@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 
 // Owner ID (replace with your owner ID)
-const OWNER_ID = '835408109899219004';
+const OWNER_ID = '835408109899219004','961918563382362122';
 
 // Forest of Death settings
 const MIN_PARTICIPANTS = 2; // Editable minimum participants
