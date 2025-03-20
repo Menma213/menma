@@ -1,21 +1,20 @@
-const { SlashCommandBuilder } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const fs = require('fs');
 const path = require('path');
-const { MessageActionRow, MessageButton, EmbedBuilder } = require('discord.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('help')
-        .setDescription('Shows all available commands with a slick interactive interface!'),
+        .setDescription('📜 View all available commands in an interactive format!'),
+
     async execute(interaction) {
-        // Path to the commands folder
+        const userId = interaction.user.id;
         const commandsPath = path.join(__dirname, '..', 'commands');
         const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
 
-        // Prepare a list to store commands
         const commands = [];
 
-        // Dynamically load commands from the folder
+        // Dynamically load commands
         for (const file of commandFiles) {
             try {
                 const command = require(path.join(commandsPath, file));
@@ -23,84 +22,115 @@ module.exports = {
                     commands.push(command);
                 }
             } catch (error) {
-                console.error(`❌ Error loading command from file "${file}":`, error);
+                console.error(`❌ Error loading command from "${file}":`, error);
             }
         }
 
-        // Set up pagination variables
+        // Pagination Variables
         const itemsPerPage = 5;
         let currentPage = 0;
+        const totalPages = Math.max(1, Math.ceil(commands.length / itemsPerPage));
 
-        // Create the initial embed
-        const embed = new EmbedBuilder()
-            .setTitle('✨ Bot Command List')
-            .setDescription('Browse through the commands using the emojis below.')
-            .setColor('#ff4757')
-            .setFooter({ text: `Page 1 of ${Math.ceil(commands.length / itemsPerPage)}` })
-            .setTimestamp();
-
-        // Generate the command list for the current page
+        // Function to generate the command list
         function generatePage() {
             let commandList = '';
             const pageCommands = commands.slice(currentPage * itemsPerPage, (currentPage + 1) * itemsPerPage);
             pageCommands.forEach(command => {
-                commandList += `**/${command.data.name}**: ${command.data.description || 'No description available'}\n`;
+                commandList += `**🌀 /${command.data.name}** → *${command.data.description || 'No description available'}*\n\n`;
             });
-            return commandList || 'No commands available on this page.';
+            return commandList || '*No commands available.*';
         }
 
-        // Set the content of the embed for the current page
-        embed.setDescription(generatePage());
+        // Function to create an embed for the current page
+        function generateEmbed() {
+            return new EmbedBuilder()
+                .setTitle("📜 **KonohaRPG Command Guide**")
+                .setDescription(generatePage())
+                .setColor("#FFD700") // Golden theme
+                .setThumbnail(interaction.client.user.displayAvatarURL({ size: 256, dynamic: true }))
+                .setFooter({
+                    text: `Page ${currentPage + 1} of ${totalPages} • Use the buttons below to navigate`,
+                    iconURL: "https://i.pinimg.com/736x/10/92/b0/1092b0aea71f620c1ed7fffe7a8704c1.jpg",
+                })
+                .setTimestamp();
+        }
 
-        // Send the initial embed and react with page navigation emojis
-        const message = await interaction.reply({ embeds: [embed], fetchReply: true });
+        // Navigation Buttons
+        const row = new ActionRowBuilder().addComponents(
+            new ButtonBuilder()
+                .setCustomId('prev')
+                .setLabel('⬅️ Previous')
+                .setStyle(ButtonStyle.Secondary)
+                .setDisabled(currentPage === 0),
 
-        // Add emoji reactions for navigation
-        await message.react('⬅️'); // Previous
-        await message.react('➡️'); // Next
+            new ButtonBuilder()
+                .setCustomId('next')
+                .setLabel('Next ➡️')
+                .setStyle(ButtonStyle.Secondary)
+                .setDisabled(currentPage === totalPages - 1),
 
-        // Create a filter to only accept reactions from the user who invoked the command
-        const filter = (reaction, user) => {
-            return ['⬅️', '➡️'].includes(reaction.emoji.name) && user.id === interaction.user.id;
-        };
+            new ButtonBuilder()
+                .setCustomId('close')
+                .setLabel('❌ Close')
+                .setStyle(ButtonStyle.Danger)
+        );
 
-        // Create a reaction collector to handle emoji reactions
-        const collector = message.createReactionCollector({ filter, time: 60000 });
+        // Send Initial Response
+        const message = await interaction.reply({ embeds: [generateEmbed()], components: [row], ephemeral: true });
 
-        collector.on('collect', async reaction => {
-            if (reaction.emoji.name === '➡️') {
-                // If the user clicks 'Next', move to the next page
-                if (currentPage < Math.ceil(commands.length / itemsPerPage) - 1) {
-                    currentPage++;
-                }
-            } else if (reaction.emoji.name === '⬅️') {
-                // If the user clicks 'Previous', move to the previous page
-                if (currentPage > 0) {
-                    currentPage--;
-                }
+        // Button Collector
+        const filter = i => i.user.id === userId;
+        const collector = message.createMessageComponentCollector({ filter, time: 60000 });
+
+        collector.on('collect', async i => {
+            if (i.customId === 'next' && currentPage < totalPages - 1) {
+                currentPage++;
+            } else if (i.customId === 'prev' && currentPage > 0) {
+                currentPage--;
+            } else if (i.customId === 'close') {
+                return await interaction.editReply({
+                    content: "✅ **Help session closed.**",
+                    embeds: [],
+                    components: [],
+                });
             }
 
-            // Update the embed with the new page content
-            embed.setDescription(generatePage())
-                 .setFooter({ text: `Page ${currentPage + 1} of ${Math.ceil(commands.length / itemsPerPage)}` })
-                 .setTimestamp();
+            // Update Embed and Buttons
+            await i.update({
+                embeds: [generateEmbed()],
+                components: [
+                    new ActionRowBuilder().addComponents(
+                        new ButtonBuilder()
+                            .setCustomId('prev')
+                            .setLabel('⬅️ Previous')
+                            .setStyle(ButtonStyle.Secondary)
+                            .setDisabled(currentPage === 0),
 
-            // Reactions must be removed before updating to prevent errors
-            await reaction.users.remove(interaction.user.id);
+                        new ButtonBuilder()
+                            .setCustomId('next')
+                            .setLabel('Next ➡️')
+                            .setStyle(ButtonStyle.Secondary)
+                            .setDisabled(currentPage === totalPages - 1),
 
-            // Edit the message with the updated page
-            await message.edit({ embeds: [embed] });
-
-            // Re-add the reactions for pagination
-            await message.react('⬅️');
-            await message.react('➡️');
+                        new ButtonBuilder()
+                            .setCustomId('close')
+                            .setLabel('❌ Close')
+                            .setStyle(ButtonStyle.Danger)
+                    ),
+                ],
+            });
         });
 
         collector.on('end', async () => {
-            // Disable the reactions after the collector ends (no more interaction)
-            await message.reactions.removeAll();
-            embed.setFooter({ text: `Help Session Expired | Last accessed at: ${new Date().toLocaleString()}` });
-            await message.edit({ embeds: [embed] });
+            await interaction.editReply({
+                components: [],
+                embeds: [
+                    generateEmbed().setFooter({
+                        text: "⏳ Help Session Expired • Use /help again",
+                        iconURL: "https://i.pinimg.com/736x/10/92/b0/1092b0aea71f620c1ed7fffe7a8704c1.jpg",
+                    }),
+                ],
+            });
         });
     },
 };
