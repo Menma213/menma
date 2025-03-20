@@ -1,196 +1,169 @@
-const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, AttachmentBuilder } = require('discord.js');
+const puppeteer = require('puppeteer');
 const fs = require('fs');
 const dataPath = './data/users.json';
 
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('enroll')
-        .setDescription('Enroll in the ninja world'),
+        .setDescription('Enroll in the ninja world and face your first trial'),
 
     async execute(interaction) {
         const userId = interaction.user.id;
+        const userAvatar = interaction.user.displayAvatarURL({ format: 'png', size: 128 });
+        const enemyImage = "https://i.pinimg.com/736x/10/92/b0/1092b0aea71f620c1ed7fffe7a8704c1.jpg"; // NPC image
 
-        // Ensure user data file exists
         if (!fs.existsSync(dataPath)) {
             fs.writeFileSync(dataPath, JSON.stringify({}, null, 2));
         }
 
         let users = JSON.parse(fs.readFileSync(dataPath, 'utf8'));
 
-        // Check if user is already enrolled
         if (users[userId]) {
-            return interaction.reply({ content: '❌ You are already enrolled!', ephemeral: true });
+            return interaction.reply({ content: "❌ You are already enrolled! Use `/profile` to view your stats.", ephemeral: true });
         }
 
-        // Enrollment Embed
         const enrollEmbed = new EmbedBuilder()
-            .setColor(0x0099ff)
-            .setTitle('Oh, you wish to become a Shinobi?')
-            .setDescription('The path of a ninja is perilous and demanding. Do you have what it takes?')
-            .addFields({ name: 'Choose wisely:', value: 'Press **"Accept"** to begin your journey or **"Decline"** to walk away.' })
-            .setFooter({ text: 'Your journey begins now...' });
+            .setColor(0x4B0082)
+            .setTitle('🌟 Your Journey Awaits, Young Ninja! 🌟')
+            .setDescription('Before you can begin your path as a shinobi, you must pass the Academy Trial. Are you ready to prove yourself?')
+            .addFields(
+                { name: '⚔️ The Path of the Shinobi', value: 'It is filled with peril, honor, and power. Your strength will be tested through battle. Do you have the courage to face the challenge?' },
+                { name: '💡 How will you begin?', value: 'Press **"Accept"** to begin your journey or **"Decline"** to stay behind.' }
+            )
+            .setFooter({ text: 'Only the worthy will survive the trials ahead.' })
+            .setThumbnail(enemyImage);
 
-        // Buttons
         const row = new ActionRowBuilder().addComponents(
-            new ButtonBuilder()
-                .setCustomId(`accept-${userId}`)
-                .setLabel('✅ Accept')
-                .setStyle(ButtonStyle.Success),
-            new ButtonBuilder()
-                .setCustomId(`decline-${userId}`)
-                .setLabel('❌ Decline')
-                .setStyle(ButtonStyle.Danger)
+            new ButtonBuilder().setCustomId(`accept-${userId}`).setLabel('✅ Accept').setStyle(ButtonStyle.Success),
+            new ButtonBuilder().setCustomId(`decline-${userId}`).setLabel('❌ Decline').setStyle(ButtonStyle.Danger)
         );
 
-        // Send the message
         await interaction.reply({ embeds: [enrollEmbed], components: [row] });
 
-        // Button Collector
         const collector = interaction.channel.createMessageComponentCollector({ time: 30000 });
 
         collector.on('collect', async (i) => {
-            if (i.user.id !== userId) {
-                return i.reply({ content: "This isn't your enrollment!", ephemeral: true });
-            }
+            if (!i.customId.startsWith(`accept-`) && !i.customId.startsWith(`decline-`)) return;
+            if (i.user.id !== userId) return i.reply({ content: "This isn't your enrollment!", ephemeral: true });
 
             if (i.customId === `accept-${userId}`) {
-                // Register new user
                 users[userId] = {
-                    level: 1,
-                    exp: 0,
-                    wins: 0,
-                    losses: 0,
-                    rank: 'Genin',
-                    clan: 'None',
-                    bloodline: 'None',
-                    health: 1000,
-                    power: 100,
-                    defense: 50,
-                    chakra: 10,
-                    jutsu: ['Attack', 'Transformation Jutsu'],
-                    ramen: 1,
-                    money: 500
+                    level: 1, exp: 0, wins: 0, losses: 0, health: 100, power: 20, defense: 10, money: 0
                 };
                 fs.writeFileSync(dataPath, JSON.stringify(users, null, 2));
 
-                const npcName = 'Rogue Shinobi';
+                await i.update({ content: '✅ You have accepted the trial! Your training battle begins now...', components: [] });
 
-                // Battle Start Embed
-                const battleEmbed = new EmbedBuilder()
-                    .setColor(0xff0000)
-                    .setTitle(`Defeat ${npcName} to prove your worth!`)
-                    .setDescription('The battle begins now... Show your strength!');
-
-                await i.update({ embeds: [battleEmbed], components: [] });
-
-                // Start the battle
-                await startBattle(interaction, users, userId, npcName, {
-                    health: 100,
-                    power: 10,
-                    defense: 10
-                });
-
-                collector.stop();
-            } else if (i.customId === `decline-${userId}`) {
-                await i.update({ content: '❌ Enrollment cancelled. Maybe next time...', embeds: [], components: [] });
-                collector.stop();
+                // Start battle
+                await startBattle(interaction, userId, userAvatar, enemyImage);
+            } else {
+                await i.update({ content: '❌ You chose to remain in the shadows... Maybe next time, Shinobi.', components: [] });
             }
+            collector.stop();
         });
 
-        // Handle timeout
         collector.on('end', async (collected) => {
             if (collected.size === 0) {
-                await interaction.editReply({ content: '❌ You did not respond in time. Enrollment cancelled.', embeds: [], components: [] });
+                return interaction.editReply({ content: '❌ Enrollment timed out. Try again later.', components: [] });
             }
         });
     }
 };
 
-// Battle Function
-async function startBattle(interaction, users, userId, npcName, npcStats) {
-    let userStats = users[userId];
-    let battleActive = true;
+// **Start Battle Function**
+async function startBattle(interaction, userId, userAvatar, enemyImage) {
+    let users = JSON.parse(fs.readFileSync(dataPath, 'utf8'));
+    let player = users[userId];
 
-    const attackPower = 2; // Attack move multiplier
-    const transformationMultiplier = 2; // Transformation Jutsu power multiplier
-    let transformed = false; // Tracks if the user used Transformation Jutsu
+    let npc = {
+        name: "Academy Instructor",
+        health: 100,
+        power: 15,
+        defense: 5,
+        currentHealth: 100
+    };
 
-    while (battleActive) {
-        // Battle Embed
-        const battleEmbed = new EmbedBuilder()
-            .setColor(0x00ff00)
-            .setTitle('Battle Round')
-            .setDescription(`**${interaction.user.username}** vs **${npcName}**`)
-            .addFields(
-                { name: 'Your HP', value: `${userStats.health}`, inline: true },
-                { name: `${npcName}'s HP`, value: `${npcStats.health}`, inline: true },
-                { name: 'Your Chakra', value: `${userStats.chakra}`, inline: true }
-            )
-            .setFooter({ text: 'React to select your move.' });
+    const generateBattleImage = async () => {
+        const browser = await puppeteer.launch({ args: ['--no-sandbox', '--disable-setuid-sandbox'] });
+        const page = await browser.newPage();
+        await page.setViewport({ width: 700, height: 350 });
 
+        const playerHealthPercent = Math.max((player.health / 100) * 100, 0);
+        const npcHealthPercent = Math.max((npc.currentHealth / npc.health) * 100, 0);
+
+        const htmlContent = `
+            <html>
+            <body style="margin: 0; padding: 0; position: relative;">
+                <img src="https://th.bing.com/th/id/R.067ea36dadfb751eb748255b475471da?rik=t4KQCUGlwxVq0Q&riu=http%3a%2f%2ffc03.deviantart.net%2ffs70%2fi%2f2013%2f268%2f7%2f5%2fbosque_naruto_by_lwisf3rxd-d6ntjgx.jpg&ehk=FH5skKe491eVsFi6eNVSnBJTJbUhblD%2bFfBsLEsWunU%3d&risl=&pid=ImgRaw&r=0" style="width: 700px; height: 350px; position: absolute; z-index: -1;">
+                
+                <div style="position: absolute; left: 50px; top: 50px;"><img src="${enemyImage}" width="150" /></div>
+                <div style="position: absolute; right: 50px; top: 50px;"><img src="${userAvatar}" width="120" /></div>
+
+                <div style="position: absolute; left: 50px; top: 220px; width: 150px; height: 15px; background: gray;">
+                    <div style="width: ${npcHealthPercent}%; height: 100%; background: red;"></div>
+                </div>
+                <div style="position: absolute; right: 50px; top: 220px; width: 120px; height: 15px; background: gray;">
+                    <div style="width: ${playerHealthPercent}%; height: 100%; background: green;"></div>
+                </div>
+            </body>
+            </html>
+        `;
+
+        await page.setContent(htmlContent);
+        const imagePath = `./battle_scene_${userId}.png`;
+        await page.screenshot({ path: imagePath });
+        await browser.close();
+        return imagePath;
+    };
+
+    const updateBattleUI = async (i) => {
+        const battleImage = new AttachmentBuilder(await generateBattleImage());
         const row = new ActionRowBuilder().addComponents(
-            new ButtonBuilder()
-                .setCustomId('attack')
-                .setLabel('Attack')
-                .setStyle(ButtonStyle.Primary),
-            new ButtonBuilder()
-                .setCustomId('transform')
-                .setLabel('Transformation Jutsu')
-                .setStyle(ButtonStyle.Secondary)
+            new ButtonBuilder().setCustomId(`attack-${userId}`).setLabel('Attack').setStyle(ButtonStyle.Primary)
         );
 
-        await interaction.followUp({ embeds: [battleEmbed], components: [row] });
+        if (i) {
+            await i.update({ content: "**Training Battle in Progress!**", components: [row], files: [battleImage] });
+        } else {
+            await interaction.followUp({ content: "**Battle Started!**", components: [row], files: [battleImage] });
+        }
+    };
 
-        // Move selection
-        const moveCollector = interaction.channel.createMessageComponentCollector({ time: 30000, max: 1 });
+    const handleAttack = async (i) => {
+        npc.currentHealth -= player.power - npc.defense;
 
-        moveCollector.on('collect', async (i) => {
-            if (i.user.id !== userId) {
-                return i.reply({ content: "This isn't your battle!", ephemeral: true });
-            }
-
-            if (i.customId === 'attack') {
-                const damage = Math.max(
-                    0,
-                    (userStats.power * attackPower) / npcStats.defense
-                );
-
-                npcStats.health -= damage;
-
-                await i.update({ content: `You dealt **${damage}** damage to ${npcName}!`, components: [] });
-            } else if (i.customId === 'transform' && userStats.chakra >= 5) {
-                transformed = true;
-                userStats.power *= transformationMultiplier;
-                userStats.chakra -= 5;
-
-                await i.update({ content: 'You used Transformation Jutsu! Your power temporarily doubled!', components: [] });
-            } else {
-                await i.update({ content: '❌ Not enough chakra for Transformation Jutsu!', components: [] });
-            }
-
-            moveCollector.stop();
-        });
-
-        // Enemy attack
-        if (npcStats.health > 0) {
-            const enemyDamage = Math.max(0, npcStats.power / userStats.defense);
-            userStats.health -= enemyDamage;
-
-            await interaction.followUp(`**${npcName}** attacked! You took **${enemyDamage}** damage.`);
+        if (npc.currentHealth <= 0) {
+            // Enrollment Success - No rewards, just a message
+            return i.update({
+                content: `🏆 **Victory!** You have successfully defeated the Academy Instructor!\n\nYour battle prowess is undeniable, and you are now a Shinobi! You have proven your strength and courage. Go forth, make the village proud and live up to the expectations of your comrades. Your journey as a Shinobi has only just begun.`,
+                components: [],
+                files: [new AttachmentBuilder(await generateBattleImage())]
+            });
         }
 
-        // Check battle end conditions
-        if (userStats.health <= 0 || npcStats.health <= 0) {
-            battleActive = false;
 
-            if (userStats.health > 0) {
-                await interaction.followUp('✅ You defeated the Rogue Shinobi!');
-            } else {
-                await interaction.followUp('❌ You were defeated by the Rogue Shinobi...');
-            }
+        player.health -= npc.power - player.defense;
 
-            users[userId] = userStats; // Update user stats
-            fs.writeFileSync(dataPath, JSON.stringify(users, null, 2));
+        if (player.health <= 0) {
+            // Enrollment Failure - Custom failure message
+            return i.update({
+                content: `💀 **Defeat!** You have been defeated by the Academy Instructor...\n\nIt is clear you need to train harder, but your determination and spirit are what define a true Shinobi. You are now a Shinobi, but don't let this defeat break you. Use it as motivation to become stronger, for this is just the beginning of your journey.`,
+                components: [],
+                files: [new AttachmentBuilder(await generateBattleImage())]
+            });
         }
-    }
+
+
+        await updateBattleUI(i);
+    };
+
+    await updateBattleUI();
+
+    const collector = interaction.channel.createMessageComponentCollector({ time: 300000 });
+
+    collector.on('collect', async (i) => {
+        if (i.user.id !== userId) return i.reply({ content: "This isn't your battle!", ephemeral: true });
+        if (i.customId === `attack-${userId}`) await handleAttack(i);
+    });
 }
