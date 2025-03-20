@@ -1,4 +1,5 @@
-const { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } = require('discord.js');
+const { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, AttachmentBuilder } = require('discord.js');
+const puppeteer = require('puppeteer');
 const fs = require('fs');
 const dataPath = './data/users.json';
 
@@ -9,9 +10,13 @@ module.exports = {
 
     async execute(interaction) {
         const userId = interaction.user.id;
-        const userPfp = interaction.user.displayAvatarURL({ dynamic: true, size: 256 });
+        const userAvatar = interaction.user.displayAvatarURL({ format: 'png', size: 128 });
+        const enemyImage = "https://i.pinimg.com/736x/10/92/b0/1092b0aea71f620c1ed7fffe7a8704c1.jpg";
 
-        if (!fs.existsSync(dataPath)) fs.writeFileSync(dataPath, JSON.stringify({}, null, 2));
+        if (!fs.existsSync(dataPath)) {
+            fs.writeFileSync(dataPath, JSON.stringify({}, null, 2));
+        }
+
         let users = JSON.parse(fs.readFileSync(dataPath, 'utf8'));
 
         if (!users[userId]) {
@@ -19,158 +24,157 @@ module.exports = {
         }
 
         let player = users[userId];
-        let totalExp = 0, totalMoney = 0, enemiesDefeated = 0, currentNpc = null;
+        let originalHealth = player.health;
+        let totalEnemiesDefeated = 0;
+        let npcList = [];
+        let playerIsDefeated = false;
 
-        // Function to generate a new NPC
         const generateNpc = () => ({
-            name: `Elite Bandit ${enemiesDefeated + 1}`,
-            health: Math.floor(150 + player.level * 12),
-            power: Math.floor(25 + player.level * 4),
-            defense: Math.floor(12 + player.level * 3),
-            currentHealth: Math.floor(150 + player.level * 12),
-            image: "https://i.pinimg.com/736x/10/92/b0/1092b0aea71f620c1ed7fffe7a8704c1.jpg"
+            name: `Elite Bandit ${totalEnemiesDefeated + 1}`,
+            health: Math.floor(player.health * 0.75 + player.defense * 3),
+            power: Math.floor(player.power * 0.9 + player.level * 3),
+            defense: Math.floor(player.defense * 0.8 + player.level * 2),
+            currentHealth: Math.floor(player.health * 0.75 + player.defense * 3),
         });
 
-        // Function to create the attack button
-        const createAttackButton = () => {
-            return new ActionRowBuilder().addComponents(
+        async function generateBattleImage() {
+            const browser = await puppeteer.launch({ headless: "new" });
+            const page = await browser.newPage();
+            await page.setViewport({ width: 700, height: 350 });
+
+            const playerHealthPercent = Math.max((player.health / originalHealth) * 100, 0);
+            const npcHealthPercent = Math.max((npcList[totalEnemiesDefeated]?.currentHealth / npcList[totalEnemiesDefeated]?.health) * 100, 0);
+
+            const htmlContent = `
+                <html>
+                <body style="margin: 0; padding: 0; position: relative;">
+                    <img src="https://th.bing.com/th/id/R.067ea36dadfb751eb748255b475471da?rik=t4KQCUGlwxVq0Q&riu=http%3a%2f%2ffc03.deviantart.net%2ffs70%2fi%2f2013%2f268%2f7%2f5%2fbosque_naruto_by_lwisf3rxd-d6ntjgx.jpg&ehk=FH5skKe491eVsFi6eNVSnBJTJbUhblD%2bFfBsLEsWunU%3d&risl=&pid=ImgRaw&r=0" style="width: 700px; height: 350px; position: absolute; z-index: -1;">
+                    
+                    <div style="position: absolute; left: 50px; top: 50px;">
+                        <img src="${enemyImage}" width="150" />
+                    </div>
+
+                    <div style="position: absolute; right: 50px; top: 50px;">
+                        <img src="${userAvatar}" width="120" />
+                    </div>
+
+                    <div style="position: absolute; left: 50px; top: 220px; width: 150px; height: 15px; background: gray;">
+                        <div style="width: ${npcHealthPercent}%; height: 100%; background: red;"></div>
+                    </div>
+
+                    <div style="position: absolute; right: 50px; top: 220px; width: 120px; height: 15px; background: gray;">
+                        <div style="width: ${playerHealthPercent}%; height: 100%; background: green;"></div>
+                    </div>
+                </body>
+                </html>
+            `;
+
+            await page.setContent(htmlContent);
+            const imagePath = `./battle_scene_${userId}.png`;
+            await page.screenshot({ path: imagePath });
+            await browser.close();
+            return imagePath;
+        }
+
+        const updateBattleUI = async (i) => {
+            const imagePath = await generateBattleImage();
+            const battleImage = new AttachmentBuilder(imagePath);
+
+            const row = new ActionRowBuilder().addComponents(
                 new ButtonBuilder()
                     .setCustomId(`attack-${interaction.id}`)
-                    .setLabel('⚔ Attack')
+                    .setLabel('Attack')
                     .setStyle(ButtonStyle.Primary)
             );
+
+            if (i) {
+                await i.update({ content: "**Battle in Progress!**", components: [row], files: [battleImage] });
+            } else {
+                await interaction.reply({ content: "**Battle Started!**", components: [row], files: [battleImage] });
+            }
         };
 
-        // Function to start a new fight
-        const startFight = async () => {
-            if (enemiesDefeated >= 50) {
-                return interaction.followUp({ embeds: [new EmbedBuilder().setTitle("🔥 Max Limit Reached!").setDescription("You can't fight more than **50 enemies** in one mission.").setColor("Red")] });
-            }
+        const handleAttack = async (i) => {
+            let playerDamage = Math.max(5, player.power - npcList[totalEnemiesDefeated].defense);
+            let npcDamage = Math.max(1, npcList[totalEnemiesDefeated].power - player.defense);
 
-            currentNpc = generateNpc();
+            if (Math.random() < 0.05) playerDamage = 0;
+            if (Math.random() < 0.05) npcDamage = 0;
 
-            const embed = new EmbedBuilder()
-                .setTitle("⚔ **A-Rank Battle Begins!**")
-                .setDescription(`You are now facing **${currentNpc.name}**!\nGet ready for battle!`)
-                .addFields(
-                    { name: "❤️ Enemy Health", value: `${currentNpc.currentHealth}`, inline: true },
-                    { name: "🔥 Enemy Power", value: `${currentNpc.power}`, inline: true },
-                    { name: "🛡 Enemy Defense", value: `${currentNpc.defense}`, inline: true }
-                )
-                .setThumbnail(currentNpc.image)
-                .setImage(userPfp)
-                .setColor("Red");
+            npcList[totalEnemiesDefeated].currentHealth -= playerDamage;
 
-            await interaction.followUp({ embeds: [embed], components: [createAttackButton()] });
-        };
-
-        // Function to process an attack
-        const attackNpc = async (i) => {
-            if (!currentNpc) return;
-
-            let attackMissed = Math.random() < 0.05;
-            if (attackMissed) {
-                return i.update({
-                    embeds: [new EmbedBuilder().setTitle("⚠️ **Missed Attack!**").setDescription(`Your attack **missed** against **${currentNpc.name}**! Stay focused!`).setColor("Yellow")],
-                    components: [createAttackButton()]
-                });
-            }
-
-            let playerDamage = Math.max(5, player.power - currentNpc.defense);
-            currentNpc.currentHealth -= playerDamage;
-
-            if (currentNpc.currentHealth <= 0) {
-                enemiesDefeated++;
-                let expReward = 500 + Math.floor(player.level * 50);
-                totalExp += expReward;
+            if (npcList[totalEnemiesDefeated].currentHealth <= 0) {
+                totalEnemiesDefeated++;
+                let expReward = 300 + Math.floor(player.level * 30);
+                let moneyReward = 500 + Math.floor(player.level * 20);
                 player.exp += expReward;
-
-                let moneyReward = 0;
-                if (enemiesDefeated % 5 === 0) {
-                    moneyReward = 2500 + Math.floor(player.level * 150);
-                    totalMoney += moneyReward;
-                }
+                player.money += moneyReward;
+                player.wins += 1;
+                player.health = originalHealth;
 
                 fs.writeFileSync(dataPath, JSON.stringify(users, null, 2));
 
-                const embed = new EmbedBuilder()
-                    .setTitle("💥 **Enemy Defeated!**")
-                    .setDescription(`You have **defeated** **${currentNpc.name}**!`)
-                    .addFields(
-                        { name: "🏅 EXP Earned", value: `${expReward}`, inline: true },
-                        { name: "💰 Total Money Earned", value: `${totalMoney} Ryo`, inline: true }
-                    )
-                    .setThumbnail(currentNpc.image)
-                    .setImage(userPfp)
-                    .setColor("Gold");
-
-                const row = new ActionRowBuilder().addComponents(
-                    new ButtonBuilder()
-                        .setCustomId(`continue-${interaction.id}`)
-                        .setLabel('➡️ Continue')
-                        .setStyle(ButtonStyle.Success),
-                    new ButtonBuilder()
-                        .setCustomId(`stop-${interaction.id}`)
-                        .setLabel('⏹ Stop')
-                        .setStyle(ButtonStyle.Danger)
-                );
-
-                return i.update({ embeds: [embed], components: [row] });
-            } else {
-                let npcDamage = Math.max(5, currentNpc.power - player.defense);
-                player.health -= npcDamage;
-
-                if (player.health <= 0) {
+                if (totalEnemiesDefeated >= 5) {
                     return i.update({
-                        embeds: [new EmbedBuilder().setTitle("💀 **Defeat!**").setDescription(`You were defeated by **${currentNpc.name}**!\n**Mission failed.**`).setColor("DarkRed")],
-                        components: []
+                        content: `🏆 **Victory!** You defeated all the enemies!\n\n🏅 **EXP Gained:** ${expReward * totalEnemiesDefeated}\n💰 **Money Earned:** ${moneyReward * totalEnemiesDefeated} Ryo`,
+                        components: [],
+                        files: [new AttachmentBuilder(await generateBattleImage())]
                     });
                 }
 
-                const embed = new EmbedBuilder()
-                    .setTitle("⚔ **Battle Continues!**")
-                    .setDescription(`**You attacked ${currentNpc.name}!**`)
-                    .addFields(
-                        { name: "💥 Damage Dealt", value: `${playerDamage}`, inline: true },
-                        { name: "❤️ Enemy Health Left", value: `${currentNpc.currentHealth}`, inline: true },
-                        { name: "🔥 Enemy Counterattack!", value: `You took **${npcDamage}** damage.`, inline: false }
-                    )
-                    .setThumbnail(currentNpc.image)
-                    .setImage(userPfp)
-                    .setColor("Red");
+                // Fixed: Delete the message using i.message.delete()
+                await i.message.delete();
 
-                await i.update({ embeds: [embed], components: [createAttackButton()] });
+                const continueRow = new ActionRowBuilder().addComponents(
+                    new ButtonBuilder()
+                        .setCustomId('continue')
+                        .setLabel('Continue')
+                        .setStyle(ButtonStyle.Success),
+                    new ButtonBuilder()
+                        .setCustomId('stop')
+                        .setLabel('Stop')
+                        .setStyle(ButtonStyle.Danger)
+                );
+
+                return interaction.followUp({
+                    content: "**Battle Finished!** Do you want to continue?",
+                    components: [continueRow],
+                    files: [new AttachmentBuilder(await generateBattleImage())]
+                });
             }
-        };
 
-        // Start first fight
-        await interaction.reply({ embeds: [new EmbedBuilder().setTitle("🔥 **A-Rank Mission Started!**").setDescription("Prepare yourself for an intense battle!").setColor("Blue")] });
-        await startFight();
+            player.health -= npcDamage;
 
-        // Button interactions
-        const collector = interaction.channel.createMessageComponentCollector({ time: 600000 });
+            if (player.health <= 0) {
+                player.losses += 1;
+                player.health = originalHealth;
 
-        collector.on('collect', async (i) => {
-            if (i.user.id !== userId) return i.reply({ content: "This isn't your fight!", ephemeral: true });
-
-            if (i.customId === `attack-${interaction.id}`) {
-                await attackNpc(i);
-            } else if (i.customId === `continue-${interaction.id}`) {
-                await i.deferUpdate();
-                await startFight();
-            } else if (i.customId === `stop-${interaction.id}`) {
-                collector.stop();
-                player.money += totalMoney;
                 fs.writeFileSync(dataPath, JSON.stringify(users, null, 2));
 
                 return i.update({
-                    embeds: [new EmbedBuilder().setTitle("🏆 **Mission Completed!**").setDescription(`You defeated **${enemiesDefeated} enemies**!`).addFields(
-                        { name: "🏅 Total EXP", value: `${totalExp}`, inline: true },
-                        { name: "💰 Total Money", value: `${totalMoney} Ryo`, inline: true }
-                    ).setThumbnail(currentNpc.image).setImage(userPfp).setColor("Green")],
-                    components: []
+                    content: `💀 **Defeat!** You were defeated by **${npcList[totalEnemiesDefeated].name}**...`,
+                    components: [],
+                    files: [new AttachmentBuilder(await generateBattleImage())]
                 });
             }
+
+            await updateBattleUI(i);
+        };
+
+        for (let i = 0; i < 5; i++) {
+            npcList.push(generateNpc());
+        }
+
+        await updateBattleUI();
+
+        const collector = interaction.channel.createMessageComponentCollector({ time: 300000 });
+
+        collector.on('collect', async (i) => {
+            if (i.user.id !== userId) return i.reply({ content: "This isn't your battle!", ephemeral: true });
+
+            if (i.customId === `attack-${interaction.id}`) await handleAttack(i);
+            else if (i.customId === 'continue') await updateBattleUI(i);
+            else if (i.customId === 'stop') await i.update({ content: "⏳ **Battle ended by player.**", components: [] });
         });
     }
 };
