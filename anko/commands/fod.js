@@ -3,11 +3,19 @@ const fs = require('fs');
 const path = require('path');
 
 // Owner ID (replace with your owner ID)
+<<<<<<< HEAD
 const OWNER_ID = '835408109899219004';
 
 // Forest of Death settings
 const MIN_PARTICIPANTS = 3; // Editable minimum participants
 const WAIT_TIME = 320000; // 5 minutes in milliseconds
+=======
+const OWNER_ID = '835408109899219004','961918563382362122';
+
+// Forest of Death settings
+const MIN_PARTICIPANTS = 2; // Editable minimum participants
+const WAIT_TIME = 15000; // 15 seconds (editable for testing)
+>>>>>>> 5112832f248875dd3fd4e5509b5515ce1d7c757a
 
 // Paths
 const deathsPath = path.resolve(__dirname, '../../data/deaths.json');
@@ -40,7 +48,11 @@ module.exports = {
     });
 
     // Ping everyone and send the starting embed
+<<<<<<< HEAD
     await message.channel.send('<@&1351949389056180226>');
+=======
+    await message.channel.send('@everne');
+>>>>>>> 5112832f248875dd3fd4e5509b5515ce1d7c757a
     const startEmbed = new EmbedBuilder()
       .setTitle('Forest of Death')
       .setDescription('Would you like to join the Forest of Death?')
@@ -187,4 +199,8 @@ module.exports = {
       fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
     }, WAIT_TIME); // Wait time before starting
   },
+<<<<<<< HEAD
 };
+=======
+};
+>>>>>>> 5112832f248875dd3fd4e5509b5515ce1d7c757a
