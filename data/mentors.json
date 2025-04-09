@@ -1,0 +1,154 @@
+{
+    "Genin": {
+        "Naruto": {
+            "jutsu": ["Shadow Clone Jutsu", "Sexy Jutsu"]
+        },
+        "Sasuke": {
+            "jutsu": ["Fireball Jutsu"]
+        },
+        "Sakura": {
+            "jutsu": ["Mystic Palms"]
+        },
+        "Ino Yamanaka": {
+            "jutsu": ["Sensory"]
+        },
+        "Shikamaru": {
+            "jutsu": ["Analysis"]
+        },
+        "Choji Akamichi": {
+            "jutsu": ["Human Boulder"],
+            "clan": "Akamichi"
+        },
+        "Rock Lee": {
+            "jutsu": ["Leaf Whirlwind"]
+        },
+        "Tenten": {
+            "jutsu": ["Kunai Grenade"]
+        },
+        "Neji Hyuga": {
+            "jutsu": ["Palm Rotation"],
+            "clan": "Hyuga"
+        },
+        "Kiba Inuzuka": {
+            "jutsu": ["Smoke Bomb", "Ally Dog"],
+            "clan": "Inuzuka"
+        },
+        "Hinata Hyuga": {
+            "jutsu": ["Parry"]
+        },
+        "Shino Aburame": {
+            "jutsu": ["Chakra Parasite"],
+            "clan": "Aburame"
+        },
+        "Kankuro": {
+            "jutsu": ["Poison Smoke"]
+        },
+        "Temari": {
+            "jutsu": ["Wind Wall"]
+        },
+        "Gaara": {
+            "jutsu": ["Sand Armor"]
+        },
+        "Kakashi": {
+            "jutsu": ["Summon Ninken"]
+        },
+        "Guy": {
+            "jutsu": ["Dynamic Entry"]
+        },
+        "Mitsuki": {
+            "jutsu": ["Striking Shadow Snakes"]
+        },
+        "Sarada": {
+            "jutsu": ["Lightning Burial: Banquet of Lightning"]
+        },
+        "Boruto": {
+            "jutsu": ["Super High Compression Rasengan"]
+        }
+    },
+    "Chuunin": {
+        "Choji Akamichi": {
+            "jutsu": ["Akimichi Pills"]
+        },
+        "Sakura": {
+            "jutsu": ["Cherry Blossom Impact"]
+        },
+        "Tenten": {
+            "jutsu": ["Twin Rising Dragons"]
+        },
+        "Gaara": {
+            "jutsu": ["Sand Coffin"]
+        },
+        "Ino Yamanaka": {
+            "jutsu": ["Mind Transfer"],
+            "clan": "Yamanaka"
+        },
+        "Shikamaru Nara": {
+            "jutsu": ["Shadow Possession"],
+            "clan": "Nara"
+        },
+        "Shino Aburame": {
+            "jutsu": ["Insect Jamming"],
+            "clan": "Aburame"
+        },
+        "Kankuro": {
+            "jutsu": ["Puppet Crow"]
+        },
+        "Temari": {
+            "jutsu": ["Wind Scythe"]
+        },
+        "Neji Hyuga": {
+            "jutsu": ["Sixty Four Palms"],
+            "clan": "Hyuga"
+        },
+        "Kiba Inuzuka": {
+            "jutsu": ["Man Beast Clone"],
+            "clan": "Inuzuka"
+        },
+        "Asuma": {
+            "jutsu": ["Chakra Infused Blades"]
+        }
+    },
+    "Jounin": {
+        "Sasuke Uchiha": {
+            "jutsu": ["Kirin", "Ephemeral"]
+        },
+        "Jiraiya": {
+            "jutsu": ["Rasengan"]
+        },
+        "Kakashi": {
+            "jutsu": ["Lightning Blade"]
+        },
+        "Hinata Hyuga": {
+            "jutsu": ["Twin Lion Fist"],
+            "clan": "Hyuga"
+        },
+        "Rock Lee": {
+            "jutsu": ["Primary Lotus"]
+        },
+        "Kurenai": {
+            "jutsu": ["Demonic Illusion", "Nirvana Temple"]
+        },
+        "Asuma": {
+            "jutsu": ["Burning Ash"]
+        },
+        "Hashirama Senju": {
+            "jutsu": ["Wood Dragon Jutsu", "Wood Clone Jutsu", "Rashomon"],
+            "clan": "Senju"
+        },
+        "Naruto Uzumaki": {
+            "jutsu": ["Adamantine Sealing Chains"],
+            "clan": "Uzumaki"
+        },
+        "Shikamaru Nara": {
+            "jutsu": ["Shadow Strangle"],
+            "clan": "Nara"
+        },
+        "Ino Yamanaka": {
+            "jutsu": ["Mind Destruction"],
+            "clan": "Yamanaka"
+        },
+        "Guy": {
+            "jutsu": ["Eight Gates"]
+        }
+    }
+}

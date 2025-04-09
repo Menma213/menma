@@ -1,0 +1,64 @@
+{
+    "attack": {
+      "name": "Attack",
+      "description": "Basic physical attack",
+      "chakraCost": 0,
+      "effects": {
+        "damageFormula": "2 * user.power / target.defense"
+      }
+    },
+    "transformation": {
+      "name": "Transformation Jutsu",
+      "description": "Temporarily increases your power",
+      "chakraCost": 5,
+      "effects": {
+        "userBuffs": {
+          "power": 5
+        }
+      }
+    },
+    "asura": {
+      "name": "Asura's Blade of Execution",
+      "description": "Unleashes god-like power",
+      "chakraCost": 10,
+      "effects": {
+        "damageFormula": "50 * (1 + (user.power / 20))",
+        "userBuffs": {
+          "power": "user.power * 2",
+          "defense": "user.defense * 2",
+          "dodge": 100,
+          "accuracy": 100,
+          "heal": "user.health * 0.5"
+        },
+        "targetDebuffs": {
+          "power": "-target.power * 0.5",
+          "defense": "-target.defense * 0.5",
+          "curseMark": true
+        },
+        "instantKillChance": 0.3
+      }
+    },
+    "Mystic Palm": {
+      "name": "Mystic Palm",
+      "description": "Advanced medical ninjutsu that accelerates cellular regeneration",
+      "chakraCost": 8,
+      "effects": {
+          "heal": "user.health * 0.4 + 100",
+          "userBuffs": {
+              "defense": "user.defense * 1.2"
+          }
+      }
+  },
+  "Summon Ninken": {
+      "name": "Summon Ninken",
+      "description": "Kuchiyose: Ninken no Jutsu! Summons ninja hounds to assist in battle",
+      "chakraCost": 10,
+      "effects": {
+          "damageFormula": "user.power * 2",
+          "targetDebuffs": {
+              "dodge": "target.dodge * 0.7"
+          },
+          "stun": 1.0 
+      }
+  }
+  }
