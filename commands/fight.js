@@ -20,16 +20,16 @@ module.exports = {
 
         // Basic validations
         if (challengerId === opponentId) {
-            return interaction.reply({ content: "You can't challenge yourself!", flags: [64] });
+            return interaction.reply({ content: "You can't challenge yourself!", ephemeral: true });
         }
 
         if (!fs.existsSync(usersPath)) {
-            return interaction.reply({ content: "Database not found. Please contact admin.", flags: [64] });
+            return interaction.reply({ content: "Database not found. Please contact admin.", ephemeral: true });
         }
 
         const users = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
         if (!users[challengerId] || !users[opponentId]) {
-            return interaction.reply({ content: "Both players must be enrolled to fight!", flags: [64] });
+            return interaction.reply({ content: "Both players must be enrolled to fight!", ephemeral: true });
         }
 
         // Create challenge embed
@@ -54,7 +54,8 @@ module.exports = {
         const challengeMessage = await interaction.reply({
             content: `<@${opponentId}>`,
             embeds: [challengeEmbed],
-            components: [challengeButtons]
+            components: [challengeButtons],
+            fetchReply: true
         });
 
         // Challenge collector
@@ -75,16 +76,16 @@ module.exports = {
 
             // Challenge accepted - start battle
             await i.update({
-                content: 'Challenge accepted!',
+                content: 'Challenge accepted! Starting battle...',
                 embeds: [],
                 components: []
             });
 
             // Initialize battle variables
-            const challenger = users[challengerId];
-            const opponent = users[opponentId];
+            const users = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
+            const challenger = { ...users[challengerId] };
+            const opponent = { ...users[opponentId] };
             let currentRound = 1;
-            let currentPlayer = challengerId; // Challenger goes first
             let battleActive = true;
             let challengerTransformation = false;
             let opponentTransformation = false;
@@ -127,25 +128,16 @@ module.exports = {
             };
 
             // Create moves embed
-            const createMovesEmbed = (playerId) => {
-                const player = playerId === challengerId ? challenger : opponent;
-                const isCurrentPlayer = playerId === currentPlayer;
-                
+            const createMovesEmbed = (player) => {
                 const movesEmbed = new EmbedBuilder()
-                    .setTitle(`Round ${currentRound} - ${isCurrentPlayer ? 'Your Turn' : 'Waiting'}`)
-                    .setDescription(isCurrentPlayer ? 
-                        `Select your move, <@${playerId}>!` : 
-                        `Waiting for opponent to make their move...`)
+                    .setTitle(`Round ${currentRound} - ${player.id === challengerId ? interaction.user.username : interaction.options.getUser('opponent').username}'s Turn`)
+                    .setDescription(`Select your move!`)
                     .setColor('#0099ff')
                     .addFields({
                         name: 'Available Jutsu',
                         value: player.jutsu.map((j, i) => `${i+1}. ${j}`).join('\n')
                     })
                     .setFooter({ text: `Chakra: ${player.chakra}/10` });
-
-                if (!isCurrentPlayer) {
-                    return { embed: movesEmbed, components: [] };
-                }
 
                 const row = new ActionRowBuilder();
                 
@@ -253,100 +245,96 @@ module.exports = {
             while (battleActive) {
                 // Show battle image
                 const battleImage = new AttachmentBuilder(await generateBattleImage());
-                const battleMessage = await interaction.followUp({ 
+                await interaction.followUp({ 
                     files: [battleImage] 
                 });
 
-                // Current player move selection
-                const currentPlayerId = currentPlayer;
-                const moves = createMovesEmbed(currentPlayerId);
-                const moveMessage = await interaction.followUp({
-                    embeds: [moves.embed],
-                    components: moves.components
+                // Challenger's turn
+                const challengerMoves = createMovesEmbed(challenger);
+                const challengerMessage = await interaction.followUp({
+                    content: `<@${challengerId}> it's your turn!`,
+                    embeds: [challengerMoves.embed],
+                    components: [challengerMoves.components]
                 });
 
-                const moveCollector = moveMessage.createMessageComponentCollector({
-                    filter: i => i.user.id === currentPlayerId,
-                    time: 30000
+                const challengerMove = await getPlayerMove(challengerId, challengerMessage);
+                const challengerResult = await processMove(challengerMove, challengerId);
+
+                // Check if battle ended (flee)
+                if (!battleActive) {
+                    await interaction.followUp({ 
+                        content: `<@${challengerId}> fled from battle!` 
+                    });
+                    break;
+                }
+
+                // Opponent's turn
+                const opponentMoves = createMovesEmbed(opponent);
+                const opponentMessage = await interaction.followUp({
+                    content: `<@${opponentId}> it's your turn!`,
+                    embeds: [opponentMoves.embed],
+                    components: [opponentMoves.components]
                 });
 
-                const moveResult = await new Promise(resolve => {
-                    moveCollector.on('collect', async i => {
-                        const result = await processMove(i.customId, currentPlayerId);
-                        await i.update({
-                            content: `You selected ${i.customId}`,
-                            components: []
-                        });
-                        resolve(result);
+                const opponentMove = await getPlayerMove(opponentId, opponentMessage);
+                const opponentResult = await processMove(opponentMove, opponentId);
+
+                // Check if battle ended (flee)
+                if (!battleActive) {
+                    await interaction.followUp({ 
+                        content: `<@${opponentId}> fled from battle!` 
+                    });
+                    break;
+                }
+
+                // Apply damage
+                challenger.health -= opponentResult.damage;
+                opponent.health -= challengerResult.damage;
+
+                // Show round summary
+                const summaryEmbed = createRoundSummary(challengerResult, opponentResult);
+                await interaction.followUp({ 
+                    embeds: [summaryEmbed] 
+                });
+
+                // Check win conditions
+                if (challenger.health <= 0 || opponent.health <= 0) {
+                    battleActive = false;
+                    const winner = challenger.health > 0 ? challengerId : opponentId;
+                    
+                    // Update stats
+                    users[winner].wins += 1;
+                    users[winner === challengerId ? opponentId : challengerId].losses += 1;
+                    fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
+
+                    await interaction.followUp({ 
+                        content: `<@${winner}> wins the battle!` 
+                    });
+                }
+
+                currentRound++;
+            }
+
+            // Helper function to get player move
+            async function getPlayerMove(playerId, message) {
+                return new Promise((resolve) => {
+                    const collector = message.createMessageComponentCollector({
+                        filter: i => i.user.id === playerId,
+                        time: 30000,
+                        max: 1
                     });
 
-                    moveCollector.on('end', () => {
-                        if (!moveCollector.collected.size) {
-                            resolve({ damage: 0, description: 'did nothing (timed out)' });
+                    collector.on('collect', async i => {
+                        await i.deferUpdate();
+                        resolve(i.customId);
+                    });
+
+                    collector.on('end', collected => {
+                        if (collected.size === 0) {
+                            resolve('attack'); // Default to attack if timed out
                         }
                     });
                 });
-
-                // Switch turns
-                currentPlayer = currentPlayer === challengerId ? opponentId : challengerId;
-
-                // If both players have moved, show summary
-                if (currentPlayer === challengerId) {
-                    const opponentMoves = createMovesEmbed(opponentId);
-                    const opponentMoveMessage = await interaction.followUp({
-                        embeds: [opponentMoves.embed],
-                        components: opponentMoves.components
-                    });
-
-                    const opponentCollector = opponentMoveMessage.createMessageComponentCollector({
-                        filter: i => i.user.id === opponentId,
-                        time: 30000
-                    });
-
-                    const opponentResult = await new Promise(resolve => {
-                        opponentCollector.on('collect', async i => {
-                            const result = await processMove(i.customId, opponentId);
-                            await i.update({
-                                content: `You selected ${i.customId}`,
-                                components: []
-                            });
-                            resolve(result);
-                        });
-
-                        opponentCollector.on('end', () => {
-                            if (!opponentCollector.collected.size) {
-                                resolve({ damage: 0, description: 'did nothing (timed out)' });
-                            }
-                        });
-                    });
-
-                    // Apply damage
-                    challenger.health -= opponentResult.damage;
-                    opponent.health -= moveResult.damage;
-
-                    // Show round summary
-                    const summaryEmbed = createRoundSummary(moveResult, opponentResult);
-                    await interaction.followUp({ 
-                        embeds: [summaryEmbed] 
-                    });
-
-                    // Check win conditions
-                    if (challenger.health <= 0 || opponent.health <= 0) {
-                        battleActive = false;
-                        const winner = challenger.health > 0 ? challengerId : opponentId;
-                        
-                        // Update stats
-                        users[winner].wins += 1;
-                        users[winner === challengerId ? opponentId : challengerId].losses += 1;
-                        fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
-
-                        await interaction.followUp({ 
-                            content: `<@${winner}> wins the battle!` 
-                        });
-                    }
-
-                    currentRound++;
-                }
             }
         });
 
