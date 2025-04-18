@@ -55,27 +55,30 @@ module.exports = {
             return interaction.reply({ content: `You don't know ${jutsuName}!`, ephemeral: true });
         }
 
-        // Initialize slots array if needed
-        if (!users[userId].jutsu || !Array.isArray(users[userId].jutsu)) {
-            users[userId].jutsu = ['Attack', 'None', 'None', 'None', 'None'];
-        }
-
-        // Ensure the array has exactly 5 slots
-        while (users[userId].jutsu.length < 5) {
-            users[userId].jutsu.push('None');
+        // Initialize slots object if needed
+        if (!users[userId].jutsuSlots || typeof users[userId].jutsuSlots !== 'object') {
+            users[userId].jutsuSlots = {
+                1: 'None',
+                2: 'None',
+                3: 'None',
+                4: 'None',
+                5: 'None'
+            };
         }
 
         // Check if already equipped in another slot
-        const currentSlotIndex = users[userId].jutsu.indexOf(jutsuName);
-        if (currentSlotIndex !== -1 && currentSlotIndex !== slotNumber - 1) {
+        const equippedSlot = Object.keys(users[userId].jutsuSlots).find(
+            slot => users[userId].jutsuSlots[slot] === jutsuName
+        );
+        if (equippedSlot && parseInt(equippedSlot) !== slotNumber) {
             return interaction.reply({
-                content: `${jutsuName} is already equipped in slot ${currentSlotIndex + 1}!`,
+                content: `${jutsuName} is already equipped in slot ${equippedSlot}!`,
                 ephemeral: true
             });
         }
 
         // Check if the slot is already occupied by a different jutsu
-        const currentJutsuInSlot = users[userId].jutsu[slotNumber - 1];
+        const currentJutsuInSlot = users[userId].jutsuSlots[slotNumber];
         if (currentJutsuInSlot !== 'None' && currentJutsuInSlot !== jutsuName) {
             return interaction.reply({
                 content: `Slot ${slotNumber} already has ${currentJutsuInSlot} equipped!`,
@@ -83,8 +86,8 @@ module.exports = {
             });
         }
 
-        // Equip the jutsu (array is 0-indexed, slots are 1-5)
-        users[userId].jutsu[slotNumber - 1] = jutsuName;
+        // Equip the jutsu
+        users[userId].jutsuSlots[slotNumber] = jutsuName;
         fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
 
         return interaction.reply({

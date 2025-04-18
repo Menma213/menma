@@ -1,24 +1,4 @@
 {
-  "961918563382362122": {
-    "level": 1012,
-    "exp": 1147840,
-    "wins": 6,
-    "losses": 0,
-    "rank": "Genin",
-    "clan": "None",
-    "bloodline": "None",
-    "health": 865,
-    "power": 1.0222222222222222e+28,
-    "defense": 10498,
-    "chakra": 6540,
-    "jutsu": [
-      "Basic Punch"
-    ],
-    "ramen": 101,
-    "money": 642800,
-    "lastClaim": "2025-03-18T17:59:47.075Z",
-    "nextClaim": "2025-03-19T17:59:47.075Z"
-  },
   "437016873104834561": {
     "level": 8,
     "exp": 4070,
@@ -99,33 +79,6 @@
     "money": 20000,
     "ramen": 51
   },
-  "835408109899219004": {
-    "level": 1e+57,
-    "exp": 100,
-    "wins": 1e+34,
-    "losses": 0,
-    "rankedPoints": 0,
-    "clan": "None",
-    "bloodline": "Unknown",
-    "mentor": "None",
-    "rank": "Jounin",
-    "health": 964.8,
-    "power": 100,
-    "defense": 50,
-    "chakra": 10,
-    "jutsu": [
-      "Attack",
-      "Transformation Jutsu",
-      "asura",
-      "None",
-      "None",
-      "Asura's Blade of Execution",
-      "Summon Ninken",
-      "Mystic Palm"
-    ],
-    "money": 20000,
-    "ramen": 101
-  },
   "843680216022122516": {
     "level": 20,
     "exp": 8450,
@@ -195,6 +148,54 @@
       "None",
       "None"
     ],
+    "money": 15000,
+    "ramen": 1
+  },
+  "835408109899219004": {
+    "level": 1,
+    "exp": 100,
+    "wins": 1,
+    "losses": 1,
+    "rankedPoints": 0,
+    "clan": "None",
+    "bloodline": "Unknown",
+    "mentor": "None",
+    "rank": "Academy Student",
+    "health": 964.8,
+    "power": 100,
+    "defense": 50,
+    "chakra": 10,
+    "jutsu": {
+      "slot_1": "Transformation Jutsu",
+      "slot_2": "None",
+      "slot_3": "None",
+      "slot_4": "None",
+      "slot_5": "None"
+    },
+    "money": 15000,
+    "ramen": 1
+  },
+  "961918563382362122": {
+    "level": 1,
+    "exp": 100,
+    "wins": 2,
+    "losses": 0,
+    "rankedPoints": 0,
+    "clan": "None",
+    "bloodline": "Unknown",
+    "mentor": "None",
+    "rank": "Academy Student",
+    "health": 964.8,
+    "power": 1e+22,
+    "defense": 50,
+    "chakra": 10,
+    "jutsu": {
+      "slot_1": "Transformation Jutsu",
+      "slot_2": "None",
+      "slot_3": "None",
+      "slot_4": "None",
+      "slot_5": "None"
+    },
     "money": 15000,
     "ramen": 1
   }

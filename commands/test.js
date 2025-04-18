@@ -49,7 +49,24 @@ const effectHandlers = {
     },
     instantKill: (chance) => Math.random() < chance,
     stun: (chance) => Math.random() < chance
-};
+}
+function getEffectiveStats(entity) {
+    const stats = { ...entity };
+    delete stats.activeEffects; // Remove to avoid recursion
+  
+    entity.activeEffects.forEach(effect => {
+      if (effect.type === 'buff' || effect.type === 'debuff') {
+        Object.entries(effect.stats).forEach(([stat, value]) => {
+          stats[stat] = (stats[stat] || 0) + value;
+        });
+      }
+    });
+    return stats;
+  }
+  
+  function hasStatus(entity, status) {
+    return entity.activeEffects.some(e => e.type === 'status' && e.status === status);
+  };
 
 // Helper function to validate variables
 function validateVariables(user, target, formula) {
@@ -84,16 +101,20 @@ module.exports = {
             return interaction.reply({ content: "You need to enroll first!", ephemeral: true });
         }
 
-        const player = users[userId];
-        const npc = {
+        const player = {
+            ...users[userId],
+            activeEffects: [] // Track buffs/debuffs/statuses
+          };
+          
+          const npc = {
             name: "Training Dummy",
             health: 800,
             power: 60,
             defense: 30,
             chakra: 10,
             jutsu: ["Attack", "Transformation Jutsu"],
-            stunned: false
-        };
+            activeEffects: []
+          };
 
         let roundNum = 1;
         let playerHealth = player.health;

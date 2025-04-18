@@ -35,7 +35,7 @@ module.exports = {
         if (users[userId]) {
             return interaction.reply({ 
                 content: "You are already enrolled! Use /profile to view your stats.", 
-                flags: [64]
+                ephemeral: true 
             });
         }
 
@@ -70,10 +70,10 @@ module.exports = {
 
         collector.on('collect', async (i) => {
             if (!i.customId.startsWith('accept-') && !i.customId.startsWith('decline-')) return;
-            if (i.user.id !== userId) return i.reply({ content: "This isn't your enrollment!", flags: [64] });
+            if (i.user.id !== userId) return i.reply({ content: "This isn't your enrollment!", ephemeral: true });
 
             if (i.customId === `accept-${userId}`) {
-                // Create user profile with jutsu as an array for battle system
+                // Create user profile with slot-based jutsu
                 users[userId] = {
                     level: 1,
                     exp: 0,
@@ -88,7 +88,13 @@ module.exports = {
                     power: 100,
                     defense: 50,
                     chakra: 10,
-                    jutsu: ['Attack', 'Transformation Jutsu', 'None', 'None', 'None'], // Changed to array
+                    jutsu: {
+                        slot_1: 'Transformation Jutsu',
+                        slot_2: 'None',
+                        slot_3: 'None',
+                        slot_4: 'None',
+                        slot_5: 'None'
+                    },
                     money: 10000,
                     ramen: 1
                 };
@@ -147,19 +153,33 @@ module.exports = {
         const processPlayerMove = (move) => {
             let damage = 0;
             let description = '';
+            let chakraCost = 0;
             
             if (move === 'attack') {
                 damage = 2 * (player.power + (transformationActive ? 5 : 0));
                 description = 'used Attack';
             } 
             else if (move === 'transform') {
-                player.chakra -= 5;
-                transformationActive = true;
-                transformationRounds = 3;
-                description = 'used Transformation Jutsu';
+                chakraCost = 5;
+                if (player.chakra >= chakraCost) {
+                    player.chakra -= chakraCost;
+                    transformationActive = true;
+                    transformationRounds = 3;
+                    description = 'used Transformation Jutsu';
+                } else {
+                    return { 
+                        damage: 0, 
+                        description: 'failed to perform jutsu (not enough chakra)',
+                        specialEffects: ['Chakra exhausted!']
+                    };
+                }
             }
 
-            return { damage, description };
+            return { 
+                damage, 
+                description,
+                chakraCost
+            };
         };
 
         // Process enemy move
@@ -171,56 +191,59 @@ module.exports = {
             };
         };
 
-        // Create moves embed
+        // Create moves embed with slot-based jutsu
         const createMovesEmbed = () => {
+            const jutsuSlots = Object.entries(player.jutsu)
+                .filter(([_, jutsu]) => jutsu !== 'None')
+                .map(([slot, jutsu]) => `${slot.replace('_', ' ')}: ${jutsu}`)
+                .join('\n');
+
             const movesEmbed = new EmbedBuilder()
                 .setTitle(`Round ${roundNum} - Select Your Move`)
                 .setColor('#0099ff')
                 .setDescription(`${interaction.user.username}, It is your turn!\nUse the buttons to make your move.`)
                 .addFields(
                     { 
-                        name: 'Your Jutsu', 
-                        value: player.jutsu.map((j, index) => 
-                            `${index + 1}. ${j}${j === 'Transformation Jutsu' ? ' (5 Chakra)' : ''}`
-                        ).join('\n')
+                        name: 'Your Jutsu Slots', 
+                        value: jutsuSlots || 'No jutsu equipped'
                     }
                 )
-                .setFooter({ text: `Chakra: ${player.chakra}` });
+                .setFooter({ text: `Chakra: ${player.chakra}/10` });
 
             const row = new ActionRowBuilder();
             
-            // Button 1 - Attack (always available)
+            // Attack button (always available)
             row.addComponents(
                 new ButtonBuilder()
-                    .setCustomId(`attack-${userId}`)
-                    .setLabel('1')
+                    .setCustomId(`attack-${userId}-${roundNum}`)
+                    .setLabel('Attack')
                     .setStyle(ButtonStyle.Primary)
             );
 
-            // Button 2 - Transform (if enough chakra and jutsu exists)
-            if (player.chakra >= 5 && player.jutsu.includes('Transformation Jutsu')) {
+            // Transformation Jutsu button if available and has chakra
+            if (Object.values(player.jutsu).includes('Transformation Jutsu') && player.chakra >= 5) {
                 row.addComponents(
                     new ButtonBuilder()
-                        .setCustomId(`transform-${userId}`)
-                        .setLabel('2')
+                        .setCustomId(`transform-${userId}-${roundNum}`)
+                        .setLabel('Transform (5 Chakra)')
                         .setStyle(ButtonStyle.Primary)
                 );
             }
 
-            // Button 3 - Rest (+1 Chakra)
+            // Rest button
             row.addComponents(
                 new ButtonBuilder()
-                    .setCustomId(`rest-${userId}`)
-                    .setLabel('😴')
-                    .setStyle(ButtonStyle.Primary)
+                    .setCustomId(`rest-${userId}-${roundNum}`)
+                    .setLabel('Rest (+1 Chakra)')
+                    .setStyle(ButtonStyle.Success)
             );
 
-            // Button 4 - Flee
+            // Flee button
             row.addComponents(
                 new ButtonBuilder()
-                    .setCustomId(`flee-${userId}`)
-                    .setLabel('❌')
-                    .setStyle(ButtonStyle.Primary)
+                    .setCustomId(`flee-${userId}-${roundNum}`)
+                    .setLabel('Flee')
+                    .setStyle(ButtonStyle.Danger)
             );
 
             return { embed: movesEmbed, components: [row] };
@@ -237,7 +260,7 @@ module.exports = {
         };
 
         // Battle variables
-        let roundNum = 1; // Start with round 1
+        let roundNum = 1;
         let transformationActive = false;
         let transformationRounds = 0;
 
@@ -335,7 +358,7 @@ module.exports = {
         // Initial moves selection
         const { embed: movesEmbed, components } = createMovesEmbed();
         const battleImage = new AttachmentBuilder(await generateBattleImage());
-        const battleMessage = await interaction.followUp({ 
+        await interaction.followUp({ 
             content: 'Battle Started! Defeat the rogue ninja to complete your enrollment!', 
             embeds: [movesEmbed], 
             components, 
@@ -343,29 +366,41 @@ module.exports = {
         });
 
         battleCollector.on('collect', async (i) => {
-            if (i.user.id !== userId) return i.reply({ content: "This isn't your battle!", flags: [64] });
+            // Verify this interaction belongs to the current user and battle
+            if (!i.customId.includes(userId)) return i.reply({ content: "This isn't your battle!", ephemeral: true });
+            
+            // Extract the base action from the custom ID
+            const action = i.customId.split('-')[0];
             
             let playerMove, enemyMove;
             
-            if (i.customId === `attack-${userId}`) {
+            if (action === 'attack') {
                 playerMove = processPlayerMove('attack');
                 enemy.currentHealth -= playerMove.damage;
                 
                 enemyMove = processEnemyMove();
                 player.health -= enemyMove.damage;
             } 
-            else if (i.customId === `transform-${userId}`) {
+            else if (action === 'transform') {
                 playerMove = processPlayerMove('transform');
+                if (playerMove.description.includes('failed')) {
+                    await i.update({ content: playerMove.description, components: [] });
+                    return;
+                }
                 enemyMove = processEnemyMove();
                 player.health -= enemyMove.damage;
             }
-            else if (i.customId === `rest-${userId}`) {
+            else if (action === 'rest') {
                 player.chakra = Math.min(player.chakra + 1, 10);
                 enemyMove = processEnemyMove();
                 player.health -= enemyMove.damage;
-                playerMove = { damage: 0, description: 'rested and gained +1 Chakra' };
+                playerMove = { 
+                    damage: 0, 
+                    description: 'rested and gained +1 Chakra',
+                    specialEffects: ['+1 Chakra']
+                };
             }
-            else if (i.customId === `flee-${userId}`) {
+            else if (action === 'flee') {
                 await i.update({
                     content: 'You fled from battle! Enrollment failed.',
                     components: [],
