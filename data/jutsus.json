@@ -1,114 +1,126 @@
 {
-  "attack": {
-    "name": "Attack",
-    "description": "Basic physical attack",
-    "chakraCost": 0,
-    "effects": [
-      {
-        "type": "damage",
-        "formula": "2 * user.power / target.defense"
-      }
-    ]
-  },
-  "transformation": {
-    "name": "Transformation Jutsu",
-    "description": "Temporarily increases your power",
-    "chakraCost": 5,
-    "effects": [
-      {
+    "Attack": {
+      "name": "Attack",
+      "description": "Basic physical attack",
+      "chakraCost": 0,
+      "effects": [
+        {
+          "type": "damage",
+          "formula": "2 * user.power / target.defense"
+        }
+      ]
+    },
+    "Transformation Jutsu": {
+      "name": "Transformation Jutsu",
+      "description": "Temporarily increases your power",
+      "chakraCost": 5,
+      "effects": [
+        {
+          "type": "buff",
+          "target": "user",
+          "stats": {
+            "power": 5
+          },
+          "duration": 3
+        }
+      ]
+    },
+    "asura": {
+      "name": "Asura's Blade of Execution",
+      "description": "Unleashes god-like power",
+      "chakraCost": 0,
+      "effects": [
+        {
+          "type": "damage",
+          "formula": "50 * (1 + (user.power / 10))"
+        },
+        {
+          "type": "buff",
+          "target": "user",
+          "stats": {
+            "power": "user.power * 2",
+            "defense": "user.defense * 2"
+          },
+          "duration": 3
+        },
+        {
+          "type": "debuff",
+          "target": "target",
+          "stats": {
+            "power": "-target.power * 0.5",
+            "defense": "-target.defense * 0.5"
+          },
+          "duration": 3
+        },
+        {
+          "type": "status",
+          "target": "target",
+          "status": "stun",
+          "duration": 1,
+          "chance": 0.7
+        }
+      ]
+    },
+    "Mystic Palm": {
+      "name": "Mystic Palm",
+      "description": "Advanced medical ninjutsu that heals wounds",
+      "chakraCost": 4,
+      "effects": [
+        {
+          "type": "heal",
+          "formula": "user.health * 0.4 + 100"
+        }
+        
+      ]
+    },
+    "Summon Ninken": {
+      "name": "Summon Ninken",
+      "description": "Summons ninja hounds to assist in battle",
+      "chakraCost": 11,
+      "effects": [
+        {
+          "type": "status",
+          "target": "target",
+          "status": "stun",
+          "duration": 2,
+          "chance": 1.0
+        }
+      ]
+    },
+    "Analysis": {
+      "name": "Analysis",
+      "description": "User concentrates, forming a plan",
+      "chakraCost": 0,
+      "effects": [
+        {
+          "type": "chakra_gain", 
+          "amount": 5          
+        }
+      ]
+    },
+    "Fireball": {
+      "name": "Fireball Jutsu",
+      "description": "Launches a massive fireball at the enemy",
+      "chakraCost": 7,
+      "effects": [
+        {
+          "type": "damage",
+          "formula": "3 * user.power + user.chakra * 2"
+        }
+      ]
+    },
+    "Smoke Bomb": {
+      "name": "Smoke Bomb",
+      "description": "Throws a Smoke Bomb to obscure vision",
+      "chakracost": 3,
+      "effects":[{
         "type": "buff",
         "target": "user",
         "stats": {
-          "power": 5
+          "dodge": 50
         },
-        "duration": 3 
-      }
-    ]
-  },
-  "asura": {
-    "name": "Asura's Blade of Execution",
-    "description": "Unleashes god-like power",
-    "chakraCost": 10,
-    "effects": [
-      {
-        "type": "damage",
-        "formula": "50 * (1 + (user.power / 20))"
-      },
-      {
-        "type": "buff",
-        "target": "user",
-        "stats": {
-          "power": "user.power * 2",
-          "defense": "user.defense * 2",
-          "dodge": 100,
-          "accuracy": 100,
-          "health": "user.health * 0.5"
-        },
-        "duration": 3
-      },
-      {
-        "type": "debuff",
-        "target": "target",
-        "stats": {
-          "power": "-target.power * 0.5",
-          "defense": "-target.defense * 0.5"
-        },
-        "duration": 3
-      },
-      {
-        "type": "status",
-        "target": "target",
-        "status": "curseMark",
-        "duration": 3
-      },
-      {
-        "type": "instantKill",
-        "chance": 0.3
-      }
-    ]
-  },
-  "Mystic Palm": {
-    "name": "Mystic Palm",
-    "description": "Advanced medical ninjutsu that accelerates cellular regeneration",
-    "chakraCost": 8,
-    "effects": [
-      {
-        "type": "heal",
-        "formula": "user.health * 0.4 + 100"
-      },
-      {
-        "type": "buff",
-        "target": "user",
-        "stats": {
-          "defense": "user.defense * 1.2"
-        },
-        "duration": 3
-      }
-    ]
-  },
-  "Summon Ninken": {
-    "name": "Summon Ninken",
-    "description": "Kuchiyose: Ninken no Jutsu! Summons ninja hounds to assist in battle",
-    "chakraCost": 10,
-    "effects": [
-      {
-        "type": "damage",
-        "formula": "user.power * 2"
-      },
-      {
-        "type": "debuff",
-        "target": "target",
-        "stats": {
-          "dodge": "target.dodge * 0.7"
-        },
-        "duration": 3
-      },
-      {
-        "type": "status",
-        "target": "target",
-        "status": "stun",
-        "duration": 1
-      }
-    ]
+        "duration": 2
+
+      }]
+    }
   }
-}

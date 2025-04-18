@@ -151,20 +151,20 @@
     "money": 15000,
     "ramen": 1
   },
-  "835408109899219004": {
+  "961918563382362122": {
     "level": 1,
     "exp": 100,
     "wins": 1,
-    "losses": 1,
+    "losses": 0,
     "rankedPoints": 0,
     "clan": "None",
     "bloodline": "Unknown",
     "mentor": "None",
     "rank": "Academy Student",
-    "health": 964.8,
+    "health": 947.1999999999999,
     "power": 100,
     "defense": 50,
-    "chakra": 10,
+    "chakra": 9,
     "jutsu": {
       "slot_1": "Transformation Jutsu",
       "slot_2": "None",
@@ -175,10 +175,35 @@
     "money": 15000,
     "ramen": 1
   },
-  "961918563382362122": {
+  "835408109899219004": {
     "level": 1,
     "exp": 100,
-    "wins": 2,
+    "wins": 1,
+    "losses": 0,
+    "rankedPoints": 0,
+    "clan": "None",
+    "bloodline": "Unknown",
+    "mentor": "None",
+    "rank": "Academy Student",
+    "health": 1444.8,
+    "power": 100,
+    "defense": 50,
+    "chakra": 10,
+    "jutsu": {
+      "slot_0": "Attack",
+      "slot_1": "Transformation Jutsu",
+      "slot_2": "asura",
+      "slot_3": "Mystic Palm",
+      "slot_4": "Analysis",
+      "slot_5": "Fireball"
+    },
+    "money": 15000,
+    "ramen": 1
+  },
+  "1112750369609633792": {
+    "level": 1,
+    "exp": 100,
+    "wins": 1,
     "losses": 0,
     "rankedPoints": 0,
     "clan": "None",
@@ -186,12 +211,13 @@
     "mentor": "None",
     "rank": "Academy Student",
     "health": 964.8,
-    "power": 1e+22,
+    "power": 100,
     "defense": 50,
     "chakra": 10,
     "jutsu": {
+      "slot_0": "Attack",
       "slot_1": "Transformation Jutsu",
-      "slot_2": "None",
+      "slot_2": "asura",
       "slot_3": "None",
       "slot_4": "None",
       "slot_5": "None"

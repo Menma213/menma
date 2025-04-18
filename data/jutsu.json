@@ -4,7 +4,10 @@
       "Transformation Jutsu",
       "asura",
       "Summon Ninken",
-      "Mystic Palm"
+      "Mystic Palm",
+      "Analysis",
+      "Fireball",
+      "Smoke Bomb"
     ]
   },
   "843680216022122516": {
@@ -25,6 +28,12 @@
   "961918563382362122": {
     "usersjutsu": [
       "Transformation Jutsu"
+    ]
+  },
+  "1112750369609633792": {
+    "usersjutsu": [
+      "Transformation Jutsu",
+      "asura"
     ]
   }
 }

@@ -47,10 +47,18 @@ module.exports = {
                 power: user.power || 10,
                 defense: user.defense || 10,
                 chakra: user.chakra || 10,
-                jutsu: user.jutsu || [],
+                jutsuSlots: user.jutsuSlots || {},
                 money: user.money || 0,
                 ramen: user.ramen || 0
             };
+
+            // Filter out default "Attack" and format jutsu slots
+            const equippedJutsu = Object.values(profile.jutsuSlots)
+                .filter(jutsu => jutsu && jutsu !== 'Attack' && jutsu !== 'None');
+
+            const jutsuDisplay = equippedJutsu.length > 0
+                ? equippedJutsu.join('\n')
+                : 'No jutsu equipped.';
 
             // Avatar image
             const avatarUrl = interaction.user.displayAvatarURL({ dynamic: true, size: 256 });
@@ -74,7 +82,7 @@ module.exports = {
                     `Power: **${profile.power}**\n` +
                     `Defense: **${profile.defense}**\n` +
                     `Chakra: **${profile.chakra}**\n\n` +
-                    `**Jutsu:**\n${profile.jutsu.length > 0 ? profile.jutsu.join('\n') : 'None'}\n\n` +
+                    `**Equipped Jutsu:**\n${jutsuDisplay}\n\n` +
                     `**Inventory**\n` +
                     `Ramen Coupons: **${profile.ramen}**\n\n` +
                     `**Your Money:** **${profile.money} Ryo**`
@@ -92,3 +100,4 @@ module.exports = {
         }
     }
 };
+

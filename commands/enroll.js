@@ -89,6 +89,7 @@ module.exports = {
                     defense: 50,
                     chakra: 10,
                     jutsu: {
+                        slot_0: 'Attack',
                         slot_1: 'Transformation Jutsu',
                         slot_2: 'None',
                         slot_3: 'None',

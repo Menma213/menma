@@ -6,7 +6,7 @@ const path = require('path');
 const usersPath = path.join(__dirname, '../../menma/data/users.json');
 const jutsuDataPath = path.join(__dirname, '../../menma/data/jutsu.json');
 const jutsusPath = path.join(__dirname, '../../menma/data/jutsus.json');
-const allowedTeacherIds = ["835408109899219004", "SECOND_OWNER_ID_HERE"];
+const allowedTeacherIds = ["835408109899219004", "961918563382362122"];
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -28,83 +28,75 @@ module.exports = {
             const jutsus = JSON.parse(fs.readFileSync(jutsusPath));
             
             const filtered = Object.entries(jutsus)
-                .filter(([_, jutsu]) => 
-                    jutsu.name.toLowerCase().includes(focusedValue))
+                .filter(([key, jutsu]) => 
+                    jutsu.name.toLowerCase().includes(focusedValue) || 
+                    key.toLowerCase().includes(focusedValue))
                 .slice(0, 25)
                 .map(([key, jutsu]) => ({
-                    name: jutsu.name,
+                    name: `${jutsu.name} (${key})`,
                     value: key
                 }));
             
             await interaction.respond(filtered);
         } catch (error) {
             console.error('Autocomplete error:', error);
+            await interaction.respond([]);
         }
     },
 
     async execute(interaction) {
-        // Defer the reply first to prevent timeout
-        await interaction.deferReply({ ephemeral: true });
-
         try {
             // Permission check
             if (!allowedTeacherIds.includes(interaction.user.id)) {
-                return interaction.editReply({ content: "❌ Unauthorized." });
+                return interaction.reply("❌ You are not authorized to use this command.");
             }
 
-            // Load all data files
-            const jutsus = JSON.parse(fs.readFileSync(jutsusPath));
-            const users = JSON.parse(fs.readFileSync(usersPath));
-            const jutsuData = JSON.parse(fs.readFileSync(jutsuDataPath));
+            // Load all data files with error handling
+            let jutsus, jutsuData;
+            try {
+                jutsus = JSON.parse(fs.readFileSync(jutsusPath));
+                jutsuData = JSON.parse(fs.readFileSync(jutsuDataPath));
+            } catch (err) {
+                console.error('File read error:', err);
+                return interaction.reply("❌ Failed to load data files.");
+            }
 
             // Get command options
             const student = interaction.options.getUser('student');
             const jutsuKey = interaction.options.getString('jutsu');
 
-            // Validate student
-            if (!users[student.id]) {
-                return interaction.editReply({ content: "❌ Student not enrolled." });
-            }
-
-            // Validate jutsu
+            // Validate jutsu exists in global storage
             if (!jutsus[jutsuKey]) {
-                return interaction.editReply({ content: "❌ Invalid jutsu selected." });
+                return interaction.reply("❌ That jutsu doesn't exist in the global registry.");
             }
 
             const jutsuName = jutsus[jutsuKey].name;
 
-            // Initialize arrays if they don't exist
-            if (!users[student.id].jutsu) users[student.id].jutsu = [];
-            if (!jutsuData[student.id]?.usersjutsu) {
+            // Initialize student's jutsu registry if needed
+            if (!jutsuData[student.id]) {
                 jutsuData[student.id] = { usersjutsu: [] };
             }
 
-            // Check if already known
-            if (users[student.id].jutsu.includes(jutsuName)) {
-                return interaction.editReply({ 
-                    content: `✅ ${student.username} already knows ${jutsuName}.` 
-                });
+            // Check if student already knows the jutsu
+            if (jutsuData[student.id].usersjutsu.includes(jutsuKey)) {
+                return interaction.reply(`ℹ️ ${student.username} already knows ${jutsuName}.`);
             }
 
-            // Update data
-            users[student.id].jutsu.push(jutsuName);
+            // Add jutsu to student's registry
             jutsuData[student.id].usersjutsu.push(jutsuKey);
 
-            // Save changes
-            fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
-            fs.writeFileSync(jutsuDataPath, JSON.stringify(jutsuData, null, 2));
+            // Save changes with error handling
+            try {
+                fs.writeFileSync(jutsuDataPath, JSON.stringify(jutsuData, null, 2));
+            } catch (err) {
+                console.error('File write error:', err);
+                return interaction.reply("❌ Failed to save changes to database.");
+            }
 
-            return interaction.editReply({
-                content: `✅ Successfully taught ${jutsuName} to ${student.username}!`,
-                ephemeral: false
-            });
+            return interaction.reply(`✅ Successfully taught ${jutsuName} to ${student.username}!`);
         } catch (error) {
             console.error('Error in teach command:', error);
-            return interaction.editReply({ 
-                content: "❌ An error occurred while processing this command." 
-            });
+            return interaction.reply("❌ An unexpected error occurred while processing this command.");
         }
     }
 };
-
-//thunderbird likes men :DD
