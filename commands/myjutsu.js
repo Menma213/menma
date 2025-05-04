@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const fs = require('fs');
 const path = require('path');
 
@@ -65,11 +65,6 @@ module.exports = {
         const learnedJutsuKeys = learnedJutsuData[userId]?.usersjutsu || []; // No .map needed!
         // --- --- --- --- --- ---
 
-        const embed = new EmbedBuilder()
-            // ... embed setup ...
-
-        // --- Add Equipped Jutsu Field ---
-        // ... (This part should be okay as it uses equippedJutsuSlots keys) ...
         const slotsDescription = Object.entries(equippedJutsuSlots)
             .sort(([slotA], [slotB]) => parseInt(slotA.split('_')[1]) - parseInt(slotB.split('_')[1]))
             .map(([slot, jutsuKey]) => {
@@ -88,10 +83,7 @@ module.exports = {
                  return `**Slot ${slot}:** ${jutsuDisplay}${costDisplay}`;
             })
             .join('\n');
-        embed.addFields({ name: 'Equipped Jutsu', value: slotsDescription || 'No slots defined!' });
 
-
-        // --- Add Learned Jutsu Field ---
         let learnedDescription = 'No jutsu learned yet!';
         if (learnedJutsuKeys.length > 0) {
             // Now iterates correctly through ["Transformation Jutsu", "asura", ...]
@@ -112,9 +104,67 @@ module.exports = {
          if (learnedDescription.length > 1024) {
              learnedDescription = learnedDescription.substring(0, 1021) + '...';
          }
-        embed.addFields({ name: 'Learned Jutsu Library', value: learnedDescription });
 
+        const pages = {
+            equipped: new EmbedBuilder()
+                .setColor('#0099ff')
+                .setTitle('Equipped Jutsu')
+                .setAuthor({ name: interaction.user.username, iconURL: interaction.user.displayAvatarURL() })
+                .setDescription('Currently equipped jutsu in your slots')
+                .addFields({ name: 'Equipped Jutsu', value: slotsDescription || 'No slots defined!' }),
 
-        await interaction.reply({ embeds: [embed] });
+            learned: new EmbedBuilder()
+                .setColor('#0099ff')
+                .setTitle('Learned Jutsu')
+                .setAuthor({ name: interaction.user.username, iconURL: interaction.user.displayAvatarURL() })
+                .setDescription('All jutsu you have learned')
+                .addFields({ name: 'Learned Jutsu Library', value: learnedDescription })
+        };
+
+        const row = new ActionRowBuilder()
+            .addComponents(
+                new ButtonBuilder()
+                    .setCustomId('equipped')
+                    .setLabel('← ')
+                    .setStyle(ButtonStyle.Secondary),
+                new ButtonBuilder()
+                    .setCustomId('learned')
+                    .setLabel('→ ')
+                    .setStyle(ButtonStyle.Secondary)
+            );
+
+        const response = await interaction.reply({
+            embeds: [pages.equipped],
+            components: [row],
+            fetchReply: true
+        });
+
+        const collector = response.createMessageComponentCollector({
+            filter: i => i.user.id === interaction.user.id,
+            time: 60000
+        });
+
+        collector.on('collect', async i => {
+            await i.update({
+                embeds: [pages[i.customId]],
+                components: [new ActionRowBuilder()
+                    .addComponents(
+                        new ButtonBuilder()
+                            .setCustomId('equipped')
+                            .setLabel('⬅')
+                            .setStyle(ButtonStyle.Secondary),
+                        new ButtonBuilder()
+                            .setCustomId('learned')
+                            .setLabel('➡')
+                            .setStyle(ButtonStyle.Secondary)
+                    )]
+            });
+        });
+
+        collector.on('end', () => {
+            if (response.editable) {
+                response.edit({ components: [] }).catch(console.error);
+            }
+        });
     }
 };

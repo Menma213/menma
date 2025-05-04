@@ -195,8 +195,8 @@ module.exports = {
       leaderboard.clear();
     }, 60000); // 1 minute delay
   },
-<<<<<<< HEAD
+
 };
-=======
-};
->>>>>>> 5112832f248875dd3fd4e5509b5515ce1d7c757a
+
+
+

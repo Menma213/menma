@@ -52,17 +52,16 @@ module.exports = {
 
         // Embed Message
         const embed = new EmbedBuilder()
-            .setTitle("🛠️ **D-Rank Mission Completed!**")
+            .setTitle(" **D-Rank Mission Completed!**")
             .setDescription(`**${username}** just completed a mission! 🎉\n`)
             .addFields(
-                { name: "📜 **Task Completed**", value: `> *${taskMessage}*`, inline: false },
-                { name: "🏅 **EXP Earned**", value: `+ **${expReward.toLocaleString()}** EXP`, inline: true },
-                { name: "💰 **Ryo Earned**", value: `+ **$${moneyReward.toLocaleString()}**`, inline: true },
-                { name: "🔹 **Next Steps**", value: "Use `/train` to level up and get stronger!" }
+                { name: " **Task Completed**", value: `> *${taskMessage}*`, inline: false },
+                { name: " **EXP Earned**", value: `+ **${expReward.toLocaleString()}** EXP`, inline: true },
+                { name: " **Ryo Earned**", value: `+ **$${moneyReward.toLocaleString()}**`, inline: true },
             )
-            .setColor("Green")
+            .setColor("Blue")
             .setThumbnail(userPfp)
-            .setFooter({ text: "KonohaRPG • D-Rank Missions", iconURL: "https://i.pinimg.com/736x/10/92/b0/1092b0aea71f620c1ed7fffe7a8704c1.jpg" })
+            .setFooter({ text: "KonohaRPG • D-Rank Missions", iconURL:"https://static.wikia.nocookie.net/naruto/images/3/34/Konohagakure.png/revision/latest?cb=20160728115517" })
             .setTimestamp();
 
         // Send response

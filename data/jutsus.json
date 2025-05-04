@@ -6,7 +6,8 @@
       "effects": [
         {
           "type": "damage",
-          "formula": "2 * user.power / target.defense"
+          "formula": "2 * user.power / target.defense",
+          "chance": 0.7
         }
       ]
     },
@@ -29,6 +30,7 @@
       "name": "Asura's Blade of Execution",
       "description": "Unleashes god-like power",
       "chakraCost": 0,
+      "image_url": "https://static.wikia.nocookie.net/naruto/images/c/c0/Amenomihashira.png/revision/latest?cb=20160721141416",
       "effects": [
         {
           "type": "damage",
@@ -122,5 +124,105 @@
         "duration": 2
 
       }]
+    },
+    "Shadow Clone Jutsu": {
+        "name": "Shadow Clone Jutsu",
+        "description": "Creates shadow clones to attack the enemy",
+        "chakraCost": 5,
+        "effects": [
+            {
+                "type": "damage",
+                "formula": "2 * user.power * (1 + (user.chakra / 10))"
+            }
+        ]
+    },
+    "Sexy Jutsu": {
+        "name": "Sexy Jutsu",
+        "description": "A distracting technique that may cause the enemy to flinch",
+        "chakraCost": 3,
+        "effects": [
+            {
+                "type": "status",
+                "target": "target",
+                "status": "flinch",
+                "duration": 1,
+                "chance": 1.0
+            }
+        ]
+    },
+    "Kirin": {
+        "name": "Kirin",
+        "description": "Summons a lightning dragon from the heavens",
+        "chakraCost": 7,
+        "effects": [
+            {
+                "type": "damage",
+                "formula": "4 * user.power"
+            },
+            {
+                "type": "buff",
+                "target": "user",
+                "stats": {
+                    "accuracy": 30
+                },
+                "duration": 1
+            }
+        ]
+    },
+    "Lightning Blade": {
+        "name": "Lightning Blade",
+        "description": "A precise lightning attack that deals extra damage to immobilized enemies",
+        "chakraCost": 6,
+        "effects": [
+            {
+                "type": "damage",
+                "formula": "3 * user.power * 100 / target.defense"
+            }
+        ]
+    },
+    "Cherry Blossom Impact": {
+        "name": "Cherry Blossom Impact",
+        "description": "A chakra-enhanced strike that shatters the ground",
+        "chakraCost": 4,
+        "effects": [
+            {
+                "type": "damage",
+                "formula": "3.5 * user.power / target.defense"
+            }
+        ]
+    },
+    "Water Prison": {
+        "name": "Water Prison",
+        "description": "Traps the enemy in a sphere of water, slowly drowning them",
+        "chakraCost": 5,
+        "effects": [
+            {
+                "type": "status",
+                "target": "target",
+                "status": "drowning",
+                "duration": 3,
+                "chance": 1.0,
+                "damagePerTurn": "target.health * 0.1"
+            }
+        ]
+    },
+    "Needle Assault": {
+        "name": "Needle Assault",
+        "description": "Launches a barrage of senbon needles that cause bleeding",
+        "chakraCost": 4,
+        "effects": [
+            {
+                "type": "damage",
+                "formula": "2 * user.power / target.defense"
+            },
+            {
+                "type": "status",
+                "target": "target",
+                "status": "bleed",
+                "duration": 2,
+                "chance": 1.0,
+                "damagePerTurn": "target.health * 0.1"
+            }
+        ]
     }
   }

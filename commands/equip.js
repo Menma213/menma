@@ -4,7 +4,6 @@ const path = require('path');
 
 const usersPath = path.join(__dirname, '../../menma/data/users.json');
 const jutsuPath = path.join(__dirname, '../../menma/data/jutsu.json');
-const jutsusPath = path.join(__dirname, '../../menma/data/jutsus.json');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -43,55 +42,35 @@ module.exports = {
 
         const users = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
         const jutsuData = JSON.parse(fs.readFileSync(jutsuPath, 'utf8'));
-        const allJutsus = JSON.parse(fs.readFileSync(jutsusPath, 'utf8'));
 
         if (!users[userId]) {
             return interaction.reply({ content: "You need to enroll first!", ephemeral: true });
         }
 
-        // Check if user has the jutsu
-        const userHasJutsu = jutsuData[userId]?.usersjutsu?.includes(jutsuName);
+        // Check if user has the jutsu in their inventory (case-insensitive)
+        const userJutsu = jutsuData[userId]?.usersjutsu || [];
+        const userHasJutsu = userJutsu.some(jutsu => jutsu.toLowerCase() === jutsuName.toLowerCase());
         if (!userHasJutsu) {
-            return interaction.reply({ content: `You don't know ${jutsuName}!`, ephemeral: true });
+            return interaction.reply({ content: `You don't own the jutsu "${jutsuName}"!`, ephemeral: true });
         }
 
-        // Initialize slots object if needed
-        if (!users[userId].jutsuSlots || typeof users[userId].jutsuSlots !== 'object') {
-            users[userId].jutsuSlots = {
-                1: 'None',
-                2: 'None',
-                3: 'None',
-                4: 'None',
-                5: 'None'
-            };
+        // Ensure the "jutsu" object exists in users.json
+        if (!users[userId].jutsu || typeof users[userId].jutsu !== 'object') {
+            return interaction.reply({ content: "Your jutsu deck is not initialized!", ephemeral: true });
         }
 
-        // Check if already equipped in another slot
-        const equippedSlot = Object.keys(users[userId].jutsuSlots).find(
-            slot => users[userId].jutsuSlots[slot] === jutsuName
-        );
-        if (equippedSlot && parseInt(equippedSlot) !== slotNumber) {
-            return interaction.reply({
-                content: `${jutsuName} is already equipped in slot ${equippedSlot}!`,
-                ephemeral: true
-            });
+        // Prevent editing slot 0 (default attack slot)
+        if (slotNumber === 0) {
+            return interaction.reply({ content: "Slot 0 is reserved for the default attack and cannot be changed!", ephemeral: true });
         }
 
-        // Check if the slot is already occupied by a different jutsu
-        const currentJutsuInSlot = users[userId].jutsuSlots[slotNumber];
-        if (currentJutsuInSlot !== 'None' && currentJutsuInSlot !== jutsuName) {
-            return interaction.reply({
-                content: `Slot ${slotNumber} already has ${currentJutsuInSlot} equipped!`,
-                ephemeral: true
-            });
-        }
-
-        // Equip the jutsu
-        users[userId].jutsuSlots[slotNumber] = jutsuName;
+        // Equip the jutsu into the specified slot
+        const slotKey = `slot_${slotNumber}`;
+        users[userId].jutsu[slotKey] = jutsuName;
         fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
 
         return interaction.reply({
-            content: `Successfully equipped ${jutsuName} in slot ${slotNumber}!`,
+            content: `Successfully equipped "${jutsuName}" in slot ${slotNumber}!`,
             ephemeral: false
         });
     }

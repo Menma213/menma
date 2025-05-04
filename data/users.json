@@ -153,8 +153,8 @@
   },
   "961918563382362122": {
     "level": 1,
-    "exp": 100,
-    "wins": 1,
+    "exp": 650,
+    "wins": 2,
     "losses": 0,
     "rankedPoints": 0,
     "clan": "None",
@@ -166,18 +166,49 @@
     "defense": 50,
     "chakra": 9,
     "jutsu": {
-      "slot_1": "Transformation Jutsu",
+      "slot_1": "Hidden mist",
       "slot_2": "None",
       "slot_3": "None",
       "slot_4": "None",
       "slot_5": "None"
     },
-    "money": 15000,
+    "money": 16030,
     "ramen": 1
   },
   "835408109899219004": {
+    "level": 38,
+    "exp": 16800,
+    "wins": 29,
+    "losses": 0,
+    "rankedPoints": 0,
+    "clan": "None",
+    "bloodline": "Unknown",
+    "mentor": "None",
+    "rank": "Genin",
+    "health": 5039.8,
+    "power": 193,
+    "defense": 149,
+    "chakra": 15,
+    "jutsu": {
+      "slot_0": "Attack",
+      "slot_1": "Sexy Jutsu",
+      "slot_2": "asura",
+      "slot_3": "Mystic Palm",
+      "slot_5": "Shadow Clone Jutsu",
+      "slot_4": "Needle Assault"
+    },
+    "money": 88676792015,
+    "ramen": 2,
+    "jutsuInventory": [
+      "Needle Assault"
+    ],
+    "lastClaim": "2025-04-24T08:51:48.586Z",
+    "nextClaim": "2025-04-25T08:51:48.586Z",
+    "lastArank": 1746371466058
+  },
+  "741142009670271010": {
     "level": 1,
-    "exp": 100,
+    "exp": 350,
     "wins": 1,
     "losses": 0,
     "rankedPoints": 0,
@@ -185,25 +216,25 @@
     "bloodline": "Unknown",
     "mentor": "None",
     "rank": "Academy Student",
-    "health": 1444.8,
+    "health": 964.8,
     "power": 100,
     "defense": 50,
     "chakra": 10,
     "jutsu": {
       "slot_0": "Attack",
       "slot_1": "Transformation Jutsu",
-      "slot_2": "asura",
-      "slot_3": "Mystic Palm",
-      "slot_4": "Analysis",
-      "slot_5": "Fireball"
+      "slot_2": "None",
+      "slot_3": "None",
+      "slot_4": "None",
+      "slot_5": "None"
     },
-    "money": 15000,
+    "money": 15430,
     "ramen": 1
   },
-  "1112750369609633792": {
+  "920673413268377670": {
     "level": 1,
-    "exp": 100,
-    "wins": 1,
+    "exp": 430,
+    "wins": 2,
     "losses": 0,
     "rankedPoints": 0,
     "clan": "None",
@@ -222,7 +253,32 @@
       "slot_4": "None",
       "slot_5": "None"
     },
-    "money": 15000,
+    "money": 15520,
+    "ramen": 1
+  },
+  "1112750369609633792": {
+    "level": 16,
+    "exp": 15545,
+    "wins": 14,
+    "losses": 0,
+    "rankedPoints": 0,
+    "clan": "None",
+    "bloodline": "Unknown",
+    "mentor": "None",
+    "rank": "Genin",
+    "health": 964.8,
+    "power": 220,
+    "defense": 140,
+    "chakra": 66,
+    "jutsu": {
+      "slot_0": "Attack",
+      "slot_1": "Transformation Jutsu",
+      "slot_2": "asura",
+      "slot_3": "None",
+      "slot_4": "None",
+      "slot_5": "None"
+    },
+    "money": 14055,
     "ramen": 1
   }
 }

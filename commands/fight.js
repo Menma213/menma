@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const math = require('mathjs');
 
+
 // Path configurations
 const usersPath = path.resolve(__dirname, '../../menma/data/users.json');
 const jutsusPath = path.resolve(__dirname, '/workspaces/menma/data/jutsus.json');
