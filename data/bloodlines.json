@@ -1,0 +1,72 @@
+{
+    "Uzumaki": {
+        "name": "Uzumaki",
+        "description": "Uzumaki Will",
+        "passive": "User gains +15 chakra each turn when their health is critical.",
+        "costToRemove": 250000,
+        "requiredLevel": 5
+    },
+    "Uchiha": {
+        "name": "Uchiha",
+        "description": "Enhanced Reflexes",
+        "passive": "15% chance to dodge incoming attacks",
+        "costToRemove": 250000,
+        "requiredLevel": 5
+    },
+    "Hyuga": {
+        "name": "Hyuga",
+        "description": "Byakugan (Gentle Fist)",
+        "passive": "Basic attacks drain the opponent's chakra",
+        "costToRemove": 250000,
+        "requiredLevel": 5
+    },
+    "Nara": {
+        "name": "Nara",
+        "description": "Increased Intelligence",
+        "passive": "Reverses the effects of sleep, and tags back to the opponent. If stunned, also stuns the opponent.",
+        "costToRemove": 250000,
+        "requiredLevel": 5
+    },
+    "Aburame": {
+        "name": "Aburame",
+        "description": "Bug Crawl",
+        "passive": "30% chance for your attacks to make the enemy flinch.",
+        "costToRemove": 250000,
+        "requiredLevel": 5
+    },
+    "Akimichi": {
+        "name": "Akimichi",
+        "description": "A Lil Chubby",
+        "passive": "User heals 5% of HP when resting. Your Defense is doubled in battle.",
+        "costToRemove": 250000,
+        "requiredLevel": 5
+    },
+    "Inuzuka": {
+        "name": "Inuzuka",
+        "description": "Dynamic Marking",
+        "passive": "User has increased accuracy when attacking.",
+        "costToRemove": 250000,
+        "requiredLevel": 5
+    },
+    "Yamanaka": {
+        "name": "Yamanaka",
+        "description": "Mind Reader",
+        "passive": "User will dodge the enemy jutsu if they also have it equipped.",
+        "costToRemove": 250000,
+        "requiredLevel": 5
+    },
+    "Yuki": {
+        "name": "Yuki",
+        "description": "Critical Hit",
+        "passive": "User has a 30% chance to deal a critical hit to the enemy. Critical hits deal twice as much damage.",
+        "costToRemove": 250000,
+        "requiredLevel": 5
+    },
+    "Senju": {
+        "name": "Senju",
+        "description": "Regeneration",
+        "passive": "User regens 5% health each turn throughout the battle",
+        "costToRemove": 250000,
+        "requiredLevel": 5
+    }
+}

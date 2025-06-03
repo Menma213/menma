@@ -16,6 +16,24 @@ const EMOJIS = {
     status: "<:status:1368243589498540092>"
 };
 
+// Combo system definition (future-proof for >2 jutsus)
+const COMBOS = {
+    "Basic Combo": {
+        name: "Basic Combo",
+        requiredJutsus: ["Attack", "Transformation Jutsu"],
+        resultMove: {
+            name: "Empowered Attack",
+            damage: 10000,
+            damageType: "true"
+        }
+    }
+    // Add more combos here in the future
+};
+
+// Combo emoji constants
+const COMBO_EMOJI_FILLED = "⭕";
+const COMBO_EMOJI_EMPTY = "⚪";
+
 // Path configurations
 const usersPath = path.resolve(__dirname, '../../menma/data/users.json');
 const jutsusPath = path.resolve(__dirname, '/workspaces/menma/data/jutsus.json');
@@ -146,6 +164,48 @@ const effectHandlers = {
     status: (chance) => Math.random() < (chance || 1)
 };
 
+// Add these utility functions near the top (after requires)
+function getCooldownString(ms) {
+    const totalSeconds = Math.floor(ms / 1000);
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+    return `${hours}h ${minutes}m ${seconds}s`;
+}
+
+function getMaterialDrop(role) {
+    if (role === "Hokage") return Math.floor(Math.random() * 3) + 12; // 12-14
+    if (role === "Right Hand Man") return Math.floor(Math.random() * 3) + 10; // 10-12
+    if (role === "Guard") return Math.floor(Math.random() * 3) + 8; // 8-10
+    if (role === "Spy") return Math.floor(Math.random() * 3) + 2; // 2-4
+    return 0;
+}
+
+function getRandomMaterial() {
+    const mats = [
+        { name: "Iron", emoji: "🪓", key: "iron" },
+        { name: "Wood", emoji: "🌲", key: "wood" },
+        { name: "Rope", emoji: "🪢", key: "rope" }
+    ];
+    return mats[Math.floor(Math.random() * mats.length)];
+}
+
+function getAkatsukiMaterialDrop(role) {
+    if (role === "Akatsuki Leader") return Math.floor(Math.random() * 3) + 12;
+    if (role === "Co-Leader") return Math.floor(Math.random() * 3) + 10;
+    if (role === "Bruiser") return Math.floor(Math.random() * 3) + 8;
+    if (role === "Scientist") return Math.floor(Math.random() * 3) + 2;
+    return 0;
+}
+function getRandomAkatsukiMaterial() {
+    const mats = [
+        { name: "Metal", emoji: "🪙", key: "metal" },
+        { name: "Gunpowder", emoji: "💥", key: "gunpowder" },
+        { name: "Copper", emoji: "🔌", key: "copper" }
+    ];
+    return mats[Math.floor(Math.random() * mats.length)];
+}
+
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('arank')
@@ -195,6 +255,15 @@ module.exports = {
                 accuracy: 100,
                 dodge: 0
             };
+
+            // Combo tracking state
+            let comboState = null;
+            if (player.Combo && COMBOS[player.Combo]) {
+                comboState = {
+                    combo: COMBOS[player.Combo],
+                    usedJutsus: new Set()
+                };
+            }
 
             // NPC data with unique stats and images
             const npcData = [
@@ -840,6 +909,20 @@ module.exports = {
                     });
                 });
 
+                // Combo progress UI
+                let comboProgressText = "";
+                if (comboState && comboState.combo) {
+                    // Only show if at least one combo jutsu was used this round
+                    const usedThisRound = comboState.combo.requiredJutsus.some(jutsu =>
+                        comboState.usedJutsus.has(jutsu)
+                    );
+                    if (usedThisRound) {
+                        const filled = comboState.combo.requiredJutsus.filter(jutsu => comboState.usedJutsus.has(jutsu)).length;
+                        const total = comboState.combo.requiredJutsus.length;
+                        comboProgressText = `\nCombo charging up... ${COMBO_EMOJI_FILLED.repeat(filled)}${COMBO_EMOJI_EMPTY.repeat(total - filled)}`;
+                    }
+                }
+
                 const embed = new EmbedBuilder()
                     .setTitle(`Round: ${roundNum}!`)
                     .setColor('#006400')
@@ -849,6 +932,7 @@ module.exports = {
                         `\n\n${npcEffectEmojis}${npcDesc}` +
                         `${npcAction.damage ? ` for ${Math.round(npcAction.damage)}!` : npcAction.heal ? ` for ${Math.round(npcAction.heal)} HP!` : '!'}`
                         + (statusEffects.length ? `\n\n${statusEffects.join('\n')}` : '')
+                        + comboProgressText // <-- Combo UI
                     )
                     .addFields({
                         name: 'Battle Status',
@@ -929,7 +1013,17 @@ module.exports = {
 
                         collector.on('collect', async i => {
                             await i.deferUpdate();
-                            resolve(await processPlayerMove(i.customId, player, currentNpc, effectivePlayer, effectiveNpc));
+                            const result = await processPlayerMove(i.customId, player, currentNpc, effectivePlayer, effectiveNpc);
+
+                            // Combo tracking: if combo equipped and jutsu used is part of combo, track it
+                            if (
+                                comboState &&
+                                result.jutsuUsed &&
+                                comboState.combo.requiredJutsus.includes(result.jutsuUsed)
+                            ) {
+                                comboState.usedJutsus.add(result.jutsuUsed);
+                            }
+                            resolve(result);
                             collector.stop();
                         });
 
@@ -967,6 +1061,19 @@ module.exports = {
                         playerHealth = Math.min(playerHealth + playerAction.heal, player.health);
                     }
 
+                    // Combo completion check and bonus damage
+                    let comboCompletedThisRound = false;
+                    if (
+                        comboState &&
+                        comboState.combo.requiredJutsus.every(jutsu => comboState.usedJutsus.has(jutsu))
+                    ) {
+                        // Apply bonus damage
+                        currentNpc.currentHealth -= comboState.combo.resultMove.damage;
+                        comboCompletedThisRound = true;
+                        // Reset combo progress for next combo
+                        comboState.usedJutsus.clear();
+                    }
+
                     // NPC turn (if still alive)
                     let npcAction = { damage: 0, heal: 0, description: `${currentNpc.name} is defeated`, specialEffects: [], hit: false };
                     if (currentNpc.currentHealth > 0) {
@@ -977,16 +1084,21 @@ module.exports = {
                         }
                     }
 
-                    // Ensure health doesn't go below 0
-                    playerHealth = Math.max(0, playerHealth);
-                    currentNpc.currentHealth = Math.max(0, currentNpc.currentHealth);
-
+                  
                     // Generate fresh battle image
                     const newBattleImage = new AttachmentBuilder(await generateBattleImage());
 
                     // Show results with fresh image
+                    // Add combo completion summary if needed
+                    let summaryEmbed = createBattleSummary(playerAction, npcAction);
+                    if (comboCompletedThisRound) {
+                        summaryEmbed.setDescription(
+                            summaryEmbed.data.description +
+                            `\n${player.name} deals ${comboState.combo.resultMove.damage} additional true damage by landing a ${comboState.combo.resultMove.name}!`
+                        );
+                    }
                     await interaction.followUp({
-                        embeds: [createBattleSummary(playerAction, npcAction)],
+                        embeds: [summaryEmbed],
                         files: [newBattleImage]
                     });
 
@@ -1112,6 +1224,65 @@ module.exports = {
                     // Add delay between rounds if battle continues
                     if (battleActive) await new Promise(resolve => setTimeout(resolve, 3000));
                 }
+
+                // --- MATERIAL DROP SYSTEM ---
+                let role = player.role || "";
+                if (interaction.member.roles.cache.has('1349278752944947240')) role = "Hokage";
+                const amount = getMaterialDrop(role);
+                const mat = getRandomMaterial();
+
+                // Only add to village and show if amount > 0
+                let villageDropMsg = "";
+                if (amount > 0) {
+                    const villagePath = path.resolve(__dirname, '../../menma/data/village.json');
+                    let village = { iron: 0, wood: 0, rope: 0, defense: 0 };
+                    if (fs.existsSync(villagePath)) {
+                        village = JSON.parse(fs.readFileSync(villagePath, 'utf8'));
+                    }
+                    village[mat.key] = (village[mat.key] || 0) + amount;
+                    fs.writeFileSync(villagePath, JSON.stringify(village, null, 2));
+                    villageDropMsg = `You found ${amount} ${mat.name} ${mat.emoji} during the mission\n`;
+                }
+
+                // Akatsuki drop
+                let akatsukiDropMsg = "";
+                if (player.occupation === "Akatsuki") {
+                    let akatsukiAmount = 0;
+                    let akatsukiRole = player.role || "";
+                    if (akatsukiRole === "Scientist") akatsukiAmount = Math.floor(Math.random() * 3) + 2;
+                    else if (akatsukiRole === "Bruiser") akatsukiAmount = Math.floor(Math.random() * 3) + 8;
+                    else if (akatsukiRole === "Co-Leader") akatsukiAmount = Math.floor(Math.random() * 3) + 10;
+                    if (akatsukiAmount > 0) {
+                        const akatsukiMat = getRandomAkatsukiMaterial();
+                        const akatsukiPath = path.resolve(__dirname, '../../menma/data/akatsuki.json');
+                        let akatsuki = { metal: 0, gunpowder: 0, copper: 0, bombs: {} };
+                        if (fs.existsSync(akatsukiPath)) {
+                            akatsuki = JSON.parse(fs.readFileSync(akatsukiPath, 'utf8'));
+                        }
+                        akatsuki[akatsukiMat.key] = (akatsuki[akatsukiMat.key] || 0) + akatsukiAmount;
+                        fs.writeFileSync(akatsukiPath, JSON.stringify(akatsuki, null, 2));
+                        akatsukiDropMsg = `You found ${akatsukiAmount} ${akatsukiMat.name} ${akatsukiMat.emoji} during the mission\n`;
+                    }
+                }
+
+                // Reward embed
+                const expReward = 500 + Math.floor(player.level * 40);
+                const moneyReward = 800 + Math.floor(player.level * 30);
+                const rewardEmbed = new EmbedBuilder()
+                    .setTitle(`Battle End! ${player.name} has won!`)
+                    .setDescription(
+                        `<@${userId}> has earned ${expReward} exp!\n<@${userId}> has earned $${moneyReward}!`
+                    )
+                    .setColor('#006400');
+
+                // Send response (only show drop lines if > 0)
+                let dropMsg = "```";
+                if (villageDropMsg) dropMsg += `\n${villageDropMsg}`;
+                if (akatsukiDropMsg) dropMsg += `${akatsukiDropMsg}`;
+                dropMsg += "```";
+                await interaction.followUp({ embeds: [rewardEmbed], content: dropMsg });
+
+                await updateRequirements(interaction.user.id, 'a_mission');
             } catch (error) {
                 console.error("Mission error:", error);
                 await interaction.followUp("An error occurred during the mission!");

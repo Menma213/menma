@@ -1,0 +1,30 @@
+{
+  "phase": "ended",
+  "startTimestamp": 1746891549061,
+  "electionChannel": "1351960055490023498",
+  "candidates": [
+    {
+      "id": "835408109899219004",
+      "name": "Thunderbird"
+    },
+    {
+      "id": "1112750369609633792",
+      "name": "Zephyr the dog"
+    },
+    {
+      "id": "961918563382362122",
+      "name": "Asukky"
+    }
+  ],
+  "votes": {
+    "835408109899219004": "835408109899219004"
+  },
+  "voters": [
+    {
+      "id": "835408109899219004",
+      "username": "thunderbird.",
+      "candidate": "835408109899219004"
+    }
+  ],
+  "votingStart": 1746891609062
+}

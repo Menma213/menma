@@ -1,7 +1,7 @@
 {
     "Attack": {
       "name": "Attack",
-      "description": "Basic physical attack",
+      "description": "attacks",
       "chakraCost": 0,
       "effects": [
         {
@@ -13,7 +13,7 @@
     },
     "Transformation Jutsu": {
       "name": "Transformation Jutsu",
-      "description": "Temporarily increases your power",
+      "description": "uses transormation jutsu",
       "chakraCost": 5,
       "effects": [
         {
@@ -34,7 +34,7 @@
       "effects": [
         {
           "type": "damage",
-          "formula": "50 * (1 + (user.power / 10))"
+          "formula": "500 * (1 + (user.power))"
         },
         {
           "type": "buff",
@@ -65,7 +65,7 @@
     },
     "Mystic Palm": {
       "name": "Mystic Palm",
-      "description": "Advanced medical ninjutsu that heals wounds",
+      "description": "heals",
       "chakraCost": 4,
       "effects": [
         {
@@ -77,7 +77,7 @@
     },
     "Summon Ninken": {
       "name": "Summon Ninken",
-      "description": "Summons ninja hounds to assist in battle",
+      "description": "Summons ninja dogs to stun the opponent",
       "chakraCost": 11,
       "effects": [
         {
@@ -113,7 +113,7 @@
     },
     "Smoke Bomb": {
       "name": "Smoke Bomb",
-      "description": "Throws a Smoke Bomb to obscure vision",
+      "description": "Throws a Smoke Bomb",
       "chakracost": 3,
       "effects":[{
         "type": "buff",
@@ -127,7 +127,7 @@
     },
     "Shadow Clone Jutsu": {
         "name": "Shadow Clone Jutsu",
-        "description": "Creates shadow clones to attack the enemy",
+        "description": "Attacks for 119\n Their clone attacks",
         "chakraCost": 5,
         "effects": [
             {
@@ -138,7 +138,7 @@
     },
     "Sexy Jutsu": {
         "name": "Sexy Jutsu",
-        "description": "A distracting technique that may cause the enemy to flinch",
+        "description": "Transforms into a sexy version of the user",
         "chakraCost": 3,
         "effects": [
             {
@@ -152,26 +152,18 @@
     },
     "Kirin": {
         "name": "Kirin",
-        "description": "Summons a lightning dragon from the heavens",
+        "description": "summons a lightning bolt from the sky",
         "chakraCost": 7,
         "effects": [
             {
                 "type": "damage",
                 "formula": "4 * user.power"
-            },
-            {
-                "type": "buff",
-                "target": "user",
-                "stats": {
-                    "accuracy": 30
-                },
-                "duration": 1
             }
         ]
     },
     "Lightning Blade": {
         "name": "Lightning Blade",
-        "description": "A precise lightning attack that deals extra damage to immobilized enemies",
+        "description": "Gathers chakra into a thunderous blade and strikes",
         "chakraCost": 6,
         "effects": [
             {
@@ -182,7 +174,7 @@
     },
     "Cherry Blossom Impact": {
         "name": "Cherry Blossom Impact",
-        "description": "A chakra-enhanced strike that shatters the ground",
+        "description": "attacks with cherry blossoms",
         "chakraCost": 4,
         "effects": [
             {
@@ -208,7 +200,7 @@
     },
     "Needle Assault": {
         "name": "Needle Assault",
-        "description": "Launches a barrage of senbon needles that cause bleeding",
+        "description": "Launches a barrage of senbon needles that causes bleeding",
         "chakraCost": 4,
         "effects": [
             {
@@ -224,5 +216,138 @@
                 "damagePerTurn": "target.health * 0.1"
             }
         ]
-    }
+    },
+    "Silent Assassination": {
+        "name": "Silent Assassination",
+        "description": "uses Silent Assassination technique",
+        "chakraCost": 4,
+        "effects": [
+            {
+                "type": "damage",
+                "formula": "user.power * 2.5 + (user.accuracy * 0.5)"
+            },
+            {
+                "type": "debuff",
+                "stats": {
+                    "defense": -10
+                },
+                "duration": 2
+            }
+        ]
+    },
+    "Serpents Wrath": {
+        "name": "Serpents Wrath",
+        "description": "unleashes a devastating Serpent Wrath",
+        "chakraCost": 5,
+        "effects": [
+            {
+                "type": "damage",
+                "formula": "user.power * 3 + (target.defense * -0.3)"
+            },
+            {
+                "type": "status",
+                "status": "poison",
+                "duration": 3,
+                "chance": 0.4
+            }
+        ]
+    },
+    "Creation Rebirth": {
+        "name": "Creation Rebirth",
+        "description": "A powerful healing technique that continuously restores health",
+        "chakraCost": 5,
+        "effects": [
+          {
+            "type": "heal",
+            "formula": "user.health * 0.27"
+          }
+        ],
+        "image_url": "https://example.com/creation-rebirth.gif"
+      },
+    
+      "Reaper Death Seal": {
+        "name": "Reaper Death Seal",
+        "description": "A forbidden jutsu that summons the Death God",
+        "chakraCost": 0,
+        "effects": [
+          {
+            "type": "status",
+            "status": "reaper_seal",
+            "duration": 999
+          }
+        ],
+        "image_url": "https://example.com/reaper-death-seal.gif"
+      },
+    
+      "Water Dragon Jutsu": {
+        "name": "Water Dragon Jutsu",
+        "description": "Creates a powerful water dragon that strikes the enemy",
+        "chakraCost": 4,
+        "effects": [
+          {
+            "type": "damage",
+            "formula": "user.power * 1.5"
+          }
+        ],
+        "image_url": "https://example.com/water-dragon.gif"
+      },
+    
+      "Rasengan": {
+        "name": "Rasengan",
+        "description": "Gathers chakra in his palm and attacks the enemy",
+        "chakraCost": 3,
+        "effects": [
+          {
+            "type": "damage",
+            "formula": "user.power * 1.8"
+          }
+        ],
+        "image_url": "https://example.com/rasengan.gif"
+      },
+    
+      "Flying Raijin": {
+        "name": "Flying Raijin",
+        "description": "dodges all incoming attacks and strikes the enemy",
+        "chakraCost": 5,
+        "effects": [
+          {
+            "type": "damage",
+            "formula": "user.power * 2"
+          },
+          {
+            "type": "buff",
+            "stats": {
+              "dodge": 100
+            },
+            "duration": 1
+          }
+        ],
+        "image_url": "https://example.com/flying-raijin.gif"
+      },
+    
+      "Great Forest Crumbling": {
+        "name": "Great Forest Crumbling",
+        "description": "summons a barrage of wooden branches that crushes the enemy",
+        "chakraCost": 6,
+        "effects": [
+          {
+            "type": "damage",
+            "formula": "user.power * 2.2"
+          }
+        ],
+        "image_url": "https://example.com/great-forest.gif"
+      },
+    
+      "Rasenshuriken": {
+        "name": "Rasenshuriken",
+        "description": "Gathers a massive amount of Spiralling wind chakra into the form of a shuriken then strikes the enemy",
+        "chakraCost": 7,
+        "effects": [
+          {
+            "type": "damage",
+            "formula": "user.power * 2.5"
+          }
+        ],
+        "image_url": "https://example.com/rasenshuriken.gif"
+      }
   }

@@ -2,6 +2,7 @@ const { SlashCommandBuilder, AttachmentBuilder } = require('discord.js');
 const fs = require('fs');
 const path = require('path');
 const puppeteer = require('puppeteer');
+const { updateRequirements } = require('./scroll');
 
 const usersPath = path.resolve(__dirname, '../../menma/data/users.json');
 
@@ -101,6 +102,9 @@ module.exports = {
             fs.unlink(imagePath, (err) => {
                 if (err) console.error("Error deleting training image:", err);
             });
+
+            // After successful training
+            await updateRequirements(userId, 'train');
         } catch (error) {
             console.error("Error generating training card:", error);
             await interaction.editReply({

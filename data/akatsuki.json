@@ -1,0 +1,34 @@
+{
+  "metal": 134,
+  "gunpowder": 104,
+  "copper": 100,
+  "bombs": {
+    "1": {
+      "damage": 100,
+      "max": 100
+    }
+  },
+  "weaponLevel": 10,
+  "weaponDamage": 10000,
+  "target": {
+    "username": "thunderbird.",
+    "id": "835408109899219004",
+    "avatar": "https://cdn.discordapp.com/avatars/835408109899219004/d6ed680499c03f67307897f8fe8448d3.webp?size=256"
+  },
+  "warActive": true,
+  "warStartTime": 1747074474338,
+  "battlePhase": "infiltration",
+  "battleScore": {
+    "akatsuki": 0,
+    "village": 0
+  },
+  "battleFighters": {
+    "akatsuki": [
+      "",
+      "1132693590066331828"
+    ],
+    "village": [
+      ""
+    ]
+  }
+}

@@ -2,34 +2,49 @@ const { SlashCommandBuilder, AttachmentBuilder } = require('discord.js');
 const fs = require('fs');
 const path = require('path');
 const puppeteer = require('puppeteer');
+const { updateRequirements } = require('./scroll');
 
 const usersPath = path.resolve(__dirname, '../../menma/data/users.json');
 const usersJutsuPath = path.resolve(__dirname, '../../menma/data/usersjutsu.json');
 const jutsusPath = path.resolve(__dirname, '../../menma/data/jutsus.json');
+const bloodlinesPath = path.resolve(__dirname, '../../menma/data/bloodlines.json');
 
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('profile')
-        .setDescription('View your ninja profile card'),
+        .setDescription('View your ninja profile card')
+        .addUserOption(option =>
+            option.setName('user')
+                .setDescription('View another player\'s profile')
+                .setRequired(false)
+        ),
 
     async execute(interaction) {
         try {
-            await interaction.deferReply();
-            const userId = interaction.user.id;
+            // Remove await interaction.deferReply(); and use reply/editReply only ONCE
+            // Get the target user (optional)
+            const targetUser = interaction.options.getUser('user') || interaction.user;
+            const userId = targetUser.id;
 
             // Load data
             if (!fs.existsSync(usersPath)) {
-                return interaction.editReply({ content: "Database not found." });
+                return interaction.reply({ content: "Database not found.", ephemeral: true });
             }
 
             const users = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
             if (!users[userId]) {
-                return interaction.editReply({ content: "You need to enroll first!" });
+                return interaction.reply({ content: targetUser.id === interaction.user.id ? "You need to enroll first!" : "This user has not enrolled yet!", ephemeral: true });
             }
 
             const user = users[userId];
             const jutsuList = fs.existsSync(jutsusPath) ? JSON.parse(fs.readFileSync(jutsusPath, 'utf8')) : {};
             const usersJutsu = fs.existsSync(usersJutsuPath) ? JSON.parse(fs.readFileSync(usersJutsuPath, 'utf8')) : {};
+            const bloodlines = fs.existsSync(bloodlinesPath) ? JSON.parse(fs.readFileSync(bloodlinesPath, 'utf8')) : {};
+
+            // Get bloodline info
+            const bloodlineInfo = user.bloodline ? bloodlines[user.bloodline] : null;
+            const bloodlineName = bloodlineInfo?.name || 'None';
+            const bloodlineDescription = bloodlineInfo?.description || 'No bloodline awakened';
 
             // Get equipped jutsu from user.jutsu object
             const equippedJutsu = Object.values(user.jutsu || {})
@@ -39,11 +54,16 @@ module.exports = {
             // Get all learned jutsu
             const learnedJutsu = usersJutsu[userId]?.usersjutsu || [];
 
+            // Update profile check requirement (only for self)
+            if (userId === interaction.user.id) {
+                await updateRequirements(interaction.user.id, 'profile_check');
+            }
+
             // Generate profile card image
             const generateProfileCard = async () => {
                 const browser = await puppeteer.launch({ args: ['--no-sandbox'] });
                 const page = await browser.newPage();
-                await page.setViewport({ width: 600, height: 800 });
+                await page.setViewport({ width: 600, height: 900 }); // Increased height for bloodline section
 
                 // Create images directory if it doesn't exist
                 const imagesDir = path.resolve(__dirname, '../images');
@@ -51,7 +71,7 @@ module.exports = {
                     fs.mkdirSync(imagesDir, { recursive: true });
                 }
 
-                const avatarUrl = interaction.user.displayAvatarURL({ format: 'png', size: 256 });
+                const avatarUrl = targetUser.displayAvatarURL({ format: 'png', size: 256 });
                 const xpPercentage = Math.min(100, (user.exp / (user.level * 1000 + 1000)) * 100);
 
                 const htmlContent = `
@@ -67,7 +87,7 @@ module.exports = {
                             }
                             .card {
                                 width: 600px;
-                                height: 800px;
+                                height: 900px;
                                 background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
                                 border-radius: 15px;
                                 box-shadow: 0 10px 20px rgba(0,0,0,0.5);
@@ -99,6 +119,12 @@ module.exports = {
                                 color: #f8d56b;
                                 margin-bottom: 5px;
                             }
+                            .bloodline {
+                                font-size: 16px;
+                                color: #6eaff8;
+                                margin-bottom: 5px;
+                                font-style: italic;
+                            }
                             .section {
                                 background-color: rgba(0,0,0,0.5);
                                 margin: 15px;
@@ -106,11 +132,25 @@ module.exports = {
                                 border-radius: 10px;
                                 border-left: 3px solid #6e1515;
                             }
+                            .bloodline-section {
+                                background-color: rgba(0,0,0,0.5);
+                                margin: 15px;
+                                padding: 15px;
+                                border-radius: 10px;
+                                border-left: 3px solid #6eaff8;
+                            }
                             .section-title {
                                 font-size: 18px;
                                 color: #f8d56b;
                                 margin-bottom: 10px;
                                 border-bottom: 1px solid #6e1515;
+                                padding-bottom: 5px;
+                            }
+                            .bloodline-title {
+                                font-size: 18px;
+                                color: #6eaff8;
+                                margin-bottom: 10px;
+                                border-bottom: 1px solid #6eaff8;
                                 padding-bottom: 5px;
                             }
                             .stats {
@@ -153,6 +193,12 @@ module.exports = {
                                 font-size: 12px;
                                 border: 1px solid #6e1515;
                             }
+                            .bloodline-desc {
+                                font-size: 14px;
+                                color: #ccc;
+                                margin-top: 5px;
+                                font-style: italic;
+                            }
                             .footer {
                                 position: absolute;
                                 bottom: 0;
@@ -169,8 +215,14 @@ module.exports = {
                         <div class="card">
                             <div class="header">
                                 <img src="${avatarUrl}" class="avatar">
-                                <div class="username">${interaction.user.username}</div>
+                                <div class="username">${targetUser.username}</div>
                                 <div class="rank">${user.rank || 'Academy Student'}</div>
+                                <div class="bloodline">${bloodlineName}</div>
+                            </div>
+                            
+                            <div class="bloodline-section">
+                                <div class="bloodline-title">BLOODLINE ABILITY</div>
+                                <div class="bloodline-desc">${bloodlineDescription}</div>
                             </div>
                             
                             <div class="section">
@@ -250,7 +302,7 @@ module.exports = {
                             </div>
                             
                             <div class="footer">
-                                ${user.clan || 'No Clan'} | ${user.bloodline || 'Unknown Bloodline'} | Mentor: ${user.mentor || 'None'}
+                                ${user.clan || 'No Clan'} | Mentor: ${user.mentor || 'None'}
                             </div>
                         </div>
                     </body>
@@ -265,16 +317,20 @@ module.exports = {
             };
 
             const profileImage = new AttachmentBuilder(await generateProfileCard());
-            await interaction.editReply({ 
-                content: `${interaction.user.username}'s Ninja Card`,
-                files: [profileImage] 
+            await interaction.reply({
+                content: `${targetUser.username}'s Ninja Card`,
+                files: [profileImage]
             });
 
         } catch (error) {
             console.error('Error generating profile card:', error);
-            await interaction.editReply({ 
-                content: "An error occurred while generating your profile card. Please try again later."
-            });
+            // Only reply if not already replied
+            if (!interaction.replied && !interaction.deferred) {
+                await interaction.reply({
+                    content: "An error occurred while generating the profile card. Please try again later.",
+                    ephemeral: true
+                });
+            }
         }
     }
 };

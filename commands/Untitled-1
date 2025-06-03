@@ -1,0 +1,11 @@
+/workspaces/menma
+├── bot.js
+├── .env
+├── commands
+│   ├── leaderboard.js
+│   ├── train.js
+│   ├── enroll.js
+│   ├── profile.js
+│   └── myjutsu.js
+└── utils
+    └── someUtilityFile.js

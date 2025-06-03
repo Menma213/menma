@@ -1,6 +1,7 @@
 {
   "835408109899219004": {
     "usersjutsu": [
+      "Attack",
       "Transformation Jutsu",
       "asura",
       "Summon Ninken",
@@ -9,12 +10,22 @@
       "Fireball",
       "Smoke Bomb",
       "Curse Mark",
-      "Needle Assault",
       "Sexy Jutsu",
       "Shadow Clone Jutsu",
       "Kirin",
       "Lightning Blade",
-      "Water Prison"
+      "Water Prison",
+      "Silent Assassination",
+      "Serpents Wrath",
+      "Needle Assault",
+      "Needle Assault"
+    ],
+    "combos": [
+      "Basic Combo"
+    ],
+    "scrolls": [
+      "Serpents Wrath Scroll",
+      "Silent Assassination Scroll"
     ]
   },
   "843680216022122516": {
@@ -25,6 +36,9 @@
   "799979545046155284": {
     "usersjutsu": [
       "Transformation Jutsu"
+    ],
+    "combos": [
+      "Basic Combo"
     ]
   },
   "737913304214667345": {
@@ -35,7 +49,6 @@
   "961918563382362122": {
     "usersjutsu": [
       "Transformation Jutsu",
-      "Needle Assault",
       "Hidden Mist",
       "asura"
     ]
@@ -43,8 +56,15 @@
   "1112750369609633792": {
     "usersjutsu": [
       "Transformation Jutsu",
-      "asura"
-    ]
+      "asura",
+      "Sexy Jutsu",
+      "Summon Ninken",
+      "Shadow Clone Jutsu",
+      "Silent Assassination",
+      "Serpents Wrath",
+      "Needle Assault"
+    ],
+    "scrolls": []
   },
   "741142009670271010": {
     "usersjutsu": [
@@ -55,6 +75,28 @@
     "usersjutsu": [
       "Transformation Jutsu",
       "asura"
+    ],
+    "scrolls": [
+      "Needle Assault Scroll"
+    ]
+  },
+  "728522737009819649": {
+    "usersjutsu": [
+      "Transformation Jutsu",
+      "Needle Assault"
+    ],
+    "scrolls": [
+      "Needle Assault Scroll"
+    ]
+  },
+  "826183795417022555": {
+    "usersjutsu": [
+      "Transformation Jutsu",
+      "Shadow Clone Jutsu",
+      "Serpents Wrath"
+    ],
+    "combos": [
+      "Basic Combo"
     ]
   }
 }

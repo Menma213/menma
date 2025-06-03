@@ -3,15 +3,29 @@ const puppeteer = require('puppeteer');
 const fs = require('fs');
 const path = require('path');
 const math = require('mathjs');
+const { updateRequirements } = require('./scroll');
 
 // Path configurations
 const usersPath = path.resolve(__dirname, '../../menma/data/users.json');
 const jutsusPath = path.resolve(__dirname, '/workspaces/menma/data/jutsus.json');
+const imagesPath = path.resolve(__dirname, '/workspaces/menma/images');
 
 // Load jutsus from JSON file
 let jutsuList = {};
 if (fs.existsSync(jutsusPath)) {
     jutsuList = JSON.parse(fs.readFileSync(jutsusPath, 'utf8'));
+}
+
+// Add Shuriken Throw jutsu to jutsuList if not present
+if (!jutsuList["Shuriken Throw"]) {
+    jutsuList["Shuriken Throw"] = {
+        name: "Shuriken Throw",
+        description: "A basic ranged attack with shuriken.",
+        chakraCost: 0,
+        effects: [
+            { type: "damage", formula: "max(5, user.power * 0.5 - target.defense * 0.2)" }
+        ]
+    };
 }
 
 // Effect handlers with improved error handling
@@ -150,6 +164,84 @@ const effectHandlers = {
     }
 };
 
+// Add emoji constants
+const EMOJIS = {
+    buff: "<:buff:1364946947055816856>",
+    debuff: "<:debuff:1368242212374188062>",
+    stun: "<:stun:1368243608695738399>",
+    heal: "<:heal:1368243632045297766>",
+    bleed: "<:bleed:1368243924346605608>",
+    flinch: "<:flinch:1368243647711023124>",
+    curse: "<:curse:1368243540978827294>",
+    status: "<:status:1368243589498540092>"
+};
+
+// Add combo system
+const COMBOS = {
+    "Basic Combo": {
+        name: "Basic Combo",
+        requiredJutsus: ["Attack", "Transformation Jutsu"],
+        resultMove: {
+            name: "Empowered Attack",
+            damage: 10000,
+            damageType: "true"
+        }
+    }
+};
+
+const COMBO_EMOJI_FILLED = "⭕";
+const COMBO_EMOJI_EMPTY = "⚪";
+
+// Add chakra regen rates
+const CHAKRA_REGEN = {
+    'Academy Student': 1,
+    'Genin': 2,
+    'Chunin': 2,
+    'Jounin': 3
+};
+
+// Add these utility functions near the top (after requires)
+function getCooldownString(ms) {
+    const totalSeconds = Math.floor(ms / 1000);
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+    return `${hours}h ${minutes}m ${seconds}s`;
+}
+
+function getMaterialDrop(role) {
+    if (role === "Hokage") return Math.floor(Math.random() * 3) + 12;
+    if (role === "Right Hand Man") return Math.floor(Math.random() * 3) + 10;
+    if (role === "Guard") return Math.floor(Math.random() * 3) + 8;
+    if (role === "Spy") return Math.floor(Math.random() * 3) + 2;
+    return 0;
+}
+
+function getRandomMaterial() {
+    const mats = [
+        { name: "Iron", emoji: "🪓", key: "iron" },
+        { name: "Wood", emoji: "🌲", key: "wood" },
+        { name: "Rope", emoji: "🪢", key: "rope" }
+    ];
+    return mats[Math.floor(Math.random() * mats.length)];
+}
+
+function getAkatsukiMaterialDrop(role) {
+    if (role === "Akatsuki Leader") return Math.floor(Math.random() * 3) + 12;
+    if (role === "Co-Leader") return Math.floor(Math.random() * 3) + 10;
+    if (role === "Bruiser") return Math.floor(Math.random() * 3) + 8;
+    if (role === "Scientist") return Math.floor(Math.random() * 3) + 2;
+    return 0;
+}
+function getRandomAkatsukiMaterial() {
+    const mats = [
+        { name: "Metal", emoji: "🪙", key: "metal" },
+        { name: "Gunpowder", emoji: "💥", key: "gunpowder" },
+        { name: "Copper", emoji: "🔌", key: "copper" }
+    ];
+    return mats[Math.floor(Math.random() * mats.length)];
+}
+
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('brank')
@@ -167,9 +259,20 @@ module.exports = {
         if (!users[userId]) {
             return interaction.reply({ content: "You need to enroll first!", ephemeral: true });
         }
+        // Fix: don't re-declare player, just assign it once
+        let player = users[userId];
+
+        // --- COOLDOWN SYSTEM ---
+        const now = Date.now();
+        if (player.lastbrank && now - player.lastbrank < 12 * 60 * 1000) {
+            const left = 12 * 60 * 1000 - (now - player.lastbrank);
+            return interaction.reply({ content: `You can do this again in ${getCooldownString(left)}.`, ephemeral: true });
+        }
+        player.lastbrank = now;
+        fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
 
         // Initialize player and NPC
-        const player = {
+        player = {
             ...users[userId],
             name: interaction.user.username,
             activeEffects: [],
@@ -179,11 +282,11 @@ module.exports = {
 
         const npc = {
             name: "Bandit Leader",
-            health: Math.floor(player.health * 0.75 + player.defense * 2),
+            health: Math.floor(player.health * 0.5 ),
             power: Math.floor(player.power * 0.9 + player.level * 2),
-            defense: Math.floor(player.defense * 0.8 + player.level),
+            defense: Math.floor(player.defense * 0.01),
             chakra: 10,
-            jutsu: ["Attack", "Substitution Jutsu"],
+            jutsu: ["Attack", "Serpents Wrath", "Shuriken Throw"],
             activeEffects: [],
             accuracy: 85,
             dodge: 15
@@ -193,46 +296,241 @@ module.exports = {
         let playerHealth = player.health;
         let npcHealth = npc.health;
 
-        // Generate battle image
+        // Combo state
+        let comboState = null;
+        if (player.Combo && COMBOS[player.Combo]) {
+            comboState = {
+                combo: COMBOS[player.Combo],
+                usedJutsus: new Set()
+            };
+        }
+
+        // Generate battle image with improved centering, name above, HP bar below, no footer
         const generateBattleImage = async () => {
             const browser = await puppeteer.launch({ args: ['--no-sandbox'] });
             const page = await browser.newPage();
-            await page.setViewport({ width: 700, height: 350 });
+            await page.setViewport({ width: 800, height: 400 });
+
+            // Use local currentNpc for image stats
+            const currentNpc = npc;
+            if (typeof currentNpc.currentHealth !== 'number') currentNpc.currentHealth = npcHealth;
 
             const playerHealthPercent = Math.max((playerHealth / player.health) * 100, 0);
-            const npcHealthPercent = Math.max((npcHealth / npc.health) * 100, 0);
+            const npcHealthPercent = Math.max((currentNpc.currentHealth / currentNpc.health) * 100, 0);
+
+            // Create images directory if it doesn't exist
+            const imagesDir = path.resolve(__dirname, '../images');
+            if (!fs.existsSync(imagesDir)) {
+                fs.mkdirSync(imagesDir, { recursive: true });
+            }
 
             const htmlContent = `
                 <html>
-                <body style="margin: 0; padding: 0; position: relative;">
-                    <img src="https://th.bing.com/th/id/R.067ea36dadfb751eb748255b475471da?rik=t4KQCUGlwxVq0Q&riu=http%3a%2f%2ffc03.deviantart.net%2ffs70%2fi%2f2013%2f268%2f7%2f5%2fbosque_naruto_by_lwisf3rxd-d6ntjgx.jpg&ehk=FH5skKe491eVsFi6eNVSnBJTJbUhblD%2bFfBsLEsWunU%3d&risl=&pid=ImgRaw&r=0" style="width: 700px; height: 350px; position: absolute; z-index: -1;">
-                    
-                    <div style="position: absolute; left: 50px; top: 50px;">
-                        <img src="https://i.pinimg.com/736x/10/92/b0/1092b0aea71f620c1ed7fffe7a8704c1.jpg" width="120" />
-                    </div>
-
-                    <div style="position: absolute; right: 50px; top: 50px;">
-                        <img src="${interaction.user.displayAvatarURL({ format: 'png', size: 128 })}" width="120" />
-                    </div>
-
-                    <div style="position: absolute; left: 50px; top: 220px; width: 120px; height: 15px; background: gray;">
-                        <div style="width: ${npcHealthPercent}%; height: 100%; background: red;"></div>
-                        <div style="position: absolute; left: 0; top: 0; color: white; font-size: 12px; padding: 1px 4px;">${Math.round(npcHealth)}/${npc.health}</div>
-                    </div>
-
-                    <div style="position: absolute; right: 50px; top: 220px; width: 120px; height: 15px; background: gray;">
-                        <div style="width: ${playerHealthPercent}%; height: 100%; background: green;"></div>
-                        <div style="position: absolute; left: 0; top: 0; color: white; font-size: 12px; padding: 1px 4px;">${Math.round(playerHealth)}/${player.health}</div>
+                <style>
+                    body {
+                        margin: 0;
+                        padding: 0;
+                    }
+                    .battle-container {
+                        width: 800px;
+                        height: 400px;
+                        position: relative;
+                        background: url('https://i.pinimg.com/originals/5d/e5/62/5de5622ecdd4e24685f141f10e4573e3.jpg') center center no-repeat;
+                        background-size: cover;
+                        border-radius: 10px;
+                        overflow: hidden;
+                    }
+                    .character {
+                        position: absolute;
+                        width: 150px;
+                        height: 150px;
+                        border-radius: 10px;
+                        border: 3px solid #6e1515;
+                        object-fit: cover;
+                    }
+                    .player {
+                        right: 50px;
+                        top: 120px;
+                    }
+                    .enemy {
+                        left: 50px;
+                        top: 120px;
+                    }
+                    .name-tag {
+                        position: absolute;
+                        width: 150px;
+                        text-align: center;
+                        color: white;
+                        font-family: Arial, sans-serif;
+                        font-size: 18px;
+                        font-weight: bold;
+                        text-shadow: 2px 2px 4px #000;
+                        top: 80px;
+                        background: rgba(0,0,0,0.5);
+                        border-radius: 5px;
+                        padding: 2px 0;
+                    }
+                    .player-name {
+                        right: 50px;
+                    }
+                    .enemy-name {
+                        left: 50px;
+                    }
+                    .health-bar {
+                        position: absolute;
+                        width: 150px;
+                        height: 22px;
+                        background-color: #333;
+                        border-radius: 5px;
+                        overflow: hidden;
+                        top: 280px;
+                    }
+                    .health-fill {
+                        height: 100%;
+                    }
+                    .npc-health-fill {
+                        background-color: #ff4444;
+                        width: ${npcHealthPercent}%;
+                    }
+                    .player-health-fill {
+                        background-color: #4CAF50;
+                        width: ${playerHealthPercent}%;
+                    }
+                    .health-text {
+                        position: absolute;
+                        width: 100%;
+                        text-align: center;
+                        color: white;
+                        font-family: Arial, sans-serif;
+                        font-size: 13px;
+                        line-height: 22px;
+                        text-shadow: 1px 1px 1px black;
+                    }
+                    .player-health {
+                        right: 50px;
+                    }
+                    .enemy-health {
+                        left: 50px;
+                    }
+                    .vs-text {
+                        position: absolute;
+                        left: 50%;
+                        top: 50%;
+                        transform: translate(-50%, -50%);
+                        color: white;
+                        font-family: Arial, sans-serif;
+                        font-size: 48px;
+                        font-weight: bold;
+                        text-shadow: 2px 2px 4px #000;
+                    }
+                </style>
+                <body>
+                    <div class="battle-container">
+                        <div class="name-tag enemy-name">${currentNpc.name}</div>
+                        <img class="character enemy" src="https://i.pinimg.com/736x/10/92/b0/1092b0aea71f620c1ed7fffe7a8704c1.jpg">
+                        <div class="health-bar enemy-health">
+                            <div class="health-fill npc-health-fill"></div>
+                            <div class="health-text">${Math.round(currentNpc.currentHealth)}/${currentNpc.health}</div>
+                        </div>
+                        
+                        <div class="name-tag player-name">${player.name}</div>
+                        <img class="character player" src="${interaction.user.displayAvatarURL({ format: 'png', size: 256 })}">
+                        <div class="health-bar player-health">
+                            <div class="health-fill player-health-fill"></div>
+                            <div class="health-text">${Math.round(playerHealth)}/${player.health}</div>
+                        </div>
+                        <div class="vs-text">VS</div>
                     </div>
                 </body>
                 </html>
             `;
 
             await page.setContent(htmlContent);
-            const imagePath = `./battle_${userId}.png`;
+            const imagePath = path.join(imagesDir, `battle_${userId}_${Date.now()}.png`);
             await page.screenshot({ path: imagePath });
             await browser.close();
             return imagePath;
+        };
+
+        // Create moves embed: 1-5 jutsu buttons on first row, 6th (if any) + rest/flee on second row
+        const createMovesEmbed = () => {
+            const embed = new EmbedBuilder()
+                .setTitle(`${player.name}`)
+                .setColor('#006400')
+                .setDescription(
+                    `${player.name}, It is your turn!\nUse buttons to make a choice.\n\n` +
+                    Object.entries(player.jutsu)
+                        .filter(([_, jutsu]) => jutsu !== 'None')
+                        .map(([_, jutsuName], index) => {
+                            const jutsuData = jutsuList[jutsuName];
+                            return `${index + 1}: ${jutsuData?.name || jutsuName}${jutsuData?.chakraCost ? ` (${jutsuData.chakraCost} Chakra)` : ''}`;
+                        })
+                        .join('\n') +
+                    `\n\n[😴] to focus your chakra.\n[❌] to flee from battle.\n\nChakra: ${player.chakra}`
+                );
+
+            const jutsuButtons = Object.entries(player.jutsu)
+                .filter(([_, jutsu]) => jutsu !== 'None')
+                .map(([_, jutsuName], index) => {
+                    const jutsu = jutsuList[jutsuName];
+                    const disabled = player.chakra < (jutsu?.chakraCost || 0);
+                    return new ButtonBuilder()
+                        .setCustomId(`move${index + 1}-${userId}-${roundNum}`)
+                        .setLabel(`${index + 1}`)
+                        .setStyle(disabled ? ButtonStyle.Secondary : ButtonStyle.Primary)
+                        .setDisabled(disabled);
+                });
+
+            const rows = [];
+            // First row: up to 5 jutsu buttons
+            if (jutsuButtons.length > 0) {
+                const row1 = new ActionRowBuilder();
+                jutsuButtons.slice(0, 5).forEach(btn => row1.addComponents(btn));
+                rows.push(row1);
+            }
+            // Second row: 6th jutsu (if any), rest, flee
+            if (jutsuButtons.length > 5) {
+                const row2 = new ActionRowBuilder();
+                row2.addComponents(jutsuButtons[5]);
+                row2.addComponents(
+                    new ButtonBuilder()
+                        .setCustomId(`rest-${userId}-${roundNum}`)
+                        .setLabel('😴')
+                        .setStyle(ButtonStyle.Primary),
+                    new ButtonBuilder()
+                        .setCustomId(`flee-${userId}-${roundNum}`)
+                        .setLabel('❌')
+                        .setStyle(ButtonStyle.Primary)
+                );
+                rows.push(row2);
+            } else {
+                // If 5 or fewer jutsu, put rest/flee on a new row
+                const row2 = new ActionRowBuilder();
+                row2.addComponents(
+                    new ButtonBuilder()
+                        .setCustomId(`rest-${userId}-${roundNum}`)
+                        .setLabel('😴')
+                        .setStyle(ButtonStyle.Primary),
+                    new ButtonBuilder()
+                        .setCustomId(`flee-${userId}-${roundNum}`)
+                        .setLabel('❌')
+                        .setStyle(ButtonStyle.Primary)
+                );
+                rows.push(row2);
+            }
+
+            return { embed, components: rows.slice(0, 5) };
+        };
+
+        // Map button index to jutsu
+        const getJutsuByButton = (buttonId) => {
+            const match = buttonId.match(/^move(\d+)-/);
+            if (!match) return null;
+            const idx = parseInt(match[1], 10) - 1;
+            const jutsuNames = Object.entries(player.jutsu)
+                .filter(([_, jutsu]) => jutsu !== 'None')
+                .map(([_, jutsuName]) => jutsuName);
+            return jutsuNames[idx];
         };
 
         // Execute a jutsu with base and effective stats
@@ -379,73 +677,6 @@ module.exports = {
             return result;
         };
 
-        // Create moves embed with slot system
-        const createMovesEmbed = () => {
-            const embed = new EmbedBuilder()
-                .setTitle(`Round ${roundNum} - ${player.name}'s Turn`)
-                .setColor('#FF0000') // Same red as fight.js
-                .setDescription("Select your move!")
-                .addFields({
-                    name: "Jutsu Slots",
-                    value: Object.entries(player.jutsu)
-                        .filter(([_, jutsu]) => jutsu !== 'None')
-                        .map(([slot, jutsu]) => {
-                            const jutsuData = jutsuList[jutsu];
-                            return `${slot.replace('_', ' ')}: ${jutsuData?.name || jutsu}${jutsuData?.chakraCost ? ` (${jutsuData.chakraCost} Chakra)` : ''}`;
-                        })
-                        .join('\n')
-                })
-                .addFields({
-                    name: "Stats",
-                    value: `Accuracy: ${player.accuracy}%\nDodge: ${player.dodge}%`
-                })
-                .setFooter({ text: `Chakra: ${player.chakra}/10 | Health: ${Math.round(playerHealth)}/${player.health}` });
-
-            const rows = [];
-            let currentRow = new ActionRowBuilder();
-            
-            // Add buttons for each equipped jutsu
-            Object.entries(player.jutsu).forEach(([slot, jutsuName]) => {
-                if (jutsuName !== 'None') {
-                    const jutsu = jutsuList[jutsuName];
-                    const disabled = player.chakra < (jutsu?.chakraCost || 0);
-                    
-                    if (currentRow.components.length >= 5) {
-                        rows.push(currentRow);
-                        currentRow = new ActionRowBuilder();
-                    }
-                    
-                    currentRow.addComponents(
-                        new ButtonBuilder()
-                            .setCustomId(`${jutsuName}-${userId}-${roundNum}`)
-                            .setLabel(`${slot.replace('_', ' ')}: ${jutsu?.name || jutsuName}`)
-                            .setStyle(disabled ? ButtonStyle.Secondary : ButtonStyle.Primary)
-                            .setDisabled(disabled)
-                    );
-                }
-            });
-
-            // Add utility buttons to a new row
-            const utilityRow = new ActionRowBuilder()
-                .addComponents(
-                    new ButtonBuilder()
-                        .setCustomId(`rest-${userId}-${roundNum}`)
-                        .setLabel('Rest (+1 Chakra)')
-                        .setStyle(ButtonStyle.Success),
-                    new ButtonBuilder()
-                        .setCustomId(`flee-${userId}-${roundNum}`)
-                        .setLabel('Flee')
-                        .setStyle(ButtonStyle.Danger)
-                );
-
-            if (currentRow.components.length > 0) {
-                rows.push(currentRow);
-            }
-            rows.push(utilityRow);
-
-            return { embed, components: rows };
-        };
-
         // Process player move with effective stats
         const processPlayerMove = async (customId, basePlayer, baseNpc, effectivePlayer, effectiveNpc) => {
             const action = customId.split('-')[0];
@@ -532,57 +763,119 @@ module.exports = {
 
         // Create battle summary
         const createBattleSummary = (playerAction, npcAction) => {
-            const embed = new EmbedBuilder()
-                .setTitle(`Round ${roundNum} Summary`)
-                .setColor('#FF0000')
-                .addFields(
-                    {
-                        name: `${player.name}`,
-                        value: `${playerAction.description}\n${playerAction.damage ? `Dealt **${Math.round(playerAction.damage)}** damage` : ''}${!playerAction.hit ? ' (Missed!)' : ''}${playerAction.specialEffects?.length ? '\n' + playerAction.specialEffects.join('\n') : ''}`
-                    },
-                    {
-                        name: `${npc.name}`,
-                        value: `${npcAction.description}\n${npcAction.damage ? `Dealt **${Math.round(npcAction.damage)}** damage` : ''}${!npcAction.hit ? ' (Missed!)' : ''}${npcAction.specialEffects?.length ? '\n' + npcAction.specialEffects.join('\n') : ''}`
-                    },
-                    {
-                        name: 'Battle Status',
-                        value: `${player.name}: ${Math.round(playerHealth)}/${player.health} HP\n${npc.name}: ${Math.round(npcHealth)}/${npc.health} HP`
+            // Get active effect emojis
+            const getEffectEmojis = (entity) => {
+                const emojis = [];
+                entity.activeEffects.forEach(effect => {
+                    if (effect.type === 'buff') emojis.push(EMOJIS.buff);
+                    if (effect.type === 'debuff') emojis.push(EMOJIS.debuff);
+                    if (effect.type === 'status') {
+                        switch (effect.status) {
+                            case 'stun': emojis.push(EMOJIS.stun); break;
+                            case 'bleed': emojis.push(EMOJIS.bleed); break;
+                            case 'flinch': emojis.push(EMOJIS.flinch); break;
+                            case 'cursed': emojis.push(EMOJIS.curse); break;
+                            default: emojis.push(EMOJIS.status);
+                        }
                     }
-                );
-
-            // Add active effects if any
-            const playerEffects = player.activeEffects.map(e => 
-                e.type === 'status' ? e.status : 
-                `${e.type}: ${Object.entries(e.stats).map(([k,v]) => `${k}: ${v > 0 ? '+' : ''}${v}`).join(', ')} (${e.duration}t)`
-            ).filter(Boolean);
-
-            const npcEffects = npc.activeEffects.map(e => 
-                e.type === 'status' ? e.status : 
-                `${e.type}: ${Object.entries(e.stats).map(([k,v]) => `${k}: ${v > 0 ? '+' : ''}${v}`).join(', ')} (${e.duration}t)`
-            ).filter(Boolean);
-
-            if (playerEffects.length > 0 || npcEffects.length > 0) {
-                embed.addFields({
-                    name: 'Active Effects',
-                    value: `**${player.name}**: ${playerEffects.join(', ') || 'None'}\n**${npc.name}**: ${npcEffects.join(', ') || 'None'}`
                 });
+                return emojis.length ? `[${emojis.join('')}] ` : '';
+            };
+
+            // For NPC, use local variable for current health
+            const currentNpc = npc;
+            if (typeof currentNpc.currentHealth !== 'number') currentNpc.currentHealth = npcHealth;
+
+            // Player/NPC effect emojis
+            const playerEffectEmojis = getEffectEmojis(player);
+            const npcEffectEmojis = getEffectEmojis(currentNpc);
+
+            // Player description
+            const playerDesc = playerAction.isRest ? playerAction.description :
+                !playerAction.hit ? (
+                    playerAction.specialEffects?.includes("Stun active") ? "is stunned!" :
+                    playerAction.specialEffects?.includes("Flinch active") ? "flinched!" : "missed!"
+                ) :
+                (jutsuList[playerAction.jutsuUsed]?.description || playerAction.description);
+
+            // NPC description
+            const npcDesc = !npcAction.hit ? (
+                npcAction.specialEffects?.includes("Stun active") ? `${currentNpc.name} is stunned!` :
+                npcAction.specialEffects?.includes("Flinch active") ? `${currentNpc.name} flinched!` : `${currentNpc.name} missed!`
+            ) :
+            npcAction.description;
+
+            // Handle active status effects (bleed/drowning)
+            let statusEffects = [];
+            [player, currentNpc].forEach(entity => {
+                if (typeof entity.currentHealth !== 'number') entity.currentHealth = entity === player ? playerHealth : npcHealth;
+                entity.activeEffects.forEach(effect => {
+                    if (effect.type === 'status') {
+                        switch(effect.status) {
+                            case 'bleed': {
+                                const bleedDamage = Math.floor(entity.health * 0.1);
+                                entity.currentHealth -= bleedDamage;
+                                statusEffects.push(`${entity.name} is bleeding! (-${bleedDamage} HP)`);
+                                break;
+                            }
+                            case 'drowning': {
+                                const drowningDamage = Math.floor(entity.health * 0.1);
+                                entity.currentHealth -= drowningDamage;
+                                const jutsu = jutsuList['Water Prison'];
+                                const chakraDrain = jutsu?.effects?.[0]?.chakraDrain || 3;
+                                entity.chakra = Math.max(0, entity.chakra - chakraDrain);
+                                statusEffects.push(`${entity.name} is drowning! (-${drowningDamage} HP, -${chakraDrain} Chakra)`);
+                                break;
+                            }
+                        }
+                    }
+                });
+            });
+
+            // Combo progress UI
+            let comboProgressText = "";
+            if (comboState && comboState.combo) {
+                // Only show if at least one combo jutsu was used this round
+                const usedThisRound = comboState.combo.requiredJutsus.some(jutsu =>
+                    comboState.usedJutsus.has(jutsu)
+                );
+                if (usedThisRound) {
+                    const filled = comboState.combo.requiredJutsus.filter(jutsu => comboState.usedJutsus.has(jutsu)).length;
+                    const total = comboState.combo.requiredJutsus.length;
+                    comboProgressText = `\nCombo charging up... ${COMBO_EMOJI_FILLED.repeat(filled)}${COMBO_EMOJI_EMPTY.repeat(total - filled)}`;
+                }
             }
 
-            embed.setFooter({ text: `Your Chakra: ${player.chakra}` });
+            const embed = new EmbedBuilder()
+                .setTitle(`Round: ${roundNum}!`)
+                .setColor('#006400')
+                .setDescription(
+                    `${playerEffectEmojis}@${player.name} ${playerDesc}` +
+                    `${playerAction.damage ? ` for ${Math.round(playerAction.damage)}!` : playerAction.heal ? ` for ${Math.round(playerAction.heal)} HP!` : '!'}` +
+                    `\n\n${npcEffectEmojis}${npcDesc}` +
+                    `${npcAction.damage ? ` for ${Math.round(npcAction.damage)}!` : npcAction.heal ? ` for ${Math.round(npcAction.heal)} HP!` : '!'}` +
+                    (statusEffects.length ? `\n\n${statusEffects.join('\n')}` : '') +
+                    comboProgressText
+                )
+                .addFields({
+                    name: 'Battle Status',
+                    value: `${player.name} || ${Math.round(player.currentHealth ?? playerHealth)} HP\n${currentNpc.name} || ${Math.round(currentNpc.currentHealth ?? npcHealth)} HP\nChakra: ${player.chakra}            Chakra: ${currentNpc.chakra}`
+                });
+
+            // Add jutsu image/gif if available
+            const playerJutsu = jutsuList[playerAction.jutsuUsed];
+            if (playerJutsu?.image_url) {
+                embed.setImage(playerJutsu.image_url);
+            }
 
             return embed;
         };
 
-        // Start battle
+        // --- Battle loop ---
         try {
-            const battleImage = new AttachmentBuilder(await generateBattleImage());
-            await interaction.reply({ 
-                content: "**B-Rank Mission Started!**",
-                files: [battleImage]
-            });
+            await interaction.reply({ content: "**B-Rank Mission Started!**" });
 
             let battleActive = true;
-            
             while (battleActive) {
                 // Update effect durations at start of turn
                 [player, npc].forEach(entity => {
@@ -596,7 +889,7 @@ module.exports = {
                 const effectivePlayer = getEffectiveStats(player);
                 const effectiveNpc = getEffectiveStats(npc);
 
-                // Player turn
+                // Moves embed first
                 const { embed, components } = createMovesEmbed();
                 const moveMessage = await interaction.followUp({
                     embeds: [embed],
@@ -604,15 +897,31 @@ module.exports = {
                     fetchReply: true
                 });
 
+                // Battle image after moves embed
+                const battleImage = new AttachmentBuilder(await generateBattleImage());
+                await interaction.followUp({ files: [battleImage] });
+
+                // Player turn
                 const playerAction = await new Promise(resolve => {
                     const collector = moveMessage.createMessageComponentCollector({
                         filter: i => i.user.id === userId && i.customId.endsWith(`-${userId}-${roundNum}`),
-                        time: 60000
+                        time: 90000 // 1 minute 30 seconds
                     });
 
                     collector.on('collect', async i => {
                         await i.deferUpdate();
-                        resolve(await processPlayerMove(i.customId, player, npc, effectivePlayer, effectiveNpc));
+                        if (i.customId.startsWith('move')) {
+                            const jutsuName = getJutsuByButton(i.customId);
+                            const result = executeJutsu(player, npc, effectivePlayer, effectiveNpc, jutsuName);
+                            // Combo tracking
+                            if (comboState?.combo.requiredJutsus.includes(jutsuName)) {
+                                comboState.usedJutsus.add(jutsuName);
+                            }
+                            result.jutsuUsed = jutsuName;
+                            resolve(result);
+                        } else {
+                            resolve(await processPlayerMove(i.customId, player, npc, effectivePlayer, effectiveNpc));
+                        }
                         collector.stop();
                     });
 
@@ -621,9 +930,10 @@ module.exports = {
                             resolve({
                                 damage: 0,
                                 heal: 0,
-                                description: `${player.name} stood still (timed out)`,
+                                description: '$user fled, did not make a move.',
                                 specialEffects: ["Missed opportunity!"],
-                                hit: false
+                                hit: false,
+                                fled: true
                             });
                         }
                         // Disable all buttons
@@ -633,18 +943,34 @@ module.exports = {
                                 disabledRow.components.forEach(c => c.setDisabled(true));
                                 return disabledRow;
                             })
-                        }).catch(console.error);
+                        }).catch(() => {});
                     });
                 });
 
                 if (playerAction.fled) {
                     battleActive = false;
-                    await interaction.followUp(`${player.name} fled from the battle!`);
+                    await interaction.followUp('player fled, did not make a move.');
                     break;
+                }
+
+                // Combo completion check and bonus damage (show in summary, reduce npc health)
+                let comboCompletedThisRound = false;
+                let comboDamageText = "";
+                if (
+                    comboState &&
+                    comboState.combo.requiredJutsus.every(jutsu => comboState.usedJutsus.has(jutsu))
+                ) {
+                    // Apply bonus damage
+                    npcHealth -= comboState.combo.resultMove.damage;
+                    if (typeof npc.currentHealth === 'number') npc.currentHealth -= comboState.combo.resultMove.damage;
+                    comboCompletedThisRound = true;
+                    comboDamageText = `\n${player.name} deals ${comboState.combo.resultMove.damage} additional true damage by landing a ${comboState.combo.resultMove.name}!`;
+                    comboState.usedJutsus.clear();
                 }
 
                 // Apply player action results
                 npcHealth -= playerAction.damage || 0;
+                if (typeof npc.currentHealth === 'number') npc.currentHealth -= playerAction.damage || 0;
                 if (playerAction.heal) {
                     playerHealth = Math.min(playerHealth + playerAction.heal, player.health);
                 }
@@ -656,58 +982,119 @@ module.exports = {
                     playerHealth -= npcAction.damage || 0;
                     if (npcAction.heal) {
                         npcHealth = Math.min(npcHealth + npcAction.heal, npc.health);
+                        if (typeof npc.currentHealth === 'number') npc.currentHealth = Math.min(npc.currentHealth + npcAction.heal, npc.health);
                     }
                 }
 
-                // Ensure health doesn't go below 0
+                // Clamp health
                 playerHealth = Math.max(0, playerHealth);
                 npcHealth = Math.max(0, npcHealth);
+                if (typeof npc.currentHealth === 'number') npc.currentHealth = Math.max(0, npc.currentHealth);
 
-                // Update battle image
-                const newBattleImage = new AttachmentBuilder(await generateBattleImage());
-
-                // Show results
+                // Show results (no extra image here)
+                let summaryEmbed = createBattleSummary(playerAction, npcAction);
+                if (comboCompletedThisRound) {
+                    summaryEmbed.setDescription(
+                        summaryEmbed.data.description + comboDamageText
+                    );
+                }
                 await interaction.followUp({
-                    embeds: [createBattleSummary(playerAction, npcAction)],
-                    files: [newBattleImage]
+                    embeds: [summaryEmbed]
                 });
 
-                // Check win conditions
+                // Win/loss
                 if (playerHealth <= 0 || npcHealth <= 0) {
                     battleActive = false;
-                    
-                    // Update user stats
                     const users = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
                     if (playerHealth > 0) {
-                        // Player wins
                         const expReward = 300 + Math.floor(player.level * 30);
                         const moneyReward = 500 + Math.floor(player.level * 20);
                         users[userId].exp += expReward;
                         users[userId].money += moneyReward;
                         users[userId].wins += 1;
-                        users[userId].health = player.health; // Restore full health
-                        
-                        await interaction.followUp(`**Victory!** You defeated ${npc.name}!\n\n**EXP Gained:** ${expReward}\n**Money Earned:** ${moneyReward} Ryo`);
+                        users[userId].health = player.health;
+                        // Reward embed
+                        const rewardEmbed = new EmbedBuilder()
+                            .setTitle(`Battle End! ${player.name} has won!`)
+                            .setDescription(
+                                `<@${userId}> has earned ${expReward} exp!\n<@${userId}> has earned $${moneyReward}!`
+                            )
+                            .setColor('#006400');
+                        await interaction.followUp({ embeds: [rewardEmbed] });
+                        await updateRequirements(interaction.user.id, 'b_mission');
                     } else {
-                        // Player loses
                         users[userId].losses += 1;
-                        users[userId].health = player.health; // Restore full health
-                        
+                        users[userId].health = player.health;
                         await interaction.followUp(`**Defeat!** You were defeated by ${npc.name}...`);
                     }
-                    
                     fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
                 }
 
                 // Passive chakra regen
-                player.chakra = Math.min(player.chakra + 1, 10);
-                npc.chakra = Math.min(npc.chakra + 1, 10);
+                player.chakra += CHAKRA_REGEN[player.rank] || 1;
+                npc.chakra += 2;
 
                 roundNum++;
-                
-                // Add delay between rounds if battle continues
                 if (battleActive) await new Promise(resolve => setTimeout(resolve, 3000));
             }
+
+            // --- MATERIAL DROP SYSTEM ---
+            let role = player.role || "";
+            if (interaction.member.roles.cache.has('1349278752944947240')) role = "Hokage";
+            const amount = getMaterialDrop(role);
+            const mat = getRandomMaterial();
+
+            // Only add to village and show if amount > 0
+            let villageDropMsg = "";
+            if (amount > 0) {
+                let village = { iron: 0, wood: 0, rope: 0, defense: 0 };
+                if (fs.existsSync(villagePath)) {
+                    village = JSON.parse(fs.readFileSync(villagePath, 'utf8'));
+                }
+                village[mat.key] = (village[mat.key] || 0) + amount;
+                fs.writeFileSync(villagePath, JSON.stringify(village, null, 2));
+                villageDropMsg = `You found ${amount} ${mat.name} ${mat.emoji} during the mission\n`;
+            }
+
+            // Akatsuki drop
+            let akatsukiDropMsg = "";
+            if (player.occupation === "Akatsuki") {
+                let akatsukiAmount = 0;
+                let akatsukiRole = player.role || "";
+                if (akatsukiRole === "Scientist") akatsukiAmount = Math.floor(Math.random() * 3) + 2;
+                else if (akatsukiRole === "Bruiser") akatsukiAmount = Math.floor(Math.random() * 3) + 8;
+                else if (akatsukiRole === "Co-Leader") akatsukiAmount = Math.floor(Math.random() * 3) + 10;
+                if (akatsukiAmount > 0) {
+                    const akatsukiMat = getRandomAkatsukiMaterial();
+                    const akatsukiPath = path.resolve(__dirname, '../../menma/data/akatsuki.json');
+                    let akatsuki = { metal: 0, gunpowder: 0, copper: 0, bombs: {} };
+                    if (fs.existsSync(akatsukiPath)) {
+                        akatsuki = JSON.parse(fs.readFileSync(akatsukiPath, 'utf8'));
+                    }
+                    akatsuki[akatsukiMat.key] = (akatsuki[akatsukiMat.key] || 0) + akatsukiAmount;
+                    fs.writeFileSync(akatsukiPath, JSON.stringify(akatsuki, null, 2));
+                    akatsukiDropMsg = `You found ${akatsukiAmount} ${akatsukiMat.name} ${akatsukiMat.emoji} during the mission\n`;
+                }
+            }
+
+            // Reward embed
+            const expReward = 300 + Math.floor(player.level * 30);
+            const moneyReward = 500 + Math.floor(player.level * 20);
+            const rewardEmbed = new EmbedBuilder()
+                .setTitle(`Battle End! ${player.name} has won!`)
+                .setDescription(
+                    `<@${userId}> has earned ${expReward} exp!\n<@${userId}> has earned $${moneyReward}!`
+                )
+                .setColor('#006400');
+
+            // Send response (only show drop lines if > 0)
+            let dropMsg = "```";
+            if (villageDropMsg) dropMsg += `\n${villageDropMsg}`;
+            if (akatsukiDropMsg) dropMsg += `${akatsukiDropMsg}`;
+            dropMsg += "```";
+            await interaction.followUp({ embeds: [rewardEmbed], content: dropMsg });
+
+            await updateRequirements(interaction.user.id, 'b_mission');
         } catch (error) {
             console.error("Battle error:", error);
             await interaction.followUp("An error occurred during the battle!");

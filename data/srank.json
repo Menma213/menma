@@ -2,7 +2,7 @@
     "Haku": {
       "name": "Haku",
       "image": "https://media.discordapp.net/attachments/1289641866597241035/1364586273133690930/image.png?ex=680a3580&is=6808e400&hm=cbdc018af3b83d959346219ee5e4877de9d97b10cfb03c81d90f9d04c6434169&=&format=webp&quality=lossless",
-      "health": 250,
+      "health": 28880,
       "power": 30,
       "defense": 25,
       "chakra": 15,
@@ -15,26 +15,26 @@
     "Zabuza": {
       "name": "Zabuza Momochi",
       "image": "https://static1.cbrimages.com/wordpress/wp-content/uploads/2021/04/zabuza-anti-hero-naruto.png",
-      "health": 300,
+      "health": 30000,
       "power": 35,
       "defense": 30,
       "chakra": 20,
       "accuracy": 85,
       "dodge": 25,
-      "jutsu": ["Attack", "Silent Assassination", "Hidden Mist"],
+      "jutsu": ["Fireball Jutsu", "Silent Assassination", "Hidden Mist"],
       "reward": "Silent Assassination",
       "rewardChance": 0.25
     },
     "Orochimaru": {
       "name": "Orochimaru",
       "image": "https://static.wikia.nocookie.net/animated/images/e/e8/Orochimaru2.jpg/revision/latest?cb=20120816233159",
-      "health": 400,
+      "health": 40000,
       "power": 40,
       "defense": 35,
       "chakra": 25,
       "accuracy": 95,
       "dodge": 15,
-      "jutsu": ["Attack", "Curse Mark", "Snake Summoning"],
+      "jutsu": ["Fireball Jutsu", "Curse Mark", "Snake Summoning"],
       "reward": "Curse Mark",
       "rewardChance": 0.2
     }

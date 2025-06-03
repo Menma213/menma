@@ -1,6 +1,21 @@
 const { SlashCommandBuilder } = require('discord.js');
 const fs = require('fs');
 const path = require('path');
+const { updateRequirements } = require('./scroll');
+
+// Combo definitions (should match arank.js)
+const COMBOS = {
+    "Basic Combo": {
+        name: "Basic Combo",
+        requiredJutsus: ["Attack", "Transformation Jutsu"],
+        resultMove: {
+            name: "Empowered Attack",
+            damage: 100,
+            damageType: "true"
+        }
+    }
+    // Add more combos here in the future
+};
 
 const usersPath = path.join(__dirname, '../../menma/data/users.json');
 const jutsuPath = path.join(__dirname, '../../menma/data/jutsu.json');
@@ -8,18 +23,26 @@ const jutsuPath = path.join(__dirname, '../../menma/data/jutsu.json');
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('equip')
-        .setDescription('Equip a jutsu to one of your battle slots')
+        .setDescription('Equip a jutsu or combo')
         .addStringOption(option =>
-            option.setName('jutsu')
-                .setDescription('Name of the jutsu to equip')
+            option.setName('type')
+                .setDescription('Type to equip: jutsu or combo')
                 .setRequired(true)
-                .setAutocomplete(true))
-        .addIntegerOption(option =>
+                .addChoices(
+                    { name: 'jutsu', value: 'jutsu' },
+                    { name: 'combo', value: 'combo' }
+                )
+        )
+        .addStringOption(option =>
+            option.setName('name')
+                .setDescription('Name of the jutsu or combo')
+                .setRequired(true)
+        )
+        .addStringOption(option =>
             option.setName('slot')
-                .setDescription('Slot number (1-5)')
+                .setDescription('Jutsu slot (required for jutsu)')
                 .setRequired(true)
-                .setMinValue(1)
-                .setMaxValue(5)),
+        ),
 
     async autocomplete(interaction) {
         const userId = interaction.user.id;
@@ -36,42 +59,75 @@ module.exports = {
     },
 
     async execute(interaction) {
+        const type = interaction.options.getString('type');
+        const name = interaction.options.getString('name');
+        const slot = interaction.options.getString('slot');
         const userId = interaction.user.id;
-        const jutsuName = interaction.options.getString('jutsu');
-        const slotNumber = interaction.options.getInteger('slot');
 
+        if (!fs.existsSync(usersPath)) {
+            return interaction.reply({ content: "User database not found.", ephemeral: true });
+        }
         const users = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
-        const jutsuData = JSON.parse(fs.readFileSync(jutsuPath, 'utf8'));
-
         if (!users[userId]) {
             return interaction.reply({ content: "You need to enroll first!", ephemeral: true });
         }
 
-        // Check if user has the jutsu in their inventory (case-insensitive)
-        const userJutsu = jutsuData[userId]?.usersjutsu || [];
-        const userHasJutsu = userJutsu.some(jutsu => jutsu.toLowerCase() === jutsuName.toLowerCase());
-        if (!userHasJutsu) {
-            return interaction.reply({ content: `You don't own the jutsu "${jutsuName}"!`, ephemeral: true });
+        if (type === 'combo') {
+            // Equip combo
+            const combo = COMBOS[name];
+            if (!combo) {
+                return interaction.reply({ content: `Combo "${name}" not found.`, ephemeral: true });
+            }
+            users[userId].Combo = combo.name;
+            fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
+            return interaction.reply({ content: `Equipped combo: **${combo.name}**!`, ephemeral: false });
         }
 
-        // Ensure the "jutsu" object exists in users.json
-        if (!users[userId].jutsu || typeof users[userId].jutsu !== 'object') {
-            return interaction.reply({ content: "Your jutsu deck is not initialized!", ephemeral: true });
+        if (type === 'jutsu') {
+            const jutsuName = name;
+            const slotNumber = parseInt(slot, 10);
+
+            // Limit to slots 1-5 only
+            if (slotNumber < 1 || slotNumber > 5) {
+                return interaction.reply({ content: "You can only equip jutsu in slots 1 to 5.", ephemeral: true });
+            }
+
+            const jutsuData = JSON.parse(fs.readFileSync(jutsuPath, 'utf8'));
+
+            // Check if user has the jutsu in their inventory (case-insensitive)
+            const userJutsu = jutsuData[userId]?.usersjutsu || [];
+            const userHasJutsu = userJutsu.some(jutsu => jutsu.toLowerCase() === jutsuName.toLowerCase());
+            if (!userHasJutsu) {
+                return interaction.reply({ content: `You don't own the jutsu "${jutsuName}"!`, ephemeral: true });
+            }
+
+            // Ensure the "jutsu" object exists in users.json
+            if (!users[userId].jutsu || typeof users[userId].jutsu !== 'object') {
+                return interaction.reply({ content: "Your jutsu deck is not initialized!", ephemeral: true });
+            }
+
+            // Prevent editing slot 0 (default attack slot)
+            if (slotNumber === 0) {
+                return interaction.reply({ content: "Slot 0 is reserved for the default attack and cannot be changed!", ephemeral: true });
+            }
+
+            // Equip the jutsu into the specified slot
+            const slotKey = `slot_${slotNumber}`;
+            users[userId].jutsu[slotKey] = jutsuName;
+            fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
+
+            const equipSuccess = true;
+
+            if (equipSuccess) {
+                await updateRequirements(interaction.user.id, 'equip_jutsu');
+            }
+
+            return interaction.reply({
+                content: `Successfully equipped "${jutsuName}" in slot ${slotNumber}!`,
+                ephemeral: false
+            });
         }
 
-        // Prevent editing slot 0 (default attack slot)
-        if (slotNumber === 0) {
-            return interaction.reply({ content: "Slot 0 is reserved for the default attack and cannot be changed!", ephemeral: true });
-        }
-
-        // Equip the jutsu into the specified slot
-        const slotKey = `slot_${slotNumber}`;
-        users[userId].jutsu[slotKey] = jutsuName;
-        fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
-
-        return interaction.reply({
-            content: `Successfully equipped "${jutsuName}" in slot ${slotNumber}!`,
-            ephemeral: false
-        });
+        return interaction.reply({ content: "Invalid type specified.", ephemeral: true });
     }
 };
