@@ -86,10 +86,13 @@ async function generateBombImageWithBg(akatsuki) {
     return canvas.toBuffer();
 }
 
+// Add your Akatsuki Leader's Discord user ID here
+const AKATSUKI_LEADER_ID = "YOUR_LEADER_DISCORD_ID"; // <-- Replace with the actual ID
+
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('blueprint')
-        .setDescription('View or create bomb blueprints (Scientist only)')
+        .setDescription('View or create bomb blueprints (Akatsuki Leader only)')
         .addIntegerOption(option =>
             option.setName('level')
                 .setDescription('Bomb level to create (1-10)')
@@ -98,9 +101,9 @@ module.exports = {
     async execute(interaction) {
         try {
             const userId = interaction.user.id;
-            const users = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../../menma/data/users.json'), 'utf8'));
-            if (!users[userId] || users[userId].occupation !== "Akatsuki" || users[userId].role !== "Scientist") {
-                return interaction.reply({ content: "Only Akatsuki Scientists can use this command.", ephemeral: true });
+            // Only Akatsuki Leader can use this command
+            if (userId !== AKATSUKI_LEADER_ID) {
+                return interaction.reply({ content: "Only the Akatsuki Leader can use this command.", ephemeral: true });
             }
             const level = interaction.options.getInteger('level');
             let akatsuki = getAkatsuki();

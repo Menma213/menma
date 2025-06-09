@@ -73,7 +73,7 @@ module.exports = {
             saveData(requirementsPath, requirements);
 
             return interaction.reply({ 
-                content: `✨ Success! You learned **${jutsuName}**!` 
+                content: `<":nsmile:1380884032312709191> Success! You learned **${jutsuName}**!` 
             });
         }
 

@@ -2,6 +2,7 @@ const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const fs = require('fs');
 const path = require('path');
 const { updateRequirements } = require('./scroll');
+const { addMentorExp } = require('./mentors.js');
 const dataPath = './data/users.json';
 
 const usersPath = path.resolve(__dirname, '../../menma/data/users.json');
@@ -121,11 +122,8 @@ module.exports = {
         // Prepare Akatsuki material drop message (but do not drop yet)
         let akatsukiDropMsg = "";
         if (player.occupation === "Akatsuki") {
-            let akatsukiAmount = 0;
             let akatsukiRole = player.role || "";
-            if (akatsukiRole === "Scientist") akatsukiAmount = Math.floor(Math.random() * 3) + 2; // 2-4
-            else if (akatsukiRole === "Bruiser") akatsukiAmount = Math.floor(Math.random() * 3) + 8; // 8-10
-            else if (akatsukiRole === "Co-Leader") akatsukiAmount = Math.floor(Math.random() * 3) + 10; // 10-12
+            let akatsukiAmount = getAkatsukiMaterialDrop(akatsukiRole);
             // Only drop if role is valid
             if (akatsukiAmount > 0) {
                 const akatsukiMat = getRandomAkatsukiMaterial();
@@ -157,12 +155,19 @@ module.exports = {
             .setTimestamp();
 
         // Send response (village + akatsuki drop if any)
-        let dropMsg = `\`\`\`\nYou found ${amount} ${mat.name} ${mat.emoji} during the mission\n`;
-        if (akatsukiDropMsg) dropMsg += akatsukiDropMsg;
+        let dropMsg = "```";
+        if (player.occupation === "Akatsuki" && akatsukiDropMsg) {
+            dropMsg += `\n${akatsukiDropMsg}`;
+        } else if (amount > 0) {
+            dropMsg += `\nYou found ${amount} ${mat.name} ${mat.emoji} during the mission\n`;
+        }
         dropMsg += "```";
         await interaction.reply({ embeds: [embed], content: dropMsg });
 
         // Update mission requirements
         await updateRequirements(interaction.user.id, 'd_mission');
+
+        // Add Mentor Experience
+        await addMentorExp(userId, 1);
     }
 };

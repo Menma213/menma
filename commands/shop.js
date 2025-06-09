@@ -9,6 +9,13 @@ const shopItems = {
         effect: "Creates an \"Empowered Attack\" that deals 100 True Damage.",
         price: 0,
         requirements: ["attack", "transformation"]
+    },
+    "intermediate combo": {
+        name: "Intermediate Combo",
+        description: "Analysis + Transformation Jutsu + Rasengan",
+        effect: "Deals 100,000 damage, stuns the opponent for 1 round, and applies bleed.",
+        price: 10000,
+        requirements: ["analysis", "transformation", "rasengan"]
     }
     // Future combos can be added here
 };
@@ -28,6 +35,11 @@ module.exports = {
                 { 
                     name: '1) Basic Combo',
                     value: 'Attack + Transformation Jutsu\nCreates an "Empowered Attack" that deals 100 True Damage.\nCost: Free (0)',
+                    inline: false 
+                },
+                { 
+                    name: '2) Intermediate Combo',
+                    value: 'Analysis + Transformation Jutsu + Rasengan\nDeals 100,000 damage, stuns the opponent for 1 round, and applies bleed.\nCost: 10,000',
                     inline: false 
                 }
             )

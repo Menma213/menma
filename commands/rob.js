@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 
 const usersPath = path.resolve(__dirname, '../../menma/data/users.json');
-const BRUISER_ROLE_ID = 'YOUR_BRUISER_ROLE_ID'; // set this
+
 
 const PLACES = [
     { name: "Yamada Ramen Store", image: "https://i.redd.it/pbaic624o2121.jpg" },

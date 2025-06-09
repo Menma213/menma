@@ -1,7 +1,7 @@
 {
-  "metal": 134,
-  "gunpowder": 104,
-  "copper": 100,
+  "metal": 173,
+  "gunpowder": 164,
+  "copper": 159,
   "bombs": {
     "1": {
       "damage": 100,
@@ -25,7 +25,8 @@
   "battleFighters": {
     "akatsuki": [
       "",
-      "1132693590066331828"
+      "1132693590066331828",
+      "835408109899219004"
     ],
     "village": [
       ""

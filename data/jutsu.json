@@ -18,15 +18,17 @@
       "Silent Assassination",
       "Serpents Wrath",
       "Needle Assault",
-      "Needle Assault"
+      "Needle Assault",
+      "Serpents Wrath",
+      "Silent Assassination",
+      "Needle Assault",
+      "Rasengan"
     ],
     "combos": [
-      "Basic Combo"
+      "Basic Combo",
+      "Intermediate Combo"
     ],
-    "scrolls": [
-      "Serpents Wrath Scroll",
-      "Silent Assassination Scroll"
-    ]
+    "scrolls": []
   },
   "843680216022122516": {
     "usersjutsu": [

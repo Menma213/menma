@@ -3,20 +3,6 @@ const fs = require('fs');
 const path = require('path');
 const { updateRequirements } = require('./scroll');
 
-// Combo definitions (should match arank.js)
-const COMBOS = {
-    "Basic Combo": {
-        name: "Basic Combo",
-        requiredJutsus: ["Attack", "Transformation Jutsu"],
-        resultMove: {
-            name: "Empowered Attack",
-            damage: 100,
-            damageType: "true"
-        }
-    }
-    // Add more combos here in the future
-};
-
 const usersPath = path.join(__dirname, '../../menma/data/users.json');
 const jutsuPath = path.join(__dirname, '../../menma/data/jutsu.json');
 
@@ -73,14 +59,20 @@ module.exports = {
         }
 
         if (type === 'combo') {
-            // Equip combo
-            const combo = COMBOS[name];
-            if (!combo) {
-                return interaction.reply({ content: `Combo "${name}" not found.`, ephemeral: true });
+            // Equip combo by checking jutsu.json combos array for the user
+            if (!fs.existsSync(jutsuPath)) {
+                return interaction.reply({ content: "Jutsu database not found.", ephemeral: true });
             }
-            users[userId].Combo = combo.name;
+            const jutsuData = JSON.parse(fs.readFileSync(jutsuPath, 'utf8'));
+            const userCombos = jutsuData[userId]?.combos || [];
+            // Case-insensitive match
+            const ownedCombo = userCombos.find(c => c.toLowerCase() === name.toLowerCase());
+            if (!ownedCombo) {
+                return interaction.reply({ content: `You do not own the combo "${name}".`, ephemeral: true });
+            }
+            users[userId].Combo = ownedCombo;
             fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
-            return interaction.reply({ content: `Equipped combo: **${combo.name}**!`, ephemeral: false });
+            return interaction.reply({ content: `Equipped combo: **${ownedCombo}**!`, ephemeral: false });
         }
 
         if (type === 'jutsu') {

@@ -3,6 +3,8 @@ const puppeteer = require('puppeteer');
 const fs = require('fs');
 const path = require('path');
 const math = require('mathjs');
+const { updateRequirements } = require('./scroll'); // <-- Add this import
+const { addMentorExp } = require('./mentors.js');
 
 // Add emoji constants at the top after requires
 const EMOJIS = {
@@ -15,28 +17,11 @@ const EMOJIS = {
     curse: "<:curse:1368243540978827294>",
     status: "<:status:1368243589498540092>"
 };
-
-// Combo system definition (future-proof for >2 jutsus)
-const COMBOS = {
-    "Basic Combo": {
-        name: "Basic Combo",
-        requiredJutsus: ["Attack", "Transformation Jutsu"],
-        resultMove: {
-            name: "Empowered Attack",
-            damage: 10000,
-            damageType: "true"
-        }
-    }
-    // Add more combos here in the future
-};
-
-// Combo emoji constants
-const COMBO_EMOJI_FILLED = "⭕";
-const COMBO_EMOJI_EMPTY = "⚪";
-
+const COMBO_EMOJI_FILLED = ":o:";
+const COMBO_EMOJI_EMPTY = ":white_circle:";
 // Path configurations
 const usersPath = path.resolve(__dirname, '../../menma/data/users.json');
-const jutsusPath = path.resolve(__dirname, '/workspaces/menma/data/jutsus.json');
+const jutsusPath = path.resolve(__dirname, '../../menma/data/jutsus.json');
 
 // Cooldown time in milliseconds (18 minutes)
 const COOLDOWN_TIME = 18 * 60 * 1000;
@@ -53,6 +38,13 @@ const CHAKRA_REGEN = {
 let jutsuList = {};
 if (fs.existsSync(jutsusPath)) {
     jutsuList = JSON.parse(fs.readFileSync(jutsusPath, 'utf8'));
+}
+
+// Remove the COMBOS variable and load combos from combos.json
+const combosPath = path.resolve(__dirname, '../../menma/data/combos.json');
+let comboList = {};
+if (fs.existsSync(combosPath)) {
+    comboList = JSON.parse(fs.readFileSync(combosPath, 'utf8'));
 }
 
 // Effect handlers with improved error handling
@@ -258,9 +250,9 @@ module.exports = {
 
             // Combo tracking state
             let comboState = null;
-            if (player.Combo && COMBOS[player.Combo]) {
+            if (player.Combo && comboList[player.Combo]) {
                 comboState = {
-                    combo: COMBOS[player.Combo],
+                    combo: comboList[player.Combo],
                     usedJutsus: new Set()
                 };
             }
@@ -701,14 +693,14 @@ module.exports = {
                 const rows = [];
                 
                 // Add jutsu buttons
-                Object.entries(player.jutsu).forEach(([_, jutsuName], index) => {
+                Object.entries(player.jutsu).forEach(([slot, jutsuName], index) => {
                     if (jutsuName !== 'None') {
                         const jutsu = jutsuList[jutsuName];
                         const disabled = player.chakra < (jutsu?.chakraCost || 0);
                         
                         currentRow.addComponents(
                             new ButtonBuilder()
-                                .setCustomId(`${jutsuName}-${userId}-${roundNum}`)
+                                .setCustomId(`jutsu${slot}-${userId}-${roundNum}`)
                                 .setLabel(`${index + 1}`)
                                 .setStyle(disabled ? ButtonStyle.Secondary : ButtonStyle.Primary)
                                 .setDisabled(disabled)
@@ -1013,18 +1005,25 @@ module.exports = {
 
                         collector.on('collect', async i => {
                             await i.deferUpdate();
-                            const result = await processPlayerMove(i.customId, player, currentNpc, effectivePlayer, effectiveNpc);
-
-                            // Combo tracking: if combo equipped and jutsu used is part of combo, track it
-                            if (
-                                comboState &&
-                                result.jutsuUsed &&
-                                comboState.combo.requiredJutsus.includes(result.jutsuUsed)
-                            ) {
-                                comboState.usedJutsus.add(result.jutsuUsed);
+                            let action = i.customId.split('-')[0];
+                            if (action.startsWith('jutsu')) {
+                                // Extract slot index from customId
+                                const slot = action.replace('jutsu', '');
+                                const jutsuName = player.jutsu[slot];
+                                const result = executeJutsu(player, currentNpc, effectivePlayer, effectiveNpc, jutsuName);
+                                // Combo tracking
+                                if (
+                                    comboState &&
+                                    result.jutsuUsed &&
+                                    comboState.combo.requiredJutsus.includes(result.jutsuUsed)
+                                ) {
+                                    comboState.usedJutsus.add(result.jutsuUsed);
+                                }
+                                resolve(result);
+                            } else {
+                                const result = await processPlayerMove(i.customId, player, currentNpc, effectivePlayer, effectiveNpc);
+                                resolve(result);
                             }
-                            resolve(result);
-                            collector.stop();
                         });
 
                         collector.on('end', (collected, reason) => {
@@ -1052,7 +1051,8 @@ module.exports = {
                     if (playerAction.fled) {
                         battleActive = false;
                         await interaction.followUp(`${player.name} fled from the battle!`);
-                        break;
+                        // Immediately return from the execute function to prevent any further code (including reward/material drop)
+                        return;
                     }
 
                     // Apply player action results
@@ -1063,14 +1063,61 @@ module.exports = {
 
                     // Combo completion check and bonus damage
                     let comboCompletedThisRound = false;
+                    let comboDamageText = "";
                     if (
                         comboState &&
                         comboState.combo.requiredJutsus.every(jutsu => comboState.usedJutsus.has(jutsu))
                     ) {
-                        // Apply bonus damage
-                        currentNpc.currentHealth -= comboState.combo.resultMove.damage;
+                        // Apply combo effects like a jutsu
+                        const combo = comboState.combo;
+                        let comboResult = {
+                            damage: combo.damage || 0,
+                            heal: 0,
+                            specialEffects: [],
+                            hit: true
+                        };
+                        if (combo.effects && Array.isArray(combo.effects)) {
+                            combo.effects.forEach(effect => {
+                                switch (effect.type) {
+                                    case 'damage':
+                                        comboResult.damage += effect.value || 0;
+                                        comboResult.specialEffects.push(`Dealt ${effect.value || 0} damage`);
+                                        break;
+                                    case 'heal':
+                                        const healAmount = effectHandlers.heal(player, effect.formula || "0");
+                                        comboResult.heal += healAmount;
+                                        comboResult.specialEffects.push(`Healed ${healAmount} HP`);
+                                        break;
+                                    case 'status':
+                                        if (!currentNpc.activeEffects) currentNpc.activeEffects = [];
+                                        currentNpc.activeEffects.push({
+                                            type: 'status',
+                                            status: effect.status,
+                                            duration: effect.duration || 1
+                                        });
+                                        comboResult.specialEffects.push(`Applied ${effect.status} for ${effect.duration || 1} turns`);
+                                        break;
+                                    case 'debuff':
+                                        const debuffChanges = effectHandlers.debuff(currentNpc, effect.stats);
+                                        if (!currentNpc.activeEffects) currentNpc.activeEffects = [];
+                                        currentNpc.activeEffects.push({
+                                            type: 'debuff',
+                                            stats: debuffChanges,
+                                            duration: effect.duration || 1
+                                        });
+                                        comboResult.specialEffects.push(`Applied debuffs: ${Object.entries(debuffChanges)
+                                            .map(([k, v]) => `${k}: ${v}`)
+                                            .join(', ')} for ${effect.duration || 1} turns`);
+                                        break;
+                                }
+                            });
+                        }
+                        currentNpc.currentHealth -= comboResult.damage;
+                        if (comboResult.heal) {
+                            playerHealth = Math.min(playerHealth + comboResult.heal, player.health);
+                        }
                         comboCompletedThisRound = true;
-                        // Reset combo progress for next combo
+                        comboDamageText = `\n${player.name} lands a ${combo.name}! ${comboResult.specialEffects.join(' ')}`;
                         comboState.usedJutsus.clear();
                     }
 
@@ -1093,8 +1140,7 @@ module.exports = {
                     let summaryEmbed = createBattleSummary(playerAction, npcAction);
                     if (comboCompletedThisRound) {
                         summaryEmbed.setDescription(
-                            summaryEmbed.data.description +
-                            `\n${player.name} deals ${comboState.combo.resultMove.damage} additional true damage by landing a ${comboState.combo.resultMove.name}!`
+                            summaryEmbed.data.description + comboDamageText
                         );
                     }
                     await interaction.followUp({
@@ -1118,36 +1164,82 @@ module.exports = {
                         // Generate fresh victory image
                         const victoryImage = new AttachmentBuilder(await generateBattleImage());
 
+                        // --- MATERIAL DROP SYSTEM ---
+                        let role = player.role || "";
+                        if (interaction.member.roles.cache.has('1349278752944947240')) role = "Hokage";
+                        const amount = getMaterialDrop(role);
+                        const mat = getRandomMaterial();
+
+                        // Only add to village and show if amount > 0
+                        let villageDropMsg = "";
+                        if (amount > 0) {
+                            const villagePath = path.resolve(__dirname, '../../menma/data/village.json');
+                            let village = { iron: 0, wood: 0, rope: 0, defense: 0 };
+                            if (fs.existsSync(villagePath)) {
+                                village = JSON.parse(fs.readFileSync(villagePath, 'utf8'));
+                            }
+                            village[mat.key] = (village[mat.key] || 0) + amount;
+                            fs.writeFileSync(villagePath, JSON.stringify(village, null, 2));
+                            villageDropMsg = `You found ${amount} ${mat.name} ${mat.emoji} during the mission\n`;
+                        }
+
+                        // Akatsuki drop
+                        let akatsukiDropMsg = "";
+                        if (player.occupation === "Akatsuki") {
+                            let akatsukiRole = player.role || "";
+                            let akatsukiAmount = getAkatsukiMaterialDrop(akatsukiRole);
+                            if (akatsukiAmount > 0) {
+                                const akatsukiMat = getRandomAkatsukiMaterial();
+                                const akatsukiPath = path.resolve(__dirname, '../../menma/data/akatsuki.json');
+                                let akatsuki = { metal: 0, gunpowder: 0, copper: 0, bombs: {} };
+                                if (fs.existsSync(akatsukiPath)) {
+                                    akatsuki = JSON.parse(fs.readFileSync(akatsukiPath, 'utf8'));
+                                }
+                                akatsuki[akatsukiMat.key] = (akatsuki[akatsukiMat.key] || 0) + akatsukiAmount;
+                                fs.writeFileSync(akatsukiPath, JSON.stringify(akatsuki, null, 2));
+                                akatsukiDropMsg = `You found ${akatsukiAmount} ${akatsukiMat.name} ${akatsukiMat.emoji} during the mission\n`;
+                            }
+                        }
+
+                        // Prepare drop message
+                        let dropMsg = "```";
+                        if (player.occupation === "Akatsuki" && akatsukiDropMsg) {
+                            dropMsg += `\n${akatsukiDropMsg}`;
+                        } else if (amount > 0) {
+                            dropMsg += `\n${villageDropMsg}`;
+                        }
+                        dropMsg += "```";
+
+                        // Prepare reward embed
+                        let rewardEmbed;
                         if (rewards.isJackpot) {
-                            await interaction.followUp({
-                                content: `**Mission Complete!** You defeated ${currentNpc.name}!\n\n` +
-                                `**JACKPOT REWARD!**\n` +
-                                `**EXP Gained:** ${rewards.exp}\n` +
-                                `**Money Earned:** ${rewards.money} Ryo\n\n` +
-                                `You've completed 50 enemies in this mission!`,
-                                files: [victoryImage]
-                            });
-                            battleActive = false;
-                            break;
-                        }
-                        else if (rewards.isBonus) {
-                            await interaction.followUp({
-                                content: `**Mission Progress!** You defeated ${currentNpc.name}!\n\n` +
-                                `**BONUS REWARD!**\n` +
-                                `**EXP Gained:** ${rewards.exp}\n` +
-                                `**Money Earned:** ${rewards.money} Ryo\n\n` +
-                                `Enemies Defeated: ${totalEnemiesDefeated}`,
-                                files: [victoryImage]
-                            });
+                            rewardEmbed = new EmbedBuilder()
+                                .setTitle(`Battle End! ${player.name} has won!`)
+                                .setDescription(
+                                    `**JACKPOT REWARD!**\n<@${userId}> has earned ${rewards.exp} exp!\n<@${userId}> has earned $${rewards.money}!\nYou've completed 50 enemies in this mission!`
+                                )
+                                .setColor('#FFD700');
+                        } else if (rewards.isBonus) {
+                            rewardEmbed = new EmbedBuilder()
+                                .setTitle(`Battle End! ${player.name} has won!`)
+                                .setDescription(
+                                    `**BONUS REWARD!**\n<@${userId}> has earned ${rewards.exp} exp!\n<@${userId}> has earned $${rewards.money}!\nEnemies Defeated: ${totalEnemiesDefeated}`
+                                )
+                                .setColor('#00BFFF');
                         } else {
-                            await interaction.followUp({
-                                content: `**Mission Progress!** You defeated ${currentNpc.name}!\n\n` +
-                                `**EXP Gained:** ${rewards.exp}\n` +
-                                `**Money Earned:** ${rewards.money} Ryo\n\n` +
-                                `Enemies Defeated: ${totalEnemiesDefeated}`,
-                                files: [victoryImage]
-                            });
+                            rewardEmbed = new EmbedBuilder()
+                                .setTitle(`Battle End! ${player.name} has won!`)
+                                .setDescription(
+                                    `<@${userId}> has earned ${rewards.exp} exp!\n<@${userId}> has earned $${rewards.money}!\nEnemies Defeated: ${totalEnemiesDefeated}`
+                                )
+                                .setColor('#006400');
                         }
+
+                        await interaction.followUp({
+                            embeds: [rewardEmbed],
+                            content: dropMsg,
+                            files: [victoryImage]
+                        });
 
                         // Check if player wants to continue
                         const continueRow = new ActionRowBuilder().addComponents(
@@ -1186,7 +1278,8 @@ module.exports = {
                         if (choice === 'stop') {
                             battleActive = false;
                             await interaction.followUp("Mission ended by player.");
-                            break;
+                            // Immediately return from the execute function to prevent any further code (including reward/material drop)
+                            return;
                         }
 
                         // Prepare next enemy with fresh image
@@ -1282,7 +1375,57 @@ module.exports = {
                 dropMsg += "```";
                 await interaction.followUp({ embeds: [rewardEmbed], content: dropMsg });
 
+                // After you determine the user has won an A-Rank fight and it's the 4th win (or multiple of 4):
+                if (users[userId].arankWins && users[userId].arankWins % 4 === 0) {
+                    let role = player.role || "";
+                    if (interaction.member.roles.cache.has('1349278752944947240')) role = "Hokage";
+                    const amount = getMaterialDrop(role);
+                    const mat = getRandomMaterial();
+
+                    // Only add to village and show if amount > 0
+                    let villageDropMsg = "";
+                    if (amount > 0) {
+                        let village = { iron: 0, wood: 0, rope: 0, defense: 0 };
+                        if (fs.existsSync(villagePath)) {
+                            village = JSON.parse(fs.readFileSync(villagePath, 'utf8'));
+                        }
+                        village[mat.key] = (village[mat.key] || 0) + amount;
+                        fs.writeFileSync(villagePath, JSON.stringify(village, null, 2));
+                        villageDropMsg = `You found ${amount} ${mat.name} ${mat.emoji} during the mission\n`;
+                    }
+
+                    // Akatsuki drop
+                    let akatsukiDropMsg = "";
+                    if (player.occupation === "Akatsuki") {
+                        let akatsukiRole = player.role || "";
+                        let akatsukiAmount = getAkatsukiMaterialDrop(akatsukiRole);
+                        // Only drop if role is valid
+                        if (akatsukiAmount > 0) {
+                            const akatsukiMat = getRandomAkatsukiMaterial();
+                            const akatsukiPath = path.resolve(__dirname, '../../menma/data/akatsuki.json');
+                            let akatsuki = { metal: 0, gunpowder: 0, copper: 0, bombs: {} };
+                            if (fs.existsSync(akatsukiPath)) {
+                                akatsuki = JSON.parse(fs.readFileSync(akatsukiPath, 'utf8'));
+                            }
+                            akatsuki[akatsukiMat.key] = (akatsuki[akatsukiMat.key] || 0) + akatsukiAmount;
+                            fs.writeFileSync(akatsukiPath, JSON.stringify(akatsuki, null, 2));
+                            akatsukiDropMsg = `You found ${akatsukiAmount} ${akatsukiMat.name} ${akatsukiMat.emoji} during the mission\n`;
+                        }
+                    }
+
+                    // Send response (village + akatsuki drop if any)
+                    let dropMsg = "```";
+                    if (player.occupation === "Akatsuki" && akatsukiDropMsg) {
+                        dropMsg += `\n${akatsukiDropMsg}`;
+                    } else if (amount > 0) {
+                        dropMsg += `\nYou found ${amount} ${mat.name} ${mat.emoji} during the mission\n`;
+                    }
+                    dropMsg += "```";
+                    await interaction.followUp({ content: dropMsg });
+                }
+
                 await updateRequirements(interaction.user.id, 'a_mission');
+                await addMentorExp(userId, 1);
             } catch (error) {
                 console.error("Mission error:", error);
                 await interaction.followUp("An error occurred during the mission!");

@@ -35,7 +35,7 @@ const COMBO_EMOJI_EMPTY = "⚪";
 
 // Path configurations
 const usersPath = path.resolve(__dirname, '../../menma/data/users.json');
-const jutsusPath = path.resolve(__dirname, '/workspaces/menma/data/jutsus.json');
+const jutsusPath = path.resolve(__dirname, '../../menma/data/jutsus.json');
 const imagesPath = path.resolve(__dirname, '/workspaces/menma/images');
 
 // Load jutsus from JSON file

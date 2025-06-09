@@ -165,8 +165,8 @@ const COMBO_EMOJI_EMPTY = "⚪";
 
 // Path configurations
 const usersPath = path.resolve(__dirname, '../../menma/data/users.json');
-const jutsusPath = path.resolve(__dirname, '/workspaces/menma/data/jutsus.json');
-const imagesPath = path.resolve(__dirname, '/workspaces/menma/images');
+const jutsusPath = path.resolve(__dirname, '../../menma/data/jutsus.json');
+const imagesPath = path.resolve(__dirname, '../../menma/images');
 
 // Load jutsus from JSON file
 let jutsuList = {};
@@ -1222,8 +1222,7 @@ module.exports = {
                         // Move to next Hokage if any
                         currentTrialIndex++;
                         if (currentTrialIndex < HOKAGE_TRIALS.length) {
-                            await interaction.followUp(`**Next Trial!** Prepare to face **${HOKAGE_TRIALS[currentTrialIndex].name}**!`);
-                            // Reset NPC health for next battle, keep playerHealth as is
+                            // Do NOT send "Next Trial!" here, let the outer loop handle it
                             break;
                         } else {
                             battleActive = false;

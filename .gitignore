@@ -1,0 +1,7 @@
+```
+# ...existing code...
+.env
+anko/.env
+ichiraku ramen/.env
+# ...existing code...
+```

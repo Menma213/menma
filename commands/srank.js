@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const math = require('mathjs');
 const { updateRequirements } = require('./scroll');
+const { addMentorExp } = require('./mentors.js');
 
 // Emoji constants (same as arank.js)
 const EMOJIS = {
@@ -37,9 +38,8 @@ const COMBO_EMOJI_EMPTY = "⚪";
 // Path configurations
 const usersPath = path.resolve(__dirname, '../../menma/data/users.json');
 const jutsuPath = path.resolve(__dirname, '../../menma/data/jutsu.json');
-const jutsusPath = path.resolve(__dirname, '/workspaces/menma/data/jutsus.json');
-const srankPath = path.resolve(__dirname, '../../menma/data/srank.json');
-const imagesPath = path.resolve(__dirname, '/workspaces/menma/images');
+const jutsusPath = path.resolve(__dirname, '../../menma/data/jutsus.json');
+const imagesPath = path.resolve(__dirname, '../../menma/images');
 
 // Load data
 let jutsuList = {};
@@ -729,8 +729,8 @@ module.exports = {
                         let currentRow = new ActionRowBuilder();
                         let buttonCount = 0;
                         
-                        // Add jutsu buttons with numbers
-                        Object.entries(currentPlayer.jutsu).forEach(([_, jutsuName], index) => {
+                        // Add jutsu buttons with unique custom_id per button (slot index)
+                        Object.entries(currentPlayer.jutsu).forEach(([slot, jutsuName], index) => {
                             if (jutsuName !== 'None') {
                                 const jutsu = jutsuList[jutsuName];
                                 const disabled = currentPlayer.chakra < (jutsu?.chakraCost || 0);
@@ -741,9 +741,10 @@ module.exports = {
                                     buttonCount = 0;
                                 }
                                 
+                                // Make custom_id unique by including slot and player id and roundNum
                                 currentRow.addComponents(
                                     new ButtonBuilder()
-                                        .setCustomId(`${jutsuName}-${currentPlayer.id}-${roundNum}`)
+                                        .setCustomId(`jutsu${slot}-${currentPlayer.id}-${roundNum}`)
                                         .setLabel(`${index + 1}`)
                                         .setStyle(disabled ? ButtonStyle.Secondary : ButtonStyle.Primary)
                                         .setDisabled(disabled)
@@ -753,7 +754,7 @@ module.exports = {
                             }
                         });
                     
-                        // Add utility buttons
+                        // Add utility buttons with unique custom_id
                         if (buttonCount < 3) {
                             currentRow.addComponents(
                                 new ButtonBuilder()
@@ -792,7 +793,6 @@ module.exports = {
                     // Process player move
                     const processPlayerMove = async (customId, basePlayer, baseNpc, effectivePlayer, effectiveNpc) => {
                         const action = customId.split('-')[0];
-                        
                         if (action === 'rest') {
                             basePlayer.chakra += 1;
                             return {
@@ -804,16 +804,20 @@ module.exports = {
                                 isRest: true
                             };
                         }
-                        
                         if (action === 'flee') {
                             return { fled: true };
                         }
-                        
-                        // Combo tracking
-                        if (comboState && comboState.combo.requiredJutsus.includes(action)) {
-                            comboState.usedJutsus.add(action);
+                        // If it's a jutsu button, extract slot and use it to get the jutsu name
+                        if (action.startsWith('jutsu')) {
+                            const slot = action.replace('jutsu', '');
+                            const jutsuName = basePlayer.jutsu[slot];
+                            // Combo tracking
+                            if (comboState && comboState.combo.requiredJutsus.includes(jutsuName)) {
+                                comboState.usedJutsus.add(jutsuName);
+                            }
+                            return executeJutsu(basePlayer, baseNpc, effectivePlayer, effectiveNpc, jutsuName);
                         }
-                        
+                        // fallback
                         return executeJutsu(basePlayer, baseNpc, effectivePlayer, effectiveNpc, action);
                     };
 
@@ -1203,25 +1207,70 @@ module.exports = {
                             }
 
                             // --- MATERIAL DROP SYSTEM ---
-                            let role = users[userId].role || "";
-                            if (interaction.member.roles.cache.has('1349278752944947240')) role = "Hokage";
-                            const amount = getMaterialDrop(role);
-                            const mat = getRandomMaterial();
+                            // Only drop materials if this is a solo mission (players.length === 1)
+                            if (players.length === 1) {
+                                let role = users[userId].role || "";
+                                if (interaction.member.roles.cache.has('1349278752944947240')) role = "Hokage";
+                                const amount = getMaterialDrop(role);
+                                const mat = getRandomMaterial();
 
-                            // Update village.json
-                            const villagePath = path.resolve(__dirname, '../../menma/data/village.json');
-                            let village = { iron: 0, wood: 0, rope: 0, defense: 0 };
-                            if (fs.existsSync(villagePath)) {
-                                village = JSON.parse(fs.readFileSync(villagePath, 'utf8'));
+                                // Village drop
+                                let villageDropMsg = "";
+                                if (amount > 0) {
+                                    const villagePath = path.resolve(__dirname, '../../menma/data/village.json');
+                                    let village = { iron: 0, wood: 0, rope: 0, defense: 0 };
+                                    if (fs.existsSync(villagePath)) {
+                                        village = JSON.parse(fs.readFileSync(villagePath, 'utf8'));
+                                    }
+                                    village[mat.key] = (village[mat.key] || 0) + amount;
+                                    fs.writeFileSync(villagePath, JSON.stringify(village, null, 2));
+                                    villageDropMsg = `You found ${amount} ${mat.name} ${mat.emoji} during the mission\n`;
+                                }
+
+                                // Akatsuki drop
+                                let akatsukiDropMsg = "";
+                                if (users[userId].occupation === "Akatsuki") {
+                                    // Akatsuki drop logic (copy from arank/brank)
+                                    function getAkatsukiMaterialDrop(role) {
+                                        if (role === "Akatsuki Leader") return Math.floor(Math.random() * 3) + 12;
+                                        if (role === "Co-Leader") return Math.floor(Math.random() * 3) + 10;
+                                        if (role === "Bruiser") return Math.floor(Math.random() * 3) + 8;
+                                        if (role === "Scientist") return Math.floor(Math.random() * 3) + 2;
+                                        return 0;
+                                    }
+                                    function getRandomAkatsukiMaterial() {
+                                        const mats = [
+                                            { name: "Metal", emoji: "🪙", key: "metal" },
+                                            { name: "Gunpowder", emoji: "💥", key: "gunpowder" },
+                                            { name: "Copper", emoji: "🔌", key: "copper" }
+                                        ];
+                                        return mats[Math.floor(Math.random() * mats.length)];
+                                    }
+                                    let akatsukiRole = users[userId].role || "";
+                                    let akatsukiAmount = getAkatsukiMaterialDrop(akatsukiRole);
+                                    if (akatsukiAmount > 0) {
+                                        const akatsukiMat = getRandomAkatsukiMaterial();
+                                        const akatsukiPath = path.resolve(__dirname, '../../menma/data/akatsuki.json');
+                                        let akatsuki = { metal: 0, gunpowder: 0, copper: 0, bombs: {} };
+                                        if (fs.existsSync(akatsukiPath)) {
+                                            akatsuki = JSON.parse(fs.readFileSync(akatsukiPath, 'utf8'));
+                                        }
+                                        akatsuki[akatsukiMat.key] = (akatsuki[akatsukiMat.key] || 0) + akatsukiAmount;
+                                        fs.writeFileSync(akatsukiPath, JSON.stringify(akatsuki, null, 2));
+                                        akatsukiDropMsg = `You found ${akatsukiAmount} ${akatsukiMat.name} ${akatsukiMat.emoji} during the mission\n`;
+                                    }
+                                }
+
+                                // Send material drop message (block message)
+                                let dropMsg = "```";
+                                if (users[userId].occupation === "Akatsuki" && akatsukiDropMsg) {
+                                    dropMsg += `\n${akatsukiDropMsg}`;
+                                } else if (villageDropMsg) {
+                                    dropMsg += `\n${villageDropMsg}`;
+                                }
+                                dropMsg += "```";
+                                await interaction.followUp({ content: dropMsg });
                             }
-                            village[mat.key] = (village[mat.key] || 0) + amount;
-                            fs.writeFileSync(villagePath, JSON.stringify(village, null, 2));
-
-                            // Send material drop message (block message)
-                            await interaction.followUp({
-                                content: `\`\`\`\nYou found ${amount} ${mat.name} ${mat.emoji} during the mission\n\`\`\``
-                            });
-
                             battleActive = false;
                         } else if (players.every(p => p.health <= 0)) {
                             // Defeat
@@ -1235,6 +1284,9 @@ module.exports = {
 
                         roundNum++;
                     }
+
+                    // Add mentor experience after mission completion
+                    await addMentorExp(userId, 1);
                 } catch (error) {
                     console.error("Battle error:", error);
                     await interaction.followUp("An error occurred during the battle!");

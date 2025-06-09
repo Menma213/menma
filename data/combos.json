@@ -1,0 +1,27 @@
+{
+    "Basic Combo": {
+        "name": "Basic Combo",
+        "requiredJutsus": ["Attack", "Transformation Jutsu"],
+        "damage": 10000,
+        "damageType": "true",
+        "effects": []
+    },
+    "Intermediate Combo": {
+        "name": "Intermediate Combo",
+        "requiredJutsus": ["Analysis", "Transformation Jutsu", "Rasengan"],
+        "damage": 100000,
+        "damageType": "true",
+        "effects": [
+            {
+                "type": "status",
+                "status": "stun",
+                "duration": 1
+            },
+            {
+                "type": "status",
+                "status": "bleed",
+                "duration": 2
+            }
+        ]
+    }
+}
