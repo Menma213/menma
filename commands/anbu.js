@@ -3,8 +3,8 @@ const fs = require('fs');
 const path = require('path');
 
 const usersPath = path.resolve(__dirname, '../../menma/data/users.json');
-const HOKAGE_ROLE_ID = '1349245807995387915'; // Replace with the actual Hokage role ID
-const ANBU_ROLE_ID = '1349314127214149712'; // Replace with the actual Anbu role ID
+const HOKAGE_ROLE_ID = '1381606285577031772'; // Replace with the actual Hokage role ID
+const ANBU_ROLE_ID = '1382055740268744784'; // Replace with the actual Anbu role ID
 
 module.exports = {
     data: new SlashCommandBuilder()

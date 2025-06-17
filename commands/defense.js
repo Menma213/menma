@@ -4,7 +4,7 @@ const path = require('path');
 const { createCanvas, loadImage } = require('canvas');
 
 const villagePath = path.resolve(__dirname, '../../menma/data/village.json');
-const HOKAGE_ROLE_ID = '1349245807995387915'; // Use your Hokage role ID
+const HOKAGE_ROLE_ID = '1381606285577031772'; // Use your Hokage role ID
 
 const DEFENSE_LEVELS = [
     { level: 1, cost: 100 },
@@ -98,8 +98,10 @@ module.exports = {
                 .setRequired(false)
         ),
     async execute(interaction) {
+        await interaction.deferReply(); // Defer immediately to avoid timeout
+
         if (!interaction.member.roles.cache.has(HOKAGE_ROLE_ID)) {
-            return interaction.reply({ content: "Only the Hokage can use this command.", ephemeral: true });
+            return interaction.editReply({ content: "Only the Hokage can use this command." });
         }
         const level = interaction.options.getInteger('level');
         let village = getVillage();
@@ -108,7 +110,7 @@ module.exports = {
             // Show all turrets as a single image
             const imgBuffer = await generateDefenseImage(village);
             const attachment = new AttachmentBuilder(imgBuffer, { name: 'defenses.png' });
-            return interaction.reply({
+            return interaction.editReply({
                 content: "**Village Defenses:**",
                 files: [attachment]
             });
@@ -116,11 +118,11 @@ module.exports = {
 
         // Build/repair a turret
         if (level < 1 || level > 10) {
-            return interaction.reply({ content: "Defense level must be between 1 and 10.", ephemeral: true });
+            return interaction.editReply({ content: "Defense level must be between 1 and 10." });
         }
         const cost = DEFENSE_LEVELS[level - 1].cost;
         if (village.iron < cost || village.wood < cost || village.rope < cost) {
-            return interaction.reply({ content: `Not enough materials! Need ${cost} of each (iron, wood, rope).`, ephemeral: true });
+            return interaction.editReply({ content: `Not enough materials! Need ${cost} of each (iron, wood, rope).` });
         }
         village.iron -= cost;
         village.wood -= cost;
@@ -132,7 +134,7 @@ module.exports = {
         // Show updated image after building
         const imgBuffer = await generateDefenseImage(village);
         const attachment = new AttachmentBuilder(imgBuffer, { name: 'defenses.png' });
-        return interaction.reply({
+        return interaction.editReply({
             content: `Defense turret level ${level} built!`,
             files: [attachment]
         });

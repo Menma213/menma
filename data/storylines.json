@@ -1,0 +1,34 @@
+{
+    "Kakashi": {
+        "title": "The Missing Icha Icha Paradise",
+        "pages": [
+            "Kakashi sighs deeply as you approach. 'Ah, young shinobi... I seem to have misplaced something very important.'",
+            "'You see, I was just reading my latest novel - Icha Icha Paradise: Tactics - when suddenly it was gone!'",
+            "'I had it with me at the training grounds, then went to get some dango... When I returned, it was missing.'",
+            "'This is most troubling. That book contains... valuable tactical information. Yes, tactical information.'",
+            "'Would you help me find it? I suspect someone at the training grounds might have taken it.'"
+        ],
+        "minigame": {
+            "title": "Find the Thief",
+            "description": "Three suspicious individuals were at the training grounds:",
+            "options": [
+                {
+                    "text": "Ebisu",
+                    "hint": "Known to disapprove of Kakashi's reading habits"
+                },
+                {
+                    "text": "Naruto",
+                    "hint": "Has a history of pranks and mischief"
+                },
+                {
+                    "text": "Guy",
+                    "hint": "Would never take something from his 'eternal rival'"
+                }
+            ],
+            "correct": 1,
+            "successText": "You found Naruto hiding behind a tree, flipping through the book! 'Hehe, I just wanted to see what Kakashi-sensei was always reading!'",
+            "failText": "Unfortunately, your investigation led to a dead end. The real thief got away!",
+            "rewardExp": 10
+        }
+    }
+}

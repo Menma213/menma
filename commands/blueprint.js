@@ -86,8 +86,8 @@ async function generateBombImageWithBg(akatsuki) {
     return canvas.toBuffer();
 }
 
-// Add your Akatsuki Leader's Discord user ID here
-const AKATSUKI_LEADER_ID = "YOUR_LEADER_DISCORD_ID"; // <-- Replace with the actual ID
+// Add your Akatsuki Leader's Discord role ID here
+const AKATSUKI_LEADER_ROLE_ID = "1381606426908033136"; // <-- Replace with the actual role ID
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -100,10 +100,14 @@ module.exports = {
         ),
     async execute(interaction) {
         try {
-            const userId = interaction.user.id;
-            // Only Akatsuki Leader can use this command
-            if (userId !== AKATSUKI_LEADER_ID) {
-                return interaction.reply({ content: "Only the Akatsuki Leader can use this command.", ephemeral: true });
+            await interaction.deferReply(); // Defer immediately to avoid timeout
+
+            // Allow by role OR user ID for backward compatibility
+            if (
+                !interaction.member.roles.cache.has(AKATSUKI_LEADER_ROLE_ID) &&
+                interaction.user.id !== "1381606426908033136"
+            ) {
+                return interaction.editReply({ content: "Only the Akatsuki Leader can use this command." });
             }
             const level = interaction.options.getInteger('level');
             let akatsuki = getAkatsuki();
@@ -111,7 +115,7 @@ module.exports = {
             if (!level) {
                 const imgBuffer = await generateBombImageWithBg(akatsuki);
                 const attachment = new AttachmentBuilder(imgBuffer, { name: 'bombs.png' });
-                await interaction.reply({
+                await interaction.editReply({
                     content: "**Nuclear Chakra Bomb Blueprints:**",
                     files: [attachment]
                 });
@@ -119,11 +123,11 @@ module.exports = {
             }
 
             if (level < 1 || level > 10) {
-                return interaction.reply({ content: "Bomb level must be between 1 and 10.", ephemeral: true });
+                return interaction.editReply({ content: "Bomb level must be between 1 and 10." });
             }
             const cost = BOMB_LEVELS[level - 1].cost;
             if (akatsuki.metal < cost || akatsuki.gunpowder < cost || akatsuki.copper < cost) {
-                return interaction.reply({ content: `Not enough materials! Need ${cost} of each (metal, gunpowder, copper).`, ephemeral: true });
+                return interaction.editReply({ content: `Not enough materials! Need ${cost} of each (metal, gunpowder, copper).` });
             }
             akatsuki.metal -= cost;
             akatsuki.gunpowder -= cost;
@@ -133,13 +137,13 @@ module.exports = {
 
             const imgBuffer = await generateBombImageWithBg(akatsuki);
             const attachment = new AttachmentBuilder(imgBuffer, { name: 'bombs.png' });
-            await interaction.reply({
+            await interaction.editReply({
                 content: `Nuclear Chakra Bomb level ${level} blueprint created!`,
                 files: [attachment]
             });
         } catch (error) {
             if (!interaction.replied && !interaction.deferred) {
-                await interaction.reply({ content: "An error occurred while executing the command.", ephemeral: true });
+                await interaction.editReply({ content: "An error occurred while executing the command." });
             }
             console.error('Error executing blueprint:', error);
         }

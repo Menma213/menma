@@ -2,7 +2,6 @@ const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const fs = require('fs');
 const path = require('path');
 const { updateRequirements } = require('./scroll');
-const { addMentorExp } = require('./mentors.js');
 const dataPath = './data/users.json';
 
 const usersPath = path.resolve(__dirname, '../../menma/data/users.json');
@@ -168,6 +167,9 @@ module.exports = {
         await updateRequirements(interaction.user.id, 'd_mission');
 
         // Add Mentor Experience
-        await addMentorExp(userId, 1);
+        users[userId].mentorExp = (users[userId].mentorExp || 0) + 1;
+
+        // Save users.json after updating mentorExp
+        fs.writeFileSync(dataPath, JSON.stringify(users, null, 2));
     }
 };

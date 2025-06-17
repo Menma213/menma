@@ -13,16 +13,14 @@
       "Sexy Jutsu",
       "Shadow Clone Jutsu",
       "Kirin",
-      "Lightning Blade",
       "Water Prison",
       "Silent Assassination",
       "Serpents Wrath",
-      "Needle Assault",
-      "Needle Assault",
       "Serpents Wrath",
       "Silent Assassination",
       "Needle Assault",
-      "Rasengan"
+      "Rasengan",
+      "Lightning Blade"
     ],
     "combos": [
       "Basic Combo",
@@ -99,6 +97,28 @@
     ],
     "combos": [
       "Basic Combo"
+    ]
+  },
+  "1355490065899585737": {
+    "usersjutsu": [
+      "asura"
+    ]
+  },
+  "818893461881094175": {
+    "usersjutsu": [
+      "Transformation Jutsu"
+    ],
+    "combos": [
+      "Basic Combo"
+    ]
+  },
+  "1132693590066331828": {
+    "usersjutsu": [
+      "Transformation Jutsu",
+      "asura"
+    ],
+    "scrolls": [
+      "Needle Assault Scroll"
     ]
   }
 }

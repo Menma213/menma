@@ -21,19 +21,21 @@ module.exports = {
 
     async execute(interaction) {
         try {
-            // Remove await interaction.deferReply(); and use reply/editReply only ONCE
+            // Defer reply immediately to avoid interaction timeout (public reply)
+            await interaction.deferReply();
+
             // Get the target user (optional)
             const targetUser = interaction.options.getUser('user') || interaction.user;
             const userId = targetUser.id;
 
             // Load data
             if (!fs.existsSync(usersPath)) {
-                return interaction.reply({ content: "Database not found.", ephemeral: true });
+                return await interaction.editReply({ content: "Database not found." });
             }
 
             const users = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
             if (!users[userId]) {
-                return interaction.reply({ content: targetUser.id === interaction.user.id ? "You need to enroll first!" : "This user has not enrolled yet!", ephemeral: true });
+                return await interaction.editReply({ content: targetUser.id === interaction.user.id ? "You need to enroll first!" : "This user has not enrolled yet!" });
             }
 
             const user = users[userId];
@@ -317,7 +319,7 @@ module.exports = {
             };
 
             const profileImage = new AttachmentBuilder(await generateProfileCard());
-            await interaction.reply({
+            await interaction.editReply({
                 content: `${targetUser.username}'s Ninja Card`,
                 files: [profileImage]
             });
@@ -325,10 +327,13 @@ module.exports = {
         } catch (error) {
             console.error('Error generating profile card:', error);
             // Only reply if not already replied
-            if (!interaction.replied && !interaction.deferred) {
+            if (interaction.deferred || interaction.replied) {
+                await interaction.editReply({
+                    content: "An error occurred while generating the profile card. Please try again later."
+                });
+            } else {
                 await interaction.reply({
-                    content: "An error occurred while generating the profile card. Please try again later.",
-                    ephemeral: true
+                    content: "An error occurred while generating the profile card. Please try again later."
                 });
             }
         }

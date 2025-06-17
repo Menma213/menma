@@ -1,72 +1,86 @@
 {
-    "Uzumaki": {
-        "name": "Uzumaki",
-        "description": "Uzumaki Will",
-        "passive": "User gains +15 chakra each turn when their health is critical.",
-        "costToRemove": 250000,
-        "requiredLevel": 5
-    },
-    "Uchiha": {
-        "name": "Uchiha",
-        "description": "Enhanced Reflexes",
-        "passive": "15% chance to dodge incoming attacks",
-        "costToRemove": 250000,
-        "requiredLevel": 5
-    },
-    "Hyuga": {
-        "name": "Hyuga",
-        "description": "Byakugan (Gentle Fist)",
-        "passive": "Basic attacks drain the opponent's chakra",
-        "costToRemove": 250000,
-        "requiredLevel": 5
-    },
-    "Nara": {
-        "name": "Nara",
-        "description": "Increased Intelligence",
-        "passive": "Reverses the effects of sleep, and tags back to the opponent. If stunned, also stuns the opponent.",
-        "costToRemove": 250000,
-        "requiredLevel": 5
-    },
-    "Aburame": {
-        "name": "Aburame",
-        "description": "Bug Crawl",
-        "passive": "30% chance for your attacks to make the enemy flinch.",
-        "costToRemove": 250000,
-        "requiredLevel": 5
-    },
-    "Akimichi": {
-        "name": "Akimichi",
-        "description": "A Lil Chubby",
-        "passive": "User heals 5% of HP when resting. Your Defense is doubled in battle.",
-        "costToRemove": 250000,
-        "requiredLevel": 5
-    },
-    "Inuzuka": {
-        "name": "Inuzuka",
-        "description": "Dynamic Marking",
-        "passive": "User has increased accuracy when attacking.",
-        "costToRemove": 250000,
-        "requiredLevel": 5
-    },
-    "Yamanaka": {
-        "name": "Yamanaka",
-        "description": "Mind Reader",
-        "passive": "User will dodge the enemy jutsu if they also have it equipped.",
-        "costToRemove": 250000,
-        "requiredLevel": 5
-    },
-    "Yuki": {
-        "name": "Yuki",
-        "description": "Critical Hit",
-        "passive": "User has a 30% chance to deal a critical hit to the enemy. Critical hits deal twice as much damage.",
-        "costToRemove": 250000,
-        "requiredLevel": 5
-    },
-    "Senju": {
-        "name": "Senju",
-        "description": "Regeneration",
-        "passive": "User regens 5% health each turn throughout the battle",
-        "costToRemove": 250000,
-        "requiredLevel": 5
-    }
+  "Uzumaki": {
+    "name": "Uzumaki",
+    "description": "Descendants of the Uzumaki clan known for their immense chakra reserves and vitality.",
+    "passive": "Gains +15 chakra when health drops below 30%. Uzumaki members have 10% increased chakra regeneration.",
+    "specialty": "Chakra & Vitality",
+    "requiredLevel": 5
+  },
+  "Uchiha": {
+    "name": "Uchiha",
+    "description": "The legendary clan possessing the Sharingan with powerful visual prowess.",
+    "passive": "15% chance to dodge attacks when defending. 10% chance for 1.5x damage when attacking.",
+    "specialty": "Sharingan",
+    "requiredLevel": 10
+  },
+  "Hyuga": {
+    "name": "Hyuga",
+    "description": "Wielders of the Byakugan with unparalleled taijutsu and chakra control.",
+    "passive": "Attacks drain 5 chakra from opponents. 20% chance to counterattack when defending.",
+    "specialty": "Byakugan",
+    "requiredLevel": 8
+  },
+  "Senju": {
+    "name": "Senju",
+    "description": "The clan of the First Hokage with exceptional vitality and wood release abilities.",
+    "passive": "Healing effects are 10% more effective. 10% chance to gain 5 chakra each turn.",
+    "specialty": "Wood Release",
+    "requiredLevel": 7
+  },
+  "Nara": {
+    "name": "Nara",
+    "description": "Masters of shadow manipulation and tactical geniuses.",
+    "passive": "Strategies are 15% more effective. 15% chance to reduce opponent's accuracy by 10%.",
+    "specialty": "Shadow Techniques",
+    "requiredLevel": 6
+  },
+  "Aburame": {
+    "name": "Aburame",
+    "description": "Symbiotic with insects that provide unique offensive and defensive capabilities.",
+    "passive": "25% chance to poison enemies on attack (10% of attack damage for 3 turns).",
+    "specialty": "Insect Techniques",
+    "requiredLevel": 5
+  },
+  "Akimichi": {
+    "name": "Akimichi",
+    "description": "Specialists in body expansion techniques and physical prowess.",
+    "passive": "Deals 10% more physical damage. Takes 5% less physical damage.",
+    "specialty": "Body Expansion",
+    "requiredLevel": 5
+  },
+  "Inuzuka": {
+    "name": "Inuzuka",
+    "description": "Clan known for their canine partners and enhanced senses.",
+    "passive": "15% increased movement speed. Attacks have 10% chance to hit twice.",
+    "specialty": "Beast Mimicry",
+    "requiredLevel": 5
+  },
+  "Yamanaka": {
+    "name": "Yamanaka",
+    "description": "Masters of mind-body techniques and sensory abilities.",
+    "passive": "10% chance to reveal opponent's next move. 5% chance to stun for 1 turn.",
+    "specialty": "Mind Techniques",
+    "requiredLevel": 6
+  },
+  "Yuki": {
+    "name": "Yuki",
+    "description": "Ice release specialists with powerful elemental control.",
+    "passive": "Water and ice techniques deal 15% more damage. 10% chance to freeze enemies.",
+    "specialty": "Ice Release",
+    "requiredLevel": 9
+  },
+  "Kaguya": {
+    "name": "Kaguya",
+    "description": "Possessors of the Shikotsumyaku bone manipulation ability.",
+    "passive": "10% increased physical damage. 5% chance to ignore defense.",
+    "specialty": "Bone Techniques",
+    "requiredLevel": 12
+  },
+  "Hozuki": {
+    "name": "Hozuki",
+    "description": "Masters of water transformation and hydrification techniques.",
+    "passive": "Takes 15% less damage from physical attacks. 10% chance to evade water-based attacks completely.",
+    "specialty": "Water Transformation",
+    "requiredLevel": 8
+  }
 }

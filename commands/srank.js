@@ -4,7 +4,6 @@ const fs = require('fs');
 const path = require('path');
 const math = require('mathjs');
 const { updateRequirements } = require('./scroll');
-const { addMentorExp } = require('./mentors.js');
 
 // Emoji constants (same as arank.js)
 const EMOJIS = {
@@ -90,9 +89,6 @@ const srankBosses = {
     }
 };
 
-// Cooldown tracking
-const cooldowns = new Map();
-const COOLDOWN_TIME = 60 * 60 * 1000; // 1 hour cooldown
 
 // Effect handlers (same as arank.js)
 const effectHandlers = {
@@ -1159,14 +1155,17 @@ module.exports = {
                                     if (!jutsuData[player.id]) {
                                         jutsuData[player.id] = { 
                                             usersjutsu: [],
-                                            scrolls: [] 
+                                            scrolls: []
                                         };
                                     }
-                                    
+                                    // Ensure scrolls array exists
+                                    if (!Array.isArray(jutsuData[player.id].scrolls)) {
+                                        jutsuData[player.id].scrolls = [];
+                                    }
                                     // Check if player already has the jutsu or scroll
-                                    const hasJutsu = jutsuData[player.id].usersjutsu?.includes(boss.reward);
-                                    const hasScroll = jutsuData[player.id].scrolls?.includes(boss.rewardScroll);
-                                    
+                                    const hasJutsu = Array.isArray(jutsuData[player.id].usersjutsu) && jutsuData[player.id].usersjutsu.includes(boss.reward);
+                                    const hasScroll = jutsuData[player.id].scrolls.includes(boss.rewardScroll);
+
                                     if (!hasJutsu && !hasScroll) {
                                         jutsuData[player.id].scrolls.push(boss.rewardScroll);
                                         interaction.followUp(`\`${player.username} found a ${boss.rewardScroll}!\``);
@@ -1286,7 +1285,8 @@ module.exports = {
                     }
 
                     // Add mentor experience after mission completion
-                    await addMentorExp(userId, 1);
+                    users[userId].mentorExp = (users[userId].mentorExp || 0) + 1;
+                    fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
                 } catch (error) {
                     console.error("Battle error:", error);
                     await interaction.followUp("An error occurred during the battle!");

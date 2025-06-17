@@ -18,28 +18,6 @@
     "ramen": 101,
     "money": 1000
   },
-  "1132693590066331828": {
-    "level": 1,
-    "exp": 250,
-    "wins": 0,
-    "losses": 0,
-    "rank": "Genin",
-    "clan": "None",
-    "bloodline": "None",
-    "health": 1000,
-    "power": 100,
-    "defense": 50,
-    "chakra": 10,
-    "jutsu": [
-      "Attack",
-      "Transformation Jutsu"
-    ],
-    "ramen": 51,
-    "money": 5930,
-    "lastdrank": 1746987373563,
-    "occupation": "Akatsuki",
-    "role": "Leader"
-  },
   "1018526599043354725": {
     "level": 1,
     "exp": 430,
@@ -79,8 +57,13 @@
       "Attack",
       "Transformation Jutsu"
     ],
-    "money": 20000,
-    "ramen": 51
+    "money": 19999,
+    "ramen": 51,
+    "lastArank": 1749741447840,
+    "lastbrank": 1749741589628,
+    "lastsrank": 1749742666424,
+    "elo": 940,
+    "firstusescroll": true
   },
   "843680216022122516": {
     "level": 20,
@@ -132,13 +115,13 @@
   },
   "835408109899219004": {
     "level": 39,
-    "exp": 83255,
-    "wins": 110,
+    "exp": 94225,
+    "wins": 114,
     "losses": 2,
     "rankedPoints": 0,
     "clan": "Thundie's clan",
     "bloodline": "Otsutsuki",
-    "mentor": "Thunderbird",
+    "mentor": "Kakashi",
     "rank": "Chuunin",
     "health": 899999999,
     "power": 12295000,
@@ -148,7 +131,7 @@
       "slot_0": "Attack",
       "slot_1": "Transformation Jutsu",
       "slot_2": "asura",
-      "slot_3": "Analysis",
+      "slot_3": "asura",
       "slot_4": "Rasengan",
       "slot_5": "Shadow Clone Jutsu"
     },
@@ -166,17 +149,27 @@
     "occupation": "Akatsuki",
     "perks": "Jinchuriki",
     "lastguard": 1746951052016,
-    "lastdrank": 1749470979677,
-    "lastbrank": 1749471328377,
-    "lastsrank": 1749471399862,
+    "lastdrank": 1750158396905,
+    "lastbrank": 1750158237996,
+    "lastsrank": 1750164071018,
     "role": "Scientist",
     "lastrob": 1747052628716,
-    "elo": 1034,
+    "elo": 1304,
     "mentorPoints": 6,
     "completedMentorStories": {
       "Kakashi": true
     },
-    "mentorExp": 4
+    "mentorExp": 3,
+    "ranked": {
+      "totalElo": 12100,
+      "rank": "The Shinobi God",
+      "division": 1,
+      "elo": 0,
+      "claimedRewards": [
+        100,
+        200
+      ]
+    }
   },
   "741142009670271010": {
     "level": 1,
@@ -300,7 +293,7 @@
     "rankedPoints": 0,
     "clan": "None",
     "bloodline": null,
-    "mentor": "None",
+    "mentor": "Kakashi",
     "rank": "Genin",
     "health": 6.899999999999998e+123,
     "power": 6.968999999999997e+122,
@@ -324,7 +317,12 @@
     "occupation": "Akatsuki",
     "role": "Co-Leader",
     "lastbrank": 1749388985623,
-    "bloodlineAttempts": 1
+    "bloodlineAttempts": 1,
+    "completedMentorStories": {
+      "Kakashi": true
+    },
+    "mentorExp": 10,
+    "elo": 1050
   },
   "826183795417022555": {
     "level": 1,
@@ -357,11 +355,11 @@
     "occupation": "Anbu",
     "role": "Spy"
   },
-  "799979545046155284": {
+  "818893461881094175": {
     "level": 1,
-    "exp": 2535,
-    "wins": 6,
-    "losses": 1,
+    "exp": 885,
+    "wins": 3,
+    "losses": 0,
     "rankedPoints": 0,
     "clan": "None",
     "bloodline": "Unknown",
@@ -379,13 +377,39 @@
       "slot_4": "None",
       "slot_5": "None"
     },
-    "money": 18855,
+    "money": 16255,
     "ramen": 1,
-    "lastbrank": 1749471476958,
-    "lastdrank": 1749389004678,
+    "lastbrank": 1750159551986,
     "Combo": "Basic Combo",
-    "lastArank": 1749389595479,
-    "elo": 986,
-    "mentorExp": 1
+    "mentorExp": 2,
+    "lastdrank": 1750158127002,
+    "lastsrank": 1750159715479
+  },
+  "1132693590066331828": {
+    "level": 31,
+    "exp": 2050,
+    "wins": 2,
+    "losses": 0,
+    "rankedPoints": 0,
+    "clan": "None",
+    "bloodline": "Unknown",
+    "mentor": "None",
+    "rank": "Academy Student",
+    "health": 5563.8,
+    "power": 175,
+    "defense": 139,
+    "chakra": 10,
+    "jutsu": {
+      "slot_0": "Attack",
+      "slot_1": "Transformation Jutsu",
+      "slot_2": "None",
+      "slot_3": "asura",
+      "slot_4": "None",
+      "slot_5": "None"
+    },
+    "money": 97016930,
+    "ramen": 1,
+    "lastsrank": 1750164430228,
+    "mentorExp": 3
   }
 }

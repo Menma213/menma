@@ -3,12 +3,18 @@ const fs = require('fs');
 const path = require('path');
 const math = require('mathjs');
 const puppeteer = require('puppeteer');
+const Canvas = require('canvas'); // ADDED
 
 // Path configurations
 const usersPath = path.resolve(__dirname, '../../menma/data/users.json');
 const jutsusPath = path.resolve(__dirname, '../../menma/data/jutsus.json');
 const combosPath = path.resolve(__dirname, '../../menma/data/combos.json');
 const imagesPath = path.resolve(__dirname, '../images');
+const rankedRewardsPath = path.resolve(__dirname, '../../menma/data/rankedrewards.json');
+const giftPath = path.resolve(__dirname, '../../menma/data/gift.json');
+
+const WIN_BG = 'https://i.imgur.com/XQJKVEp.gif';
+const LOSS_BG = 'https://i.imgur.com/mxqUWZJ.gif';
 
 // Load jutsus from JSON file
 let jutsuList = {};
@@ -22,34 +28,20 @@ if (fs.existsSync(combosPath)) {
     comboList = JSON.parse(fs.readFileSync(combosPath, 'utf8'));
 }
 
-// ELO System Configuration (League of Legends style)
-const ELO_CONFIG = {
-    tiers: {
-        IRON: 0,
-        BRONZE: 400,
-        SILVER: 800,
-        GOLD: 1200,
-        PLATINUM: 1600,
-        DIAMOND: 2000,
-        MASTER: 2400,
-        GRANDMASTER: 2800,
-        CHALLENGER: 3200
-    },
-    tierNames: {
-        IRON: 'Iron',
-        BRONZE: 'Bronze',
-        SILVER: 'Silver',
-        GOLD: 'Gold',
-        PLATINUM: 'Platinum',
-        DIAMOND: 'Diamond',
-        MASTER: 'Master',
-        GRANDMASTER: 'Grandmaster',
-        CHALLENGER: 'Challenger'
-    },
-    divisions: ['IV', 'III', 'II', 'I'],
+// Replace old rank names with new ones
+const RANK_CONFIG = {
+    ranks: [
+        "Genin",
+        "Chuunin",
+        "Jounin",
+        "Sannin",
+        "Master Shinobi",
+        "The Shinobi God"
+    ],
+    divisions: [5, 4, 3, 2, 1],
+    eloPerDivision: 100,
     winElo: 50,
-    lossElo: 30,
-    baseElo: 1000
+    lossElo: 25
 };
 
 // Ranked queue system
@@ -289,20 +281,26 @@ async function generateBattleImage(player1, player2) {
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('ranked')
-        .setDescription('Enter the ranked queue for competitive 1v1 battles')
+        .setDescription('Ranked queue and rewards')
         .addStringOption(option =>
-            option.setName('mode')
-                .setDescription('Ranked mode')
-                .setRequired(true)
+            option.setName('option')
+                .setDescription('Show rewards or join ranked')
                 .addChoices(
-                    { name: 'Standard', value: 'standard' },
-                    { name: 'Custom', value: 'custom' }
-                )),
-    
+                    { name: 'rewards', value: 'rewards' }
+                )
+                .setRequired(false)
+        ),
+
     async execute(interaction) {
         const userId = interaction.user.id;
-        const mode = interaction.options.getString('mode');
-        
+        const opt = interaction.options.getString('option');
+
+        if (opt === 'rewards') {
+            return await handleRankedRewards(interaction);
+        }
+
+        const mode = 'standard';
+
         // Load user data
         if (!fs.existsSync(usersPath)) {
             if (!interaction.replied && !interaction.deferred)
@@ -434,6 +432,119 @@ async function startRankedBattle(client, player1Id, player2Id, mode) {
         ]
     });
 
+    // --- Invitation Embed ---
+    const invitationEmbed = new EmbedBuilder()
+        .setTitle('🏆 RANKED: STANDARD MODE')
+        .setDescription(
+            `Welcome to the ultimate test of strength and will!\n\n` +
+            `Step into the arena and prove yourself as the strongest shinobi. ` +
+            `Climb the ranks, defeat your rivals, and aim to become the next Hokage!\n\n` +
+            `**Do <@${player1Id}> and <@${player2Id}> swear to fight fairly under the gaze of the Shinigami, god of death?**\n` +
+            `*Ορκίζομαι να πολεμήσω δίκαια υπό το βλέμμα του Shinigami!*\n\n` +
+            `:hourglass: **Invitation expires in 1 minute.**`
+        )
+        .setColor('#e67e22')
+        .setImage('https://static0.gamerantimages.com/wordpress/wp-content/uploads/2024/01/the_valley_of_the_end-1.jpg')
+        .setFooter({ text: 'Both must accept to begin the battle.' });
+
+    const acceptRow = new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+            .setCustomId('ranked_accept')
+            .setLabel('Accept')
+            .setStyle(ButtonStyle.Success),
+        new ButtonBuilder()
+            .setCustomId('ranked_decline')
+            .setLabel('Decline')
+            .setStyle(ButtonStyle.Danger)
+    );
+
+    // Ping both users with the embed
+    const invitationMsg = await channel.send({
+        content: `<@${player1Id}> <@${player2Id}>`,
+        embeds: [invitationEmbed],
+        components: [acceptRow]
+    });
+
+    // Await both players to accept
+    const accepted = new Set();
+    let declined = false;
+
+    await new Promise((resolve) => {
+        const collector = invitationMsg.createMessageComponentCollector({
+            filter: i => [player1Id, player2Id].includes(i.user.id),
+            time: 60000 // 1 minute
+        });
+
+        collector.on('collect', async i => {
+            if (i.customId === 'ranked_accept') {
+                accepted.add(i.user.id);
+                await i.reply({ content: `You have accepted the challenge!`, ephemeral: true });
+                await channel.send(`<@${i.user.id}> has accepted.`);
+                if (accepted.has(player1Id) && accepted.has(player2Id)) {
+                    collector.stop('both_accepted');
+                }
+            } else if (i.customId === 'ranked_decline') {
+                declined = true;
+                await i.reply({ content: `You have declined the challenge. The match is cancelled.`, ephemeral: true });
+                await channel.send(`<@${i.user.id}> has declined. The match is cancelled.`);
+                collector.stop('declined');
+            }
+        });
+
+        collector.on('end', async (collected, reason) => {
+            // Disable buttons
+            await invitationMsg.edit({
+                components: [
+                    new ActionRowBuilder().addComponents(
+                        new ButtonBuilder()
+                            .setCustomId('ranked_accept')
+                            .setLabel('Accept')
+                            .setStyle(ButtonStyle.Success)
+                            .setDisabled(true),
+                        new ButtonBuilder()
+                            .setCustomId('ranked_decline')
+                            .setLabel('Decline')
+                            .setStyle(ButtonStyle.Danger)
+                            .setDisabled(true)
+                    )
+                ]
+            });
+            if (reason === 'both_accepted') {
+                await channel.send('**# RANKED: STANDARD MODE**\nLet the battle begin!');
+                resolve();
+            } else if (declined) {
+                // Already handled above
+                resolve();
+            } else {
+                // Timeout: only one accepted
+                if (accepted.size === 1) {
+                    const winnerId = [...accepted][0];
+                    const loserId = winnerId === player1Id ? player2Id : player1Id;
+                    await channel.send(`<@${winnerId}> has accepted, but <@${loserId}> did not respond in time. <@${WinnerId}> wins by default!`);
+                    // ELO update logic for default win
+                    const eloUpdate = updateElo(winnerId, loserId);
+                    try {
+                        const logChannel = await client.channels.fetch(LOG_CHANNEL_ID);
+                        if (logChannel) {
+                            await logChannel.send(`[RANKED] ${winnerId} wins by default (opponent did not accept) +${eloUpdate.winnerChange} ELO`);
+                        }
+                    } catch (e) {}
+                } else {
+                    await channel.send('The ranked match has been cancelled due to no response.');
+                }
+                // Auto-delete channel after 15 seconds
+                setTimeout(async () => {
+                    try {
+                        await channel.delete("Ranked match invitation expired (auto-cleanup)");
+                    } catch (e) {}
+                }, 15000);
+                resolve();
+            }
+        });
+    });
+
+    if (declined || accepted.size !== 2) return;
+
     // Initialize player objects (adapted from brank.js)
     // Add avatarURL for battle image
     const player1Avatar = (await client.users.fetch(player1Id)).displayAvatarURL({ format: 'png', size: 256 });
@@ -489,36 +600,41 @@ async function startRankedBattle(client, player1Id, player2Id, mode) {
         });
 
         // Calculate effective stats for both players
-        const effectiveActive = getEffectiveStats(activePlayer);
-        const effectiveOpponent = getEffectiveStats(opponent);
+        const effective1 = getEffectiveStats(player1);
+        const effective2 = getEffectiveStats(player2);
 
-        // Moves embed (from brank.js, but for activePlayer)
-        const { embed, components } = createMovesEmbedPvP(activePlayer, roundNum);
-        const moveMessage = await channel.send({
-            content: `<@${activePlayer.userId}>`,
-            embeds: [embed],
-            components: components,
+        // --- Player 1's turn ---
+        const { embed: embed1, components: components1 } = createMovesEmbedPvP(player1, roundNum);
+        const moveMessage1 = await channel.send({
+            content: `<@${player1.userId}>`,
+            embeds: [embed1],
+            components: components1,
             fetchReply: true
         });
+        const battleImagePath1 = await generateBattleImage(player1, player2);
+        const battleImage1 = new AttachmentBuilder(battleImagePath1);
+        await channel.send({
+            content: `**Battle Image:**`,
+            files: [battleImage1]
+        });
 
-        // Player move
-        const playerAction = await new Promise(resolve => {
-            const collector = moveMessage.createMessageComponentCollector({
-                filter: i => i.user.id === activePlayer.userId && i.customId.endsWith(`-${activePlayer.userId}-${roundNum}`),
+        const player1Action = await new Promise(resolve => {
+            const collector = moveMessage1.createMessageComponentCollector({
+                filter: i => i.user.id === player1.userId && i.customId.endsWith(`-${player1.userId}-${roundNum}`),
                 time: 90000
             });
             collector.on('collect', async i => {
                 await i.deferUpdate();
                 if (i.customId.startsWith('move')) {
-                    const jutsuName = getJutsuByButtonPvP(i.customId, activePlayer);
-                    const result = executeJutsu(activePlayer, opponent, effectiveActive, effectiveOpponent, jutsuName);
-                    if (activeComboState?.combo.requiredJutsus.includes(jutsuName)) {
-                        activeComboState.usedJutsus.add(jutsuName);
+                    const jutsuName = getJutsuByButtonPvP(i.customId, player1);
+                    const result = executeJutsu(player1, player2, effective1, effective2, jutsuName);
+                    if (comboState1?.combo.requiredJutsus.includes(jutsuName)) {
+                        comboState1.usedJutsus.add(jutsuName);
                     }
                     result.jutsuUsed = jutsuName;
                     resolve(result);
                 } else {
-                    resolve(await processPlayerMove(i.customId, activePlayer, opponent, effectiveActive, effectiveOpponent));
+                    resolve(await processPlayerMove(i.customId, player1, player2, effective1, effective2));
                 }
                 collector.stop();
             });
@@ -527,14 +643,14 @@ async function startRankedBattle(client, player1Id, player2Id, mode) {
                     resolve({
                         damage: 0,
                         heal: 0,
-                        description: `${activePlayer.name} did not make a move.`,
+                        description: `${player1.name} did not make a move.`,
                         specialEffects: ["Missed opportunity!"],
                         hit: false,
                         fled: true
                     });
                 }
-                moveMessage.edit({
-                    components: components.map(row => {
+                moveMessage1.edit({
+                    components: components1.map(row => {
                         const disabledRow = ActionRowBuilder.from(row);
                         disabledRow.components.forEach(c => c.setDisabled(true));
                         return disabledRow;
@@ -543,27 +659,97 @@ async function startRankedBattle(client, player1Id, player2Id, mode) {
             });
         });
 
-        if (playerAction.fled) {
+        if (player1Action.fled) {
             battleActive = false;
-            await channel.send(`${activePlayer.name} fled from the battle!`);
+            await channel.send(`${player1.name} fled from the battle!`);
             // Log flee
             try {
                 const logChannel = await client.channels.fetch(LOG_CHANNEL_ID);
                 if (logChannel) {
-                    await logChannel.send(`[RANKED] ${activePlayer.name} (${activePlayer.userId}) fled from the match against ${opponent.name} (${opponent.userId})`);
+                    await logChannel.send(`[RANKED] ${player1.name} (${player1.userId}) fled from the match against ${player2.name} (${player2.userId})`);
                 }
             } catch (e) {}
             break;
         }
 
-        // Combo completion check for active player
-        let comboCompletedThisRound = false;
-        let comboDamageText = "";
+        // --- Player 2's turn ---
+        const { embed: embed2, components: components2 } = createMovesEmbedPvP(player2, roundNum);
+        const moveMessage2 = await channel.send({
+            content: `<@${player2.userId}>`,
+            embeds: [embed2],
+            components: components2,
+            fetchReply: true
+        });
+        // Remove the extra battle image after player 2's embed
+        // const battleImagePath2 = await generateBattleImage(player1, player2);
+        // const battleImage2 = new AttachmentBuilder(battleImagePath2);
+        // await channel.send({
+        //     content: `**Battle Image:**`,
+        //     files: [battleImage2]
+        // });
+
+        const player2Action = await new Promise(resolve => {
+            const collector = moveMessage2.createMessageComponentCollector({
+                filter: i => i.user.id === player2.userId && i.customId.endsWith(`-${player2.userId}-${roundNum}`),
+                time: 90000
+            });
+            collector.on('collect', async i => {
+                await i.deferUpdate();
+                if (i.customId.startsWith('move')) {
+                    const jutsuName = getJutsuByButtonPvP(i.customId, player2);
+                    const result = executeJutsu(player2, player1, effective2, effective1, jutsuName);
+                    if (comboState2?.combo.requiredJutsus.includes(jutsuName)) {
+                        comboState2.usedJutsus.add(jutsuName);
+                    }
+                    result.jutsuUsed = jutsuName;
+                    resolve(result);
+                } else {
+                    resolve(await processPlayerMove(i.customId, player2, player1, effective2, effective1));
+                }
+                collector.stop();
+            });
+            collector.on('end', (collected, reason) => {
+                if (reason === 'time') {
+                    resolve({
+                        damage: 0,
+                        heal: 0,
+                        description: `${player2.name} did not make a move.`,
+                        specialEffects: ["Missed opportunity!"],
+                        hit: false,
+                        fled: true
+                    });
+                }
+                moveMessage2.edit({
+                    components: components2.map(row => {
+                        const disabledRow = ActionRowBuilder.from(row);
+                        disabledRow.components.forEach(c => c.setDisabled(true));
+                        return disabledRow;
+                    })
+                }).catch(() => {});
+            });
+        });
+
+        if (player2Action.fled) {
+            battleActive = false;
+            await channel.send(`${player2.name} fled from the battle!`);
+            // Log flee
+            try {
+                const logChannel = await client.channels.fetch(LOG_CHANNEL_ID);
+                if (logChannel) {
+                    await logChannel.send(`[RANKED] ${player2.name} (${player2.userId}) fled from the match against ${player1.name} (${player1.userId})`);
+                }
+            } catch (e) {}
+            break;
+        }
+
+        // --- Apply both actions after both have chosen ---
+        // Combo completion check for player 1
+        let comboCompleted1 = false, comboDamageText1 = "";
         if (
-            activeComboState &&
-            activeComboState.combo.requiredJutsus.every(jutsu => activeComboState.usedJutsus.has(jutsu))
+            comboState1 &&
+            comboState1.combo.requiredJutsus.every(jutsu => comboState1.usedJutsus.has(jutsu))
         ) {
-            const combo = activeComboState.combo;
+            const combo = comboState1.combo;
             let comboResult = {
                 damage: combo.damage || 0,
                 heal: 0,
@@ -578,13 +764,13 @@ async function startRankedBattle(client, player1Id, player2Id, mode) {
                             comboResult.specialEffects.push(`Dealt ${effect.value || 0} damage`);
                             break;
                         case 'heal':
-                            const healAmount = effectHandlers.heal(activePlayer, effect.formula || "0");
+                            const healAmount = effectHandlers.heal(player1, effect.formula || "0");
                             comboResult.heal += healAmount;
                             comboResult.specialEffects.push(`Healed ${healAmount} HP`);
                             break;
                         case 'status':
-                            if (!opponent.activeEffects) opponent.activeEffects = [];
-                            opponent.activeEffects.push({
+                            if (!player2.activeEffects) player2.activeEffects = [];
+                            player2.activeEffects.push({
                                 type: 'status',
                                 status: effect.status,
                                 duration: effect.duration || 1
@@ -592,9 +778,9 @@ async function startRankedBattle(client, player1Id, player2Id, mode) {
                             comboResult.specialEffects.push(`Applied ${effect.status} for ${effect.duration || 1} turns`);
                             break;
                         case 'debuff':
-                            const debuffChanges = effectHandlers.debuff(opponent, effect.stats);
-                            if (!opponent.activeEffects) opponent.activeEffects = [];
-                            opponent.activeEffects.push({
+                            const debuffChanges = effectHandlers.debuff(player2, effect.stats);
+                            if (!player2.activeEffects) player2.activeEffects = [];
+                            player2.activeEffects.push({
                                 type: 'debuff',
                                 stats: debuffChanges,
                                 duration: effect.duration || 1
@@ -606,68 +792,268 @@ async function startRankedBattle(client, player1Id, player2Id, mode) {
                     }
                 });
             }
-            opponent.currentHealth -= comboResult.damage;
+            player2.currentHealth -= comboResult.damage;
             if (comboResult.heal) {
-                activePlayer.currentHealth = Math.min(activePlayer.currentHealth + comboResult.heal, activePlayer.health);
+                player1.currentHealth = Math.min(player1.currentHealth + comboResult.heal, player1.health);
             }
-            comboCompletedThisRound = true;
-            comboDamageText = `\n${activePlayer.name} lands a ${combo.name}! ${comboResult.specialEffects.join(' ')}`;
-            activeComboState.usedJutsus.clear();
+            comboCompleted1 = true;
+            comboDamageText1 = `\n${player1.name} lands a ${combo.name}! ${comboResult.specialEffects.join(' ')}`;
+            comboState1.usedJutsus.clear();
         }
 
-        // Apply player action results
-        opponent.currentHealth -= playerAction.damage || 0;
-        if (playerAction.heal) {
-            activePlayer.currentHealth = Math.min(activePlayer.currentHealth + playerAction.heal, activePlayer.health);
+        // Combo completion check for player 2
+        let comboCompleted2 = false, comboDamageText2 = "";
+        if (
+            comboState2 &&
+            comboState2.combo.requiredJutsus.every(jutsu => comboState2.usedJutsus.has(jutsu))
+        ) {
+            const combo = comboState2.combo;
+            let comboResult = {
+                damage: combo.damage || 0,
+                heal: 0,
+                specialEffects: [],
+                hit: true
+            };
+            if (combo.effects && Array.isArray(combo.effects)) {
+                combo.effects.forEach(effect => {
+                    switch (effect.type) {
+                        case 'damage':
+                            comboResult.damage += effect.value || 0;
+                            comboResult.specialEffects.push(`Dealt ${effect.value || 0} damage`);
+                            break;
+                        case 'heal':
+                            const healAmount = effectHandlers.heal(player2, effect.formula || "0");
+                            comboResult.heal += healAmount;
+                            comboResult.specialEffects.push(`Healed ${healAmount} HP`);
+                            break;
+                        case 'status':
+                            if (!player1.activeEffects) player1.activeEffects = [];
+                            player1.activeEffects.push({
+                                type: 'status',
+                                status: effect.status,
+                                duration: effect.duration || 1
+                            });
+                            comboResult.specialEffects.push(`Applied ${effect.status} for ${effect.duration || 1} turns`);
+                            break;
+                        case 'debuff':
+                            const debuffChanges = effectHandlers.debuff(player1, effect.stats);
+                            if (!player1.activeEffects) player1.activeEffects = [];
+                            player1.activeEffects.push({
+                                type: 'debuff',
+                                stats: debuffChanges,
+                                duration: effect.duration || 1
+                            });
+                            comboResult.specialEffects.push(`Applied debuffs: ${Object.entries(debuffChanges)
+                                .map(([k, v]) => `${k}: ${v}`)
+                                .join(', ')} for ${effect.duration || 1} turns`);
+                            break;
+                    }
+                });
+            }
+            player1.currentHealth -= comboResult.damage;
+            if (comboResult.heal) {
+                player2.currentHealth = Math.min(player2.currentHealth + comboResult.heal, player2.health);
+            }
+            comboCompleted2 = true;
+            comboDamageText2 = `\n${player2.name} lands a ${combo.name}! ${comboResult.specialEffects.join(' ')}`;
+            comboState2.usedJutsus.clear();
         }
 
-        // Generate and send battle image before each round
-        const battleImagePath = await generateBattleImage(player1, player2);
-        const battleImage = new AttachmentBuilder(battleImagePath);
+        // Apply player 1's action to player 2
+        player2.currentHealth -= player1Action.damage || 0;
+        if (player1Action.heal) {
+            player1.currentHealth = Math.min(player1.currentHealth + player1Action.heal, player1.health);
+        }
 
-        await channel.send({
-            content: `**Battle Image:**`,
-            files: [battleImage]
-        });
+        // Apply player 2's action to player 1
+        player1.currentHealth -= player2Action.damage || 0;
+        if (player2Action.heal) {
+            player2.currentHealth = Math.min(player2.currentHealth + player2Action.heal, player2.health);
+        }
 
-        // Show round summary (use brank.js summary logic, but for PvP)
-        let summaryEmbed = createBattleSummaryPvP(playerAction, activePlayer, opponent, roundNum, comboCompletedThisRound, comboDamageText);
-        await channel.send({ embeds: [summaryEmbed] });
+        // Show round summary for both players
+        let summaryEmbed1 = createBattleSummaryPvP(player1Action, player1, player2, roundNum, comboCompleted1, comboDamageText1);
+        // let summaryEmbed2 = createBattleSummaryPvP(player2Action, player2, player1, roundNum, comboCompleted2, comboDamageText2);
+        await channel.send({ embeds: [summaryEmbed1] });
+        // await channel.send({ embeds: [summaryEmbed2] });
 
         // Win/loss check
-        if (opponent.currentHealth <= 0 || activePlayer.currentHealth <= 0) {
+        if (player1.currentHealth <= 0 || player2.currentHealth <= 0) {
             battleActive = false;
-            let winner = activePlayer.currentHealth > 0 ? activePlayer : opponent;
-            let loser = activePlayer.currentHealth > 0 ? opponent : activePlayer;
-            await channel.send(`🏆 **${winner.name}** wins the ranked match!`);
-            // ELO update logic
-            const eloUpdate = updateElo(winner.userId, loser.userId);
+            let winner, loser;
+            if (player1.currentHealth > 0 && player2.currentHealth <= 0) {
+                winner = player1; loser = player2;
+            } else if (player2.currentHealth > 0 && player1.currentHealth <= 0) {
+                winner = player2; loser = player1;
+            } else {
+                // Both at 0 or below, draw
+                await channel.send(`It's a draw!`);
+                break;
+            }
+
+            // Handle match end with new ELO visualizations
+            const eloUpdate = await handleMatchEnd(channel, winner, loser, users);
+
             // Log match result
             try {
                 const logChannel = await client.channels.fetch(LOG_CHANNEL_ID);
                 if (logChannel) {
-                    await logChannel.send(`[RANKED] ${winner.name} (${winner.userId}) has won against ${loser.name} (${loser.userId}) +${eloUpdate.winnerChange} ELO`);
+                    await logChannel.send(`[RANKED] ${winner.name} (${winner.userId}) has won against ${loser.name} (${loser.userId})`);
                 }
             } catch (e) {}
             break;
         }
 
         // Passive chakra regen
-        activePlayer.chakra = Math.min(activePlayer.chakra + 2, 10);
-        opponent.chakra = Math.min(opponent.chakra + 2, 10);
+        player1.chakra = Math.min(player1.chakra + 2, 10);
+        player2.chakra = Math.min(player2.chakra + 2, 10);
 
-        // Swap turns
-        [activePlayer, opponent] = [opponent, activePlayer];
-        [activeComboState, opponentComboState] = [opponentComboState, activeComboState];
         roundNum++;
     }
 
-    // Clean up: delete channel after a delay, update ELO, etc.
+    // --- Auto-delete channel after 15 seconds ---
+    setTimeout(async () => {
+        try {
+            await channel.delete("Ranked match ended (auto-cleanup)");
+        } catch (e) {}
+    }, 15000);
+}
+
+// --- Canvas-based match summary image ---
+async function generateMatchSummaryCanvas(user, oldElo, newElo, isWinner, rounds, maxDamage) {
+    const width = 700, height = 220;
+    const canvas = Canvas.createCanvas(width, height);
+    const ctx = canvas.getContext('2d');
+
+    // Load and draw background GIF (first frame, as Canvas can't animate)
+    const bg = await Canvas.loadImage(isWinner ? WIN_BG : LOSS_BG);
+    ctx.globalAlpha = 0.3;
+    ctx.drawImage(bg, 0, 0, width, height);
+    ctx.globalAlpha = 1;
+
+    // Theme
+    const colors = isWinner
+        ? { bar: '#4ade80', bar2: '#22c55e', text: '#eaffea' }
+        : { bar: '#f87171', bar2: '#dc2626', text: '#ffeaea' };
+
+    // ELO bar
+    const barX = 120, barY = 90, barW = 460, barH = 28;
+    const oldRank = getTierAndDivision(oldElo);
+    const newRank = getTierAndDivision(newElo);
+    const nextRank = rankedRewards.find(r => r.elo > newElo);
+    const progress = Math.max(0, Math.min(1, (newElo % 100) / 100));
+    ctx.save();
+    ctx.fillStyle = '#222c';
+    ctx.beginPath();
+    ctx.roundRect(barX, barY, barW, barH, 14);
+    ctx.fill();
+    ctx.restore();
+
+    // Progress bar
+    ctx.save();
+    const grad = ctx.createLinearGradient(barX, 0, barX + barW, 0);
+    grad.addColorStop(0, colors.bar);
+    grad.addColorStop(1, colors.bar2);
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.roundRect(barX, barY, barW * progress, barH, 14);
+    ctx.fill();
+    ctx.restore();
+
+    // ELO gained/lost in center
+    ctx.font = 'bold 22px Segoe UI';
+    ctx.fillStyle = colors.text;
+    ctx.textAlign = 'center';
+    ctx.fillText(`${isWinner ? '+' : ''}${newElo - oldElo} ELO`, barX + barW / 2, barY + barH / 2 + 7);
+
+    // Current rank (left)
+    ctx.font = 'bold 15px Segoe UI';
+    ctx.textAlign = 'left';
+    ctx.fillText(`${newRank.rank} Div. ${newRank.division}`, barX, barY - 8);
+    ctx.font = '10px Segoe UI';
+    ctx.fillText('Current Rank', barX, barY + barH + 16);
+
+    // Next rank (right)
+    ctx.font = 'bold 15px Segoe UI';
+    ctx.textAlign = 'right';
+    ctx.fillText(
+        nextRank ? `${nextRank.rank} Div. ${nextRank.division}` : 'Max Rank',
+        barX + barW,
+        barY - 8
+    );
+    ctx.font = '10px Segoe UI';
+    ctx.fillText('Next Rank', barX + barW, barY + barH + 16);
+
+    // Progress text below bar
+    ctx.font = '11px Segoe UI';
+    ctx.textAlign = 'center';
+    ctx.fillText(`${newElo % 100}/100`, barX + barW / 2, barY + barH + 16);
+
+    return canvas.toBuffer('image/png');
+}
+
+// --- Canvas-based match summary embed handler ---
+async function handleMatchEnd(channel, winner, loser, users, roundNum, maxDamage) {
+    const oldWinnerElo = users[winner.userId].ranked?.totalElo || 0;
+    const oldLoserElo = users[loser.userId].ranked?.totalElo || 0;
+    const eloUpdate = updateElo(winner.userId, loser.userId);
+
+    // Generate summary images
+    const winnerImage = await generateMatchSummaryCanvas(
+        winner,
+        oldWinnerElo,
+        eloUpdate.winnerNew.totalElo,
+        true,
+        roundNum,
+        maxDamage
+    );
+    const loserImage = await generateMatchSummaryCanvas(
+        loser,
+        oldLoserElo,
+        eloUpdate.loserNew.totalElo,
+        false,
+        roundNum,
+        maxDamage
+    );
+
+    // Create summary embeds
+    const winnerSummary = new EmbedBuilder()
+        .setColor('#22c55e')
+        .setTitle('Match Summary')
+        .setDescription(
+            `**RANKED: STANDARD MODE**\n\nSummary: Win\nRounds: ${roundNum}\nHighest Damage: ${maxDamage}`
+        )
+        .setImage('attachment://result.png')
+        .setFooter({ text: 'Victory' })
+        .setFlags(64);
+
+    const loserSummary = new EmbedBuilder()
+        .setColor('#dc2626')
+        .setTitle('Match Summary')
+        .setDescription(
+            `**RANKED: STANDARD MODE**\n\nSummary: Loss\nRounds: ${roundNum}\nHighest Damage: ${maxDamage}`
+        )
+        .setImage('attachment://result.png')
+        .setFooter({ text: 'Defeat' })
+        .setFlags(64);
+
+    // Send results to the original queue channel
+    await channel.send({
+        content: `🏆 <@${winner.userId}>`,
+        embeds: [winnerSummary],
+        files: [{ attachment: winnerImage, name: 'result.png' }]
+    });
+
+    await channel.send({
+        content: `💔 <@${loser.userId}>`,
+        embeds: [loserSummary],
+        files: [{ attachment: loserImage, name: 'result.png' }]
+    });
+
+    return eloUpdate;
 }
 
 // --- Helper functions for PvP ---
-// Use/adapt createMovesEmbed, getJutsuByButton, executeJutsu, processPlayerMove, getEffectiveStats, createBattleSummary from brank.js
-
 function getEffectiveStats(entity) {
     const stats = { ...entity };
     delete stats.activeEffects;
@@ -951,42 +1337,475 @@ function getRandomChannelId() {
 }
 
 function getTierAndDivision(elo) {
-    let tier = 'IRON';
-    let division = 'IV';
-    for (const [tierName, threshold] of Object.entries(ELO_CONFIG.tiers)) {
-        if (elo >= threshold) {
-            tier = tierName;
-        } else {
-            break;
-        }
+    if (!elo && elo !== 0) return { rank: "Genin", division: 5, elo: 0 };
+    let totalDivisions = RANK_CONFIG.ranks.length * 5;
+    let currentDivision = Math.floor(elo / RANK_CONFIG.eloPerDivision);
+    if (currentDivision >= totalDivisions) {
+        return {
+            rank: "The Shinobi God",
+            division: 1,
+            elo: elo % RANK_CONFIG.eloPerDivision
+        };
     }
-    const tierThreshold = ELO_CONFIG.tiers[tier];
-    const nextTierThreshold = Object.values(ELO_CONFIG.tiers).find(t => t > tierThreshold) || Infinity;
-    const range = nextTierThreshold - tierThreshold;
-    const position = elo - tierThreshold;
-    const divisionIndex = Math.min(
-        ELO_CONFIG.divisions.length - 1,
-        Math.floor((position / range) * ELO_CONFIG.divisions.length)
-    );
-    division = ELO_CONFIG.divisions[divisionIndex];
+    let rankIndex = Math.floor(currentDivision / 5);
+    let division = 5 - (currentDivision % 5);
     return {
-        tier: ELO_CONFIG.tierNames[tier],
-        division
+        rank: RANK_CONFIG.ranks[rankIndex],
+        division: division,
+        elo: elo % RANK_CONFIG.eloPerDivision
     };
 }
 
 // ELO update logic: +50 on win, -30 on loss, always keep >= 0
 function updateElo(winnerId, loserId) {
     const users = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
-    if (!users[winnerId].elo) users[winnerId].elo = ELO_CONFIG.baseElo;
-    if (!users[loserId].elo) users[loserId].elo = ELO_CONFIG.baseElo;
-    users[winnerId].elo += ELO_CONFIG.winElo;
-    users[loserId].elo = Math.max(0, users[loserId].elo - ELO_CONFIG.lossElo);
-    fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
-    return {
-        winnerChange: ELO_CONFIG.winElo,
-        loserChange: ELO_CONFIG.lossElo,
-        winnerNewElo: users[winnerId].elo,
-        loserNewElo: users[loserId].elo
+    
+    // Initialize ranked data if not exists
+    if (!users[winnerId].ranked) users[winnerId].ranked = { totalElo: 0 };
+    if (!users[loserId].ranked) users[loserId].ranked = { totalElo: 0 };
+
+    // Update ELO
+    users[winnerId].ranked.totalElo += RANK_CONFIG.winElo;
+    users[loserId].ranked.totalElo = Math.max(0, users[loserId].ranked.totalElo - RANK_CONFIG.lossElo);
+
+    // Calculate new ranks
+    const winnerRank = getTierAndDivision(users[winnerId].ranked.totalElo);
+    const loserRank = getTierAndDivision(users[loserId].ranked.totalElo);
+
+    // Update full rank info
+    users[winnerId].ranked = {
+        ...users[winnerId].ranked,
+        ...winnerRank
     };
+    
+    users[loserId].ranked = {
+        ...users[loserId].ranked,
+        ...loserRank
+    };
+
+    fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
+
+    return {
+        winnerChange: RANK_CONFIG.winElo,
+        loserChange: RANK_CONFIG.lossElo,
+        winnerNew: winnerRank,
+        loserNew: loserRank
+    };
+}
+
+// Load ranked ladder rewards
+let rankedRewards = [];
+if (fs.existsSync(rankedRewardsPath)) {
+    rankedRewards = JSON.parse(fs.readFileSync(rankedRewardsPath, 'utf8'));
+}
+
+// Load or initialize gift inventory
+function getGiftInventory(userId) {
+    let giftData = {};
+    if (fs.existsSync(giftPath)) {
+        giftData = JSON.parse(fs.readFileSync(giftPath, 'utf8'));
+    }
+    if (!giftData[userId]) giftData[userId] = {};
+    return giftData;
+}
+function saveGiftInventory(giftData) {
+    fs.writeFileSync(giftPath, JSON.stringify(giftData, null, 2));
+}
+
+// --- Ranked Ladder Rewards Handler ---
+async function handleRankedRewards(interaction) {
+    const userId = interaction.user.id;
+    const users = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
+    const user = users[userId];
+    if (!user || !user.ranked) {
+        return interaction.reply({ content: "You haven't played ranked yet!" });
+    }
+    const userElo = user.ranked.totalElo || 0;
+    const userRankObj = getTierAndDivision(userElo);
+    const userRank = userRankObj.rank;
+    const userDiv = userRankObj.division;
+
+    // Find claimable and next reward
+    let claimable = null, nextReward = null;
+    for (const reward of rankedRewards) {
+        if (userElo >= reward.elo && !user.ranked.claimedRewards?.includes(reward.elo)) {
+            claimable = reward;
+            break;
+        }
+    }
+    if (!claimable) {
+        nextReward = rankedRewards.find(r => r.elo > userElo);
+    }
+
+    // Generate the ranked rewards image using Puppeteer
+    const imagePath = await generateRankedRewardsImage(user, userElo, userRank, userDiv, claimable, nextReward);
+
+    const row = claimable
+        ? new ActionRowBuilder().addComponents(
+            new ButtonBuilder()
+                .setCustomId('ranked_claim')
+                .setLabel('Claim')
+                .setStyle(ButtonStyle.Success)
+        )
+        : null;
+
+    // Use deferReply/followUp to avoid "Unknown interaction" error if Puppeteer takes time
+    await interaction.deferReply();
+    await interaction.followUp({
+        content: '',
+        files: [imagePath],
+        components: row ? [row] : []
+    });
+
+    if (claimable) {
+        const filter = i => i.customId === 'ranked_claim' && i.user.id === userId;
+        const collector = interaction.channel.createMessageComponentCollector({ filter, time: 60000, max: 1 });
+        collector.on('collect', async i => {
+            // Add reward to gift inventory with random id 1-5000
+            let giftData = getGiftInventory(userId);
+            if (!giftData[userId]) giftData[userId] = [];
+            const id = generateGiftId(giftData[userId]);
+            giftData[userId].push({
+                id,
+                type: 'ranked_reward',
+                reward: claimable,
+                date: Date.now()
+            });
+            saveGiftInventory(giftData);
+
+            // Mark reward as claimed
+            const users = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
+            if (!users[userId].ranked.claimedRewards) users[userId].ranked.claimedRewards = [];
+            users[userId].ranked.claimedRewards.push(claimable.elo);
+            fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
+
+            await i.reply({ content: `Reward sent to your gift inventory! Use /gift inventory to claim it.` });
+        });
+    }
+}
+
+// --- Generate random gift id (1-5000, unique per user) ---
+function generateGiftId(userGifts) {
+    let id;
+    do {
+        id = Math.floor(Math.random() * 5000) + 1;
+    } while (userGifts && userGifts.some(g => g.id === id));
+    return id;
+}
+
+// --- Puppeteer image for ranked rewards ---
+async function generateRankedRewardsImage(user, userElo, userRank, userDiv, claimable, nextReward) {
+    const browser = await puppeteer.launch({ args: ['--no-sandbox'] });
+    const page = await browser.newPage();
+    await page.setViewport({ width: 700, height: 500 });
+
+    // Theme colors by rank
+    const themes = {
+        "Genin":    { bg: "#0a1a3a", accent: "#1e3a8a", text: "#e0eaff", border: "#274690" },
+        "Chuunin":  { bg: "#1e4023", accent: "#4ade80", text: "#eaffea", border: "#22c55e" },
+        "Jounin":   { bg: "#0e3c3c", accent: "#2dd4bf", text: "#eafffa", border: "#14b8a6" },
+        "Sannin":   { bg: "#2a1a3a", accent: "#a78bfa", text: "#f3eaff", border: "#7c3aed" },
+        "Master Shinobi": { bg: "#3a3a1a", accent: "#fde68a", text: "#fffbe0", border: "#facc15" },
+        "The Shinobi God": { bg: "#0a2a3a", accent: "#67e8f9", text: "#e0faff", border: "#06b6d4" }
+    };
+    const theme = themes[userRank] || themes["Genin"];
+
+    // HTML/CSS for rewards
+    const html = `
+    <html>
+    <head>
+    <style>
+    body { margin: 0; padding: 0; background: ${theme.bg}; }
+    .container {
+        width: 700px; height: 500px; background: ${theme.bg}; border-radius: 18px;
+        box-shadow: 0 8px 32px #000a; display: flex; flex-direction: column; align-items: center; padding: 0;
+        border: 4px solid ${theme.border};
+        font-family: 'Segoe UI', Arial, sans-serif;
+    }
+    .title {
+        font-size: 36px; font-weight: bold; color: ${theme.accent}; margin: 32px 0 8px 0; letter-spacing: 2px;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+    }
+    .rank-box {
+        background: linear-gradient(90deg, ${theme.accent}33, transparent 80%);
+        border-radius: 10px; padding: 18px 32px; margin-bottom: 18px; margin-top: 8px;
+        border: 2px solid ${theme.accent}; color: ${theme.text}; font-size: 22px; font-weight: bold;
+        box-shadow: 0 2px 12px #0004;
+        display: flex; flex-direction: row; align-items: center; gap: 18px;
+    }
+    .rank-label { font-size: 18px; color: ${theme.accent}; font-weight: bold; margin-right: 8px; }
+    .rank-value { font-size: 24px; color: ${theme.text}; }
+    .upcoming-title {
+        font-size: 22px; color: ${theme.accent}; font-weight: bold; margin: 18px 0 6px 0;
+        letter-spacing: 1px;
+    }
+    .upcoming-box {
+        background: ${theme.bg}cc; border-radius: 10px; padding: 14px 24px; margin-bottom: 10px;
+        border: 2px solid ${theme.accent}; color: ${theme.text}; font-size: 18px;
+        box-shadow: 0 2px 8px #0004;
+    }
+    .claim-title {
+        font-size: 22px; color: ${theme.accent}; font-weight: bold; margin: 18px 0 6px 0;
+        letter-spacing: 1px;
+    }
+    .claim-box {
+        background: ${theme.bg}cc; border-radius: 10px; padding: 14px 24px; margin-bottom: 10px;
+        border: 2px solid ${theme.accent}; color: ${theme.text}; font-size: 18px;
+        box-shadow: 0 2px 8px #0004;
+    }
+    .footer {
+        margin-top: 18px; font-size: 15px; color: ${theme.text}cc; font-style: italic; text-align: center;
+        width: 90%;
+    }
+    .reward-choice { margin-left: 10px; }
+    </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="title">Ranked Rewards</div>
+            <div class="rank-box">
+                <span class="rank-label">Your Rank:</span>
+                <span class="rank-value">${userRank} <span style="font-size:18px;opacity:.7;">Div. ${userDiv}</span> <span style="font-size:16px;opacity:.7;">(${userElo} ELO)</span></span>
+            </div>
+            <div class="upcoming-title">Upcoming</div>
+            <div class="upcoming-box">
+                ${
+                    nextReward
+                        ? `<b>${nextReward.rank} Div. ${nextReward.division} (${nextReward.elo} ELO)</b><br>
+                        <span>1️⃣ ${nextReward.reward1.name}: ${nextReward.reward1.desc}</span><br>
+                        <span>2️⃣ ${nextReward.reward2.name}: ${nextReward.reward2.desc}</span>`
+                        : `<span>No more upcoming rewards.</span>`
+                }
+            </div>
+            <div class="claim-title">Available Claims</div>
+            <div class="claim-box">
+                ${
+                    claimable
+                        ? `<b>${claimable.rank} Div. ${claimable.division} (${claimable.elo} ELO)</b><br>
+                        <span>1️⃣ ${claimable.reward1.name}: ${claimable.reward1.desc}</span><br>
+                        <span>2️⃣ ${claimable.reward2.name}: ${claimable.reward2.desc}</span>`
+                        : `<span>No claimable rewards at this time.</span>`
+                }
+            </div>
+            <div class="footer">
+                *All these gifts are sent to your gift inventory, check using <b>/gift inventory</b>.*
+            </div>
+        </div>
+    </body>
+    </html>
+    `;
+
+    const filename = `rewards_${user.id}_${Date.now()}.png`;
+    const fullPath = path.join(imagesPath, filename);
+    await page.setContent(html);
+    await page.screenshot({ path: fullPath });
+    await browser.close();
+    return fullPath;
+}
+
+// Add the new ELO image generator
+async function generateEloImage(user, oldElo, newElo, isWinner) {
+    const browser = await puppeteer.launch({ args: ['--no-sandbox'] });
+    const page = await browser.newPage();
+    await page.setViewport({ width: 600, height: 300 });
+
+    // Calculate rank progression
+    const oldRank = getTierAndDivision(oldElo);
+    const newRank = getTierAndDivision(newElo);
+    const eloChange = newElo - oldElo;
+    
+    // Theme colors
+    const bgColor = isWinner ? '#1a3a1a' : '#3a1a1a';
+    const primaryColor = isWinner ? '#4ade80' : '#ef4444';
+    const secondaryColor = isWinner ? '#22c55e' : '#dc2626';
+    const textColor = '#ffffff';
+
+    const html = `
+    <html>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: ${bgColor};
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            font-family: 'Segoe UI', Arial, sans-serif;
+        }
+        .elo-container {
+            width: 580px;
+            height: 280px;
+            background: linear-gradient(145deg, ${bgColor}, #000);
+            border-radius: 16px;
+            border: 4px solid ${primaryColor};
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+        .header {
+            font-size: 28px;
+            font-weight: bold;
+            color: ${primaryColor};
+            text-align: center;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+        }
+        .rank-info {
+            display: flex;
+            justify-content: space-between;
+            margin: 15px 0;
+        }
+        .rank-box {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            border: 2px solid ${secondaryColor};
+            flex: 1;
+            margin: 0 10px;
+            text-align: center;
+        }
+        .rank-title {
+            font-size: 18px;
+            color: ${textColor};
+            margin-bottom: 8px;
+        }
+        .rank-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: ${primaryColor};
+        }
+        .elo-bar-container {
+            margin: 20px 0;
+            height: 30px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            border: 2px solid ${secondaryColor};
+            position: relative;
+            overflow: hidden;
+        }
+        .elo-bar {
+            height: 100%;
+            background: linear-gradient(90deg, ${primaryColor}, ${secondaryColor});
+            border-radius: 12px;
+            width: ${Math.min(100, (newElo % 100) || 0)}%;
+            transition: width 0.5s ease;
+        }
+        .elo-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 16px;
+            font-weight: bold;
+            color: ${textColor};
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+        }
+        .change-info {
+            display: flex;
+            justify-content: center;
+            margin-top: 10px;
+        }
+        .change-box {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            padding: 10px 20px;
+            border: 2px solid ${secondaryColor};
+            text-align: center;
+        }
+        .change-title {
+            font-size: 16px;
+            color: ${textColor};
+        }
+        .change-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: ${primaryColor};
+        }
+        .next-rank {
+            margin-top: 10px;
+            font-size: 16px;
+            color: ${textColor};
+            text-align: center;
+            font-style: italic;
+        }
+    </style>
+    <body>
+        <div class="elo-container">
+            <div class="header">${isWinner ? 'VICTORY - ELO GAINED' : 'DEFEAT - ELO LOST'}</div>
+            
+            <div class="rank-info">
+                <div class="rank-box">
+                    <div class="rank-title">Previous Rank</div>
+                    <div class="rank-value">${oldRank.rank} ${oldRank.division}</div>
+                </div>
+                <div class="rank-box">
+                    <div class="rank-title">Current Rank</div>
+                    <div class="rank-value">${newRank.rank} ${newRank.division}</div>
+                </div>
+            </div>
+            
+            <div class="elo-bar-container">
+                <div class="elo-bar"></div>
+                <div class="elo-text">${newElo % 100}/100 ELO to next division</div>
+            </div>
+            
+            <div class="change-info">
+                <div class="change-box">
+                    <div class="change-title">ELO ${isWinner ? 'Gained' : 'Lost'}</div>
+                    <div class="change-value">${isWinner ? '+' : ''}${eloChange}</div>
+                </div>
+            </div>
+            
+            <div class="next-rank">
+                Next rank at ${Math.ceil(newElo / 100) * 100} ELO
+            </div>
+        </div>
+    </body>
+    </html>
+    `;
+
+    const filename = `elo_${user.id}_${Date.now()}.png`;
+    const fullPath = path.join(imagesPath, filename);
+    await page.setContent(html);
+    await page.screenshot({ path: fullPath });
+    await browser.close();
+    return fullPath;
+}
+
+// Add new match end handler
+async function handleMatchEnd(channel, winner, loser, users, roundNum, maxDamage) {
+    const oldWinnerElo = users[winner.userId].ranked?.totalElo || 0;
+    const oldLoserElo = users[loser.userId].ranked?.totalElo || 0;
+    const eloUpdate = updateElo(winner.userId, loser.userId);
+    
+    // Generate ELO images
+    const winnerImagePath = await generateEloImage(
+        winner, 
+        eloUpdate.winnerNew.elo - eloUpdate.winnerChange, 
+        eloUpdate.winnerNew.elo, 
+        true
+    );
+    const loserImagePath = await generateEloImage(
+        loser, 
+        eloUpdate.loserNew.elo + eloUpdate.loserChange, 
+        eloUpdate.loserNew.elo, 
+        false
+    );
+    
+    const winnerAttachment = new AttachmentBuilder(winnerImagePath);
+    const loserAttachment = new AttachmentBuilder(loserImagePath);
+    
+    await channel.send({
+        content: `🏆 **${winner.name}** has defeated **${loser.name}**!`,
+        files: [winnerAttachment]
+    });
+    
+    await channel.send({
+        content: `💔 **${loser.name}** lost the match`,
+        files: [loserAttachment]
+    });
+
+    return eloUpdate;
 }

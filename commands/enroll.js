@@ -265,40 +265,6 @@ module.exports = {
         let transformationActive = false;
         let transformationRounds = 0;
 
-        // Generate battle image
-        const generateBattleImage = async () => {
-            const browser = await puppeteer.launch({ args: ['--no-sandbox', '--disable-setuid-sandbox'] });
-            const page = await browser.newPage();
-            await page.setViewport({ width: 700, height: 350 });
-
-            const playerHealthPercent = Math.max((player.health / 1000) * 100, 0);
-            const enemyHealthPercent = Math.max((enemy.currentHealth / enemy.health) * 100, 0);
-
-            const htmlContent = `
-                <html>
-                <body style="margin: 0; padding: 0; position: relative;">
-                    <img src="https://th.bing.com/th/id/R.067ea36dadfb751eb748255b475471da?rik=t4KQCUGlwxVq0Q&riu=http%3a%2f%2ffc03.deviantart.net%2ffs70%2fi%2f2013%2f268%2f7%2f5%2fbosque_naruto_by_lwisf3rxd-d6ntjgx.jpg&ehk=FH5skKe491eVsFi6eNVSnBJTJbUhblD%2bFfBsLEsWunU%3d&risl=&pid=ImgRaw&r=0" style="width: 700px; height: 350px; position: absolute; z-index: -1;">
-                    
-                    <div style="position: absolute; left: 50px; top: 50px;"><img src="${enemyImage}" width="150" /></div>
-                    <div style="position: absolute; right: 50px; top: 50px;"><img src="${userAvatar}" width="120" /></div>
-
-                    <div style="position: absolute; left: 50px; top: 220px; width: 150px; height: 15px; background: gray;">
-                        <div style="width: ${enemyHealthPercent}%; height: 100%; background: red;"></div>
-                    </div>
-                    <div style="position: absolute; right: 50px; top: 220px; width: 120px; height: 15px; background: gray;">
-                        <div style="width: ${playerHealthPercent}%; height: 100%; background: green;"></div>
-                    </div>
-                </body>
-                </html>
-            `;
-
-            await page.setContent(htmlContent);
-            const imagePath = `./battle_scene_${userId}.png`;
-            await page.screenshot({ path: imagePath });
-            await browser.close();
-            return imagePath;
-        };
-
         // Create round summary
         const createRoundSummary = (playerMove, enemyMove) => {
             return new EmbedBuilder()
@@ -353,13 +319,172 @@ module.exports = {
             return null;
         };
 
+        // Add improved generateBattleImage function here
+        const generateBattleImage = async ({ userId, userAvatar, enemyImage, playerHealth, playerMaxHealth, enemyHealth, enemyMaxHealth, roundNum }) => {
+            const puppeteer = require('puppeteer');
+            const path = require('path');
+            const fs = require('fs');
+            const browser = await puppeteer.launch({ args: ['--no-sandbox'] });
+            const page = await browser.newPage();
+            await page.setViewport({ width: 800, height: 400 });
+
+            const playerHealthPercent = Math.max((playerHealth / playerMaxHealth) * 100, 0);
+            const npcHealthPercent = Math.max((enemyHealth / enemyMaxHealth) * 100, 0);
+
+            // Create images directory if it doesn't exist
+            const imagesDir = path.resolve(__dirname, '../images');
+            if (!fs.existsSync(imagesDir)) {
+                fs.mkdirSync(imagesDir, { recursive: true });
+            }
+
+            const htmlContent = `
+                <html>
+                <style>
+                    body {
+                        margin: 0;
+                        padding: 0;
+                    }
+                    .battle-container {
+                        width: 800px;
+                        height: 400px;
+                        position: relative;
+                        background: url('https://i.pinimg.com/originals/5d/e5/62/5de5622ecdd4e24685f141f10e4573e3.jpg') center center no-repeat;
+                        background-size: cover;
+                        border-radius: 10px;
+                        overflow: hidden;
+                    }
+                    .character {
+                        position: absolute;
+                        width: 150px;
+                        height: 150px;
+                        border-radius: 10px;
+                        border: 3px solid #6e1515;
+                        object-fit: cover;
+                    }
+                    .player {
+                        right: 50px;
+                        top: 120px;
+                    }
+                    .enemy {
+                        left: 50px;
+                        top: 120px;
+                    }
+                    .name-tag {
+                        position: absolute;
+                        width: 150px;
+                        text-align: center;
+                        color: white;
+                        font-family: Arial, sans-serif;
+                        font-size: 18px;
+                        font-weight: bold;
+                        text-shadow: 2px 2px 4px #000;
+                        top: 80px;
+                        background: rgba(0,0,0,0.5);
+                        border-radius: 5px;
+                        padding: 2px 0;
+                    }
+                    .player-name {
+                        right: 50px;
+                    }
+                    .enemy-name {
+                        left: 50px;
+                    }
+                    .health-bar {
+                        position: absolute;
+                        width: 150px;
+                        height: 22px;
+                        background-color: #333;
+                        border-radius: 5px;
+                        overflow: hidden;
+                        top: 280px;
+                    }
+                    .health-fill {
+                        height: 100%;
+                    }
+                    .npc-health-fill {
+                        background-color: #ff4444;
+                        width: ${npcHealthPercent}%;
+                    }
+                    .player-health-fill {
+                        background-color: #4CAF50;
+                        width: ${playerHealthPercent}%;
+                    }
+                    .health-text {
+                        position: absolute;
+                        width: 100%;
+                        text-align: center;
+                        color: white;
+                        font-family: Arial, sans-serif;
+                        font-size: 13px;
+                        line-height: 22px;
+                        text-shadow: 1px 1px 1px black;
+                    }
+                    .player-health {
+                        right: 50px;
+                    }
+                    .enemy-health {
+                        left: 50px;
+                    }
+                    .vs-text {
+                        position: absolute;
+                        left: 50%;
+                        top: 50%;
+                        transform: translate(-50%, -50%);
+                        color: white;
+                        font-family: Arial, sans-serif;
+                        font-size: 48px;
+                        font-weight: bold;
+                        text-shadow: 2px 2px 4px #000;
+                    }
+                </style>
+                <body>
+                    <div class="battle-container">
+                        <div class="name-tag enemy-name">Rogue Ninja</div>
+                        <img class="character enemy" src="${enemyImage}">
+                        <div class="health-bar enemy-health">
+                            <div class="health-fill npc-health-fill"></div>
+                            <div class="health-text">${Math.round(enemyHealth)}/${enemyMaxHealth}</div>
+                        </div>
+                        
+                        <div class="name-tag player-name">${interaction.user.username}</div>
+                        <img class="character player" src="${userAvatar}">
+                        <div class="health-bar player-health">
+                            <div class="health-fill player-health-fill"></div>
+                            <div class="health-text">${Math.round(playerHealth)}/${playerMaxHealth}</div>
+                        </div>
+                        <div class="vs-text">VS</div>
+                    </div>
+                </body>
+                </html>
+            `;
+
+            await page.setContent(htmlContent);
+            const imagePath = path.join(imagesDir, `battle_${userId}_${Date.now()}.png`);
+            await page.screenshot({ path: imagePath });
+            const buffer = fs.readFileSync(imagePath);
+            await browser.close();
+            return buffer;
+        };
+
         // Main battle loop
         const battleCollector = interaction.channel.createMessageComponentCollector({ time: 300000 });
 
         // Initial moves selection
         const { embed: movesEmbed, components } = createMovesEmbed();
-        const battleImage = new AttachmentBuilder(await generateBattleImage());
-        await interaction.followUp({ 
+        const battleImageBuffer = await generateBattleImage({
+            userId,
+            userAvatar,
+            enemyImage,
+            playerHealth: player.health,
+            playerMaxHealth: 1000,
+            enemyHealth: enemy.currentHealth,
+            enemyMaxHealth: enemy.health,
+            roundNum
+        });
+        const battleImage = new AttachmentBuilder(battleImageBuffer, { name: `battle_scene_${userId}.png` });
+
+        // Send the initial round embed as a new message
+        let lastBattleMsg = await interaction.followUp({ 
             content: 'Battle Started! Defeat the rogue ninja to complete your enrollment!', 
             embeds: [movesEmbed], 
             components, 
@@ -367,25 +492,32 @@ module.exports = {
         });
 
         battleCollector.on('collect', async (i) => {
-            // Verify this interaction belongs to the current user and battle
             if (!i.customId.includes(userId)) return i.reply({ content: "This isn't your battle!", ephemeral: true });
-            
+            await i.deferUpdate();
+
+            // Remove buttons from previous message (if any)
+            if (lastBattleMsg) {
+                await lastBattleMsg.edit({ components: [] }).catch(() => {});
+            }
+
             // Extract the base action from the custom ID
             const action = i.customId.split('-')[0];
-            
+
             let playerMove, enemyMove;
-            
+
             if (action === 'attack') {
                 playerMove = processPlayerMove('attack');
                 enemy.currentHealth -= playerMove.damage;
-                
+
                 enemyMove = processEnemyMove();
                 player.health -= enemyMove.damage;
             } 
             else if (action === 'transform') {
                 playerMove = processPlayerMove('transform');
                 if (playerMove.description.includes('failed')) {
-                    await i.update({ content: playerMove.description, components: [] });
+                    // Edit the last reply since we've already deferred
+                    await interaction.editReply({ content: playerMove.description, embeds: [], components: [] });
+                    battleCollector.stop();
                     return;
                 }
                 enemyMove = processEnemyMove();
@@ -402,18 +534,29 @@ module.exports = {
                 };
             }
             else if (action === 'flee') {
-                await i.update({
+                await interaction.editReply({
                     content: 'You fled from battle! Enrollment failed.',
+                    embeds: [],
                     components: [],
                     files: []
                 });
                 battleCollector.stop();
                 return;
             }
-            
-            // Update battle image
-            const newBattleImage = new AttachmentBuilder(await generateBattleImage());
-            
+
+            // Use the new battle image generator for each round
+            const newBattleImageBuffer = await generateBattleImage({
+                userId,
+                userAvatar,
+                enemyImage,
+                playerHealth: player.health,
+                playerMaxHealth: 1000,
+                enemyHealth: enemy.currentHealth,
+                enemyMaxHealth: enemy.health,
+                roundNum
+            });
+            const newBattleImage = new AttachmentBuilder(newBattleImageBuffer, { name: `battle_scene_${userId}.png` });
+
             // Check battle status
             const battleStatus = await checkBattleStatus();
             if (battleStatus) {
@@ -432,15 +575,16 @@ module.exports = {
                             value: '[Land of Fire](https://discord.gg/8kJPMp8m) - Start your adventure today!'
                         });
 
-                    await i.update({ 
+                    await interaction.followUp({ 
                         content: null,
                         embeds: [victoryEmbed], 
                         components: [], 
                         files: [newBattleImage] 
                     });
                 } else {
-                    await i.update({ 
+                    await interaction.followUp({ 
                         content: battleStatus.content, 
+                        embeds: [],
                         components: battleStatus.components, 
                         files: [newBattleImage] 
                     });
@@ -448,26 +592,26 @@ module.exports = {
                 battleCollector.stop();
                 return;
             }
-            
-            // Send round summary
+
+            // Send round summary as a new message (not editing previous)
             const summaryEmbed = createRoundSummary(playerMove, enemyMove);
-            await i.update({ 
+            lastBattleMsg = await interaction.followUp({ 
                 content: 'Battle continues!', 
                 embeds: [summaryEmbed], 
                 components: [], 
                 files: [newBattleImage] 
             });
-            
-            // Next round moves selection
+
+            // Next round moves selection as a new message
             const nextMoves = createMovesEmbed();
-            await interaction.followUp({ 
+            lastBattleMsg = await interaction.followUp({ 
                 embeds: [nextMoves.embed], 
                 components: nextMoves.components 
             });
         });
 
         battleCollector.on('end', () => {
-            interaction.editReply({ components: [] }).catch(console.error);
+            if (lastBattleMsg) lastBattleMsg.edit({ components: [] }).catch(console.error);
         });
     }
 };

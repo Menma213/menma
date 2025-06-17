@@ -1,0 +1,67 @@
+{
+  "835408109899219004": [
+    {
+      "id": 4536,
+      "type": "ranked_reward",
+      "reward": {
+        "elo": 100,
+        "rank": "Genin",
+        "division": 4,
+        "reward1": {
+          "name": "Money",
+          "desc": "Spend in the shop for upgrades."
+        },
+        "reward2": {
+          "name": "Common Mystery Box",
+          "desc": "A chance to get random jutsu, scroll, combo, or 1 ramen ticket.",
+          "box": {
+            "rarity": "common",
+            "contents": [
+              {
+                "type": "jutsu",
+                "chance": 0.4,
+                "name": "Random Genin Jutsu"
+              },
+              {
+                "type": "scroll",
+                "chance": 0.2,
+                "name": "Genin Scroll"
+              },
+              {
+                "type": "combo",
+                "chance": 0.2,
+                "name": "Genin Combo"
+              },
+              {
+                "type": "ramen",
+                "chance": 0.2,
+                "amount": 1
+              }
+            ]
+          }
+        }
+      },
+      "date": 1750072700756
+    },
+    {
+      "id": 314,
+      "type": "ranked_reward",
+      "reward": {
+        "elo": 200,
+        "rank": "Genin",
+        "division": 3,
+        "reward1": {
+          "name": "Ramen Ticket",
+          "desc": "Redeem for a free ramen meal."
+        },
+        "reward2": {
+          "name": "Money",
+          "desc": "Spend in the shop for upgrades."
+        }
+      },
+      "date": 1750089992863
+    }
+  ],
+  "799979545046155284": [],
+  "1132693590066331828": []
+}

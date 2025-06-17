@@ -1,0 +1,226 @@
+[
+  {
+    "elo": 100,
+    "rank": "Genin",
+    "division": 4,
+    "reward1": {
+      "name": "Money",
+      "desc": "Spend in the shop for upgrades.",
+      "amount": { "min": 10000, "max": 15000 }
+    },
+    "reward2": {
+      "name": "Common Mystery Box",
+      "desc": "A chance to get random jutsu, scroll, combo, or 1 ramen ticket.",
+      "box": {
+        "rarity": "common",
+        "contents": [
+          { "type": "jutsu", "chance": 0.4, "name": "Random Jutsu" },
+          { "type": "scroll", "chance": 0.2, "name": "Random Scroll" },
+          { "type": "combo", "chance": 0.2, "name": "Random Combo" },
+          { "type": "ramen", "chance": 0.2, "amount": 1 }
+        ]
+      }
+    }
+  },
+  {
+    "elo": 200,
+    "rank": "Genin",
+    "division": 3,
+    "reward1": {
+      "name": "Ramen Ticket",
+      "desc": "Redeem for a free ramen meal."
+    },
+    "reward2": {
+      "name": "Money",
+      "desc": "Spend in the shop for upgrades.",
+      "amount": { "min": 12000, "max": 18000 }
+    }
+  },
+  {
+    "elo": 400,
+    "rank": "Genin",
+    "division": 2,
+    "reward1": {
+      "name": "Uncommon Mystery Box",
+      "desc": "Contains: random jutsu, scroll, combo, or 2 ramen tickets.",
+      "box": {
+        "rarity": "uncommon",
+        "contents": [
+          { "type": "jutsu", "chance": 0.35, "name": "Random Jutsu" },
+          { "type": "scroll", "chance": 0.2, "name": "Random Scroll" },
+          { "type": "combo", "chance": 0.25, "name": "Random Combo" },
+          { "type": "ramen", "chance": 0.2, "amount": 2 }
+        ]
+      }
+    },
+    "reward2": {
+      "name": "Money",
+      "desc": "Spend in the shop for upgrades.",
+      "amount": { "min": 15000, "max": 25000 }
+    }
+  },
+  {
+    "elo": 600,
+    "rank": "Chuunin",
+    "division": 5,
+    "reward1": {
+      "name": "Jutsu: Fireball",
+      "desc": "Unlocks the Fireball jutsu."
+    },
+    "reward2": {
+      "name": "Money",
+      "desc": "Spend in the shop for upgrades.",
+      "amount": { "min": 25000, "max": 40000 }
+    }
+  },
+  {
+    "elo": 800,
+    "rank": "Chuunin",
+    "division": 3,
+    "reward1": {
+      "name": "Rare Mystery Box",
+      "desc": "Contains: rare jutsu, combo, scroll, or 3 ramen tickets.",
+      "box": {
+        "rarity": "rare",
+        "contents": [
+          { "type": "jutsu", "chance": 0.3, "name": "Random Jutsu" },
+          { "type": "combo", "chance": 0.25, "name": "Random Combo" },
+          { "type": "scroll", "chance": 0.2, "name": "Random Scroll" },
+          { "type": "ramen", "chance": 0.25, "amount": 3 }
+        ]
+      }
+    },
+    "reward2": {
+      "name": "Scroll",
+      "desc": "A scroll for learning new abilities.",
+      "name_detail": "Random Scroll"
+    }
+  },
+  {
+    "elo": 1200,
+    "rank": "Jounin",
+    "division": 4,
+    "reward1": {
+      "name": "Combo: Shadow Dance",
+      "desc": "Unlocks the Shadow Dance combo."
+    },
+    "reward2": {
+      "name": "Money",
+      "desc": "Spend in the shop for upgrades.",
+      "amount": { "min": 60000, "max": 120000 }
+    }
+  },
+  {
+    "elo": 1600,
+    "rank": "Sannin",
+    "division": 5,
+    "reward1": {
+      "name": "Epic Mystery Box",
+      "desc": "Contains: epic jutsu, combo, scroll, or 4 ramen tickets.",
+      "box": {
+        "rarity": "epic",
+        "contents": [
+          { "type": "jutsu", "chance": 0.3, "name": "Random Jutsu" },
+          { "type": "combo", "chance": 0.25, "name": "Random Combo" },
+          { "type": "scroll", "chance": 0.2, "name": "Random Scroll" },
+          { "type": "ramen", "chance": 0.25, "amount": 4 }
+        ]
+      }
+    },
+    "reward2": {
+      "name": "Money",
+      "desc": "Spend in the shop for upgrades.",
+      "amount": { "min": 200000, "max": 350000 }
+    }
+  },
+  {
+    "elo": 2000,
+    "rank": "Master Shinobi",
+    "division": 3,
+    "reward1": {
+      "name": "Jutsu: Lightning Blade",
+      "desc": "Unlocks the Lightning Blade jutsu."
+    },
+    "reward2": {
+      "name": "Rare Mystery Box",
+      "desc": "Contains: rare jutsu, combo, scroll, or 3 ramen tickets.",
+      "box": {
+        "rarity": "rare",
+        "contents": [
+          { "type": "jutsu", "chance": 0.3, "name": "Random Jutsu" },
+          { "type": "combo", "chance": 0.25, "name": "Random Combo" },
+          { "type": "scroll", "chance": 0.2, "name": "Random Scroll" },
+          { "type": "ramen", "chance": 0.25, "amount": 3 }
+        ]
+      }
+    }
+  },
+  {
+    "elo": 2400,
+    "rank": "Master Shinobi",
+    "division": 1,
+    "reward1": {
+      "name": "Legendary Mystery Box",
+      "desc": "Contains: Random jutsu, combo, scroll, or 5 ramen tickets.",
+      "box": {
+        "rarity": "legendary",
+        "contents": [
+          { "type": "jutsu", "chance": 0.3, "name": "Random Legendary Jutsu" },
+          { "type": "combo", "chance": 0.25, "name": "Legendary Combo" },
+          { "type": "scroll", "chance": 0.2, "name": "Legendary Scroll" },
+          { "type": "ramen", "chance": 0.25, "amount": 5 }
+        ]
+      }
+    },
+    "reward2": {
+      "name": "Money",
+      "desc": "Spend in the shop for upgrades.",
+      "amount": { "min": 400000, "max": 600000 }
+    }
+  },
+  {
+    "elo": 3200,
+    "rank": "The Shinobi God",
+    "division": 1,
+    "reward1": {
+      "name": "Jutsu: Divine Wind",
+      "desc": "Unlocks the Divine Wind jutsu."
+    },
+    "reward2": {
+      "name": "Legendary Mystery Box",
+      "desc": "Contains: jutsu, combo, scroll, or 5 ramen tickets.",
+      "box": {
+        "rarity": "legendary",
+        "contents": [
+          { "type": "jutsu", "chance": 0.3, "name": "Random Jutsu" },
+          { "type": "combo", "chance": 0.25, "name": "Random Combo" },
+          { "type": "scroll", "chance": 0.2, "name": "Random Scroll" },
+          { "type": "ramen", "chance": 0.25, "amount": 5 }
+        ]
+      }
+    }
+  },
+  {
+    "elo": 4000,
+    "rank": "The Shinobi God",
+    "division": 0,
+    "reward1": {
+      "name": "Money",
+      "desc": "Spend in the shop for upgrades.",
+      "amount": { "min": 800000, "max": 1000000 }
+    },
+    "reward2": {
+      "name": "Legendary Mystery Box",
+      "desc": "Contains: jutsu, combo, scroll, or 5 ramen tickets.",
+      "box": {
+        "rarity": "legendary",
+        "contents": [
+          { "type": "jutsu", "chance": 0.3, "name": "Random Jutsu" },
+          { "type": "combo", "chance": 0.25, "name": "Random Combo" },
+          { "type": "scroll", "chance": 0.2, "name": "Random Scroll" },
+          { "type": "ramen", "chance": 0.25, "amount": 5 }
+        ]
+      }
+    }
+  }
+]
