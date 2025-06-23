@@ -5,11 +5,13 @@
     "division": 4,
     "reward1": {
       "name": "Money",
+      "display": "Money",
       "desc": "Spend in the shop for upgrades.",
       "amount": { "min": 10000, "max": 15000 }
     },
     "reward2": {
       "name": "Common Mystery Box",
+      "display": "Common Mystery Box",
       "desc": "A chance to get random jutsu, scroll, combo, or 1 ramen ticket.",
       "box": {
         "rarity": "common",
@@ -28,10 +30,12 @@
     "division": 3,
     "reward1": {
       "name": "Ramen Ticket",
+      "display": "Ramen Ticket",
       "desc": "Redeem for a free ramen meal."
     },
     "reward2": {
       "name": "Money",
+      "display": "Money",
       "desc": "Spend in the shop for upgrades.",
       "amount": { "min": 12000, "max": 18000 }
     }
@@ -42,6 +46,7 @@
     "division": 2,
     "reward1": {
       "name": "Uncommon Mystery Box",
+      "display": "Uncommon Mystery Box",
       "desc": "Contains: random jutsu, scroll, combo, or 2 ramen tickets.",
       "box": {
         "rarity": "uncommon",
@@ -55,6 +60,7 @@
     },
     "reward2": {
       "name": "Money",
+      "display": "Money",
       "desc": "Spend in the shop for upgrades.",
       "amount": { "min": 15000, "max": 25000 }
     }
@@ -65,10 +71,12 @@
     "division": 5,
     "reward1": {
       "name": "Jutsu: Fireball",
+      "display": "Jutsu: Fireball",
       "desc": "Unlocks the Fireball jutsu."
     },
     "reward2": {
       "name": "Money",
+      "display": "Money",
       "desc": "Spend in the shop for upgrades.",
       "amount": { "min": 25000, "max": 40000 }
     }
@@ -79,6 +87,7 @@
     "division": 3,
     "reward1": {
       "name": "Rare Mystery Box",
+      "display": "Rare Mystery Box",
       "desc": "Contains: rare jutsu, combo, scroll, or 3 ramen tickets.",
       "box": {
         "rarity": "rare",
@@ -92,6 +101,7 @@
     },
     "reward2": {
       "name": "Scroll",
+      "display": "Random Scroll",
       "desc": "A scroll for learning new abilities.",
       "name_detail": "Random Scroll"
     }
@@ -102,10 +112,12 @@
     "division": 4,
     "reward1": {
       "name": "Combo: Shadow Dance",
+      "display": "Combo: Shadow Dance",
       "desc": "Unlocks the Shadow Dance combo."
     },
     "reward2": {
       "name": "Money",
+      "display": "Money",
       "desc": "Spend in the shop for upgrades.",
       "amount": { "min": 60000, "max": 120000 }
     }
@@ -116,6 +128,7 @@
     "division": 5,
     "reward1": {
       "name": "Epic Mystery Box",
+      "display": "Epic Mystery Box",
       "desc": "Contains: epic jutsu, combo, scroll, or 4 ramen tickets.",
       "box": {
         "rarity": "epic",
@@ -129,6 +142,7 @@
     },
     "reward2": {
       "name": "Money",
+      "display": "Money",
       "desc": "Spend in the shop for upgrades.",
       "amount": { "min": 200000, "max": 350000 }
     }
@@ -139,10 +153,12 @@
     "division": 3,
     "reward1": {
       "name": "Jutsu: Lightning Blade",
+      "display": "Jutsu: Lightning Blade",
       "desc": "Unlocks the Lightning Blade jutsu."
     },
     "reward2": {
       "name": "Rare Mystery Box",
+      "display": "Rare Mystery Box",
       "desc": "Contains: rare jutsu, combo, scroll, or 3 ramen tickets.",
       "box": {
         "rarity": "rare",
@@ -161,6 +177,7 @@
     "division": 1,
     "reward1": {
       "name": "Legendary Mystery Box",
+      "display": "Legendary Mystery Box",
       "desc": "Contains: Random jutsu, combo, scroll, or 5 ramen tickets.",
       "box": {
         "rarity": "legendary",
@@ -174,6 +191,7 @@
     },
     "reward2": {
       "name": "Money",
+      "display": "Money",
       "desc": "Spend in the shop for upgrades.",
       "amount": { "min": 400000, "max": 600000 }
     }
@@ -184,10 +202,12 @@
     "division": 1,
     "reward1": {
       "name": "Jutsu: Divine Wind",
+      "display": "Jutsu: Divine Wind",
       "desc": "Unlocks the Divine Wind jutsu."
     },
     "reward2": {
       "name": "Legendary Mystery Box",
+      "display": "Legendary Mystery Box",
       "desc": "Contains: jutsu, combo, scroll, or 5 ramen tickets.",
       "box": {
         "rarity": "legendary",
@@ -206,11 +226,13 @@
     "division": 0,
     "reward1": {
       "name": "Money",
+      "display": "Money",
       "desc": "Spend in the shop for upgrades.",
       "amount": { "min": 800000, "max": 1000000 }
     },
     "reward2": {
       "name": "Legendary Mystery Box",
+      "display": "Legendary Mystery Box",
       "desc": "Contains: jutsu, combo, scroll, or 5 ramen tickets.",
       "box": {
         "rarity": "legendary",

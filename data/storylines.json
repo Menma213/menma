@@ -30,5 +30,169 @@
             "failText": "Unfortunately, your investigation led to a dead end. The real thief got away!",
             "rewardExp": 10
         }
+    },
+    "Naruto": {
+        "title": "Believe It! The Ramen Promise",
+        "pages": [
+            "Naruto grins widely as you approach. 'Hey! Want to train with me? But first, let's get some ramen!'",
+            "'Ichiraku's is the best! But... I promised Iruka-sensei I'd help him clean up first.'",
+            "'Can you help me finish my chores faster? If we hurry, I'll teach you a cool move!'"
+        ],
+        "minigame": {
+            "title": "Clean-up Race",
+            "description": "You and Naruto have three chores to finish. Which do you tackle first?",
+            "options": [
+                { "text": "Sweep the floors", "hint": "Quick, but dusty." },
+                { "text": "Wash the dishes", "hint": "Naruto hates this one." },
+                { "text": "Take out the trash", "hint": "Smelly, but fast." }
+            ],
+            "correct": 0,
+            "successText": "You finish sweeping in record time! Naruto cheers, 'Let's go eat ramen!'",
+            "failText": "You chose the slowest chore. Naruto groans, 'Now we're late for ramen...'",
+            "rewardExp": 10
+        }
+    },
+    "Sasuke": {
+        "title": "The Path of Power",
+        "pages": [
+            "Sasuke stands alone, gazing at the sky. 'If you wish to learn from me, you must prove your resolve.'",
+            "'Strength is everything. But so is control.'",
+            "'Let's see if you can keep up with my training.'"
+        ],
+        "minigame": {
+            "title": "Shuriken Challenge",
+            "description": "Sasuke throws three shuriken at targets. Which target do you aim for?",
+            "options": [
+                { "text": "The center target", "hint": "Direct, but expected." },
+                { "text": "The left target", "hint": "Sasuke's favorite feint." },
+                { "text": "The moving target", "hint": "Requires precision and timing." }
+            ],
+            "correct": 2,
+            "successText": "You hit the moving target! Sasuke nods, 'Not bad.'",
+            "failText": "You miss. Sasuke turns away, 'You need more practice.'",
+            "rewardExp": 10
+        }
+    },
+    "Sakura": {
+        "title": "Strength of Heart",
+        "pages": [
+            "Sakura greets you with a determined smile. 'Medical ninjutsu isn't just about healing. It's about courage.'",
+            "'Can you stay calm under pressure? Let's find out.'"
+        ],
+        "minigame": {
+            "title": "Emergency Aid",
+            "description": "A teammate is injured! What do you do first?",
+            "options": [
+                { "text": "Stop the bleeding", "hint": "Always address the most urgent danger." },
+                { "text": "Check for broken bones", "hint": "Important, but not first." },
+                { "text": "Give them water", "hint": "Not the priority right now." }
+            ],
+            "correct": 0,
+            "successText": "You act quickly and save your teammate! Sakura beams, 'You have the makings of a great medic.'",
+            "failText": "You hesitate and your teammate's condition worsens. Sakura sighs, 'Try to focus on what's most urgent.'",
+            "rewardExp": 10
+        }
+    },
+    "Hinata Hyuga": {
+        "title": "Gentle Steps",
+        "pages": [
+            "Hinata bows politely. 'I... I would be honored to train with you.'",
+            "'The Gentle Fist is about precision and inner strength.'",
+            "'Let's see if you can sense the flow of chakra.'"
+        ],
+        "minigame": {
+            "title": "Chakra Flow",
+            "description": "Hinata asks you to identify the strongest chakra point.",
+            "options": [
+                { "text": "The heart", "hint": "Vital, but not the strongest point." },
+                { "text": "The stomach", "hint": "Where chakra is stored." },
+                { "text": "The forehead", "hint": "A key point for Byakugan users." }
+            ],
+            "correct": 1,
+            "successText": "You sense the chakra in the stomach. Hinata smiles, 'You have a good eye for chakra.'",
+            "failText": "You choose incorrectly. Hinata gently corrects you, 'Try to feel the flow, not just guess.'",
+            "rewardExp": 10
+        }
+    },
+    "Shikamaru": {
+        "title": "A Drag of a Day",
+        "pages": [
+            "Shikamaru yawns. 'Man, this is such a drag... But I guess I can teach you something.'",
+            "'Strategy is about thinking ahead. Let's play a quick game.'"
+        ],
+        "minigame": {
+            "title": "Shadow Trap",
+            "description": "You and Shikamaru are playing shogi. What is your opening move?",
+            "options": [
+                { "text": "Advance your pawn", "hint": "Straightforward, but predictable." },
+                { "text": "Move your knight", "hint": "Flexible, but risky." },
+                { "text": "Defend your king", "hint": "Safe, but passive." }
+            ],
+            "correct": 1,
+            "successText": "You surprise Shikamaru with your move. He grins, 'Not bad for a rookie.'",
+            "failText": "Shikamaru easily counters your move. 'Too predictable,' he says.",
+            "rewardExp": 10
+        }
+    },
+    "Rock Lee": {
+        "title": "The Power of Youth",
+        "pages": [
+            "Rock Lee greets you with a sparkling smile. 'Let us train with the power of youth!'",
+            "'Endurance is key. Can you keep up with my regimen?'"
+        ],
+        "minigame": {
+            "title": "Endurance Sprint",
+            "description": "Lee challenges you to a race. What do you focus on?",
+            "options": [
+                { "text": "Speed", "hint": "Fast, but you might tire quickly." },
+                { "text": "Stamina", "hint": "Slow and steady wins the race." },
+                { "text": "Technique", "hint": "Balance is important." }
+            ],
+            "correct": 1,
+            "successText": "You pace yourself and finish strong! Lee gives you a thumbs up, 'Youth prevails!'",
+            "failText": "You burn out too quickly. Lee encourages you, 'Never give up!'",
+            "rewardExp": 10
+        }
+    },
+    "Asuma": {
+        "title": "The Will of Fire",
+        "pages": [
+            "Asuma sits under a tree, puffing on his cigarette. 'Hey, kid. The Will of Fire burns in all of us.'",
+            "'But it's not just about strength. It's about protecting your comrades.'",
+            "'Let me test your resolve. Imagine your team is in danger. What do you do?'"
+        ],
+        "minigame": {
+            "title": "Test of Resolve",
+            "description": "Your teammate is trapped under rubble during a mission. What do you do?",
+            "options": [
+                { "text": "Rush in alone to save them.", "hint": "Brave, but reckless." },
+                { "text": "Call for backup and plan a rescue.", "hint": "Teamwork is key." },
+                { "text": "Leave them and complete the mission.", "hint": "The mission is important, but at what cost?" }
+            ],
+            "correct": 1,
+            "successText": "You call for help and coordinate a rescue. Asuma nods, 'That's the Will of Fire.'",
+            "failText": "You act alone and get hurt. Asuma shakes his head, 'Think about your team.'",
+            "rewardExp": 10
+        }
+    },
+    "Guy": {
+        "title": "The Springtime of Youth",
+        "pages": [
+            "Guy strikes a pose. 'The Springtime of Youth is upon us! Are you ready for a challenge?'",
+            "'Only those with a burning spirit can master my techniques.'"
+        ],
+        "minigame": {
+            "title": "Dynamic Entry",
+            "description": "Guy asks you to break a boulder. What do you do?",
+            "options": [
+                { "text": "Kick it with all your might", "hint": "Direct, but risky." },
+                { "text": "Look for a weak spot", "hint": "Smart and efficient." },
+                { "text": "Ask Guy for help", "hint": "He might appreciate teamwork." }
+            ],
+            "correct": 1,
+            "successText": "You find a weak spot and shatter the boulder! Guy beams, 'Youthful wisdom!'",
+            "failText": "You hurt your foot. Guy laughs, 'Don't forget to use your head!'",
+            "rewardExp": 10
+        }
     }
 }

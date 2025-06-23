@@ -233,18 +233,21 @@ const createMovesEmbed = (player, userId, roundNum) => {
     let currentRow = new ActionRowBuilder();
     let buttonCount = 0;
     const rows = [];
+    let jutsuButtonIndex = 0;
     Object.entries(player.jutsu).forEach(([_, jutsuName], index) => {
         if (jutsuName !== 'None') {
             const jutsu = jutsuList[jutsuName];
             const disabled = player.chakra < (jutsu?.chakraCost || 0);
+            // Make custom_id unique by appending jutsuButtonIndex
             currentRow.addComponents(
                 new ButtonBuilder()
-                    .setCustomId(`${jutsuName}-${userId}-${roundNum}`)
+                    .setCustomId(`${jutsuName}-${userId}-${roundNum}-${jutsuButtonIndex}`)
                     .setLabel(`${index + 1}`)
                     .setStyle(disabled ? ButtonStyle.Secondary : ButtonStyle.Primary)
                     .setDisabled(disabled)
             );
             buttonCount++;
+            jutsuButtonIndex++;
             if (buttonCount === 5) {
                 rows.push(currentRow);
                 currentRow = new ActionRowBuilder();
@@ -252,14 +255,15 @@ const createMovesEmbed = (player, userId, roundNum) => {
             }
         }
     });
-    // Add rest/flee
+    // Add rest/flee with unique custom_ids
+    const restIndex = jutsuButtonIndex;
     currentRow.addComponents(
         new ButtonBuilder()
-            .setCustomId(`rest-${userId}-${roundNum}`)
+            .setCustomId(`rest-${userId}-${roundNum}-${restIndex}`)
             .setLabel('😴')
             .setStyle(ButtonStyle.Primary),
         new ButtonBuilder()
-            .setCustomId(`flee-${userId}-${roundNum}`)
+            .setCustomId(`flee-${userId}-${roundNum}-${restIndex + 1}`)
             .setLabel('❌')
             .setStyle(ButtonStyle.Primary)
     );
@@ -416,8 +420,7 @@ module.exports = {
         const challengeMessage = await interaction.reply({
             content: `<@${opponentId}>`,
             embeds: [challengeEmbed],
-            components: [challengeButtons],
-            fetchReply: true
+            components: [challengeButtons]
         });
 
         const challengeCollector = challengeMessage.createMessageComponentCollector({ 
@@ -670,8 +673,7 @@ module.exports = {
                     const challengerMessage = await interaction.followUp({
                         content: `<@${challengerId}> it's your turn!`,
                         embeds: [challengerEmbed],
-                        components: challengerComponents,
-                        fetchReply: true
+                        components: challengerComponents
                     });
 
                     // 2. Show battle image
@@ -683,8 +685,7 @@ module.exports = {
                     const opponentMessage = await interaction.followUp({
                         content: `<@${opponentId}> it's your turn!`,
                         embeds: [opponentEmbed],
-                        components: opponentComponents,
-                        fetchReply: true
+                        components: opponentComponents
                     });
 
                     // Collect both players' actions
@@ -692,12 +693,18 @@ module.exports = {
                         // Collect challenger action
                         new Promise(resolve => {
                             const collector = challengerMessage.createMessageComponentCollector({
-                                filter: i => i.user.id === challengerId && i.customId.endsWith(`-${challengerId}-${roundNum}`),
+                                filter: i => i.user.id === challengerId && i.customId.includes(`-${challengerId}-${roundNum}-`),
                                 time: 60000
                             });
 
                             collector.on('collect', async i => {
-                                await i.deferUpdate();
+                                try {
+                                    // Only call deferUpdate if you are not calling update/reply elsewhere for this interaction
+                                    await i.deferUpdate();
+                                } catch (err) {
+                                    // Ignore "Interaction has already been acknowledged" error
+                                    if (err.code !== 40060) throw err;
+                                }
                                 resolve(await processPlayerMove(i.customId, challenger, opponent, effectiveChallenger, effectiveOpponent));
                                 collector.stop();
                             });
@@ -724,12 +731,18 @@ module.exports = {
                         // Collect opponent action
                         new Promise(resolve => {
                             const collector = opponentMessage.createMessageComponentCollector({
-                                filter: i => i.user.id === opponentId && i.customId.endsWith(`-${opponentId}-${roundNum}`),
+                                filter: i => i.user.id === opponentId && i.customId.includes(`-${opponentId}-${roundNum}-`),
                                 time: 60000
                             });
 
                             collector.on('collect', async i => {
-                                await i.deferUpdate();
+                                try {
+                                    // Only call deferUpdate if you are not calling update/reply elsewhere for this interaction
+                                    await i.deferUpdate();
+                                } catch (err) {
+                                    // Ignore "Interaction has already been acknowledged" error
+                                    if (err.code !== 40060) throw err;
+                                }
                                 resolve(await processPlayerMove(i.customId, opponent, challenger, effectiveOpponent, effectiveChallenger));
                                 collector.stop();
                             });

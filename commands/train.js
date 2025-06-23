@@ -19,19 +19,17 @@ module.exports = {
         ),
     
     async execute(interaction) {
-        await interaction.deferReply();
-
         const userId = interaction.user.id;
         const levels = interaction.options.getInteger('levels');
 
         if (!fs.existsSync(usersPath)) {
-            return interaction.followUp("Database not found.");
+            return interaction.reply("Database not found.");
         }
 
         const users = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
 
         if (!users[userId]) {
-            return interaction.followUp("You need to enroll first!");
+            return interaction.reply("You need to enroll first!");
         }
 
         const player = users[userId];
@@ -39,7 +37,7 @@ module.exports = {
         const totalCost = costPerLevel * levels;
 
         if (player.money < totalCost) {
-            return interaction.followUp(`You don't have enough Ryo! You need ${totalCost} Ryo for ${levels} level(s) of training.`);
+            return interaction.reply(`You don't have enough Ryo! You need ${totalCost} Ryo for ${levels} level(s) of training.`);
         }
 
         // Deduct money
@@ -91,13 +89,34 @@ module.exports = {
                 defenseGain,
                 originalStats
             });
-            
+
             const attachment = new AttachmentBuilder(imagePath);
-            await interaction.editReply({ 
-                content: null, // Clear loading message
-                files: [attachment] 
-            });
-            
+
+            // Try to send the image, but if the interaction is expired, send a fallback message to the channel
+            try {
+                await interaction.reply({ 
+                    content: null,
+                    files: [attachment] 
+                });
+            } catch (err) {
+                console.error("Error sending training card image:", err);
+                // Fallback: send to channel if interaction expired
+                try {
+                    await interaction.channel.send({
+                        content: `<@${userId}> Training complete! (Interaction expired, sending here)\n` +
+                                 `Gained ${levels} level(s)\n` +
+                                 `- Money Spent: ${totalCost} Ryo\n` +
+                                 `- Remaining Money: ${player.money} Ryo\n` +
+                                 `- Health: +${healthGain}\n` +
+                                 `- Power: +${powerGain}\n` +
+                                 `- Defense: +${defenseGain}`,
+                        files: [attachment]
+                    });
+                } catch (err2) {
+                    console.error("Error sending fallback training card to channel:", err2);
+                }
+            }
+
             // Clean up the image file after sending
             fs.unlink(imagePath, (err) => {
                 if (err) console.error("Error deleting training image:", err);
@@ -107,14 +126,32 @@ module.exports = {
             await updateRequirements(userId, 'train');
         } catch (error) {
             console.error("Error generating training card:", error);
-            await interaction.editReply({
-                content: `✅ Training complete! Gained ${levels} level(s)\n` +
-                         `- Money Spent: ${totalCost} Ryo\n` +
-                         `- Remaining Money: ${player.money} Ryo\n` +
-                         `- Health: +${healthGain}\n` +
-                         `- Power: +${powerGain}\n` +
-                         `- Defense: +${defenseGain}`
-            });
+            // Try to reply, but if interaction is expired, send fallback to channel
+            try {
+                await interaction.reply({
+                    content: `✅ Training complete! Gained ${levels} level(s)\n` +
+                             `- Money Spent: ${totalCost} Ryo\n` +
+                             `- Remaining Money: ${player.money} Ryo\n` +
+                             `- Health: +${healthGain}\n` +
+                             `- Power: +${powerGain}\n` +
+                             `- Defense: +${defenseGain}`
+                });
+            } catch (err) {
+                console.error("Error sending fallback training reply:", err);
+                try {
+                    await interaction.channel.send({
+                        content: `<@${userId}> Training complete! (Interaction expired, sending here)\n` +
+                                 `Gained ${levels} level(s)\n` +
+                                 `- Money Spent: ${totalCost} Ryo\n` +
+                                 `- Remaining Money: ${player.money} Ryo\n` +
+                                 `- Health: +${healthGain}\n` +
+                                 `- Power: +${powerGain}\n` +
+                                 `- Defense: +${defenseGain}`
+                    });
+                } catch (err2) {
+                    console.error("Error sending fallback training reply to channel:", err2);
+                }
+            }
         }
     },
     

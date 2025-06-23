@@ -1,5 +1,4 @@
-const { SlashCommandBuilder } = require('discord.js');
-const { EmbedBuilder } = require('discord.js');
+const { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } = require('discord.js');
 
 // Shop database
 const shopItems = {
@@ -20,12 +19,38 @@ const shopItems = {
     // Future combos can be added here
 };
 
+// Premium shop items
+const premiumItems = [
+    {
+        name: "Donator",
+        description: "Unlocks the exclusive Donator role.",
+        price: 100, // Example price in Shinobi Shards
+        roleId: "1385640728130097182", // Placeholder
+        duration: 30 * 24 * 60 * 60 * 1000 // 1 month in ms, use 15000 for 15 seconds
+    },
+    {
+        name: "Legendary Ninja",
+        description: "Grants the Legendary Ninja role.",
+        price: 200,
+        roleId: "1385640798581952714", // Placeholder
+        duration: 30 * 24 * 60 * 60 * 1000 // 1 month in ms, use 15000 for 15 seconds
+    },
+    {
+        name: "Jinchuriki",
+        description: "Become a Jinchuriki and receive the Jinchuriki role.",
+        price: 500,
+        roleId: "1385641469507010640", // Placeholder
+        duration: 30 * 24 * 60 * 60 * 1000 // 1 month in ms, use 15000 for 15 seconds
+    }
+];
+
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('shop')
         .setDescription('View the available combos in the shop'),
 
     async execute(interaction) {
+        // Main shop embed
         const embed = new EmbedBuilder()
             .setColor(0x000000)
             .setTitle('SHOP')
@@ -45,6 +70,51 @@ module.exports = {
             )
             .setFooter({ text: 'Page 1/1' });
 
-        await interaction.reply({ embeds: [embed] });
+        // Add Shinobi Shards button
+        const row = new ActionRowBuilder().addComponents(
+            new ButtonBuilder()
+                .setCustomId('shinobi_shards')
+                .setLabel('Shinobi Shards')
+                .setStyle(ButtonStyle.Primary)
+        );
+
+        await interaction.reply({ embeds: [embed], components: [row] });
+
+        // Create a collector for the button
+        const collector = interaction.channel.createMessageComponentCollector({
+            filter: i => i.user.id === interaction.user.id,
+            time: 60000
+        });
+
+        collector.on('collect', async i => {
+            if (i.customId === 'shinobi_shards') {
+                // Premium shop embed
+                const premiumEmbed = new EmbedBuilder()
+                    .setColor(0xffd700)
+                    .setTitle('Shinobi Shard Corner')
+                    .setDescription('Spend your Shinobi Shards on exclusive perks!')
+                    .addFields(
+                        {
+                            name: `1) ${premiumItems[0].name}`,
+                            value: `${premiumItems[0].description}\nPrice: ${premiumItems[0].price} Shinobi Shards\nRole: <@&${premiumItems[0].roleId}>`,
+                            inline: false
+                        },
+                        {
+                            name: `2) ${premiumItems[1].name}`,
+                            value: `${premiumItems[1].description}\nPrice: ${premiumItems[1].price} Shinobi Shards\nRole: <@&${premiumItems[1].roleId}>`,
+                            inline: false
+                        },
+                        {
+                            name: `3) ${premiumItems[2].name}`,
+                            value: `${premiumItems[2].description}\nPrice: ${premiumItems[2].price} Shinobi Shards\nRole: <@&${premiumItems[2].roleId}>`,
+                            inline: false
+                        }
+                    )
+                    .setFooter({ text: 'Premium Shop' });
+
+                await i.update({ embeds: [premiumEmbed], components: [] });
+                collector.stop();
+            }
+        });
     }
 };

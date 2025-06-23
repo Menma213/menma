@@ -20,11 +20,13 @@
       "Silent Assassination",
       "Needle Assault",
       "Rasengan",
-      "Lightning Blade"
+      "Lightning Blade",
+      "Flying Raijin Jutsu"
     ],
     "combos": [
       "Basic Combo",
-      "Intermediate Combo"
+      "Intermediate Combo",
+      "Shadow Dance"
     ],
     "scrolls": []
   },
@@ -35,15 +37,36 @@
   },
   "799979545046155284": {
     "usersjutsu": [
-      "Transformation Jutsu"
+      "Transformation Jutsu",
+      "asura",
+      "Serpents Wrath",
+      "Shadow Clone Jutsu",
+      "Fireball Jutsu",
+      "Analysis",
+      "Mystic Palms",
+      "Parry",
+      "Mystic Palm",
+      "Smoke Bomb",
+      "Sexy Jutsu",
+      "Rasenshuriken",
+      "Flying Raijin Jutsu"
     ],
     "combos": [
-      "Basic Combo"
+      "Basic Combo",
+      "Intermediate Combo"
+    ],
+    "scrolls": [
+      "Needle Assault Scroll",
+      "Silent Assassination Scroll"
     ]
   },
   "737913304214667345": {
     "usersjutsu": [
-      "Transformation Jutsu"
+      "Transformation Jutsu",
+      "asura"
+    ],
+    "scrolls": [
+      "Serpents Wrath Scroll"
     ]
   },
   "961918563382362122": {
@@ -101,7 +124,15 @@
   },
   "1355490065899585737": {
     "usersjutsu": [
-      "asura"
+      "asura",
+      "Transformation Jutsu",
+      "Mystic Palm",
+      "Creation Rebirth",
+      "Water Prison",
+      "Rasengan",
+      "Water Dragon Jutsu",
+      "Great Forest Crumbling",
+      "Reaper Death Seal"
     ]
   },
   "818893461881094175": {

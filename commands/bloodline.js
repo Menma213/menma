@@ -159,7 +159,7 @@ module.exports = {
     async autocomplete(interaction) {
         const focusedValue = interaction.options.getFocused().toLowerCase();
         const filtered = Object.entries(bloodlines)
-            .filter(([_, bl]) => bl.name.toLowerCase().includes(focusedValue))
+            .filter(([_, bl]) => bl && bl.name && bl.name.toLowerCase().includes(focusedValue))
             .slice(0, 25)
             .map(([id, bl]) => ({ 
                 name: `${getBloodlineData(id).name} ${bl.name}`, 
@@ -223,10 +223,10 @@ module.exports = {
         }
 
         const availableBloodlines = Object.entries(bloodlines)
-            .filter(([id, bl]) => isAdmin || player.level >= (bl.requiredLevel || BASE_LEVEL_REQ))
+            .filter(([id, bl]) => bl && (isAdmin || player.level >= (bl.requiredLevel || BASE_LEVEL_REQ)))
             .map(([id, bl]) => ({
-                label: bl.name,
-                description: `${bl.passive.substring(0, 50)}...`,
+                label: bl.name || 'Unknown',
+                description: bl.passive ? `${bl.passive.substring(0, 50)}...` : 'No description available',
                 value: id,
                 emoji: getBloodlineData(id).name
             }));
@@ -292,7 +292,7 @@ module.exports = {
                         .setDescription(`You need ${REMOVAL_COST.toLocaleString()} Ryo to remove your bloodline!`)
                         .addFields(
                             { name: 'Your Balance', value: `${player.money?.toLocaleString() || 0} Ryo`, inline: true },
-                            { name: 'Missing', value: `${(REMOVAL_COST - player.money).toLocaleString()} Ryo`, inline: true }
+                            { name: 'Missing', value: `${(REMOVAL_COST - (player.money || 0)).toLocaleString()} Ryo`, inline: true }
                         )
                 ]
             });
@@ -302,7 +302,7 @@ module.exports = {
         users[userId] = {
             ...player,
             bloodline: null,
-            money: player.money - REMOVAL_COST,
+            money: (player.money || 0) - REMOVAL_COST,
             bloodlineAttempts: (player.bloodlineAttempts || 0) + 1
         };
         saveData(usersPath, users);
@@ -338,13 +338,13 @@ module.exports = {
 
         const emojiData = getBloodlineData(bloodlineId);
         const embed = new EmbedBuilder()
-            .setTitle(`${emojiData.name} ${bl.name} Bloodline`)
-            .setDescription(bl.description)
+            .setTitle(`${emojiData.name} ${bl.name || 'Unknown'} Bloodline`)
+            .setDescription(bl.description || 'No description available')
             .setColor(emojiData.color)
             .addFields(
                 { 
                     name: 'Passive Ability', 
-                    value: bl.passive,
+                    value: bl.passive || 'No passive ability defined',
                     inline: false 
                 },
                 { 
@@ -366,6 +366,7 @@ module.exports = {
 
     async handleList(interaction) {
         const groupedBloodlines = Object.entries(bloodlines).reduce((acc, [id, bl]) => {
+            if (!bl) return acc;
             const specialty = bl.specialty || 'General';
             if (!acc[specialty]) acc[specialty] = [];
             acc[specialty].push({ id, ...bl });
@@ -382,7 +383,7 @@ module.exports = {
                 name: `▸ ${specialty}`,
                 value: bls.map(bl => {
                     const emoji = getBloodlineData(bl.id).name;
-                    return `${emoji} **${bl.name}** - ${bl.description.substring(0, 50)}...`;
+                    return `${emoji} **${bl.name || 'Unknown'}** - ${(bl.description || '').substring(0, 50)}...`;
                 }).join('\n'),
                 inline: false
             });
@@ -400,108 +401,107 @@ module.exports = {
         } catch (err) {
             console.error('Failed to handle error:', err);
         }
-    }
-};
+    },
 
-// Selection handler
-module.exports.handleSelection = async function(interaction) {
-    try {
-        await interaction.deferReply({ ephemeral: true });
-        
-        const { user, values } = interaction;
-        const bloodlineId = values[0];
-        const bloodline = bloodlines[bloodlineId];
-
-        if (!bloodline) {
-            return await interaction.editReply({
-                embeds: [
-                    new EmbedBuilder()
-                        .setColor(0xe74c3c)
-                        .setTitle('❌ Bloodline Not Found')
-                        .setDescription('The selected bloodline no longer exists!')
-                ]
-            });
-        }
-
-        const users = loadData(usersPath);
-        const player = users[user.id] || { level: 0 };
-
-        if (player.bloodline) {
-            return await interaction.editReply({
-                embeds: [
-                    new EmbedBuilder()
-                        .setColor(0xe74c3c)
-                        .setTitle('❌ Bloodline Already Awakened')
-                        .setDescription('You already have a bloodline!')
-                ]
-            });
-        }
-
-        const isAdmin = user.id === ADMIN_ID;
-        const requiredLevel = bloodline.requiredLevel || BASE_LEVEL_REQ;
-        const attempts = player.bloodlineAttempts || 0;
-        const actualRequiredLevel = requiredLevel + (Math.min(attempts, MAX_ATTEMPTS) * LEVEL_INCREASE_PER_ATTEMPT;
-        
-        if (!isAdmin && player.level < actualRequiredLevel) {
-            return await interaction.editReply({ 
-                embeds: [
-                    new EmbedBuilder()
-                        .setColor(0xf39c12)
-                        .setTitle('❌ Level Requirement Not Met')
-                        .setDescription(`You need level ${actualRequiredLevel} for the ${bloodline.name} bloodline!`)
-                        .addFields(
-                            { name: 'Your Level', value: `${player.level}`, inline: true }
-                        )
-                ]
-            });
-        }
-
-        users[user.id] = {
-            ...player,
-            bloodline: bloodlineId,
-            bloodlineAttempts: 0
-        };
-        saveData(usersPath, users);
-
-        const emojiData = getBloodlineData(bloodlineId);
-        const embed = new EmbedBuilder()
-            .setTitle(`✨ ${emojiData.name} Bloodline Awakened: ${bloodline.name}`)
-            .setDescription(`**${bloodline.description}**`)
-            .setColor(emojiData.color)
-            .addFields(
-                { 
-                    name: 'Passive Ability', 
-                    value: bloodline.passive,
-                    inline: false 
-                },
-                { 
-                    name: 'Specialty', 
-                    value: bloodline.specialty || 'General',
-                    inline: true 
-                }
-            )
-            .setThumbnail(user.displayAvatarURL())
-            .setFooter({ text: 'This power is now yours to command' });
-
-        await interaction.editReply({ embeds: [embed] });
-        
-        if (!isAdmin && player.level >= 20) {
-            await interaction.followUp({
-                content: `🎉 **${user.username}** has awakened the **${bloodline.name}** bloodline!`,
-                ephemeral: false
-            }).catch(() => {});
-        }
-    } catch (error) {
-        console.error('Bloodline selection error:', error);
+    async handleSelection(interaction) {
         try {
-            const content = "❌ An error occurred during bloodline selection.";
-            if (interaction.deferred || interaction.replied) {
-                await interaction.editReply({ content }).catch(() => {});
-            } else {
-                await interaction.reply({ content, ephemeral: true }).catch(() => {});
+            await interaction.deferReply({ ephemeral: true });
+            
+            const { user, values } = interaction;
+            const bloodlineId = values[0];
+            const bloodline = bloodlines[bloodlineId];
+
+            if (!bloodline) {
+                return await interaction.editReply({
+                    embeds: [
+                        new EmbedBuilder()
+                            .setColor(0xe74c3c)
+                            .setTitle('❌ Bloodline Not Found')
+                            .setDescription('The selected bloodline no longer exists!')
+                    ]
+                });
             }
-        } catch (err) {
-            console.error('Failed to handle selection error:', err);
+
+            const users = loadData(usersPath);
+            const player = users[user.id] || { level: 0 };
+
+            if (player.bloodline) {
+                return await interaction.editReply({
+                    embeds: [
+                        new EmbedBuilder()
+                            .setColor(0xe74c3c)
+                            .setTitle('❌ Bloodline Already Awakened')
+                            .setDescription('You already have a bloodline!')
+                    ]
+                });
+            }
+
+            const isAdmin = user.id === ADMIN_ID;
+            const requiredLevel = bloodline.requiredLevel || BASE_LEVEL_REQ;
+            const attempts = player.bloodlineAttempts || 0;
+            const actualRequiredLevel = requiredLevel + (Math.min(attempts, MAX_ATTEMPTS) * LEVEL_INCREASE_PER_ATTEMPT);
+            
+            if (!isAdmin && player.level < actualRequiredLevel) {
+                return await interaction.editReply({ 
+                    embeds: [
+                        new EmbedBuilder()
+                            .setColor(0xf39c12)
+                            .setTitle('❌ Level Requirement Not Met')
+                            .setDescription(`You need level ${actualRequiredLevel} for the ${bloodline.name} bloodline!`)
+                            .addFields(
+                                { name: 'Your Level', value: `${player.level}`, inline: true }
+                            )
+                    ]
+                });
+            }
+
+            users[user.id] = {
+                ...player,
+                bloodline: bloodlineId,
+                bloodlineAttempts: 0
+            };
+            saveData(usersPath, users);
+
+            const emojiData = getBloodlineData(bloodlineId);
+            const embed = new EmbedBuilder()
+                .setTitle(`✨ ${emojiData.name} Bloodline Awakened: ${bloodline.name || 'Unknown'}`)
+                .setDescription(`**${bloodline.description || 'No description available'}**`)
+                .setColor(emojiData.color)
+                .addFields(
+                    { 
+                        name: 'Passive Ability', 
+                        value: bloodline.passive || 'No passive ability defined',
+                        inline: false 
+                    },
+                    { 
+                        name: 'Specialty', 
+                        value: bloodline.specialty || 'General',
+                        inline: true 
+                    }
+                )
+                .setThumbnail(user.displayAvatarURL())
+                .setFooter({ text: 'This power is now yours to command' });
+
+            await interaction.editReply({ embeds: [embed] });
+            
+            if (!isAdmin && player.level >= 20) {
+                await interaction.followUp({
+                    content: `🎉 **${user.username}** has awakened the **${bloodline.name || 'Unknown'}** bloodline!`,
+                    ephemeral: false
+                }).catch(() => {});
+            }
+        } catch (error) {
+            console.error('Bloodline selection error:', error);
+            try {
+                const content = "❌ An error occurred during bloodline selection.";
+                if (interaction.deferred || interaction.replied) {
+                    await interaction.editReply({ content }).catch(() => {});
+                } else {
+                    await interaction.reply({ content, ephemeral: true }).catch(() => {});
+                }
+            } catch (err) {
+                console.error('Failed to handle selection error:', err);
+            }
         }
     }
 };

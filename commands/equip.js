@@ -68,7 +68,7 @@ module.exports = {
             // Case-insensitive match
             const ownedCombo = userCombos.find(c => c.toLowerCase() === name.toLowerCase());
             if (!ownedCombo) {
-                return interaction.reply({ content: `You do not own the combo "${name}".`, ephemeral: true });
+                return interaction.reply({ content: `You do not own the combo \"${name}\".`, ephemeral: true });
             }
             users[userId].Combo = ownedCombo;
             fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
@@ -88,9 +88,9 @@ module.exports = {
 
             // Check if user has the jutsu in their inventory (case-insensitive)
             const userJutsu = jutsuData[userId]?.usersjutsu || [];
-            const userHasJutsu = userJutsu.some(jutsu => jutsu.toLowerCase() === jutsuName.toLowerCase());
-            if (!userHasJutsu) {
-                return interaction.reply({ content: `You don't own the jutsu "${jutsuName}"!`, ephemeral: true });
+            const matchedJutsu = userJutsu.find(jutsu => jutsu.toLowerCase() === jutsuName.toLowerCase());
+            if (!matchedJutsu) {
+                return interaction.reply({ content: `You don't own the jutsu \"${jutsuName}\"!`, ephemeral: true });
             }
 
             // Ensure the "jutsu" object exists in users.json
@@ -103,9 +103,9 @@ module.exports = {
                 return interaction.reply({ content: "Slot 0 is reserved for the default attack and cannot be changed!", ephemeral: true });
             }
 
-            // Equip the jutsu into the specified slot
+            // Equip the jutsu into the specified slot (use the correct case from inventory)
             const slotKey = `slot_${slotNumber}`;
-            users[userId].jutsu[slotKey] = jutsuName;
+            users[userId].jutsu[slotKey] = matchedJutsu;
             fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
 
             const equipSuccess = true;
@@ -115,7 +115,7 @@ module.exports = {
             }
 
             return interaction.reply({
-                content: `Successfully equipped "${jutsuName}" in slot ${slotNumber}!`,
+                content: `Successfully equipped \"${matchedJutsu}\" in slot ${slotNumber}!`,
                 ephemeral: false
             });
         }

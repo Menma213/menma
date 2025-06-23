@@ -1,67 +1,75 @@
 {
-  "835408109899219004": [
+  "835408109899219004": [],
+  "799979545046155284": [
     {
-      "id": 4536,
-      "type": "ranked_reward",
-      "reward": {
-        "elo": 100,
-        "rank": "Genin",
-        "division": 4,
-        "reward1": {
-          "name": "Money",
-          "desc": "Spend in the shop for upgrades."
-        },
-        "reward2": {
-          "name": "Common Mystery Box",
-          "desc": "A chance to get random jutsu, scroll, combo, or 1 ramen ticket.",
-          "box": {
-            "rarity": "common",
-            "contents": [
-              {
-                "type": "jutsu",
-                "chance": 0.4,
-                "name": "Random Genin Jutsu"
-              },
-              {
-                "type": "scroll",
-                "chance": 0.2,
-                "name": "Genin Scroll"
-              },
-              {
-                "type": "combo",
-                "chance": 0.2,
-                "name": "Genin Combo"
-              },
-              {
-                "type": "ramen",
-                "chance": 0.2,
-                "amount": 1
-              }
-            ]
-          }
-        }
-      },
-      "date": 1750072700756
+      "id": 1,
+      "type": "ss",
+      "amount": 21,
+      "from": "835408109899219004",
+      "date": 1750167643904
     },
     {
-      "id": 314,
-      "type": "ranked_reward",
-      "reward": {
-        "elo": 200,
-        "rank": "Genin",
-        "division": 3,
-        "reward1": {
-          "name": "Ramen Ticket",
-          "desc": "Redeem for a free ramen meal."
-        },
-        "reward2": {
-          "name": "Money",
-          "desc": "Spend in the shop for upgrades."
-        }
-      },
-      "date": 1750089992863
+      "id": 2752,
+      "type": "money",
+      "amount": 1,
+      "from": "835408109899219004",
+      "date": 1750260307038
+    },
+    {
+      "id": 888,
+      "type": "ss",
+      "amount": 100,
+      "from": "835408109899219004",
+      "date": 1750605264659
+    },
+    {
+      "id": 9,
+      "type": "ss",
+      "amount": 50,
+      "from": "835408109899219004",
+      "date": 1750605493040
+    },
+    {
+      "id": 49274,
+      "type": "ss",
+      "amount": 100,
+      "from": "835408109899219004",
+      "date": 1750605864371
+    },
+    {
+      "id": 77,
+      "type": "ss",
+      "amount": 100,
+      "from": "835408109899219004",
+      "date": 1750605974478
     }
   ],
-  "799979545046155284": [],
-  "1132693590066331828": []
+  "1132693590066331828": [
+    {
+      "id": 1590,
+      "type": "money",
+      "amount": 100,
+      "from": "835408109899219004",
+      "date": 1750259008797
+    }
+  ],
+  "737913304214667345": [],
+  "1355490065899585737": [
+    {
+      "id": 533,
+      "type": "money",
+      "amount": 1000000,
+      "from": "835408109899219004",
+      "date": 1750607235224
+    }
+  ],
+  "1018526599043354725": [
+    {
+      "id": 1662,
+      "type": "money",
+      "amount": 1000000,
+      "from": "835408109899219004",
+      "date": 1750438386834
+    }
+  ]
 }

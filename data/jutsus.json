@@ -91,16 +91,24 @@
     },
     "Analysis": {
       "name": "Analysis",
-      "description": "User concentrates, forming a plan",
+      "description": "User concentrates, forming a plan +5 chakra!",
       "chakraCost": 0,
       "effects": [
         {
           "type": "chakra_gain", 
           "amount": 5          
+        },
+         {
+          "type": "buff",
+          "target": "user",
+          "stats": {
+            "chakra": "user.chakra + 5"
+          },
+          "duration": 1
         }
       ]
     },
-    "Fireball": {
+    "Fireball Jutsu": {
       "name": "Fireball Jutsu",
       "description": "Launches a massive fireball at the enemy",
       "chakraCost": 7,
@@ -127,7 +135,7 @@
     },
     "Shadow Clone Jutsu": {
         "name": "Shadow Clone Jutsu",
-        "description": "Attacks for 119\n Their clone attacks",
+        "description": "Attacks\n Their clone attacks",
         "chakraCost": 5,
         "effects": [
             {
@@ -305,8 +313,8 @@
         "image_url": "https://example.com/rasengan.gif"
       },
     
-      "Flying Raijin": {
-        "name": "Flying Raijin",
+      "Flying Raijin Jutsu": {
+        "name": "Flying Raijin Jutsu",
         "description": "dodges all incoming attacks and strikes the enemy",
         "chakraCost": 5,
         "effects": [
@@ -317,7 +325,7 @@
           {
             "type": "buff",
             "stats": {
-              "dodge": 100
+              "dodge": 10000
             },
             "duration": 1
           }

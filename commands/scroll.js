@@ -363,7 +363,10 @@ module.exports = {
 
     async showTutorial(interaction, users, userId) {
         let currentPage = 0;
-        
+
+        // Defer reply to keep the interaction alive
+        await interaction.deferReply();
+
         const row = new ActionRowBuilder()
             .addComponents(
                 new ButtonBuilder()
@@ -387,10 +390,10 @@ module.exports = {
             { name: 'tutorial.png' }
         );
 
-        const message = await interaction.reply({
+        // Use editReply since we deferred above
+        const message = await interaction.editReply({
             files: [tutorialImage],
-            components: [row],
-            fetchReply: true
+            components: [row]
         });
 
         const collector = message.createMessageComponentCollector({ time: 300000 });
@@ -407,16 +410,17 @@ module.exports = {
             } else if (i.customId === 'finish_tutorial') {
                 users[userId].firstusescroll = true;
                 saveData(usersPath, users);
-                
+
                 const finalEmbed = new EmbedBuilder()
                     .setColor('#4BB543')
                     .setTitle('Tutorial Completed!')
                     .setDescription('You can now use `/scroll info` to check your scrolls and requirements!')
                     .setThumbnail(TUTORIAL_PAGES[0].image);
-                
+
                 await i.update({
                     embeds: [finalEmbed],
-                    components: []
+                    components: [],
+                    files: []
                 });
                 return;
             }
@@ -431,9 +435,11 @@ module.exports = {
                 { name: 'tutorial.png' }
             );
 
+            // Use update for button interactions
             await i.update({
                 files: [newTutorialImage],
-                components: [row]
+                components: [row],
+                embeds: []
             });
         });
     },

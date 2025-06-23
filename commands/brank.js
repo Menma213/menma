@@ -651,8 +651,8 @@ module.exports = {
                             } else {
                                 try {
                                     gainAmount = Math.max(0, math.evaluate(effect.amount, { user: baseUser }));
-                                } catch(e) { 
-                                    console.error("chakra_gain formula error", e); 
+                                } catch(e) {
+                                    console.error("chakra_gain formula error", e);
                                     gainAmount = 0;
                                 }
                             }
@@ -853,7 +853,7 @@ module.exports = {
                 )
                 .addFields({
                     name: 'Battle Status',
-                    value: `${player.name} || ${Math.round(player.currentHealth ?? playerHealth)} HP\n${currentNpc.name} || ${Math.round(currentNpc.currentHealth ?? npcHealth)} HP\nChakra: ${player.chakra}            Chakra: ${currentNpc.chakra}`
+                    value: `${player.name} | ${Math.round(player.currentHealth ?? playerHealth)} HP\n${currentNpc.name} | ${Math.round(currentNpc.currentHealth ?? npcHealth)} HP\nChakra: ${player.chakra}            Chakra: ${currentNpc.chakra}`
                 });
 
             // Add jutsu image/gif if available

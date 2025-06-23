@@ -35,6 +35,11 @@ module.exports = {
                 )
         ),
     async execute(interaction) {
+        // Only allow in main server
+        if (!interaction.guild || interaction.guild.id !== '1381268582595297321') {
+            return interaction.reply({ content: 'This command can only be used in the main server.', ephemeral: true });
+        }
+
         // Owner/admin check
         if (!OWNER_IDS.includes(interaction.user.id)) {
             return interaction.reply({ content: "You do not have permission to use this command.", ephemeral: true });

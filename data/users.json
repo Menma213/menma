@@ -20,7 +20,7 @@
   },
   "1018526599043354725": {
     "level": 1,
-    "exp": 430,
+    "exp": 555,
     "wins": 2,
     "losses": 1,
     "rankedPoints": 0,
@@ -36,34 +36,10 @@
       "Attack",
       "Transformation Jutsu"
     ],
-    "money": 15520,
-    "ramen": 1
-  },
-  "1355490065899585737": {
-    "level": 1,
-    "exp": 100,
-    "wins": 1,
-    "losses": 0,
-    "rankedPoints": 0,
-    "clan": "None",
-    "bloodline": "Unknown",
-    "mentor": "None",
-    "rank": "Academy Student",
-    "health": 964.8,
-    "power": 100,
-    "defense": 50,
-    "chakra": 12,
-    "jutsu": [
-      "Attack",
-      "Transformation Jutsu"
-    ],
-    "money": 19999,
-    "ramen": 51,
-    "lastArank": 1749741447840,
-    "lastbrank": 1749741589628,
-    "lastsrank": 1749742666424,
-    "elo": 940,
-    "firstusescroll": true
+    "money": 15735,
+    "ramen": 1,
+    "lastdrank": 1750166229696,
+    "mentorExp": 1
   },
   "843680216022122516": {
     "level": 20,
@@ -89,87 +65,80 @@
     "money": 1260,
     "ramen": 1
   },
-  "737913304214667345": {
-    "level": 1,
-    "exp": 100,
-    "wins": 1,
-    "losses": 0,
-    "rankedPoints": 0,
-    "clan": "None",
-    "bloodline": "Unknown",
-    "mentor": "None",
-    "rank": "Academy Student",
-    "health": 964.8,
-    "power": 100,
-    "defense": 50,
-    "chakra": 10,
-    "jutsu": [
-      "Attack",
-      "Transformation Jutsu",
-      "None",
-      "None",
-      "None"
-    ],
-    "money": 15000,
-    "ramen": 1
-  },
   "835408109899219004": {
-    "level": 39,
-    "exp": 94225,
-    "wins": 114,
-    "losses": 2,
+    "level": 79,
+    "exp": 47675,
+    "wins": 124,
+    "losses": 3,
     "rankedPoints": 0,
     "clan": "Thundie's clan",
     "bloodline": "Otsutsuki",
     "mentor": "Kakashi",
-    "rank": "Chuunin",
-    "health": 899999999,
-    "power": 12295000,
-    "defense": 100,
+    "rank": "The Shinobi God",
+    "health": 99909346,
+    "power": 12295102,
+    "defense": 217,
     "chakra": 15,
     "jutsu": {
       "slot_0": "Attack",
-      "slot_1": "Transformation Jutsu",
+      "slot_1": "asura",
       "slot_2": "asura",
-      "slot_3": "asura",
-      "slot_4": "Rasengan",
-      "slot_5": "Shadow Clone Jutsu"
+      "slot_3": "Transformation Jutsu",
+      "slot_4": "Analysis",
+      "slot_5": "Flying Raijin Jutsu"
     },
-    "money": 8.800000000000007e+23,
-    "ramen": 4,
+    "money": 26688,
+    "ramen": 9,
     "lastClaim": "2025-04-24T08:51:48.586Z",
     "nextClaim": "2025-04-25T08:51:48.586Z",
-    "lastArank": 1749385042340,
+    "lastArank": 1750610783509,
     "Combo": "Intermediate Combo",
     "firstusescroll": true,
     "current_scroll": null,
     "scroll_attempts": 34,
     "lastTrials": 1746638885031,
     "lastTrial": 1746706355538,
-    "occupation": "Akatsuki",
+    "occupation": "Anbu",
     "perks": "Jinchuriki",
-    "lastguard": 1746951052016,
-    "lastdrank": 1750158396905,
-    "lastbrank": 1750158237996,
-    "lastsrank": 1750164071018,
-    "role": "Scientist",
+    "lastguard": 1750175065990,
+    "lastdrank": 1750440039217,
+    "lastbrank": 1750610577634,
+    "lastsrank": 1750440147074,
+    "role": "Spy",
     "lastrob": 1747052628716,
     "elo": 1304,
     "mentorPoints": 6,
     "completedMentorStories": {
       "Kakashi": true
     },
-    "mentorExp": 3,
+    "mentorExp": 10,
     "ranked": {
-      "totalElo": 12100,
+      "totalElo": 12275,
       "rank": "The Shinobi God",
       "division": 1,
-      "elo": 0,
+      "elo": 75,
       "claimedRewards": [
         100,
-        200
+        200,
+        400,
+        600,
+        800,
+        1200,
+        1600,
+        2000,
+        2400
       ]
-    }
+    },
+    "ss": 99999999400,
+    "roles": [
+      "1385641469507010640"
+    ],
+    "premiumRoles": [
+      {
+        "roleId": "1385641469507010640",
+        "expiresAt": 1753027054640
+      }
+    ]
   },
   "741142009670271010": {
     "level": 1,
@@ -312,7 +281,7 @@
     "firstusescroll": true,
     "speed": 0,
     "sanninSince": "2025-05-12T10:19:59.222Z",
-    "lastsrank": 1747043019281,
+    "lastsrank": 1750169879376,
     "lastArank": 1749375082831,
     "occupation": "Akatsuki",
     "role": "Co-Leader",
@@ -387,15 +356,15 @@
   },
   "1132693590066331828": {
     "level": 31,
-    "exp": 2050,
-    "wins": 2,
+    "exp": 7380,
+    "wins": 5,
     "losses": 0,
     "rankedPoints": 0,
     "clan": "None",
     "bloodline": "Unknown",
     "mentor": "None",
-    "rank": "Academy Student",
-    "health": 5563.8,
+    "rank": "Genin",
+    "health": 4271.8,
     "power": 175,
     "defense": 139,
     "chakra": 10,
@@ -407,9 +376,128 @@
       "slot_4": "None",
       "slot_5": "None"
     },
-    "money": 97016930,
+    "money": 97021910,
     "ramen": 1,
-    "lastsrank": 1750164430228,
-    "mentorExp": 3
+    "lastsrank": 1750164940532,
+    "mentorExp": 7,
+    "ss": 1000,
+    "lastbrank": 1750233862929,
+    "ranked": {
+      "totalElo": 0,
+      "rank": "Genin",
+      "division": 5,
+      "elo": 0
+    }
+  },
+  "799979545046155284": {
+    "level": 101,
+    "exp": 28965,
+    "wins": 13,
+    "losses": 0,
+    "rankedPoints": 0,
+    "clan": "None",
+    "bloodline": "Unknown",
+    "mentor": "Hinata Hyuga",
+    "rank": "Genin",
+    "health": 4034.7999999999993,
+    "power": 353,
+    "defense": 349,
+    "chakra": 10,
+    "jutsu": {
+      "slot_0": "Attack",
+      "slot_1": "Transformation Jutsu",
+      "slot_2": "asura",
+      "slot_3": "Sexy Jutsu",
+      "slot_4": "Smoke Bomb",
+      "slot_5": "Analysis"
+    },
+    "money": 100000144235,
+    "ramen": 1,
+    "Combo": "Intermediate Combo",
+    "lastbrank": 1750611079225,
+    "lastdrank": 1750608209149,
+    "mentorExp": 6,
+    "lastsrank": 1750608827296,
+    "firstusescroll": true,
+    "current_scroll": null,
+    "scroll_attempts": 1,
+    "lastArank": 1750607949970,
+    "ss": 9500,
+    "roles": [
+      "1385641469507010640"
+    ],
+    "premiumRoles": [
+      {
+        "roleId": "1385641469507010640",
+        "expiresAt": 1753026936304
+      }
+    ],
+    "completedMentorStories": {
+      "Kakashi": true,
+      "Naruto": true,
+      "Shikamaru": true,
+      "Sasuke": true,
+      "Sakura": true,
+      "Hinata Hyuga": true
+    }
+  },
+  "737913304214667345": {
+    "level": 100,
+    "exp": 26900,
+    "wins": 7,
+    "losses": 0,
+    "rankedPoints": 0,
+    "clan": "None",
+    "bloodline": "Unknown",
+    "mentor": "None",
+    "rank": "Academy Student",
+    "health": 10000,
+    "power": 1999999991,
+    "defense": 5000,
+    "chakra": 10,
+    "jutsu": {
+      "slot_0": "Attack",
+      "slot_1": "Transformation Jutsu",
+      "slot_2": "asura",
+      "slot_3": "None",
+      "slot_4": "None",
+      "slot_5": "None"
+    },
+    "money": 10134700,
+    "ramen": 1,
+    "lastbrank": 1750174338336,
+    "mentorExp": 5,
+    "lastsrank": 1750174401835,
+    "lastdrank": 1750174461414,
+    "lastArank": 1750174468052
+  },
+  "1355490065899585737": {
+    "level": 22,
+    "exp": 0,
+    "wins": 3,
+    "losses": 0,
+    "rankedPoints": 0,
+    "clan": "None",
+    "bloodline": "Unknown",
+    "mentor": "None",
+    "rank": "Academy Student",
+    "health": 4098,
+    "power": 152,
+    "defense": 113,
+    "chakra": 10,
+    "jutsu": {
+      "slot_0": "Attack",
+      "slot_1": "Transformation Jutsu",
+      "slot_2": "asura",
+      "slot_3": "Great Forest Crumbling",
+      "slot_4": "Water Dragon Jutsu",
+      "slot_5": "Reaper Death Seal"
+    },
+    "money": 11875,
+    "ramen": 1,
+    "lastdrank": 1750438394353,
+    "mentorExp": 3,
+    "lastbrank": null,
+    "lastArank": 1750438481742
   }
 }

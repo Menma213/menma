@@ -50,7 +50,7 @@ if (fs.existsSync(jutsuPath)) jutsuData = JSON.parse(fs.readFileSync(jutsuPath, 
 const srankBosses = {
     "haku": {
         name: "Haku",
-        image: "https://i.imgur.com/example1.png", // Replace with actual image
+        image: "https://static.wikia.nocookie.net/naruto/images/3/35/Haku%27s_shinobi_attire.png/revision/latest/scale-to-width-down/1200?cb=20160610212143", // Replace with actual image
         health: 25000,
         power: 800,
         defense: 400,
@@ -63,7 +63,7 @@ const srankBosses = {
     },
     "zabuza": {
         name: "Zabuza",
-        image: "https://i.imgur.com/example2.png", // Replace with actual image
+        image: "https://static.wikia.nocookie.net/villains/images/7/7d/Zabuza.png/revision/latest?cb=20181118072602", // Replace with actual image
         health: 30000,
         power: 1000,
         defense: 600,
@@ -76,7 +76,7 @@ const srankBosses = {
     },
     "orochimaru": {
         name: "Orochimaru",
-        image: "https://i.imgur.com/example3.png", // Replace with actual image
+        image: "https://www.pngplay.com/wp-content/uploads/12/Orochimaru-PNG-Free-File-Download.png", // Replace with actual image
         health: 35000,
         power: 1200,
         defense: 800,
@@ -251,17 +251,7 @@ module.exports = {
     async execute(interaction) {
         try {
             // Check cooldown
-            if (cooldowns.has(interaction.user.id)) {
-                const expirationTime = cooldowns.get(interaction.user.id) + COOLDOWN_TIME;
-                if (Date.now() < expirationTime) {
-                    const timeLeft = (expirationTime - Date.now()) / 1000;
-                    return await interaction.reply({ 
-                        content: `You must wait ${Math.ceil(timeLeft)} seconds before starting another S-Rank mission.`,
-                        ephemeral: true 
-                    });
-                }
-            }
-            cooldowns.set(interaction.user.id, Date.now());
+           
 
             await interaction.deferReply();
 
@@ -578,9 +568,9 @@ module.exports = {
                         const result = {
                             damage: 0,
                             heal: 0,
-                            description: jutsu.description || `${baseUser.name || 'Unknown'} used ${jutsu.name}`,
+                            description: jutsu.description || `${baseUser.name} used ${jutsu.name}`,
                             specialEffects: [],
-                            hit: true,
+                            hit: false,
                             jutsuUsed: jutsuName
                         };
 
@@ -589,7 +579,7 @@ module.exports = {
                                 damage: 0,
                                 heal: 0,
                                 description: `${baseUser.name} failed to perform ${jutsu.name} (not enough chakra)`,
-                                specialEffects: ["Chakra exhausted!"],
+                                specialEffects: ["Not enough chakra!"],
                                 hit: false,
                                 jutsuUsed: jutsuName
                             };
@@ -1102,9 +1092,7 @@ module.exports = {
                             comboState.usedJutsus.clear();
                         }
 
-                        // Ensure health doesn't go below 0
-                        players.forEach(p => p.health = Math.max(0, p.health));
-                        npc.currentHealth = Math.max(0, npc.currentHealth);
+                       
 
                         // Move chakra regen to BEFORE battle summary
                         players.forEach(p => {

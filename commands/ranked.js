@@ -292,6 +292,11 @@ module.exports = {
         ),
 
     async execute(interaction) {
+        // Only allow in main server
+        if (!interaction.guild || interaction.guild.id !== '1381268582595297321') {
+            return interaction.reply({ content: 'This command can only be used in the main server.', ephemeral: true });
+        }
+
         const userId = interaction.user.id;
         const opt = interaction.options.getString('option');
 
@@ -400,6 +405,9 @@ const SERVER_ID = "1381268582595297321";
 
 // Add your log channel ID here
 const LOG_CHANNEL_ID = "1381278641144467637"; // <-- Replace with your log channel ID
+
+// Add a constant for the summary channel (if needed)
+const SUMMARY_CHANNEL_ID = "1381601428740505660"; // <-- Replace with your summary channel ID
 
 // --- 1v1 Battle Logic using brank.js features ---
 async function startRankedBattle(client, player1Id, player2Id, mode) {
@@ -993,61 +1001,148 @@ async function generateMatchSummaryCanvas(user, oldElo, newElo, isWinner, rounds
 }
 
 // --- Canvas-based match summary embed handler ---
-async function handleMatchEnd(channel, winner, loser, users, roundNum, maxDamage) {
+async function handleMatchEnd(channel, winner, loser, users, roundNum = 0, maxDamage = 0) {
+    // Update ELO and rank
     const oldWinnerElo = users[winner.userId].ranked?.totalElo || 0;
     const oldLoserElo = users[loser.userId].ranked?.totalElo || 0;
     const eloUpdate = updateElo(winner.userId, loser.userId);
 
-    // Generate summary images
-    const winnerImage = await generateMatchSummaryCanvas(
-        winner,
-        oldWinnerElo,
-        eloUpdate.winnerNew.totalElo,
-        true,
-        roundNum,
-        maxDamage
+    // Update "rank" variable in users.json directly based on ELO
+    const updatedUsers = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
+    updatedUsers[winner.userId].rank = getTierAndDivision(updatedUsers[winner.userId].ranked.totalElo).rank;
+    updatedUsers[loser.userId].rank = getTierAndDivision(updatedUsers[loser.userId].ranked.totalElo).rank;
+    fs.writeFileSync(usersPath, JSON.stringify(updatedUsers, null, 2));
+
+    // Fetch updated user objects for summary
+    const winnerUser = updatedUsers[winner.userId];
+    const loserUser = updatedUsers[loser.userId];
+
+    // Calculate stats for summary
+    const winnerStats = {
+        power: winnerUser.power || 0,
+        defense: winnerUser.defense || 0,
+        health: winnerUser.health || 0,
+        chakra: winnerUser.chakra || 0,
+        accuracy: winnerUser.accuracy || 0,
+        dodge: winnerUser.dodge || 0,
+        totalElo: winnerUser.ranked?.totalElo || 0,
+        rank: winnerUser.rank || "Genin"
+    };
+    const loserStats = {
+        power: loserUser.power || 0,
+        defense: loserUser.defense || 0,
+        health: loserUser.health || 0,
+        chakra: loserUser.chakra || 0,
+        accuracy: loserUser.accuracy || 0,
+        dodge: loserUser.dodge || 0,
+        totalElo: loserUser.ranked?.totalElo || 0,
+        rank: loserUser.rank || "Genin"
+    };
+
+    // Calculate total damage dealt/taken (for now, just use maxDamage and rounds)
+    // You can expand this with more detailed tracking if needed
+    const winnerDamageDealt = maxDamage || "N/A";
+    const loserDamageDealt = maxDamage || "N/A";
+    const winnerDamageTaken = maxDamage || "N/A";
+    const loserDamageTaken = maxDamage || "N/A";
+
+    // Generate ELO image for winner and loser
+    const winnerImagePath = await generateEloImage(
+        winner, 
+        oldWinnerElo, 
+        winnerUser.ranked.totalElo, 
+        true
     );
-    const loserImage = await generateMatchSummaryCanvas(
-        loser,
-        oldLoserElo,
-        eloUpdate.loserNew.totalElo,
-        false,
-        roundNum,
-        maxDamage
+    const loserImagePath = await generateEloImage(
+        loser, 
+        oldLoserElo, 
+        loserUser.ranked.totalElo, 
+        false
     );
 
-    // Create summary embeds
-    const winnerSummary = new EmbedBuilder()
-        .setColor('#22c55e')
-        .setTitle('Match Summary')
+    // Prepare summary embeds
+    const winnerEmbed = new EmbedBuilder()
+        .setTitle("🏆 Battle Summary")
+        .setColor("#22c55e")
         .setDescription(
-            `**RANKED: STANDARD MODE**\n\nSummary: Win\nRounds: ${roundNum}\nHighest Damage: ${maxDamage}`
+            `**Result:** Victory\n` +
+            `**Rounds Played:** ${roundNum}\n` +
+            `**Total Damage Dealt:** ${winnerDamageDealt}\n` +
+            `**Total Damage Taken:** ${winnerDamageTaken}\n\n` +
+            `**Your Stats:**\n` +
+            `> Power: ${winnerStats.power}\n` +
+            `> Defense: ${winnerStats.defense}\n` +
+            `> Health: ${winnerStats.health}\n` +
+            `> Chakra: ${winnerStats.chakra}\n` +
+            `> Accuracy: ${winnerStats.accuracy}\n` +
+            `> Dodge: ${winnerStats.dodge}\n` +
+            `> Rank: ${winnerStats.rank}\n` +
+            `> ELO: ${winnerStats.totalElo}\n\n` +
+            `**Enemy Stats:**\n` +
+            `> Power: ${loserStats.power}\n` +
+            `> Defense: ${loserStats.defense}\n` +
+            `> Health: ${loserStats.health}\n` +
+            `> Chakra: ${loserStats.chakra}\n` +
+            `> Accuracy: ${loserStats.accuracy}\n` +
+            `> Dodge: ${loserStats.dodge}\n` +
+            `> Rank: ${loserStats.rank}\n` +
+            `> ELO: ${loserStats.totalElo}`
         )
-        .setImage('attachment://result.png')
-        .setFooter({ text: 'Victory' })
-        .setFlags(64);
+        .setImage(`attachment://winner_elo.png`)
+        .setFooter({ text: "Congratulations on your victory!" });
 
-    const loserSummary = new EmbedBuilder()
-        .setColor('#dc2626')
-        .setTitle('Match Summary')
+    const loserEmbed = new EmbedBuilder()
+        .setTitle("💔 Battle Summary")
+        .setColor("#dc2626")
         .setDescription(
-            `**RANKED: STANDARD MODE**\n\nSummary: Loss\nRounds: ${roundNum}\nHighest Damage: ${maxDamage}`
+            `**Result:** Defeat\n` +
+            `**Rounds Played:** ${roundNum}\n` +
+            `**Total Damage Dealt:** ${loserDamageDealt}\n` +
+            `**Total Damage Taken:** ${loserDamageTaken}\n\n` +
+            `**Your Stats:**\n` +
+            `> Power: ${loserStats.power}\n` +
+            `> Defense: ${loserStats.defense}\n` +
+            `> Health: ${loserStats.health}\n` +
+            `> Chakra: ${loserStats.chakra}\n` +
+            `> Accuracy: ${loserStats.accuracy}\n` +
+            `> Dodge: ${loserStats.dodge}\n` +
+            `> Rank: ${loserStats.rank}\n` +
+            `> ELO: ${loserStats.totalElo}\n\n` +
+            `**Enemy Stats:**\n` +
+            `> Power: ${winnerStats.power}\n` +
+            `> Defense: ${winnerStats.defense}\n` +
+            `> Health: ${winnerStats.health}\n` +
+            `> Chakra: ${winnerStats.chakra}\n` +
+            `> Accuracy: ${winnerStats.accuracy}\n` +
+            `> Dodge: ${winnerStats.dodge}\n` +
+            `> Rank: ${winnerStats.rank}\n` +
+            `> ELO: ${winnerStats.totalElo}`
         )
-        .setImage('attachment://result.png')
-        .setFooter({ text: 'Defeat' })
-        .setFlags(64);
+        .setImage(`attachment://loser_elo.png`)
+        .setFooter({ text: "Better luck next time!" });
 
-    // Send results to the original queue channel
-    await channel.send({
+    // Send to summary channel or original queue channel
+    let summaryChannel = channel;
+    try {
+        // Try to fetch the original channel if possible, else use summary channel
+        if (!summaryChannel || typeof summaryChannel.send !== "function") {
+            summaryChannel = await winner.client.channels.fetch(SUMMARY_CHANNEL_ID);
+        }
+    } catch (e) {
+        // fallback to summary channel
+        summaryChannel = await winner.client.channels.fetch(SUMMARY_CHANNEL_ID);
+    }
+
+    // Send winner and loser summary
+    await summaryChannel.send({
         content: `🏆 <@${winner.userId}>`,
-        embeds: [winnerSummary],
-        files: [{ attachment: winnerImage, name: 'result.png' }]
+        embeds: [winnerEmbed],
+        files: [{ attachment: winnerImagePath, name: "winner_elo.png" }]
     });
-
-    await channel.send({
+    await summaryChannel.send({
         content: `💔 <@${loser.userId}>`,
-        embeds: [loserSummary],
-        files: [{ attachment: loserImage, name: 'result.png' }]
+        embeds: [loserEmbed],
+        files: [{ attachment: loserImagePath, name: "loser_elo.png" }]
     });
 
     return eloUpdate;
@@ -1774,38 +1869,16 @@ async function generateEloImage(user, oldElo, newElo, isWinner) {
     return fullPath;
 }
 
-// Add new match end handler
-async function handleMatchEnd(channel, winner, loser, users, roundNum, maxDamage) {
-    const oldWinnerElo = users[winner.userId].ranked?.totalElo || 0;
-    const oldLoserElo = users[loser.userId].ranked?.totalElo || 0;
-    const eloUpdate = updateElo(winner.userId, loser.userId);
-    
-    // Generate ELO images
-    const winnerImagePath = await generateEloImage(
-        winner, 
-        eloUpdate.winnerNew.elo - eloUpdate.winnerChange, 
-        eloUpdate.winnerNew.elo, 
-        true
-    );
-    const loserImagePath = await generateEloImage(
-        loser, 
-        eloUpdate.loserNew.elo + eloUpdate.loserChange, 
-        eloUpdate.loserNew.elo, 
-        false
-    );
-    
-    const winnerAttachment = new AttachmentBuilder(winnerImagePath);
-    const loserAttachment = new AttachmentBuilder(loserImagePath);
-    
-    await channel.send({
-        content: `🏆 **${winner.name}** has defeated **${loser.name}**!`,
-        files: [winnerAttachment]
-    });
-    
-    await channel.send({
-        content: `💔 **${loser.name}** lost the match`,
-        files: [loserAttachment]
-    });
+// --- Optimize battle image generation ---
+// Only generate battle image at the start and at the end, not every round.
+// In the battle loop, comment out or remove per-turn battle image generation:
+// ...existing code...
+// const battleImagePath1 = await generateBattleImage(player1, player2);
+// const battleImage1 = new AttachmentBuilder(battleImagePath1);
+// await channel.send({
+//     content: `**Battle Image:**`,
+//     files: [battleImage1]
+// });
+// ...existing code...
 
-    return eloUpdate;
-}
+// Optionally, you can generate a single battle image at the start or end of the match only.

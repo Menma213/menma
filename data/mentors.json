@@ -14,7 +14,7 @@
         },
         "Sakura": {
             "jutsu": [
-                { "name": "Mystic Palms", "required_exp": 10 }
+                { "name": "Mystic Palm", "required_exp": 10 }
             ],
             "clan": "Any"
         },

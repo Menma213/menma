@@ -4,7 +4,9 @@
     "discord.js": "^14.19.3",
     "dotenv": "^16.5.0",
     "gif-encoder-2": "^1.0.5",
+    "gifwrap": "^0.10.1",
     "mathjs": "^14.4.0",
+    "node-fetch": "^3.3.2",
     "puppeteer": "^24.8.1"
   }
 }

@@ -261,7 +261,7 @@ module.exports = {
             const npcData = [
                 {
                     name: "Jugo",
-                    image: "https://media.discordapp.net/attachments/1354605859103178895/1364667218570514462/image.png?ex=68170723&is=6815b5a3&hm=6fa594229de00425cef3ae3bb8a1998de9811a27e0435bd3061c0e9882704ce6&=&format=webp&quality=lossless",
+                    image: "https://i.postimg.cc/vmfSx5V1/17-D3-B777-0-FC6-4-EE4-957-D-513-CC60-D8924.png",
                     basePower: 0.9,
                     baseDefense: 0.8,
                     baseHealth: 0.9,
@@ -271,7 +271,7 @@ module.exports = {
                 },
                 {
                     name: "Temari",
-                    image: "https://media.discordapp.net/attachments/1354605859103178895/1364667330067562576/image.png",
+                    image: "https://i.postimg.cc/1tS7G4Gv/6-CCACDF3-9612-4831-8-D31-046-BEA1586-D9.png",
                     basePower: 0.95,
                     baseDefense: 0.7,
                     baseHealth: 0.8,
@@ -281,7 +281,7 @@ module.exports = {
                 },
                 {
                     name: "Kankuro",
-                    image: "https://media.discordapp.net/attachments/1354605859103178895/1364667676235923506/image.png",
+                    image: "https://i.postimg.cc/y8wbNLk4/5-F95788-A-754-C-4-BA6-B0-E0-39-BCE2-FDCF04.png",
                     basePower: 0.85,
                     baseDefense: 0.9,
                     baseHealth: 0.85,
@@ -291,7 +291,7 @@ module.exports = {
                 },
                 {
                     name: "Suigetsu",
-                    image: "https://media.discordapp.net/attachments/1354605859103178895/1364667843660087428/image.png",
+                    image: "https://i.postimg.cc/GmBfrW3x/54-AE56-B1-E2-EE-4179-BD24-EEC282-A8-B3-BF.png",
                     basePower: 0.8,
                     baseDefense: 1.0,
                     baseHealth: 1.0,
@@ -301,7 +301,7 @@ module.exports = {
                 },
                 {
                     name: "Fuguki",
-                    image: "https://media.discordapp.net/attachments/1354605859103178895/1364667943425671248/image.png",
+                    image: "https://i.postimg.cc/QMJJrm7q/064262-C0-1-BC4-47-B2-A06-A-59-DC193-C0285.png",
                     basePower: 1.0,
                     baseDefense: 0.95,
                     baseHealth: 1.1,
@@ -311,7 +311,7 @@ module.exports = {
                 },
                 {
                     name: "Jinpachi",
-                    image: "https://media.discordapp.net/attachments/1354605859103178895/1364668009624502293/image.png",
+                    image: "https://i.postimg.cc/SsZLnKD2/809-EBF4-E-70-EF-4-C83-BCE4-3-D6-C228-B1239.png",
                     basePower: 0.9,
                     baseDefense: 0.85,
                     baseHealth: 0.95,
@@ -321,7 +321,7 @@ module.exports = {
                 },
                 {
                     name: "Kushimaru",
-                    image: "https://media.discordapp.net/attachments/1354605859103178895/1364668134488932434/image.png",
+                    image: "https://i.postimg.cc/3wTF6VkR/53-BE91-D0-8-A53-47-C9-BD48-A06728-AFE79-C.png",
                     basePower: 0.95,
                     baseDefense: 0.75,
                     baseHealth: 0.9,
@@ -330,18 +330,8 @@ module.exports = {
                     jutsu: ["Attack", "Substitution Jutsu", "Silent Killing"]
                 },
                 {
-                    name: "Jhunin",
-                    image: "https://media.discordapp.net/attachments/1354605859103178895/1364668218433863772/image.png",
-                    basePower: 0.8,
-                    baseDefense: 0.9,
-                    baseHealth: 0.85,
-                    accuracy: 90,
-                    dodge: 15,
-                    jutsu: ["Attack", "Substitution Jutsu", "Fireball Jutsu"]
-                },
-                {
                     name: "Baki",
-                    image: "https://media.discordapp.net/attachments/1289641866597241035/1364586273133690930/image.png",
+                    image: "https://i.postimg.cc/Jn7c7XcC/5997-D785-7-C7-D-4-BC0-93-DB-CCF7-CA3-CDB56.png",
                     basePower: 1.1,
                     baseDefense: 0.9,
                     baseHealth: 1.0,
@@ -365,15 +355,15 @@ module.exports = {
             ];
 
             let totalEnemiesDefeated = 0;
-            let currentEnemyIndex = 0;
             let roundNum = 1;
             let playerHealth = player.health;
+            let playerChakra = player.chakra;
+            let playerActiveEffects = [];
 
-            // Generate NPC with scaling difficulty and unique stats
+            // Generate NPC with scaling difficulty and unique stats, now random
             const generateNpc = () => {
-                const npcTemplate = npcData[currentEnemyIndex % npcData.length];
+                const npcTemplate = npcData[Math.floor(Math.random() * npcData.length)];
                 const scalingFactor = 1 + Math.floor(totalEnemiesDefeated / 4) * 0.5;
-                
                 return {
                     name: npcTemplate.name,
                     image: npcTemplate.image,
@@ -682,10 +672,10 @@ module.exports = {
                             .filter(([_, jutsu]) => jutsu !== 'None')
                             .map(([slot, jutsu], index) => {
                                 const jutsuData = jutsuList[jutsu];
-                                return `${index + 1}: ${jutsuData?.name || jutsu}${jutsuData?.chakraCost ? ` (${jutsuData.chakraCost} Chakra)` : ''}`;
+                                return `${index + 1}: ${jutsuData?.name || jutsu}${jutsuData?.chakraCost ? ` (${jutsuData?.chakraCost} Chakra)` : ''}`;
                             })
                             .join('\n') +
-                        `\n\n[😴] to focus your chakra.\n[❌] to flee from battle.\n\nChakra: ${player.chakra}`
+                        `\n\n[:sleeping:] to focus your chakra.\n[:x:] to flee from battle.\n\nChakra: ${player.chakra}`
                     );
 
                 let currentRow = new ActionRowBuilder();
@@ -721,31 +711,30 @@ module.exports = {
                     currentRow.addComponents(
                         new ButtonBuilder()
                             .setCustomId(`rest-${userId}-${roundNum}`)
-                            .setLabel('😴')
+                            .setEmoji('😴')
                             .setStyle(ButtonStyle.Primary),
                         new ButtonBuilder()
                             .setCustomId(`flee-${userId}-${roundNum}`)
-                            .setLabel('❌')
+                            .setEmoji('❌')
                             .setStyle(ButtonStyle.Primary)
                     );
                     if (currentRow.components.length > 0) {
                         rows.push(currentRow);
                     }
                 } else {
-                    // If last row is almost full, push it and create a new row for utility buttons
                     if (currentRow.components.length > 0) {
                         rows.push(currentRow);
                     }
-                    if (rows.length < 5) { // Discord max row limit
+                    if (rows.length < 5) {
                         const utilityRow = new ActionRowBuilder()
                             .addComponents(
                                 new ButtonBuilder()
                                     .setCustomId(`rest-${userId}-${roundNum}`)
-                                    .setLabel('Rest')
+                                    .setEmoji('😴')
                                     .setStyle(ButtonStyle.Primary),
                                 new ButtonBuilder()
                                     .setCustomId(`flee-${userId}-${roundNum}`)
-                                    .setLabel('Flee')
+                                    .setEmoji('❌')
                                     .setStyle(ButtonStyle.Primary)
                             );
                         rows.push(utilityRow);
@@ -968,14 +957,7 @@ module.exports = {
 
             // Start battle
             try {
-                const battleImage = new AttachmentBuilder(await generateBattleImage());
-                await interaction.followUp({ 
-                    content: "**A-Rank Mission Started!** Defeat multiple enemies in succession!",
-                    files: [battleImage]
-                });
-
                 let battleActive = true;
-                
                 while (battleActive) {
                     // Update effect durations at start of turn
                     [player, currentNpc].forEach(entity => {
@@ -991,11 +973,15 @@ module.exports = {
 
                     // Player turn
                     const { embed, components } = createMovesEmbed();
+                    // Send moves embed first
                     const moveMessage = await interaction.followUp({
                         embeds: [embed],
                         components: components,
                         fetchReply: true
                     });
+                    // Then send battle image
+                    const battleImage = new AttachmentBuilder(await generateBattleImage());
+                    await interaction.followUp({ files: [battleImage] });
 
                     const playerAction = await new Promise(resolve => {
                         const collector = moveMessage.createMessageComponentCollector({
@@ -1051,7 +1037,7 @@ module.exports = {
                     if (playerAction.fled) {
                         battleActive = false;
                         await interaction.followUp(`${player.name} fled from the battle!`);
-                        // Immediately return from the execute function to prevent any further code (including reward/material drop)
+                        // Do not give mentor exp or update requirements on flee
                         return;
                     }
 
@@ -1305,8 +1291,14 @@ module.exports = {
 
                         await interaction.followUp(`**Defeat!** You were defeated by ${currentNpc.name}...`);
                         battleActive = false;
-                        break;
+                        // Do not give mentor exp or update requirements on loss
+                        return;
                     }
+
+                    // Persist player stats across battles
+                    player.health = playerHealth;
+                    player.chakra = playerChakra;
+                    player.activeEffects = playerActiveEffects;
 
                     // Passive chakra regen
                     player.chakra += CHAKRA_REGEN[player.rank] || 1;
@@ -1427,12 +1419,12 @@ module.exports = {
                 await updateRequirements(interaction.user.id, 'a_mission');
                 await addMentorExp(userId, 1);
             } catch (error) {
-                console.error("Mission error:", error);
-                await interaction.followUp("An error occurred during the mission!");
+                console.error('Mission error:', error);
+                await interaction.followUp('An error occurred during the mission!');
             }
         } catch (error) {
-            console.error("Mission error:", error);
-            await interaction.followUp("An error occurred during the mission!");
+            console.error('Mission error:', error);
+            await interaction.followUp('An error occurred during the mission!');
         }
     }
 };

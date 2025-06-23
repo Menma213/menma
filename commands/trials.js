@@ -305,7 +305,7 @@ const HOKAGE_TRIALS = [
     },
     {
         name: "Tsunade",
-        image: "",
+        image: "https://static.wikia.nocookie.net/all-worlds-alliance/images/5/5a/8-83829_senju-tsunade-random-pinterest-boruto-and-naruto-png.png/revision/latest?cb=20190502024736",
         health: 42000,
         power: 2100,
         defense: 1500,
@@ -360,7 +360,7 @@ const HOKAGE_TRIALS = [
     },
     {
         name: "Naruto Uzumaki",
-        image: "https://www.pngplay.com/wp-content/uploads/12/Hashirama-Senju-No-Background.png",
+        image: "https://pngimg.com/d/naruto_PNG18.png",
         health: 80000,
         power: 3500,
         defense: 2500,

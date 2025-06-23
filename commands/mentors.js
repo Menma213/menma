@@ -274,7 +274,6 @@ async function startStoryline(interaction, player, userId, users, mentorName, st
         fetchReply: true
     });
 
-    // Pagination
     const collector = response.createMessageComponentCollector({ 
         filter: i => i.user.id === userId, 
         time: 60000 
@@ -283,8 +282,7 @@ async function startStoryline(interaction, player, userId, users, mentorName, st
     collector.on('collect', async i => {
         if (i.customId === 'story_next') {
             currentPage++;
-            if (currentPage >= storyline.pages.length - 1) {
-                // Last page - show minigame
+            if (currentPage === storyline.pages.length) {
                 collector.stop();
                 await showMinigame(i, player, userId, users, mentorName, storyline);
                 return;
@@ -295,11 +293,14 @@ async function startStoryline(interaction, player, userId, users, mentorName, st
 
         // Update buttons
         row.components[0].setDisabled(currentPage <= 0);
-        row.components[1].setLabel(currentPage >= storyline.pages.length - 1 ? 'Start Minigame' : 'Next');
+        row.components[1].setLabel(currentPage === storyline.pages.length - 1 ? 'Start Minigame' : 'Next');
 
-        embed.setDescription(storyline.pages[currentPage]);
-        embed.setFooter({ text: `Page ${currentPage + 1}/${storyline.pages.length}` });
-        await i.update({ embeds: [embed], components: [row] });
+        // Show last page before minigame
+        if (currentPage < storyline.pages.length) {
+            embed.setDescription(storyline.pages[currentPage]);
+            embed.setFooter({ text: `Page ${currentPage + 1}/${storyline.pages.length}` });
+            await i.update({ embeds: [embed], components: [row] });
+        }
     });
 }
 
@@ -329,7 +330,6 @@ async function showMinigame(interaction, player, userId, users, mentorName, stor
         );
     });
 
-    // Use reply if not yet replied, otherwise followUp, always with fetchReply: true
     let response;
     if (!interaction.replied && !interaction.deferred) {
         response = await interaction.reply({
@@ -354,15 +354,16 @@ async function showMinigame(interaction, player, userId, users, mentorName, stor
         const selected = parseInt(i.customId.split('_')[1]);
         const isCorrect = selected === minigame.correct;
 
-        // Update user data
+        // Ensure mentorExp is initialized
         const { users } = await loadData();
         const user = users[userId] || {};
+        if (typeof user.mentorExp !== "number") user.mentorExp = 0;
 
         if (isCorrect) {
             user.completedMentorStories = user.completedMentorStories || {};
             user.completedMentorStories[mentorName] = true;
-            user.mentorExp = (user.mentorExp || 0) + (minigame.rewardExp || 10);
-            user.mentor = mentorName; // Directly select mentor after success
+            user.mentorExp += (minigame.rewardExp || 10);
+            user.mentor = mentorName;
 
             users[userId] = user;
             await saveJsonFile(DATA_PATH, users);
