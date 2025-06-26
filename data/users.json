@@ -568,7 +568,8 @@
     "firstusescroll": true,
     "current_scroll": "Needle Assault Scroll",
     "lastdrank": 1750870496174,
-    "occupation": "Akatsuki"
+    "occupation": "Akatsuki",
+    "tutorialStory": true
   },
   "1383619165843230730": {
     "level": 1,
@@ -595,5 +596,35 @@
     "money": 10000,
     "ramen": 1,
     "Combo": "Basic Combo"
+  },
+  "1071680680616001557": {
+    "level": 1,
+    "exp": 430,
+    "wins": 2,
+    "losses": 0,
+    "rankedPoints": 0,
+    "clan": "None",
+    "bloodline": "Unknown",
+    "mentor": "None",
+    "rank": "Academy Student",
+    "health": 964.8,
+    "power": 100,
+    "defense": 50,
+    "chakra": 7,
+    "jutsu": {
+      "slot_0": "Attack",
+      "slot_1": "Transformation Jutsu",
+      "slot_2": "None",
+      "slot_3": "None",
+      "slot_4": "None",
+      "slot_5": "None"
+    },
+    "money": 15520,
+    "ramen": 1,
+    "Combo": "Basic Combo",
+    "tutorialStory": true,
+    "lastbrank": 1750961196471,
+    "mentorExp": 1,
+    "brankWon": true
   }
 }

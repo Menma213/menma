@@ -4,13 +4,13 @@
     "requirements": [
       {
         "description": "Complete D-rank mission 4 times",
-        "completed": 1,
+        "completed": 2,
         "needed": 4,
         "type": "d_mission"
       },
       {
         "description": "Complete S-rank mission 5 times",
-        "completed": 1,
+        "completed": 2,
         "needed": 5,
         "type": "s_mission"
       },

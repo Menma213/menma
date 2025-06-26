@@ -1,7 +1,17 @@
-require('dotenv').config();
-const { Client, GatewayIntentBits, Collection, REST, Routes } = require('discord.js');
+// Add this block at the very top, before any require('dotenv').config()
 const fs = require('fs');
 const path = require('path');
+
+// Support for .env.path file
+const envPathFile = path.join(__dirname, '.env.path');
+let envFile = '.env';
+if (fs.existsSync(envPathFile)) {
+    const customEnvPath = fs.readFileSync(envPathFile, 'utf8').trim();
+    if (customEnvPath) envFile = customEnvPath;
+}
+require('dotenv').config({ path: path.resolve(__dirname, envFile) });
+
+const { Client, GatewayIntentBits, Collection, REST, Routes } = require('discord.js');
 
 // Load environment variables
 const TOKEN = process.env.DISCORD_TOKEN;

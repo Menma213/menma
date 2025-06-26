@@ -5,7 +5,7 @@ const path = require('path');
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('help')
-        .setDescription('📜 View all available commands in an interactive format!'),
+        .setDescription('📜 View all available commands!'),
 
     async execute(interaction) {
         const userId = interaction.user.id;
@@ -50,7 +50,7 @@ module.exports = {
                 .setThumbnail(interaction.client.user.displayAvatarURL({ size: 256, dynamic: true }))
                 .setFooter({
                     text: `Page ${currentPage + 1} of ${totalPages} • Use the buttons below to navigate`,
-                    iconURL: "",
+                    iconURL: "https://img1.hulu.com/user/v3/artwork/a99159e3-5f5b-4bf6-b166-c3d26c02ab56?base_image_bucket_name=image_manager&base_image=3ed708b1-223c-4af7-ac5c-2aeb085aa221&size=600x338&format=webp",
                 })
                 .setTimestamp();
         }
@@ -89,7 +89,7 @@ module.exports = {
                 currentPage--;
             } else if (i.customId === 'close') {
                 return await interaction.editReply({
-                    content: "✅ **Help session closed.**",
+                    content: "✅ **Help closed.**",
                     embeds: [],
                     components: [],
                 });
