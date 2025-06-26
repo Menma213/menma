@@ -11,7 +11,7 @@ module.exports = {
     async execute(interaction) {
         const userId = interaction.user.id;
         const userAvatar = interaction.user.displayAvatarURL({ format: 'png', size: 128 });
-        const enemyImage = "https://i.pinimg.com/736x/10/92/b0/1092b0aea71f620c1ed7fffe7a8704c1.jpg";
+        const enemyImage = "https://image.tmdb.org/t/p/original/o33WNqmy81CX1QaHXpYl5oQVGE4.jpg";
         const usersPath = path.resolve(__dirname, '../../menma/data/users.json');
         const inventoryPath = path.resolve(__dirname, '../../menma/data/inventory.json');
         const jutsuPath = path.resolve(__dirname, '../../menma/data/jutsu.json');
@@ -568,11 +568,11 @@ module.exports = {
                         .setImage('https://static.wikia.nocookie.net/naruto/images/5/50/Team_Kakashi.png/revision/latest?cb=20161219035928')
                         .setFooter({ 
                             text: 'Begin your journey', 
-                            iconURL: 'https://cdn.discordapp.com/icons/763131066940522496/d62fe06e4b51f2431769fa96b90b8446.jpg' 
+                            iconURL: 'https://i.pinimg.com/736x/a3/c2/6c/a3c26c173f6a317431b2ddd586f8b10a.jpg' 
                         })
                         .addFields({
                             name: 'Next Steps',
-                            value: '[Land of Fire](https://discord.gg/8kJPMp8m) - Start your adventure today!'
+                            value: '[ShinobiRPG Official Server](https://discord.gg/GPPVnydZ8m) - Start your adventure today!'
                         });
 
                     await interaction.followUp({ 
