@@ -596,6 +596,12 @@ async function startRankedBattle(client, player1Id, player2Id, mode) {
     let activeComboState = comboState1;
     let opponentComboState = comboState2;
 
+    // --- Damage tracking ---
+    let totalDamageDealt1 = 0;
+    let totalDamageTaken1 = 0;
+    let totalDamageDealt2 = 0;
+    let totalDamageTaken2 = 0;
+
     // Battle loop
     let battleActive = true;
     while (battleActive) {
@@ -807,6 +813,7 @@ async function startRankedBattle(client, player1Id, player2Id, mode) {
             comboCompleted1 = true;
             comboDamageText1 = `\n${player1.name} lands a ${combo.name}! ${comboResult.specialEffects.join(' ')}`;
             comboState1.usedJutsus.clear();
+            totalDamageDealt1 += comboResult.damage || 0; // Track combo damage dealt
         }
 
         // Combo completion check for player 2
@@ -865,6 +872,7 @@ async function startRankedBattle(client, player1Id, player2Id, mode) {
             comboCompleted2 = true;
             comboDamageText2 = `\n${player2.name} lands a ${combo.name}! ${comboResult.specialEffects.join(' ')}`;
             comboState2.usedJutsus.clear();
+            totalDamageDealt2 += comboResult.damage || 0; // Track combo damage dealt
         }
 
         // Apply player 1's action to player 2
@@ -872,12 +880,16 @@ async function startRankedBattle(client, player1Id, player2Id, mode) {
         if (player1Action.heal) {
             player1.currentHealth = Math.min(player1.currentHealth + player1Action.heal, player1.health);
         }
+        totalDamageDealt1 += player1Action.damage || 0;
+        totalDamageTaken2 += player1Action.damage || 0;
 
         // Apply player 2's action to player 1
         player1.currentHealth -= player2Action.damage || 0;
         if (player2Action.heal) {
             player2.currentHealth = Math.min(player2.currentHealth + player2Action.heal, player2.health);
         }
+        totalDamageDealt2 += player2Action.damage || 0;
+        totalDamageTaken1 += player2Action.damage || 0;
 
         // Show round summary for both players
         let summaryEmbed1 = createBattleSummaryPvP(player1Action, player1, player2, roundNum, comboCompleted1, comboDamageText1);
@@ -900,7 +912,16 @@ async function startRankedBattle(client, player1Id, player2Id, mode) {
             }
 
             // Handle match end with new ELO visualizations
-            const eloUpdate = await handleMatchEnd(channel, winner, loser, users);
+            const eloUpdate = await handleMatchEnd(channel, winner, loser, users, roundNum, {
+                winner: {
+                    dealt: totalDamageDealt1,
+                    taken: totalDamageTaken1
+                },
+                loser: {
+                    dealt: totalDamageDealt2,
+                    taken: totalDamageTaken2
+                }
+            });
 
             // Log match result
             try {
@@ -1001,7 +1022,7 @@ async function generateMatchSummaryCanvas(user, oldElo, newElo, isWinner, rounds
 }
 
 // --- Canvas-based match summary embed handler ---
-async function handleMatchEnd(channel, winner, loser, users, roundNum = 0, maxDamage = 0) {
+async function handleMatchEnd(channel, winner, loser, users, roundNum = 0, damageStats = { winner: {}, loser: {} }) {
     // Update ELO and rank
     const oldWinnerElo = users[winner.userId].ranked?.totalElo || 0;
     const oldLoserElo = users[loser.userId].ranked?.totalElo || 0;
@@ -1041,10 +1062,10 @@ async function handleMatchEnd(channel, winner, loser, users, roundNum = 0, maxDa
 
     // Calculate total damage dealt/taken (for now, just use maxDamage and rounds)
     // You can expand this with more detailed tracking if needed
-    const winnerDamageDealt = maxDamage || "N/A";
-    const loserDamageDealt = maxDamage || "N/A";
-    const winnerDamageTaken = maxDamage || "N/A";
-    const loserDamageTaken = maxDamage || "N/A";
+    const winnerDamageDealt = damageStats?.winner?.dealt ?? "N/A";
+    const winnerDamageTaken = damageStats?.winner?.taken ?? "N/A";
+    const loserDamageDealt = damageStats?.loser?.dealt ?? "N/A";
+    const loserDamageTaken = damageStats?.loser?.taken ?? "N/A";
 
     // Generate ELO image for winner and loser
     const winnerImagePath = await generateEloImage(

@@ -97,14 +97,6 @@
         {
           "type": "chakra_gain", 
           "amount": 5          
-        },
-         {
-          "type": "buff",
-          "target": "user",
-          "stats": {
-            "chakra": "user.chakra + 5"
-          },
-          "duration": 1
         }
       ]
     },

@@ -47,14 +47,16 @@ const effectHandlers = {
                     defense: Number(user.defense) || 0,
                     health: Number(user.health) || 0,
                     chakra: Number(user.chakra) || 0,
-                    accuracy: Number(user.accuracy) || 100
+                    accuracy: Number(user.accuracy) || 100,
+                    dodge: Number(user.dodge) || 0
                 },
                 target: {
                     power: Number(target.power) || 0,
                     defense: Number(target.defense) || 1,
                     health: Number(target.health) || 0,
                     chakra: Number(target.chakra) || 0,
-                    dodge: Number(target.dodge) || 0
+                    dodge: Number(target.dodge) || 0,
+                    accuracy: Number(target.accuracy) || 100
                 },
                 // Add flags for special conditions
                 hasHiddenMist: target.activeEffects?.some(e => e.type === 'status' && e.status === 'mist'),
@@ -62,22 +64,24 @@ const effectHandlers = {
                     e.type === 'status' && 
                     ['stun', 'flinch'].includes(e.status)
                 ),
-                max: Math.max // Make max function available in formulas
+                max: Math.max
             };
-            
+
+            // --- FLYING RAIJIN DODGE IMMUNITY PATCH ---
+            // If target has a dodge >= 10000, they dodge everything this turn
+            if (context.target.dodge >= 10000) {
+                return { damage: 0, hit: false, special: "dodged" };
+            }
+
             // Apply accuracy bonus if present
             const finalAccuracy = effect.accuracyBonus ? 
                 effectHandlers.getAccuracyBonus(effect, context.user.accuracy) : 
                 context.user.accuracy;
-            
-            // Calculate hit chance (user accuracy vs target dodge)
             const hitChance = Math.max(0, Math.min(100, finalAccuracy - context.target.dodge));
             const hits = Math.random() * 100 <= hitChance;
-            
             if (!hits) {
                 return { damage: 0, hit: false };
             }
-            
             const damage = Math.max(0, Math.floor(math.evaluate(formula, context)));
             return { damage, hit: true };
         } catch (err) {
@@ -568,7 +572,9 @@ module.exports = {
                             const damageResult = effectHandlers.damage(effectiveUser, effectiveTarget, effect.formula, effect);
                             result.damage += damageResult.damage;
                             result.hit = damageResult.hit;
-                            if (damageResult.hit && damageResult.damage > 0) {
+                            if (damageResult.special === "dodged") {
+                                result.specialEffects.push("Attack was dodged!");
+                            } else if (damageResult.hit && damageResult.damage > 0) {
                                 result.specialEffects.push(`Dealt ${Math.round(damageResult.damage)} damage`);
                             } else if (!damageResult.hit) {
                                 result.specialEffects.push("Attack missed!");
@@ -583,6 +589,15 @@ module.exports = {
                                 stats: buffChanges,
                                 duration: effect.duration || 1
                             });
+                            // --- FLYING RAIJIN PATCH ---
+                            if (jutsuName === "Flying Raijin Jutsu") {
+                                baseUser.activeEffects.push({
+                                    type: 'status',
+                                    status: 'flying_raijin',
+                                    duration: 1
+                                });
+                                result.specialEffects.push("100% miss");
+                            }
                             result.specialEffects.push(`Gained buffs: ${Object.entries(buffChanges)
                                 .map(([k, v]) => `${k}: +${v}`)
                                 .join(', ')} for ${effect.duration || 1} turns`);
@@ -619,28 +634,43 @@ module.exports = {
                         case 'status':
                             if (effectHandlers.status(effect.chance)) {
                                 if (!baseTarget.activeEffects) baseTarget.activeEffects = [];
-                                
-                                // Handle different status effects
-                                switch (effect.status) {
-                                    case 'bleed':
-                                        const bleedDamage = effectHandlers.bleed(baseTarget);
-                                        result.damage += bleedDamage;
-                                        result.specialEffects.push(`Target is bleeding (${bleedDamage} damage/turn)`);
-                                        break;
-                                        
-                                    case 'flinch':
-                                        if (effectHandlers.flinch(effect.chance)) {
-                                            result.specialEffects.push('Target flinched!');
-                                        }
-                                        break;
+                                // --- REAPER DEATH SEAL PATCH ---
+                                if (effect.status === "reaper_seal") {
+                                    // Apply to both user and target
+                                    if (!baseUser.activeEffects) baseUser.activeEffects = [];
+                                    baseUser.activeEffects.push({
+                                        type: 'status',
+                                        status: 'reaper_seal',
+                                        duration: effect.duration || 999
+                                    });
+                                    baseTarget.activeEffects.push({
+                                        type: 'status',
+                                        status: 'reaper_seal',
+                                        duration: effect.duration || 999
+                                    });
+                                    result.specialEffects.push("Both souls are being ripped by the Shinigami!");
+                                } else {
+                                    // Handle different status effects
+                                    switch (effect.status) {
+                                        case 'bleed':
+                                            const bleedDamage = effectHandlers.bleed(baseTarget);
+                                            result.damage += bleedDamage;
+                                            result.specialEffects.push(`Target is bleeding (${bleedDamage} damage/turn)`);
+                                            break;
+                                            
+                                        case 'flinch':
+                                            if (effectHandlers.flinch(effect.chance)) {
+                                                result.specialEffects.push('Target flinched!');
+                                            }
+                                            break;
+                                    }
+                                    baseTarget.activeEffects.push({
+                                        type: 'status',
+                                        status: effect.status,
+                                        duration: effect.duration || 1
+                                    });
+                                    result.specialEffects.push(`Applied ${effect.status} for ${effect.duration || 1} turns`);
                                 }
-                                
-                                baseTarget.activeEffects.push({
-                                    type: 'status',
-                                    status: effect.status,
-                                    duration: effect.duration || 1
-                                });
-                                result.specialEffects.push(`Applied ${effect.status} for ${effect.duration || 1} turns`);
                             }
                             break;
 
@@ -707,6 +737,15 @@ module.exports = {
                 };
             }
 
+            // --- FLYING RAIJIN PATCH: If player has flying_raijin, set npc accuracy to 0 for this attack ---
+            let originalAccuracy = baseNpc.accuracy;
+            let flyingRaijinIdx = basePlayer.activeEffects.findIndex(e => e.type === 'status' && e.status === 'flying_raijin');
+            let usedFlyingRaijin = false;
+            if (flyingRaijinIdx !== -1) {
+                baseNpc.accuracy = 0;
+                usedFlyingRaijin = true;
+            }
+
             // Filter available jutsu based on chakra
             const availableJutsu = baseNpc.jutsu.filter(j => {
                 const jutsu = jutsuList[j];
@@ -725,7 +764,16 @@ module.exports = {
             }
 
             const randomJutsu = availableJutsu[Math.floor(Math.random() * availableJutsu.length)];
-            return executeJutsu(baseNpc, basePlayer, effectiveNpc, effectivePlayer, randomJutsu);
+            const result = executeJutsu(baseNpc, basePlayer, effectiveNpc, effectivePlayer, randomJutsu);
+
+            // Restore accuracy after attack if Flying Raijin was used
+            if (usedFlyingRaijin) {
+                baseNpc.accuracy = originalAccuracy;
+                // Remove the flying_raijin status so it only works for one attack
+                basePlayer.activeEffects.splice(flyingRaijinIdx, 1);
+            }
+
+            return result;
         };
 
         // Calculate effective stats considering active effects
@@ -747,7 +795,13 @@ module.exports = {
             entity.activeEffects.forEach(effect => {
                 if (effect.type === 'buff' || effect.type === 'debuff') {
                     Object.entries(effect.stats).forEach(([stat, value]) => {
-                        effectiveStats[stat] = (effectiveStats[stat] || 0) + value;
+                        // --- FLYING RAIJIN DODGE IMMUNITY PATCH ---
+                        // If dodge is set to a very high value (e.g., 10000), override any previous dodge
+                        if (stat === "dodge" && value >= 10000) {
+                            effectiveStats.dodge = value;
+                        } else {
+                            effectiveStats[stat] = (effectiveStats[stat] || 0) + value;
+                        }
                     });
                 }
             });
@@ -799,7 +853,7 @@ module.exports = {
             ) :
             npcAction.description;
 
-            // Handle active status effects (bleed/drowning)
+            // Handle active status effects (bleed/drowning/reaper_seal)
             let statusEffects = [];
             [player, currentNpc].forEach(entity => {
                 if (typeof entity.currentHealth !== 'number') entity.currentHealth = entity === player ? playerHealth : npcHealth;
@@ -819,6 +873,12 @@ module.exports = {
                                 const chakraDrain = jutsu?.effects?.[0]?.chakraDrain || 3;
                                 entity.chakra = Math.max(0, entity.chakra - chakraDrain);
                                 statusEffects.push(`${entity.name} is drowning! (-${drowningDamage} HP, -${chakraDrain} Chakra)`);
+                                break;
+                            }
+                            case 'reaper_seal': {
+                                const reaperDamage = Math.floor(entity.health * 0.2);
+                                entity.currentHealth -= reaperDamage;
+                                statusEffects.push(`${entity.name}'s soul is being ripped by the shinigami! (-${reaperDamage} HP)`);
                                 break;
                             }
                         }
@@ -1056,9 +1116,10 @@ module.exports = {
                         users[userId].health = player.health;
                         // Add mentorExp directly to users.json
                         users[userId].mentorExp = (users[userId].mentorExp || 0) + 1;
-                        // ...existing code...
                         await updateRequirements(interaction.user.id, 'b_mission');
                         // Optionally: await addMentorExp(userId, 1); // (kept for compatibility)
+                        // Mark brank as won for tutorial
+                        users[userId].brankWon = true;
                     } else {
                         users[userId].losses += 1;
                         users[userId].health = player.health;
@@ -1139,5 +1200,132 @@ module.exports = {
             console.error("Battle error:", error);
             await interaction.followUp("An error occurred during the battle!");
         }
-    }
+    },
+
+    // Export helpers for dummy battle
+    generateBattleImageForDummy: async function(interaction, player, playerHealth, dummy) {
+        // Use the same HTML as generateBattleImage, but with dummy's image and stats
+        const browser = await puppeteer.launch({ args: ['--no-sandbox'] });
+        const page = await browser.newPage();
+        await page.setViewport({ width: 800, height: 400 });
+        const playerHealthPercent = Math.max((playerHealth / player.health) * 100, 0);
+        const npcHealthPercent = 100; // Always full for dummy
+        const imagesDir = path.resolve(__dirname, '../images');
+        if (!fs.existsSync(imagesDir)) {
+            fs.mkdirSync(imagesDir, { recursive: true });
+        }
+        const htmlContent = `
+            <html>
+            <style>
+                body { margin: 0; padding: 0; }
+                .battle-container { width: 800px; height: 400px; position: relative; background: url('https://i.pinimg.com/originals/5d/e5/62/5de5622ecdd4e24685f141f10e4573e3.jpg') center center no-repeat; background-size: cover; border-radius: 10px; overflow: hidden; }
+                .character { position: absolute; width: 150px; height: 150px; border-radius: 10px; border: 3px solid #6e1515; object-fit: cover; }
+                .player { right: 50px; top: 120px; }
+                .enemy { left: 50px; top: 120px; }
+                .name-tag { position: absolute; width: 150px; text-align: center; color: white; font-family: Arial, sans-serif; font-size: 18px; font-weight: bold; text-shadow: 2px 2px 4px #000; top: 80px; background: rgba(0,0,0,0.5); border-radius: 5px; padding: 2px 0; }
+                .player-name { right: 50px; }
+                .enemy-name { left: 50px; }
+                .health-bar { position: absolute; width: 150px; height: 22px; background-color: #333; border-radius: 5px; overflow: hidden; top: 280px; }
+                .health-fill { height: 100%; }
+                .npc-health-fill { background-color: #ff4444; width: ${npcHealthPercent}%; }
+                .player-health-fill { background-color: #4CAF50; width: ${playerHealthPercent}%; }
+                .health-text { position: absolute; width: 100%; text-align: center; color: white; font-family: Arial, sans-serif; font-size: 13px; line-height: 22px; text-shadow: 1px 1px 1px black; }
+                .player-health { right: 50px; }
+                .enemy-health { left: 50px; }
+                .vs-text { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); color: white; font-family: Arial, sans-serif; font-size: 48px; font-weight: bold; text-shadow: 2px 2px 4px #000; }
+            </style>
+            <body>
+                <div class="battle-container">
+                    <div class="name-tag enemy-name">${dummy.name}</div>
+                    <img class="character enemy" src="https://i.imgur.com/6QK8QkL.png">
+                    <div class="health-bar enemy-health">
+                        <div class="health-fill npc-health-fill"></div>
+                        <div class="health-text">∞/∞</div>
+                    </div>
+                    <div class="name-tag player-name">${player.name}</div>
+                    <img class="character player" src="${interaction.user.displayAvatarURL({ format: 'png', size: 256 })}">
+                    <div class="health-bar player-health">
+                        <div class="health-fill player-health-fill"></div>
+                        <div class="health-text">${Math.round(playerHealth)}/${player.health}</div>
+                    </div>
+                    <div class="vs-text">VS</div>
+                </div>
+            </body>
+            </html>
+        `;
+        const imagePath = path.join(imagesDir, `dummy_${interaction.user.id}_${Date.now()}.png`);
+        await page.setContent(htmlContent);
+        await page.screenshot({ path: imagePath });
+        await browser.close();
+        return imagePath;
+    },
+
+    createMovesEmbedForDummy: function(player, roundNum, userId) {
+        // Use the same as createMovesEmbed, but with roundNum and userId as params
+        // ...copy the body of createMovesEmbed, but use player, roundNum, userId as arguments...
+        // For now, just call the original:
+        return module.exports.createMovesEmbed
+            ? module.exports.createMovesEmbed(player, roundNum, userId)
+            : { embed: null, components: [] };
+    },
+
+    getJutsuByButtonForDummy: function(buttonId, player) {
+        // ...copy the body of getJutsuByButton, but use player as param...
+        // For now, just call the original:
+        return module.exports.getJutsuByButton
+            ? module.exports.getJutsuByButton(buttonId, player)
+            : null;
+    },
+
+    executeJutsuForDummy: function(baseUser, baseTarget, effectiveUser, effectiveTarget, jutsuName) {
+        // Use the same as executeJutsu, but allow "Hello" as a dummy move
+        if (jutsuName === "Hello") {
+            return {
+                damage: 0,
+                heal: 0,
+                description: "You attack the dummy. It waves at you.",
+                specialEffects: [],
+                hit: true,
+                jutsuUsed: "Hello"
+            };
+        }
+        return module.exports.executeJutsu
+            ? module.exports.executeJutsu(baseUser, baseTarget, effectiveUser, effectiveTarget, jutsuName)
+            : { damage: 0, heal: 0, description: "Unknown move.", specialEffects: [], hit: false };
+    },
+
+    processPlayerMoveForDummy: async function(customId, basePlayer, baseNpc, effectivePlayer, effectiveNpc) {
+        // Use the same as processPlayerMove, but don't allow fleeing to end the dummy (just end the loop)
+        const action = customId.split('-')[0];
+        if (action === 'rest') {
+            basePlayer.chakra = Math.min(basePlayer.chakra + 1, 10);
+            return {
+                damage: 0,
+                heal: 0,
+                description: `${basePlayer.name} gathered chakra and rested`,
+                specialEffects: ["+1 Chakra"],
+                hit: true
+            };
+        }
+        if (action === 'flee') {
+            return { fled: true };
+        }
+        return module.exports.executeJutsuForDummy(basePlayer, baseNpc, effectivePlayer, effectiveNpc, action);
+    },
+
+    getEffectiveStatsForDummy: function(entity) {
+        // Use the same as getEffectiveStats
+        return module.exports.getEffectiveStats
+            ? module.exports.getEffectiveStats(entity)
+            : entity;
+    },
+
+    createBattleSummaryForDummy: function(playerAction, npcAction, player, dummy, roundNum, comboState, playerHealth) {
+        // Use the same as createBattleSummary, but with dummy's infinite HP
+        // ...copy the body of createBattleSummary, but replace dummy HP with ∞...
+        // For brevity, just call the original if it supports params:
+        return module.exports.createBattleSummary
+            ? module.exports.createBattleSummary(playerAction, npcAction, player, dummy, roundNum, comboState, playerHealth)
+            : null;
+    },
 };

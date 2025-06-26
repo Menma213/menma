@@ -3,8 +3,8 @@ const fs = require('fs');
 const path = require('path');
 
 const usersPath = path.resolve(__dirname, '../../menma/data/users.json');
-const AKATSUKI_LEADER_ROLE_ID = '1371076470369288223';
-const AKATSUKI_ROLE_ID = '1349246393348526100'; // <-- set this
+const AKATSUKI_LEADER_ROLE_ID = '1381606426908033136';
+const AKATSUKI_ROLE_ID = '1382055870229119159'; // <-- set this
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -22,7 +22,7 @@ module.exports = {
         const targetUser = interaction.options.getUser('user');
         const users = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
         if (!users[targetUser.id] || users[targetUser.id].occupation !== "Rogue") {
-            return interaction.reply({ content: "This user is not a rogue ninja.", ephemeral: true });
+            return interaction.reply({ content: "This user is not a rogue ninja.", ephemeral: false });
         }
         users[targetUser.id].occupation = "Akatsuki";
         fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));

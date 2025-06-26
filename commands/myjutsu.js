@@ -93,13 +93,13 @@ module.exports = {
                     if (jutsuDetails) {
                         const name = jutsuDetails.name ?? jutsuKey;
                         const cost = jutsuDetails.chakraCost ?? '?';
-                        const desc = jutsuDetails.description ?? 'No description available.';
-                        return `• **${name}** (${cost} Chakra)\n   *${desc}*`;
+                        // Remove description for tidier look
+                        return `• **${name}** (${cost} Chakra)`;
                     } else {
                         return `• ${jutsuKey} (*Unknown*)`; // Handle if key not in master list
                     }
                 })
-                .join('\n\n');
+                .join('\n');
         }
          if (learnedDescription.length > 1024) {
              learnedDescription = learnedDescription.substring(0, 1021) + '...';

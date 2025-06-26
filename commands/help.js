@@ -50,7 +50,7 @@ module.exports = {
                 .setThumbnail(interaction.client.user.displayAvatarURL({ size: 256, dynamic: true }))
                 .setFooter({
                     text: `Page ${currentPage + 1} of ${totalPages} • Use the buttons below to navigate`,
-                    iconURL: "https://i.pinimg.com/736x/10/92/b0/1092b0aea71f620c1ed7fffe7a8704c1.jpg",
+                    iconURL: "",
                 })
                 .setTimestamp();
         }

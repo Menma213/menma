@@ -1187,7 +1187,7 @@ module.exports = {
                             await interaction.followUp({ embeds: [victoryEmbed] });
 
                             await updateRequirements(interaction.user.id, 's_mission');
-        
+    
                             // If mission was completed with friends
                             if (players.length > 1) {
                                 await updateRequirements(interaction.user.id, 's_mission_with_friends');
@@ -1259,6 +1259,10 @@ module.exports = {
                                 await interaction.followUp({ content: dropMsg });
                             }
                             battleActive = false;
+
+                            // Mark S-rank as win for tutorial
+                            users[userId].srankResult = "win";
+                            fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
                         } else if (players.every(p => p.health <= 0)) {
                             // Defeat
                             const defeatEmbed = new EmbedBuilder()
@@ -1267,6 +1271,10 @@ module.exports = {
                                 .setDescription(`Team was defeated by ${npc.name}...`);
                             await interaction.followUp({ embeds: [defeatEmbed] });
                             battleActive = false;
+
+                            // Mark S-rank as loss for tutorial
+                            users[userId].srankResult = "lose";
+                            fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
                         }
 
                         roundNum++;

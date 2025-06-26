@@ -417,7 +417,8 @@ module.exports = {
                     .setDescription('You can now use `/scroll info` to check your scrolls and requirements!')
                     .setThumbnail(TUTORIAL_PAGES[0].image);
 
-                await i.update({
+                // Use editReply instead of update to avoid "Unknown interaction" error
+                await interaction.editReply({
                     embeds: [finalEmbed],
                     components: [],
                     files: []
@@ -435,8 +436,8 @@ module.exports = {
                 { name: 'tutorial.png' }
             );
 
-            // Use update for button interactions
-            await i.update({
+            // Use editReply instead of update to avoid "Unknown interaction" error
+            await interaction.editReply({
                 files: [newTutorialImage],
                 components: [row],
                 embeds: []

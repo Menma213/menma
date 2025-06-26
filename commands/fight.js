@@ -439,8 +439,8 @@ module.exports = {
             }
 
             // Challenge accepted - start battle
-            await i.deferUpdate();
-            
+            try { await i.deferUpdate(); } catch (err) { /* ignore unknown interaction */ }
+
             // Initialize battle entities
             const challenger = {
                 ...users[challengerId],
@@ -698,13 +698,7 @@ module.exports = {
                             });
 
                             collector.on('collect', async i => {
-                                try {
-                                    // Only call deferUpdate if you are not calling update/reply elsewhere for this interaction
-                                    await i.deferUpdate();
-                                } catch (err) {
-                                    // Ignore "Interaction has already been acknowledged" error
-                                    if (err.code !== 40060) throw err;
-                                }
+                                try { await i.deferUpdate(); } catch (err) { /* ignore unknown interaction */ }
                                 resolve(await processPlayerMove(i.customId, challenger, opponent, effectiveChallenger, effectiveOpponent));
                                 collector.stop();
                             });
@@ -736,13 +730,7 @@ module.exports = {
                             });
 
                             collector.on('collect', async i => {
-                                try {
-                                    // Only call deferUpdate if you are not calling update/reply elsewhere for this interaction
-                                    await i.deferUpdate();
-                                } catch (err) {
-                                    // Ignore "Interaction has already been acknowledged" error
-                                    if (err.code !== 40060) throw err;
-                                }
+                                try { await i.deferUpdate(); } catch (err) { /* ignore unknown interaction */ }
                                 resolve(await processPlayerMove(i.customId, opponent, challenger, effectiveOpponent, effectiveChallenger));
                                 collector.stop();
                             });

@@ -3,155 +3,316 @@ const fs = require('fs');
 const path = require('path');
 const puppeteer = require('puppeteer');
 const { updateRequirements } = require('./scroll');
+const brank = require('./brank.js'); // Import for battle helpers
 
 const usersPath = path.resolve(__dirname, '../../menma/data/users.json');
 
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('train')
-        .setDescription('Train to level up (Costs 100,000 Ryo per level)')
-        .addIntegerOption(option =>
-            option.setName('levels')
-                .setDescription('Number of levels to train (1-10)')
-                .setRequired(true)
-                .setMinValue(1)
-                .setMaxValue(10)
+        .setDescription('Train to level up or fight a training dummy')
+        .addSubcommand(sub =>
+            sub.setName('levels')
+                .setDescription('Train to level up (Costs 100,000 Ryo per level)')
+                .addIntegerOption(option =>
+                    option.setName('levels')
+                        .setDescription('Number of levels to train (1-10)')
+                        .setRequired(true)
+                        .setMinValue(1)
+                        .setMaxValue(10)
+                )
+        )
+        .addSubcommand(sub =>
+            sub.setName('dummy')
+                .setDescription('Fight a training dummy (no cooldown, infinite HP)')
         ),
     
     async execute(interaction) {
-        const userId = interaction.user.id;
-        const levels = interaction.options.getInteger('levels');
-
-        if (!fs.existsSync(usersPath)) {
-            return interaction.reply("Database not found.");
-        }
-
-        const users = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
-
-        if (!users[userId]) {
-            return interaction.reply("You need to enroll first!");
-        }
-
-        const player = users[userId];
-        const costPerLevel = 100000;
-        const totalCost = costPerLevel * levels;
-
-        if (player.money < totalCost) {
-            return interaction.reply(`You don't have enough Ryo! You need ${totalCost} Ryo for ${levels} level(s) of training.`);
-        }
-
-        // Deduct money
-        player.money -= totalCost;
-
-        // Store original stats for display
-        const originalStats = {
-            level: player.level,
-            health: player.health,
-            power: player.power,
-            defense: player.defense
-        };
-
-        // Apply level gains with random stat increases
-        let healthGain = 0;
-        let powerGain = 0;
-        let defenseGain = 0;
-
-        for (let i = 0; i < levels; i++) {
-            player.level += 1;
-            
-            // Random stat gains per level
-            const currentHealthGain = Math.floor(Math.random() * 101) + 100; // 100-200
-            const currentPowerGain = Math.floor(Math.random() * 2) + 2;      // 2-3
-            const currentDefenseGain = Math.floor(Math.random() * 3) + 2;    // 2-4
-            
-            player.health += currentHealthGain;
-            player.power += currentPowerGain;
-            player.defense += currentDefenseGain;
-            
-            healthGain += currentHealthGain;
-            powerGain += currentPowerGain;
-            defenseGain += currentDefenseGain;
-        }
-
-        // Reset EXP to 0 since we leveled up
-        player.exp = 0;
-
-        fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
-
-        // Generate visual card
-        try {
-            const imagePath = await this.generateTrainingCard(interaction, player, {
-                levelsGained: levels,
-                moneySpent: totalCost,
-                remainingMoney: player.money,
-                healthGain,
-                powerGain,
-                defenseGain,
-                originalStats
+        // --- TRAINING DUMMY SUBCOMMAND ---
+        if (interaction.options.getSubcommand && interaction.options.getSubcommand() === 'dummy') {
+            const userId = interaction.user.id;
+            if (!fs.existsSync(usersPath)) {
+                return interaction.reply("Database not found.");
+            }
+            const users = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
+            if (!users[userId]) {
+                return interaction.reply("You need to enroll first!");
+            }
+            let player = {
+                ...users[userId],
+                name: interaction.user.username,
+                activeEffects: [],
+                accuracy: 100,
+                dodge: 0
+            };
+            let playerHealth = player.health;
+            let dummy = {
+                name: "Training Dummy",
+                health: 999999999,
+                power: 0,
+                defense: player.defense,
+                chakra: 10,
+                jutsu: ["Hello"],
+                activeEffects: [],
+                accuracy: 100,
+                dodge: 0,
+                currentHealth: 999999999
+            };
+            let roundNum = 1;
+            // Use brank's helpers for UI
+            const generateBattleImage = async () => {
+                return await brank.generateBattleImageForDummy(interaction, player, playerHealth, dummy);
+            };
+            const createMovesEmbed = () => brank.createMovesEmbedForDummy(player, roundNum, userId);
+            const getJutsuByButton = (buttonId) => brank.getJutsuByButtonForDummy(buttonId, player);
+            const executeJutsu = brank.executeJutsuForDummy;
+            const processPlayerMove = brank.processPlayerMoveForDummy;
+            const npcChooseMove = () => ({
+                damage: 0,
+                heal: 0,
+                description: `Training Dummy teases ${player.name} by waving at them while being attacked.`,
+                specialEffects: [],
+                hit: true
             });
+            const getEffectiveStats = brank.getEffectiveStatsForDummy;
+            const createBattleSummary = brank.createBattleSummaryForDummy;
 
-            const attachment = new AttachmentBuilder(imagePath);
-
-            // Try to send the image, but if the interaction is expired, send a fallback message to the channel
-            try {
-                await interaction.reply({ 
-                    content: null,
-                    files: [attachment] 
-                });
-            } catch (err) {
-                console.error("Error sending training card image:", err);
-                // Fallback: send to channel if interaction expired
-                try {
-                    await interaction.channel.send({
-                        content: `<@${userId}> Training complete! (Interaction expired, sending here)\n` +
-                                 `Gained ${levels} level(s)\n` +
-                                 `- Money Spent: ${totalCost} Ryo\n` +
-                                 `- Remaining Money: ${player.money} Ryo\n` +
-                                 `- Health: +${healthGain}\n` +
-                                 `- Power: +${powerGain}\n` +
-                                 `- Defense: +${defenseGain}`,
-                        files: [attachment]
+            await interaction.reply({ content: "**Training Dummy Battle Started!**" });
+            let battleActive = true;
+            while (battleActive) {
+                // ...effect durations...
+                [player, dummy].forEach(entity => {
+                    entity.activeEffects.forEach(effect => {
+                        if (effect.duration > 0) effect.duration--;
                     });
-                } catch (err2) {
-                    console.error("Error sending fallback training card to channel:", err2);
+                    entity.activeEffects = entity.activeEffects.filter(e => e.duration > 0);
+                });
+                const effectivePlayer = getEffectiveStats(player);
+                const effectiveDummy = getEffectiveStats(dummy);
+                const { embed, components } = createMovesEmbed();
+                // Only send a message if there is something to send
+                if ((embed && components && components.length > 0) || (embed && !components) || (!embed && components && components.length > 0)) {
+                    await interaction.followUp({
+                        embeds: embed ? [embed] : [],
+                        components: components || [],
+                        fetchReply: true
+                    });
                 }
+                const battleImage = new AttachmentBuilder(await generateBattleImage());
+                await interaction.followUp({ files: [battleImage] });
+                const moveMessage = await interaction.fetchReply(); // Get the last message for collector
+                const playerAction = await new Promise(resolve => {
+                    const collector = moveMessage.createMessageComponentCollector({
+                        filter: i => i.user.id === userId && i.customId.endsWith(`-${userId}-${roundNum}`),
+                        time: 90000
+                    });
+                    collector.on('collect', async i => {
+                        await i.deferUpdate();
+                        if (i.customId.startsWith('move')) {
+                            const jutsuName = getJutsuByButton(i.customId);
+                            const result = executeJutsu(player, dummy, effectivePlayer, effectiveDummy, jutsuName);
+                            result.jutsuUsed = jutsuName;
+                            resolve(result);
+                        } else {
+                            resolve(await processPlayerMove(i.customId, player, dummy, effectivePlayer, effectiveDummy));
+                        }
+                        collector.stop();
+                    });
+                    collector.on('end', (collected, reason) => {
+                        if (reason === 'time') {
+                            resolve({
+                                damage: 0,
+                                heal: 0,
+                                description: '$user did not make a move.',
+                                specialEffects: ["Missed opportunity!"],
+                                hit: false,
+                                fled: true
+                            });
+                        }
+                        if (moveMessage && moveMessage.edit) {
+                            moveMessage.edit({
+                                components: components.map(row => {
+                                    const disabledRow = ActionRowBuilder.from(row);
+                                    disabledRow.components.forEach(c => c.setDisabled(true));
+                                    return disabledRow;
+                                })
+                            }).catch(() => {});
+                        }
+                    });
+                });
+                if (playerAction.fled) {
+                    battleActive = false;
+                    await interaction.followUp(`${player.name} ended the training session!`);
+                    return;
+                }
+                dummy.currentHealth -= playerAction.damage || 0;
+                if (playerAction.heal) {
+                    playerHealth = Math.min(playerHealth + playerAction.heal, player.health);
+                }
+                // Dummy's turn (does nothing)
+                let npcAction = npcChooseMove();
+                // Clamp health
+                playerHealth = Math.max(0, playerHealth);
+                dummy.currentHealth = Math.max(0, dummy.currentHealth);
+                // Show results
+                let summaryEmbed = createBattleSummary(playerAction, npcAction, player, dummy, roundNum, null, playerHealth);
+                if (summaryEmbed) {
+                    await interaction.followUp({
+                        embeds: [summaryEmbed]
+                    });
+                } else {
+                    await interaction.followUp({
+                        content: `${player.name} attacks the dummy!`
+                    });
+                }
+                // End if player dies (optional: revive for infinite training)
+                if (playerHealth <= 0) {
+                    playerHealth = player.health;
+                    await interaction.followUp(`WEAKLING!`);
+                }
+                roundNum++;
+                await new Promise(resolve => setTimeout(resolve, 2000));
+            }
+            return;
+        }
+
+        // --- LEVELS SUBCOMMAND ---
+        if (interaction.options.getSubcommand && interaction.options.getSubcommand() === 'levels') {
+            const userId = interaction.user.id;
+            const levels = interaction.options.getInteger('levels');
+
+            if (!fs.existsSync(usersPath)) {
+                return interaction.reply("Database not found.");
             }
 
-            // Clean up the image file after sending
-            fs.unlink(imagePath, (err) => {
-                if (err) console.error("Error deleting training image:", err);
-            });
+            const users = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
 
-            // After successful training
-            await updateRequirements(userId, 'train');
-        } catch (error) {
-            console.error("Error generating training card:", error);
-            // Try to reply, but if interaction is expired, send fallback to channel
+            if (!users[userId]) {
+                return interaction.reply("You need to enroll first!");
+            }
+
+            const player = users[userId];
+            const costPerLevel = 100000;
+            const totalCost = costPerLevel * levels;
+
+            if (player.money < totalCost) {
+                return interaction.reply(`You don't have enough Ryo! You need ${totalCost} Ryo for ${levels} level(s) of training.`);
+            }
+
+            // Deduct money
+            player.money -= totalCost;
+
+            // Store original stats for display
+            const originalStats = {
+                level: player.level,
+                health: player.health,
+                power: player.power,
+                defense: player.defense
+            };
+
+            // Apply level gains with random stat increases
+            let healthGain = 0;
+            let powerGain = 0;
+            let defenseGain = 0;
+
+            for (let i = 0; i < levels; i++) {
+                player.level += 1;
+                
+                // Random stat gains per level
+                const currentHealthGain = Math.floor(Math.random() * 101) + 100; // 100-200
+                const currentPowerGain = Math.floor(Math.random() * 2) + 2;      // 2-3
+                const currentDefenseGain = Math.floor(Math.random() * 3) + 2;    // 2-4
+                
+                player.health += currentHealthGain;
+                player.power += currentPowerGain;
+                player.defense += currentDefenseGain;
+                
+                healthGain += currentHealthGain;
+                powerGain += currentPowerGain;
+                defenseGain += currentDefenseGain;
+            }
+
+            // Reset EXP to 0 since we leveled up
+            player.exp = 0;
+
+            fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
+
+            // Generate visual card
             try {
-                await interaction.reply({
-                    content: `✅ Training complete! Gained ${levels} level(s)\n` +
-                             `- Money Spent: ${totalCost} Ryo\n` +
-                             `- Remaining Money: ${player.money} Ryo\n` +
-                             `- Health: +${healthGain}\n` +
-                             `- Power: +${powerGain}\n` +
-                             `- Defense: +${defenseGain}`
+                const imagePath = await this.generateTrainingCard(interaction, player, {
+                    levelsGained: levels,
+                    moneySpent: totalCost,
+                    remainingMoney: player.money,
+                    healthGain,
+                    powerGain,
+                    defenseGain,
+                    originalStats
                 });
-            } catch (err) {
-                console.error("Error sending fallback training reply:", err);
+
+                const attachment = new AttachmentBuilder(imagePath);
+
+                // Try to send the image, but if the interaction is expired, send a fallback message to the channel
                 try {
-                    await interaction.channel.send({
-                        content: `<@${userId}> Training complete! (Interaction expired, sending here)\n` +
-                                 `Gained ${levels} level(s)\n` +
+                    await interaction.reply({ 
+                        content: null,
+                        files: [attachment] 
+                    });
+                } catch (err) {
+                    console.error("Error sending training card image:", err);
+                    // Fallback: send to channel if interaction expired
+                    try {
+                        await interaction.channel.send({
+                            content: `<@${userId}> Training complete! (Interaction expired, sending here)\n` +
+                                     `Gained ${levels} level(s)\n` +
+                                     `- Money Spent: ${totalCost} Ryo\n` +
+                                     `- Remaining Money: ${player.money} Ryo\n` +
+                                     `- Health: +${healthGain}\n` +
+                                     `- Power: +${powerGain}\n` +
+                                     `- Defense: +${defenseGain}`,
+                        files: [attachment]
+                        });
+                    } catch (err2) {
+                        console.error("Error sending fallback training card to channel:", err2);
+                    }
+                }
+
+                // Clean up the image file after sending
+                fs.unlink(imagePath, (err) => {
+                    if (err) console.error("Error deleting training image:", err);
+                });
+
+                // After successful training
+                await updateRequirements(userId, 'train');
+            } catch (error) {
+                console.error("Error generating training card:", error);
+                // Try to reply, but if interaction is expired, send fallback to channel
+                try {
+                    await interaction.reply({
+                        content: `✅ Training complete! Gained ${levels} level(s)\n` +
                                  `- Money Spent: ${totalCost} Ryo\n` +
                                  `- Remaining Money: ${player.money} Ryo\n` +
                                  `- Health: +${healthGain}\n` +
                                  `- Power: +${powerGain}\n` +
                                  `- Defense: +${defenseGain}`
                     });
-                } catch (err2) {
-                    console.error("Error sending fallback training reply to channel:", err2);
+                } catch (err) {
+                    console.error("Error sending fallback training reply:", err);
+                    try {
+                        await interaction.channel.send({
+                            content: `<@${userId}> Training complete! (Interaction expired, sending here)\n` +
+                                     `Gained ${levels} level(s)\n` +
+                                     `- Money Spent: ${totalCost} Ryo\n` +
+                                     `- Remaining Money: ${player.money} Ryo\n` +
+                                     `- Health: +${healthGain}\n` +
+                                     `- Power: +${powerGain}\n` +
+                                     `- Defense: +${defenseGain}`
+                        });
+                    } catch (err2) {
+                        console.error("Error sending fallback training reply to channel:", err2);
+                    }
                 }
             }
+            return;
         }
     },
     

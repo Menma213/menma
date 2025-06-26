@@ -3,6 +3,19 @@ const puppeteer = require('puppeteer');
 const fs = require('fs');
 const path = require('path');
 
+
+const EMOJIS = {
+    buff: "<:buff:1364946947055816856>",
+    debuff: "<:debuff:1368242212374188062>",
+    stun: "<:stun:1368243608695738399>",
+    heal: "<:heal:1368243632045297766>",
+    bleed: "<:bleed:1368243924346605608>",
+    flinch: "<:flinch:1368243647711023124>",
+    curse: "<:curse:1368243540978827294>",
+    status: "<:status:1368243589498540092>"
+};
+const COMBO_EMOJI_FILLED = ":o:";
+const COMBO_EMOJI_EMPTY = ":white_circle:";
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('enroll')
@@ -65,8 +78,11 @@ module.exports = {
 
         await interaction.reply({ embeds: [enrollEmbed], components: [row] });
 
-        // Button collector
-        const collector = interaction.channel.createMessageComponentCollector({ time: 30000 });
+        // Use fetchReply to get the message for the collector
+        const enrollMsg = await interaction.fetchReply();
+
+        // Button collector (fix: use message collector on the reply)
+        const collector = enrollMsg.createMessageComponentCollector({ time: 30000 });
 
         collector.on('collect', async (i) => {
             if (!i.customId.startsWith('accept-') && !i.customId.startsWith('decline-')) return;
@@ -97,7 +113,8 @@ module.exports = {
                         slot_5: 'None'
                     },
                     money: 10000,
-                    ramen: 1
+                    ramen: 1,
+                    Combo: "Basic Combo"
                 };
                 
                 // Add to inventory
@@ -192,17 +209,42 @@ module.exports = {
             };
         };
 
-        // Create moves embed with slot-based jutsu
+        // Combo system setup
+        const comboList = {
+            "Basic Combo": {
+                name: "Basic Combo",
+                requiredJutsus: ["Attack", "Transformation Jutsu"],
+                damage: 10000,
+                effects: []
+            }
+        };
+        let comboState = {
+            combo: comboList["Basic Combo"],
+            usedJutsus: new Set()
+        };
+
+        // Create moves embed with slot-based jutsu and combo progress
         const createMovesEmbed = () => {
             const jutsuSlots = Object.entries(player.jutsu)
                 .filter(([_, jutsu]) => jutsu !== 'None')
                 .map(([slot, jutsu]) => `${slot.replace('_', ' ')}: ${jutsu}`)
                 .join('\n');
 
+            // Combo progress UI
+            let comboProgressText = "";
+            if (comboState && comboState.combo) {
+                const filled = comboState.combo.requiredJutsus.filter(jutsu => comboState.usedJutsus.has(jutsu)).length;
+                const total = comboState.combo.requiredJutsus.length;
+                comboProgressText = `\nCombo charging up... ${COMBO_EMOJI_FILLED.repeat(filled)}${COMBO_EMOJI_EMPTY.repeat(total - filled)}`;
+            }
+
             const movesEmbed = new EmbedBuilder()
                 .setTitle(`Round ${roundNum} - Select Your Move`)
                 .setColor('#0099ff')
-                .setDescription(`${interaction.user.username}, It is your turn!\nUse the buttons to make your move.`)
+                .setDescription(
+                    `${interaction.user.username}, It is your turn!\nUse the buttons to make your move.` +
+                    comboProgressText
+                )
                 .addFields(
                     { 
                         name: 'Your Jutsu Slots', 
@@ -212,7 +254,6 @@ module.exports = {
                 .setFooter({ text: `Chakra: ${player.chakra}/10` });
 
             const row = new ActionRowBuilder();
-            
             // Attack button (always available)
             row.addComponents(
                 new ButtonBuilder()
@@ -265,14 +306,28 @@ module.exports = {
         let transformationActive = false;
         let transformationRounds = 0;
 
+        // --- Damage tracking ---
+        let totalDamageDealt = 0;
+        let totalDamageTaken = 0;
+
         // Create round summary
         const createRoundSummary = (playerMove, enemyMove) => {
+            // Buff emoji if transformation is active
+            const playerBuff = transformationActive ? EMOJIS.buff : "";
+            // Combo progress UI
+            let comboProgressText = "";
+            if (comboState && comboState.combo) {
+                const filled = comboState.combo.requiredJutsus.filter(jutsu => comboState.usedJutsus.has(jutsu)).length;
+                const total = comboState.combo.requiredJutsus.length;
+                comboProgressText = `\nCombo charging up... ${COMBO_EMOJI_FILLED.repeat(filled)}${COMBO_EMOJI_EMPTY.repeat(total - filled)}`;
+            }
             return new EmbedBuilder()
                 .setTitle(`Round ${roundNum}`)
                 .setColor('#0099ff')
                 .setDescription(
-                    `${interaction.user.username} ${playerMove.description} for ${playerMove.damage.toFixed(0)} damage\n` +
-                    `${enemy.name} ${enemyMove.description} for ${enemyMove.damage.toFixed(0)} damage`
+                    `${playerBuff} ${interaction.user.username} ${playerMove.description} for ${playerMove.damage.toFixed(0)} damage\n` +
+                    `${enemy.name} ${enemyMove.description} for ${enemyMove.damage.toFixed(0)} damage` +
+                    comboProgressText
                 )
                 .addFields(
                     { 
@@ -483,13 +538,18 @@ module.exports = {
         });
         const battleImage = new AttachmentBuilder(battleImageBuffer, { name: `battle_scene_${userId}.png` });
 
-        // Send the initial round embed as a new message
+        // Send moves embed first, then battle image, then tip
         let lastBattleMsg = await interaction.followUp({ 
-            content: 'Battle Started! Defeat the rogue ninja to complete your enrollment!', 
             embeds: [movesEmbed], 
             components, 
-            files: [battleImage] 
         });
+        await interaction.followUp({ files: [battleImage] });
+        // Only send tip after the first battle image
+        let tipSent = false;
+        if (!tipSent) {
+            await interaction.followUp({ content: "Tip: Use Transformation Jutsu then Attack the enemy to combo them!" });
+            tipSent = true;
+        }
 
         battleCollector.on('collect', async (i) => {
             if (!i.customId.includes(userId)) return i.reply({ content: "This isn't your battle!", ephemeral: true });
@@ -505,23 +565,27 @@ module.exports = {
 
             let playerMove, enemyMove;
 
+            // Combo tracking
             if (action === 'attack') {
                 playerMove = processPlayerMove('attack');
+                if (comboState.combo.requiredJutsus.includes('Attack')) comboState.usedJutsus.add('Attack');
                 enemy.currentHealth -= playerMove.damage;
-
+                totalDamageDealt += playerMove.damage; // Track damage dealt
                 enemyMove = processEnemyMove();
                 player.health -= enemyMove.damage;
+                totalDamageTaken += enemyMove.damage; // Track damage taken
             } 
             else if (action === 'transform') {
                 playerMove = processPlayerMove('transform');
+                if (comboState.combo.requiredJutsus.includes('Transformation Jutsu')) comboState.usedJutsus.add('Transformation Jutsu');
                 if (playerMove.description.includes('failed')) {
-                    // Edit the last reply since we've already deferred
                     await interaction.editReply({ content: playerMove.description, embeds: [], components: [] });
                     battleCollector.stop();
                     return;
                 }
                 enemyMove = processEnemyMove();
                 player.health -= enemyMove.damage;
+                totalDamageTaken += enemyMove.damage;
             }
             else if (action === 'rest') {
                 player.chakra = Math.min(player.chakra + 1, 10);
@@ -532,6 +596,7 @@ module.exports = {
                     description: 'rested and gained +1 Chakra',
                     specialEffects: ['+1 Chakra']
                 };
+                totalDamageTaken += enemyMove.damage;
             }
             else if (action === 'flee') {
                 await interaction.editReply({
@@ -542,6 +607,24 @@ module.exports = {
                 });
                 battleCollector.stop();
                 return;
+            }
+
+            // Combo completion check and bonus damage
+            let comboCompletedThisRound = false;
+            let comboDamageText = "";
+            if (
+                comboState &&
+                comboState.combo.requiredJutsus.every(jutsu => comboState.usedJutsus.has(jutsu))
+            ) {
+                // Apply combo effects
+                const combo = comboState.combo;
+                playerMove.damage += combo.damage || 0;
+                comboCompletedThisRound = true;
+                comboDamageText = `\n${interaction.user.username} lands a ${combo.name}! Massive damage!`;
+                comboState.usedJutsus.clear();
+                // Apply combo damage immediately
+                enemy.currentHealth -= combo.damage || 0;
+                totalDamageDealt += combo.damage || 0;
             }
 
             // Use the new battle image generator for each round
@@ -560,10 +643,30 @@ module.exports = {
             // Check battle status
             const battleStatus = await checkBattleStatus();
             if (battleStatus) {
+                // Show final round summary before win/lose screen
+                const summaryEmbed = createRoundSummary(playerMove, enemyMove);
+                if (comboCompletedThisRound) {
+                    summaryEmbed.setDescription(
+                        summaryEmbed.data.description + comboDamageText
+                    );
+                }
+                await interaction.followUp({ 
+                    content: 'Final Round!', 
+                    embeds: [summaryEmbed], 
+                    components: [], 
+                });
+               
+
+                // Show final stats in the win/lose screen
                 if (enemy.currentHealth <= 0) {
                     const victoryEmbed = new EmbedBuilder()
                         .setTitle('Congratulations Shinobi!')
-                        .setDescription('You have been accepted into the Shinobi world!\n\nUse `/help` to know more about the bot\nUse `/tutorial` to learn the basics and earn your starter money!')
+                        .setDescription(
+                            'You have been accepted into the Shinobi world!\n\n' +
+                            `**Total Damage Dealt:** ${Math.round(totalDamageDealt)}\n` +
+                            `**Total Damage Taken:** ${Math.round(totalDamageTaken)}\n\n` +
+                            'Use `/help` to know more about the bot\nUse `/tutorial` to learn the basics and earn your starter money!'
+                        )
                         .setColor('#4B0082')
                         .setImage('https://static.wikia.nocookie.net/naruto/images/5/50/Team_Kakashi.png/revision/latest?cb=20161219035928')
                         .setFooter({ 
@@ -582,10 +685,17 @@ module.exports = {
                         files: [newBattleImage] 
                     });
                 } else {
+                    // Defeat
+                    const defeatEmbed = new EmbedBuilder()
+                        .setTitle('Defeat!')
+                        .setDescription(
+                            `You were defeated by the rogue ninja.\n\n` +
+                            `**Total Damage Dealt:** ${Math.round(totalDamageDealt)}\n` +
+                            `**Total Damage Taken:** ${Math.round(totalDamageTaken)}`
+                        )
+                        .setColor('#b91c1c');
                     await interaction.followUp({ 
-                        content: battleStatus.content, 
-                        embeds: [],
-                        components: battleStatus.components, 
+                        embeds: [defeatEmbed], 
                         files: [newBattleImage] 
                     });
                 }
@@ -593,14 +703,19 @@ module.exports = {
                 return;
             }
 
-            // Send round summary as a new message (not editing previous)
+            // Send moves embed first, then battle image (tip only after first image)
             const summaryEmbed = createRoundSummary(playerMove, enemyMove);
+            if (comboCompletedThisRound) {
+                summaryEmbed.setDescription(
+                    summaryEmbed.data.description + comboDamageText
+                );
+            }
             lastBattleMsg = await interaction.followUp({ 
                 content: 'Battle continues!', 
                 embeds: [summaryEmbed], 
                 components: [], 
-                files: [newBattleImage] 
             });
+            await interaction.followUp({ files: [newBattleImage] });
 
             // Next round moves selection as a new message
             const nextMoves = createMovesEmbed();

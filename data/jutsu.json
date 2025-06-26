@@ -28,7 +28,9 @@
       "Intermediate Combo",
       "Shadow Dance"
     ],
-    "scrolls": []
+    "scrolls": [
+      "Needle Assault Scroll"
+    ]
   },
   "843680216022122516": {
     "usersjutsu": [
@@ -132,7 +134,12 @@
       "Rasengan",
       "Water Dragon Jutsu",
       "Great Forest Crumbling",
-      "Reaper Death Seal"
+      "Reaper Death Seal",
+      "Flying Raijin Jutsu",
+      "Analysis"
+    ],
+    "combos": [
+      "Basic Combo"
     ]
   },
   "818893461881094175": {
@@ -150,6 +157,28 @@
     ],
     "scrolls": [
       "Needle Assault Scroll"
+    ]
+  },
+  "1239968214130102424": {
+    "usersjutsu": [
+      "Transformation Jutsu"
+    ]
+  },
+  "1354836327467847864": {
+    "usersjutsu": [
+      "Transformation Jutsu"
+    ]
+  },
+  "1239065381373476894": {
+    "usersjutsu": [],
+    "scrolls": [
+      "Needle Assault Scroll",
+      "Silent Assassination Scroll"
+    ]
+  },
+  "1383619165843230730": {
+    "usersjutsu": [
+      "Transformation Jutsu"
     ]
   }
 }

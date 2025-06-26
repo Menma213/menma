@@ -169,6 +169,9 @@ module.exports = {
         // Add Mentor Experience
         users[userId].mentorExp = (users[userId].mentorExp || 0) + 1;
 
+        // Mark drank as completed for tutorial
+        users[userId].drankCompleted = true;
+
         // Save users.json after updating mentorExp
         fs.writeFileSync(dataPath, JSON.stringify(users, null, 2));
     }

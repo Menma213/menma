@@ -1,1 +1,72 @@
-{}
+{
+  "1239065381373476894": {
+    "scroll": "Needle Assault Scroll",
+    "requirements": [
+      {
+        "description": "Complete D-rank mission 4 times",
+        "completed": 1,
+        "needed": 4,
+        "type": "d_mission"
+      },
+      {
+        "description": "Complete S-rank mission 5 times",
+        "completed": 1,
+        "needed": 5,
+        "type": "s_mission"
+      },
+      {
+        "description": "Check profile 10 times",
+        "completed": 1,
+        "needed": 10,
+        "type": "profile_check"
+      },
+      {
+        "description": "Equip a jutsu 1 time",
+        "completed": 0,
+        "needed": 1,
+        "type": "equip_jutsu"
+      },
+      {
+        "description": "Complete an S-rank with friends 1 time",
+        "completed": 1,
+        "needed": 1,
+        "type": "s_mission_with_friends"
+      }
+    ]
+  },
+  "835408109899219004": {
+    "scroll": "Needle Assault Scroll",
+    "requirements": [
+      {
+        "description": "Complete B-rank mission 5 times",
+        "completed": 2,
+        "needed": 5,
+        "type": "b_mission"
+      },
+      {
+        "description": "Complete S-rank mission 2 times",
+        "completed": 1,
+        "needed": 2,
+        "type": "s_mission"
+      },
+      {
+        "description": "Complete an S-rank with friends 1 time",
+        "completed": 0,
+        "needed": 1,
+        "type": "s_mission_with_friends"
+      },
+      {
+        "description": "Train 3 times",
+        "completed": 0,
+        "needed": 3,
+        "type": "train"
+      },
+      {
+        "description": "Fight another ninja 2 times",
+        "completed": 0,
+        "needed": 2,
+        "type": "pvp"
+      }
+    ]
+  }
+}
