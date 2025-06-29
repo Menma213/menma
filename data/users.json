@@ -67,14 +67,14 @@
   },
   "835408109899219004": {
     "level": 79,
-    "exp": 53070,
-    "wins": 126,
+    "exp": 70870,
+    "wins": 132,
     "losses": 3,
     "rankedPoints": 0,
     "clan": "Thundie's clan",
     "bloodline": "Otsutsuki",
     "mentor": "Kakashi",
-    "rank": "Genin",
+    "rank": "The Shinobi God",
     "health": 99909346,
     "power": 12295102,
     "defense": 217,
@@ -82,16 +82,16 @@
     "jutsu": {
       "slot_0": "Attack",
       "slot_1": "asura",
-      "slot_2": "asura",
-      "slot_3": "asura",
+      "slot_2": "Mystic Palm",
+      "slot_3": "Rasengan",
       "slot_4": "Analysis",
       "slot_5": "Flying Raijin Jutsu"
     },
-    "money": 31243,
+    "money": 45013,
     "ramen": 9,
     "lastClaim": "2025-04-24T08:51:48.586Z",
     "nextClaim": "2025-04-25T08:51:48.586Z",
-    "lastArank": 1750610783509,
+    "lastArank": 1751214628003,
     "Combo": "Intermediate Combo",
     "firstusescroll": true,
     "current_scroll": "Needle Assault Scroll",
@@ -102,8 +102,8 @@
     "perks": "Jinchuriki",
     "lastguard": 1750175065990,
     "lastdrank": 1750955725858,
-    "lastbrank": 1750856046617,
-    "lastsrank": 1750440147074,
+    "lastbrank": 1751189725889,
+    "lastsrank": 1751189698110,
     "role": "Spy",
     "lastrob": 1747052628716,
     "elo": 1304,
@@ -111,12 +111,12 @@
     "completedMentorStories": {
       "Kakashi": true
     },
-    "mentorExp": 12,
+    "mentorExp": 15,
     "ranked": {
-      "totalElo": 12475,
+      "totalElo": 12625,
       "rank": "The Shinobi God",
       "division": 1,
-      "elo": 75,
+      "elo": 25,
       "claimedRewards": [
         100,
         200,
@@ -139,7 +139,9 @@
         "expiresAt": 1753027054640
       }
     ],
-    "tutorialStory": true
+    "tutorialStory": true,
+    "srankResult": "win",
+    "brankWon": true
   },
   "741142009670271010": {
     "level": 1,
@@ -405,6 +407,12 @@
       "Sasuke": true,
       "Sakura": true,
       "Hinata Hyuga": true
+    },
+    "ranked": {
+      "totalElo": 0,
+      "rank": "Genin",
+      "division": 5,
+      "elo": 0
     }
   },
   "737913304214667345": {
@@ -439,8 +447,8 @@
   },
   "1355490065899585737": {
     "level": 22,
-    "exp": 4170,
-    "wins": 7,
+    "exp": 6090,
+    "wins": 9,
     "losses": 0,
     "rankedPoints": 0,
     "clan": "None",
@@ -459,12 +467,12 @@
       "slot_4": "Analysis",
       "slot_5": "Flying Raijin Jutsu"
     },
-    "money": 16505,
+    "money": 18385,
     "ramen": 1,
     "lastdrank": null,
-    "mentorExp": 16,
-    "lastbrank": 1750696653412,
-    "lastArank": 1750693855632,
+    "mentorExp": 17,
+    "lastbrank": 1751213980369,
+    "lastArank": 1751214052910,
     "ranked": {
       "totalElo": 0,
       "rank": "Genin",
@@ -475,7 +483,8 @@
       "Naruto": true
     },
     "firstusescroll": true,
-    "lastsrank": 1750869749547
+    "lastsrank": 1751214102644,
+    "brankWon": true
   },
   "1239968214130102424": {
     "level": 1,

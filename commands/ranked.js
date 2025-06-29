@@ -2,8 +2,7 @@ const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, Butt
 const fs = require('fs');
 const path = require('path');
 const math = require('mathjs');
-const puppeteer = require('puppeteer');
-const Canvas = require('canvas'); // ADDED
+const Canvas = require('canvas'); // Use Canvas only
 
 // Path configurations
 const usersPath = path.resolve(__dirname, '../../menma/data/users.json');
@@ -212,69 +211,277 @@ function getEffectiveStats(entity) {
     return effectiveStats;
 }
 
-// --- Battle image generation (from brank.js, adapted for PvP) ---
-async function generateBattleImage(player1, player2) {
-    const browser = await puppeteer.launch({ args: ['--no-sandbox'] });
-    const page = await browser.newPage();
-    await page.setViewport({ width: 800, height: 400 });
-
-    const player1HealthPercent = Math.max((player1.currentHealth / player1.health) * 100, 0);
-    const player2HealthPercent = Math.max((player2.currentHealth / player2.health) * 100, 0);
-
-    const imagesDir = imagesPath;
-    if (!fs.existsSync(imagesDir)) {
-        fs.mkdirSync(imagesDir, { recursive: true });
+// --- Battle image generation (Canvas version, PvP) ---
+async function generateBattleImage(player1, player2, interaction = null) {
+    // --- Use brank.js style avatar logic for both players ---
+    const CanvasLib = require('canvas');
+    let p1AvatarUrl, p2AvatarUrl;
+    if (interaction && interaction.client) {
+        try {
+            const userObj1 = await interaction.client.users.fetch(player1.userId || player1.id);
+            player1.userId = userObj1.id;
+            player1.avatar = userObj1.avatar;
+            player1.discriminator = userObj1.discriminator;
+            player1.name = userObj1.username || player1.name;
+        } catch {}
+        try {
+            const userObj2 = await interaction.client.users.fetch(player2.userId || player2.id);
+            player2.userId = userObj2.id;
+            player2.avatar = userObj2.avatar;
+            player2.discriminator = userObj2.discriminator;
+            player2.name = userObj2.username || player2.name;
+        } catch {}
+    }
+    // Always use userId and avatar hash, fallback to default avatar
+    if (player1.avatar) {
+        p1AvatarUrl = `https://cdn.discordapp.com/avatars/${player1.userId}/${player1.avatar}.png?size=256`;
+    } else {
+        const disc = player1.discriminator ? parseInt(player1.discriminator) % 5 : 0;
+        p1AvatarUrl = `https://cdn.discordapp.com/embed/avatars/${disc}.png`;
+    }
+    if (player2.avatar) {
+        p2AvatarUrl = `https://cdn.discordapp.com/avatars/${player2.userId}/${player2.avatar}.png?size=256`;
+    } else {
+        const disc = player2.discriminator ? parseInt(player2.discriminator) % 5 : 0;
+        p2AvatarUrl = `https://cdn.discordapp.com/embed/avatars/${disc}.png`;
     }
 
-    const htmlContent = `
-        <html>
-        <style>
-            body { margin: 0; padding: 0; }
-            .battle-container {
-                width: 800px; height: 400px; position: relative;
-                background: url('https://i.pinimg.com/originals/5d/e5/62/5de5622ecdd4e24685f141f10e4573e3.jpg') center center no-repeat;
-                background-size: cover; border-radius: 10px; overflow: hidden;
-            }
-            .character { position: absolute; width: 150px; height: 150px; border-radius: 10px; border: 3px solid #6e1515; object-fit: cover; }
-            .player1 { left: 50px; top: 120px; }
-            .player2 { right: 50px; top: 120px; }
-            .name-tag { position: absolute; width: 150px; text-align: center; color: white; font-family: Arial, sans-serif; font-size: 18px; font-weight: bold; text-shadow: 2px 2px 4px #000; top: 80px; background: rgba(0,0,0,0.5); border-radius: 5px; padding: 2px 0; }
-            .player1-name { left: 50px; }
-            .player2-name { right: 50px; }
-            .health-bar { position: absolute; width: 150px; height: 22px; background-color: #333; border-radius: 5px; overflow: hidden; top: 280px; }
-            .health-fill { height: 100%; }
-            .player1-health-fill { background-color: #4CAF50; width: ${player1HealthPercent}%; }
-            .player2-health-fill { background-color: #ff4444; width: ${player2HealthPercent}%; }
-            .health-text { position: absolute; width: 100%; text-align: center; color: white; font-family: Arial, sans-serif; font-size: 13px; line-height: 22px; text-shadow: 1px 1px 1px black; }
-            .player1-health { left: 50px; }
-            .player2-health { right: 50px; }
-            .vs-text { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); color: white; font-family: Arial, sans-serif; font-size: 48px; font-weight: bold; text-shadow: 2px 2px 4px #000; }
-        </style>
-        <body>
-            <div class="battle-container">
-                <div class="name-tag player1-name">${player1.name}</div>
-                <img class="character player1" src="${player1.avatarURL || 'https://i.imgur.com/1Q9Z1Zm.png'}">
-                <div class="health-bar player1-health">
-                    <div class="health-fill player1-health-fill"></div>
-                    <div class="health-text">${Math.round(player1.currentHealth)}/${player1.health}</div>
-                </div>
-                <div class="name-tag player2-name">${player2.name}</div>
-                <img class="character player2" src="${player2.avatarURL || 'https://i.imgur.com/1Q9Z1Zm.png'}">
-                <div class="health-bar player2-health">
-                    <div class="health-fill player2-health-fill"></div>
-                    <div class="health-text">${Math.round(player2.currentHealth)}/${player2.health}</div>
-                </div>
-                <div class="vs-text">VS</div>
-            </div>
-        </body>
-        </html>
-    `;
+    const width = 800, height = 400;
+    const canvas = CanvasLib.createCanvas(width, height);
+    const ctx = canvas.getContext('2d');
 
-    await page.setContent(htmlContent);
-    const imagePath = path.join(imagesDir, `battle_${player1.userId}_${player2.userId}_${Date.now()}.png`);
-    await page.screenshot({ path: imagePath });
-    await browser.close();
+    // Load background
+    let bgImg;
+    try {
+        bgImg = await CanvasLib.loadImage('https://i.pinimg.com/originals/5d/e5/62/5de5622ecdd4e24685f141f10e4573e3.jpg');
+    } catch { bgImg = null; }
+    if (bgImg) ctx.drawImage(bgImg, 0, 0, width, height);
+    else { ctx.fillStyle = '#222'; ctx.fillRect(0, 0, width, height); }
+
+    // Helper for rounded rectangles
+    function roundRect(ctx, x, y, w, h, r) {
+        ctx.beginPath();
+        ctx.moveTo(x + r, y);
+        ctx.lineTo(x + w - r, y);
+        ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+        ctx.lineTo(x + w, y + h - r);
+        ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+        ctx.lineTo(x + r, y + h);
+        ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+        ctx.lineTo(x, y + r);
+        ctx.quadraticCurveTo(x, y, x + r, y);
+        ctx.closePath();
+    }
+
+    // Positions
+    const charW = 150, charH = 150;
+    const p1X = 50, p1Y = 120;
+    const p2X = width - 50 - charW, p2Y = 120;
+    const nameY = 80, barY = 280;
+    const nameH = 28, barH = 22;
+
+    // --- Avatar logic: always use userId and avatar ---
+    let p1Img = null, p2Img = null;
+    try {
+        p1Img = await CanvasLib.loadImage(p1AvatarUrl);
+    } catch { p1Img = null; }
+    try {
+        p2Img = await CanvasLib.loadImage(p2AvatarUrl);
+    } catch { p2Img = null; }
+
+    // Draw player 1
+    if (p1Img) {
+        ctx.save();
+        roundRect(ctx, p1X, p1Y, charW, charH, 10);
+        ctx.clip();
+        ctx.drawImage(p1Img, p1X, p1Y, charW, charH);
+        ctx.restore();
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = "#6e1515";
+        roundRect(ctx, p1X, p1Y, charW, charH, 10);
+        ctx.stroke();
+    }
+    // Draw player 2
+    if (p2Img) {
+        ctx.save();
+        roundRect(ctx, p2X, p2Y, charW, charH, 10);
+        ctx.clip();
+        ctx.drawImage(p2Img, p2X, p2Y, charW, charH);
+        ctx.restore();
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = "#6e1515";
+        roundRect(ctx, p2X, p2Y, charW, charH, 10);
+        ctx.stroke();
+    }
+
+    // Name tags
+    ctx.font = "bold 18px Arial";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    // Player 1
+    ctx.save();
+    ctx.globalAlpha = 0.7;
+    ctx.fillStyle = "#000";
+    roundRect(ctx, p1X, nameY, charW, nameH, 5);
+    ctx.fill();
+    ctx.restore();
+    ctx.fillStyle = "#fff";
+    ctx.shadowColor = "#000";
+    ctx.shadowBlur = 4;
+    ctx.fillText(player1.name, p1X + charW / 2, nameY + nameH / 2);
+    ctx.shadowBlur = 0;
+    // Player 2
+    ctx.save();
+    ctx.globalAlpha = 0.7;
+    ctx.fillStyle = "#000";
+    roundRect(ctx, p2X, nameY, charW, nameH, 5);
+    ctx.fill();
+    ctx.restore();
+    ctx.fillStyle = "#fff";
+    ctx.shadowColor = "#000";
+    ctx.shadowBlur = 4;
+    ctx.fillText(player2.name, p2X + charW / 2, nameY + nameH / 2);
+    ctx.shadowBlur = 0;
+
+    // Health bars
+    // Player 1
+    const p1HealthPercent = Math.max(player1.currentHealth / player1.health, 0);
+    ctx.save();
+    ctx.fillStyle = "#333";
+    roundRect(ctx, p1X, barY, charW, barH, 5);
+    ctx.fill();
+    ctx.fillStyle = "#4CAF50";
+    roundRect(ctx, p1X, barY, charW * p1HealthPercent, barH, 5);
+    ctx.fill();
+    ctx.fillStyle = "#fff";
+    ctx.font = "13px Arial";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.shadowColor = "#000";
+    ctx.shadowBlur = 1;
+    ctx.shadowBlur = 0;
+    ctx.restore();
+
+    // Player 2
+    const p2HealthPercent = Math.max(player2.currentHealth / player2.health, 0);
+    ctx.save();
+    ctx.fillStyle = "#333";
+    roundRect(ctx, p2X, barY, charW, barH, 5);
+    ctx.fill();
+    ctx.fillStyle = "#ff4444";
+    roundRect(ctx, p2X, barY, charW * p2HealthPercent, barH, 5);
+    ctx.fill();
+    ctx.fillStyle = "#fff";
+    ctx.font = "13px Arial";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.shadowColor = "#000";
+    ctx.shadowBlur = 1;
+    ctx.shadowBlur = 0;
+    ctx.restore();
+
+    // VS text
+    ctx.save();
+    ctx.font = "bold 48px Arial";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillStyle = "#fff";
+    ctx.shadowColor = "#000";
+    ctx.shadowBlur = 4;
+    ctx.fillText("VS", width / 2, height / 2);
+    ctx.restore();
+
+    // Save to file and return path
+    const imagesDir = path.resolve(__dirname, '../images');
+    if (!fs.existsSync(imagesDir)) fs.mkdirSync(imagesDir, { recursive: true });
+    const imagePath = path.join(imagesDir, `battle_${player1.userId || player1.id}_${player2.userId || player2.id}_${Date.now()}.png`);
+    const out = fs.createWriteStream(imagePath);
+    const stream = canvas.createPNGStream();
+    await new Promise((resolve, reject) => {
+        stream.pipe(out);
+        out.on('finish', resolve);
+        out.on('error', reject);
+    });
     return imagePath;
+}
+
+// --- Canvas-based match summary image ---
+async function generateEloImage(user, oldElo, newElo, isWinner) {
+    const width = 600, height = 220;
+    const canvas = Canvas.createCanvas(width, height);
+    const ctx = canvas.getContext('2d');
+
+    // Theme colors
+    const bgColor = isWinner ? '#1a3a1a' : '#3a1a1a';
+    const primaryColor = isWinner ? '#4ade80' : '#ef4444';
+    const secondaryColor = isWinner ? '#22c55e' : '#dc2626';
+    const textColor = '#ffffff';
+
+    // Background
+    ctx.fillStyle = bgColor;
+    ctx.fillRect(0, 0, width, height);
+
+    // ELO bar
+    const barX = 120, barY = 90, barW = 360, barH = 28;
+    const oldRank = getTierAndDivision(oldElo);
+    const newRank = getTierAndDivision(newElo);
+    const progress = Math.max(0, Math.min(1, (newElo % 100) / 100));
+    ctx.save();
+    ctx.fillStyle = '#222c';
+    ctx.beginPath();
+    ctx.roundRect(barX, barY, barW, barH, 14);
+    ctx.fill();
+    ctx.restore();
+
+    // Progress bar
+    ctx.save();
+    const grad = ctx.createLinearGradient(barX, 0, barX + barW, 0);
+    grad.addColorStop(0, primaryColor);
+    grad.addColorStop(1, secondaryColor);
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.roundRect(barX, barY, barW * progress, barH, 14);
+    ctx.fill();
+    ctx.restore();
+
+    // ELO gained/lost in center
+    ctx.font = 'bold 22px Segoe UI, Arial';
+    ctx.fillStyle = textColor;
+    ctx.textAlign = 'center';
+    ctx.fillText(`${isWinner ? '+' : ''}${newElo - oldElo} ELO`, barX + barW / 2, barY + barH / 2 + 7);
+
+    // Current rank (left)
+    ctx.font = 'bold 15px Segoe UI, Arial';
+    ctx.textAlign = 'left';
+    ctx.fillText(`${newRank.rank} Div. ${newRank.division}`, barX, barY - 8);
+    ctx.font = '10px Segoe UI, Arial';
+    ctx.fillText('Current Rank', barX, barY + barH + 16);
+
+    // Previous rank (right)
+    ctx.font = 'bold 15px Segoe UI, Arial';
+    ctx.textAlign = 'right';
+    ctx.fillText(`${oldRank.rank} Div. ${oldRank.division}`, barX + barW, barY - 8);
+    ctx.font = '10px Segoe UI, Arial';
+    ctx.fillText('Previous Rank', barX + barW, barY + barH + 16);
+
+    // Progress text below bar
+    ctx.font = '11px Segoe UI, Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText(`${newElo % 100}/100`, barX + barW / 2, barY + barH + 16);
+
+    // Save to file and return path
+    const imagesDir = path.resolve(__dirname, '../images');
+    if (!fs.existsSync(imagesDir)) fs.mkdirSync(imagesDir, { recursive: true });
+    const filename = `elo_${user.id || user.userId}_${Date.now()}.png`;
+    const fullPath = path.join(imagesDir, filename);
+    const out = fs.createWriteStream(fullPath);
+    const stream = canvas.createPNGStream();
+    await new Promise((resolve, reject) => {
+        stream.pipe(out);
+        out.on('finish', resolve);
+        out.on('error', reject);
+    });
+    return fullPath;
 }
 
 // Ranked command
@@ -1539,23 +1746,7 @@ async function handleRankedRewards(interaction) {
     const userElo = user.ranked.totalElo || 0;
     const userRankObj = getTierAndDivision(userElo);
     const userRank = userRankObj.rank;
-    const userDiv = userRankObj.division;
-
-    // Find claimable and next reward
-    let claimable = null, nextReward = null;
-    for (const reward of rankedRewards) {
-        if (userElo >= reward.elo && !user.ranked.claimedRewards?.includes(reward.elo)) {
-            claimable = reward;
-            break;
-        }
-    }
-    if (!claimable) {
-        nextReward = rankedRewards.find(r => r.elo > userElo);
-    }
-
-    // Generate the ranked rewards image using Puppeteer
-    const imagePath = await generateRankedRewardsImage(user, userElo, userRank, userDiv, claimable, nextReward);
-
+    const userDiv = user
     const row = claimable
         ? new ActionRowBuilder().addComponents(
             new ButtonBuilder()
@@ -1712,177 +1903,6 @@ async function generateRankedRewardsImage(user, userElo, userRank, userDiv, clai
     `;
 
     const filename = `rewards_${user.id}_${Date.now()}.png`;
-    const fullPath = path.join(imagesPath, filename);
-    await page.setContent(html);
-    await page.screenshot({ path: fullPath });
-    await browser.close();
-    return fullPath;
-}
-
-// Add the new ELO image generator
-async function generateEloImage(user, oldElo, newElo, isWinner) {
-    const browser = await puppeteer.launch({ args: ['--no-sandbox'] });
-    const page = await browser.newPage();
-    await page.setViewport({ width: 600, height: 300 });
-
-    // Calculate rank progression
-    const oldRank = getTierAndDivision(oldElo);
-    const newRank = getTierAndDivision(newElo);
-    const eloChange = newElo - oldElo;
-    
-    // Theme colors
-    const bgColor = isWinner ? '#1a3a1a' : '#3a1a1a';
-    const primaryColor = isWinner ? '#4ade80' : '#ef4444';
-    const secondaryColor = isWinner ? '#22c55e' : '#dc2626';
-    const textColor = '#ffffff';
-
-    const html = `
-    <html>
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-            background: ${bgColor};
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            font-family: 'Segoe UI', Arial, sans-serif;
-        }
-        .elo-container {
-            width: 580px;
-            height: 280px;
-            background: linear-gradient(145deg, ${bgColor}, #000);
-            border-radius: 16px;
-            border: 4px solid ${primaryColor};
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-        }
-        .header {
-            font-size: 28px;
-            font-weight: bold;
-            color: ${primaryColor};
-            text-align: center;
-            margin-bottom: 10px;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
-        }
-        .rank-info {
-            display: flex;
-            justify-content: space-between;
-            margin: 15px 0;
-        }
-        .rank-box {
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 10px;
-            padding: 15px;
-            border: 2px solid ${secondaryColor};
-            flex: 1;
-            margin: 0 10px;
-            text-align: center;
-        }
-        .rank-title {
-            font-size: 18px;
-            color: ${textColor};
-            margin-bottom: 8px;
-        }
-        .rank-value {
-            font-size: 24px;
-            font-weight: bold;
-            color: ${primaryColor};
-        }
-        .elo-bar-container {
-            margin: 20px 0;
-            height: 30px;
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 15px;
-            border: 2px solid ${secondaryColor};
-            position: relative;
-            overflow: hidden;
-        }
-        .elo-bar {
-            height: 100%;
-            background: linear-gradient(90deg, ${primaryColor}, ${secondaryColor});
-            border-radius: 12px;
-            width: ${Math.min(100, (newElo % 100) || 0)}%;
-            transition: width 0.5s ease;
-        }
-        .elo-text {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 16px;
-            font-weight: bold;
-            color: ${textColor};
-            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
-        }
-        .change-info {
-            display: flex;
-            justify-content: center;
-            margin-top: 10px;
-        }
-        .change-box {
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 10px;
-            padding: 10px 20px;
-            border: 2px solid ${secondaryColor};
-            text-align: center;
-        }
-        .change-title {
-            font-size: 16px;
-            color: ${textColor};
-        }
-        .change-value {
-            font-size: 24px;
-            font-weight: bold;
-            color: ${primaryColor};
-        }
-        .next-rank {
-            margin-top: 10px;
-            font-size: 16px;
-            color: ${textColor};
-            text-align: center;
-            font-style: italic;
-        }
-    </style>
-    <body>
-        <div class="elo-container">
-            <div class="header">${isWinner ? 'VICTORY - ELO GAINED' : 'DEFEAT - ELO LOST'}</div>
-            
-            <div class="rank-info">
-                <div class="rank-box">
-                    <div class="rank-title">Previous Rank</div>
-                    <div class="rank-value">${oldRank.rank} ${oldRank.division}</div>
-                </div>
-                <div class="rank-box">
-                    <div class="rank-title">Current Rank</div>
-                    <div class="rank-value">${newRank.rank} ${newRank.division}</div>
-                </div>
-            </div>
-            
-            <div class="elo-bar-container">
-                <div class="elo-bar"></div>
-                <div class="elo-text">${newElo % 100}/100 ELO to next division</div>
-            </div>
-            
-            <div class="change-info">
-                <div class="change-box">
-                    <div class="change-title">ELO ${isWinner ? 'Gained' : 'Lost'}</div>
-                    <div class="change-value">${isWinner ? '+' : ''}${eloChange}</div>
-                </div>
-            </div>
-            
-            <div class="next-rank">
-                Next rank at ${Math.ceil(newElo / 100) * 100} ELO
-            </div>
-        </div>
-    </body>
-    </html>
-    `;
-
-    const filename = `elo_${user.id}_${Date.now()}.png`;
     const fullPath = path.join(imagesPath, filename);
     await page.setContent(html);
     await page.screenshot({ path: fullPath });

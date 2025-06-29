@@ -5,6 +5,7 @@ const path = require('path');
 const math = require('mathjs');
 const { updateRequirements } = require('./scroll'); // <-- Add this import
 const { addMentorExp } = require('./mentors.js');
+const { createCanvas, loadImage, registerFont } = require('canvas');
 
 // Add emoji constants at the top after requires
 const EMOJIS = {
@@ -198,6 +199,14 @@ function getRandomAkatsukiMaterial() {
     return mats[Math.floor(Math.random() * mats.length)];
 }
 
+// Register a font (optional, for better appearance)
+try {
+    registerFont(path.join(__dirname, '../assets/Roboto-Bold.ttf'), { family: 'Roboto', weight: 'bold' });
+    registerFont(path.join(__dirname, '../assets/Roboto-Regular.ttf'), { family: 'Roboto', weight: 'regular' });
+} catch (e) {
+    // If font files are missing, fallback to system fonts
+}
+
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('arank')
@@ -384,145 +393,155 @@ module.exports = {
 
             // Generate battle image with improved centering, name above, HP bar below, no footer
             const generateBattleImage = async () => {
-                const browser = await puppeteer.launch({ args: ['--no-sandbox'] });
-                const page = await browser.newPage();
-                await page.setViewport({ width: 800, height: 400 });
+                const width = 800, height = 400;
+                const canvas = createCanvas(width, height);
+                const ctx = canvas.getContext('2d');
 
-                const playerHealthPercent = Math.max((playerHealth / player.health) * 100, 0);
-                const npcHealthPercent = Math.max((currentNpc.currentHealth / currentNpc.health) * 100, 0);
+                // Load images
+                const bgUrl = 'https://i.pinimg.com/originals/5d/e5/62/5de5622ecdd4e24685f141f10e4573e3.jpg';
+                let bgImg, npcImg, playerImg;
+                try { bgImg = await loadImage(bgUrl); } catch { bgImg = null; }
+                try { npcImg = await loadImage(currentNpc.image); } catch { npcImg = null; }
+                let playerImgUrl;
+                if (interaction.user.avatar) {
+                    playerImgUrl = `https://cdn.discordapp.com/avatars/${interaction.user.id}/${interaction.user.avatar}.png?size=256`;
+                } else {
+                    const defaultAvatarNumber = parseInt(interaction.user.discriminator) % 5;
+                    playerImgUrl = `https://cdn.discordapp.com/embed/avatars/${defaultAvatarNumber}.png`;
+                }
+                try { playerImg = await loadImage(playerImgUrl); } catch { playerImg = null; }
 
-                // Create images directory if it doesn't exist
-                const imagesDir = path.resolve(__dirname, '../images');
-                if (!fs.existsSync(imagesDir)) {
-                    fs.mkdirSync(imagesDir, { recursive: true });
+                // Draw background
+                if (bgImg) ctx.drawImage(bgImg, 0, 0, width, height);
+                else { ctx.fillStyle = '#222'; ctx.fillRect(0, 0, width, height); }
+
+                // Helper for rounded rectangles
+                function roundRect(ctx, x, y, w, h, r) {
+                    ctx.beginPath();
+                    ctx.moveTo(x + r, y);
+                    ctx.lineTo(x + w - r, y);
+                    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+                    ctx.lineTo(x + w, y + h - r);
+                    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+                    ctx.lineTo(x + r, y + h);
+                    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+                    ctx.lineTo(x, y + r);
+                    ctx.quadraticCurveTo(x, y, x + r, y);
+                    ctx.closePath();
                 }
 
-                const htmlContent = `
-                    <html>
-                    <style>
-                        body {
-                            margin: 0;
-                            padding: 0;
-                        }
-                        .battle-container {
-                            width: 800px;
-                            height: 400px;
-                            position: relative;
-                            background: url('https://i.pinimg.com/originals/5d/e5/62/5de5622ecdd4e24685f141f10e4573e3.jpg') center center no-repeat;
-                            background-size: cover;
-                            border-radius: 10px;
-                            overflow: hidden;
-                        }
-                        .character {
-                            position: absolute;
-                            width: 150px;
-                            height: 150px;
-                            border-radius: 10px;
-                            border: 3px solid #6e1515;
-                            object-fit: cover;
-                        }
-                        .player {
-                            right: 50px;
-                            top: 120px;
-                        }
-                        .enemy {
-                            left: 50px;
-                            top: 120px;
-                        }
-                        .name-tag {
-                            position: absolute;
-                            width: 150px;
-                            text-align: center;
-                            color: white;
-                            font-family: Arial, sans-serif;
-                            font-size: 18px;
-                            font-weight: bold;
-                            text-shadow: 2px 2px 4px #000;
-                            top: 80px;
-                            background: rgba(0,0,0,0.5);
-                            border-radius: 5px;
-                            padding: 2px 0;
-                        }
-                        .player-name {
-                            right: 50px;
-                        }
-                        .enemy-name {
-                            left: 50px;
-                        }
-                        .health-bar {
-                            position: absolute;
-                            width: 150px;
-                            height: 22px;
-                            background-color: #333;
-                            border-radius: 5px;
-                            overflow: hidden;
-                            top: 280px;
-                        }
-                        .health-fill {
-                            height: 100%;
-                        }
-                        .npc-health-fill {
-                            background-color: #ff4444;
-                            width: ${npcHealthPercent}%;
-                        }
-                        .player-health-fill {
-                            background-color: #4CAF50;
-                            width: ${playerHealthPercent}%;
-                        }
-                        .health-text {
-                            position: absolute;
-                            width: 100%;
-                            text-align: center;
-                            color: white;
-                            font-family: Arial, sans-serif;
-                            font-size: 13px;
-                            line-height: 22px;
-                            text-shadow: 1px 1px 1px black;
-                        }
-                        .player-health {
-                            right: 50px;
-                        }
-                        .enemy-health {
-                            left: 50px;
-                        }
-                        .vs-text {
-                            position: absolute;
-                            left: 50%;
-                            top: 50%;
-                            transform: translate(-50%, -50%);
-                            color: white;
-                            font-family: Arial, sans-serif;
-                            font-size: 48px;
-                            font-weight: bold;
-                            text-shadow: 2px 2px 4px #000;
-                        }
-                    </style>
-                    <body>
-                        <div class="battle-container">
-                            <div class="name-tag enemy-name">${currentNpc.name}</div>
-                            <img class="character enemy" src="${currentNpc.image}">
-                            <div class="health-bar enemy-health">
-                                <div class="health-fill npc-health-fill"></div>
-                                <div class="health-text">${Math.round(currentNpc.currentHealth)}/${currentNpc.health}</div>
-                            </div>
-                            
-                            <div class="name-tag player-name">${player.name}</div>
-                            <img class="character player" src="${interaction.user.displayAvatarURL({ format: 'png', size: 256 })}">
-                            <div class="health-bar player-health">
-                                <div class="health-fill player-health-fill"></div>
-                                <div class="health-text">${Math.round(playerHealth)}/${player.health}</div>
-                            </div>
-                            <div class="vs-text">VS</div>
-                        </div>
-                    </body>
-                    </html>
-                `;
+                // Positions
+                const charW = 150, charH = 150;
+                const playerX = width - 50 - charW, playerY = 120;
+                const npcX = 50, npcY = 120;
+                const nameY = 80, barY = 280;
+                const nameH = 28, barH = 22;
 
-                await page.setContent(htmlContent);
-                const imagePath = path.join(imagesDir, `battle_${userId}_${Date.now()}.png`);
-                await page.screenshot({ path: imagePath });
-                await browser.close();
-                return imagePath;
+                // Draw NPC character
+                if (npcImg) {
+                    ctx.save();
+                    roundRect(ctx, npcX, npcY, charW, charH, 10);
+                    ctx.clip();
+                    ctx.drawImage(npcImg, npcX, npcY, charW, charH);
+                    ctx.restore();
+                    ctx.lineWidth = 3;
+                    ctx.strokeStyle = "#6e1515";
+                    roundRect(ctx, npcX, npcY, charW, charH, 10);
+                    ctx.stroke();
+                }
+
+                // Draw Player character
+                if (playerImg) {
+                    ctx.save();
+                    roundRect(ctx, playerX, playerY, charW, charH, 10);
+                    ctx.clip();
+                    ctx.drawImage(playerImg, playerX, playerY, charW, charH);
+                    ctx.restore();
+                    ctx.lineWidth = 3;
+                    ctx.strokeStyle = "#6e1515";
+                    roundRect(ctx, playerX, playerY, charW, charH, 10);
+                    ctx.stroke();
+                }
+
+                // Draw name tags
+                ctx.font = "bold 18px Arial";
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                // NPC name
+                ctx.save();
+                ctx.globalAlpha = 0.7;
+                ctx.fillStyle = "#000";
+                roundRect(ctx, npcX, nameY, charW, nameH, 5);
+                ctx.fill();
+                ctx.restore();
+                ctx.fillStyle = "#fff";
+                ctx.shadowColor = "#000";
+                ctx.shadowBlur = 4;
+                ctx.fillText(currentNpc.name, npcX + charW / 2, nameY + nameH / 2);
+                ctx.shadowBlur = 0;
+                // Player name
+                ctx.save();
+                ctx.globalAlpha = 0.7;
+                ctx.fillStyle = "#000";
+                roundRect(ctx, playerX, nameY, charW, nameH, 5);
+                ctx.fill();
+                ctx.restore();
+                ctx.fillStyle = "#fff";
+                ctx.shadowColor = "#000";
+                ctx.shadowBlur = 4;
+                ctx.fillText(player.name, playerX + charW / 2, nameY + nameH / 2);
+                ctx.shadowBlur = 0;
+
+                // Health bars
+                // NPC
+                const npcHealthPercent = Math.max((currentNpc.currentHealth ?? currentNpc.health) / currentNpc.health, 0);
+                ctx.save();
+                ctx.fillStyle = "#333";
+                roundRect(ctx, npcX, barY, charW, barH, 5);
+                ctx.fill();
+                ctx.fillStyle = "#ff4444";
+                roundRect(ctx, npcX, barY, charW * npcHealthPercent, barH, 5);
+                ctx.fill();
+                ctx.fillStyle = "#fff";
+                ctx.font = "13px Arial";
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.shadowColor = "#000";
+                ctx.shadowBlur = 1;
+                ctx.shadowBlur = 0;
+                ctx.restore();
+
+                // Player
+                const playerHealthPercent = Math.max(playerHealth / player.health, 0);
+                ctx.save();
+                ctx.fillStyle = "#333";
+                roundRect(ctx, playerX, barY, charW, barH, 5);
+                ctx.fill();
+                ctx.fillStyle = "#4CAF50";
+                roundRect(ctx, playerX, barY, charW * playerHealthPercent, barH, 5);
+                ctx.fill();
+                ctx.fillStyle = "#fff";
+                ctx.font = "13px Arial";
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.shadowColor = "#000";
+                ctx.shadowBlur = 1;
+                ctx.shadowBlur = 0;
+                ctx.restore();
+
+                // VS text
+                ctx.save();
+                ctx.font = "bold 48px Arial";
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.fillStyle = "#fff";
+                ctx.shadowColor = "#000";
+                ctx.shadowBlur = 4;
+                ctx.fillText("VS", width / 2, height / 2);
+                ctx.restore();
+
+                // Return buffer instead of saving to file
+                return canvas.toBuffer('image/png');
             };
 
             // Execute a jutsu with base and effective stats
@@ -917,7 +936,7 @@ module.exports = {
                     )
                     .addFields({
                         name: 'Battle Status',
-                        value: `${player.name} || ${Math.round(playerHealth)} HP\n${currentNpc.name} || ${Math.round(currentNpc.currentHealth)} HP\nChakra: ${player.chakra}            Chakra: ${currentNpc.chakra}`
+                        value: `${player.name} | ${Math.round(playerHealth)} HP\n${currentNpc.name} | ${Math.round(currentNpc.currentHealth)} HP\nChakra: ${player.chakra}            Chakra: ${currentNpc.chakra}`
                     });
 
                 // Add jutsu image/gif if available
@@ -986,7 +1005,7 @@ module.exports = {
                     const playerAction = await new Promise(resolve => {
                         const collector = moveMessage.createMessageComponentCollector({
                             filter: i => i.user.id === userId && i.customId.endsWith(`-${userId}-${roundNum}`),
-                            time: 60000
+                            time: 120000 // 2 minutes
                         });
 
                         collector.on('collect', async i => {
@@ -1268,19 +1287,14 @@ module.exports = {
                             return;
                         }
 
-                        // Prepare next enemy with fresh image
-                        currentEnemyIndex++;
+                        // Prepare next enemy with fresh stats (reset health/chakra/effects)
                         currentNpc = generateNpc();
                         currentNpc.currentHealth = currentNpc.health;
                         playerHealth = player.health;
+                        player.chakra = player.chakra || 10; // reset to base chakra
+                        player.activeEffects = [];
                         roundNum = 1;
-                        
-                        // Send fresh battle image for new enemy
-                        const newEnemyImage = new AttachmentBuilder(await generateBattleImage());
-                        await interaction.followUp({
-                            content: `**New Enemy Appeared!** ${currentNpc.name} approaches!`,
-                            files: [newEnemyImage]
-                        });
+                        // Do NOT send a fresh battle image here! The moves embed will send the image after.
                     }
                     // Check if player is defeated
                     else if (playerHealth <= 0) {

@@ -1,7 +1,16 @@
 const { SlashCommandBuilder, AttachmentBuilder } = require('discord.js');
 const fs = require('fs');
 const path = require('path');
-const puppeteer = require('puppeteer');
+// const puppeteer = require('puppeteer'); // Remove puppeteer
+const { createCanvas, loadImage, registerFont } = require('canvas');
+
+// Register a font (optional, for better appearance)
+try {
+    registerFont(path.join(__dirname, '../assets/Roboto-Bold.ttf'), { family: 'Roboto', weight: 'bold' });
+    registerFont(path.join(__dirname, '../assets/Roboto-Regular.ttf'), { family: 'Roboto', weight: 'regular' });
+} catch (e) {
+    // If font files are missing, fallback to system fonts
+}
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -78,191 +87,188 @@ module.exports = {
     },
 };
 
-// --- Puppeteer Image Generation Function ---
+// --- Canvas Image Generation Function ---
 async function generateLeaderboardImage(leaderboardData) {
-    const browser = await puppeteer.launch({
-        args: ['--no-sandbox', '--disable-setuid-sandbox'], // Common args for server environments
-        // headless: 'new' // Use the new headless mode if compatible
-    });
-    const page = await browser.newPage();
-
-    // Calculate dynamic height or use a fixed large height
-    const itemHeight = 45; // Approximate height per user row
-    const headerHeight = 250; // Approximate height for the #1 user header
-    const padding = 40;
-    const calculatedHeight = headerHeight + (leaderboardData.length * itemHeight) + padding;
+    // --- Layout constants ---
     const width = 800;
-    const height = Math.max(600, calculatedHeight); // Minimum height
+    const headerHeight = 180;
+    const itemHeight = 45;
+    const padding = 40;
+    const listStartY = headerHeight + 10;
+    const rowGap = 10;
+    const avatarSize = 35;
+    const topAvatarSize = 100;
+    const calculatedHeight = headerHeight + leaderboardData.length * (itemHeight + rowGap) + padding;
+    const height = Math.max(600, calculatedHeight);
 
-    await page.setViewport({ width: width, height: height });
+    // --- Create canvas ---
+    const canvas = createCanvas(width, height);
+    const ctx = canvas.getContext('2d');
 
-    const topUser = leaderboardData.length > 0 ? leaderboardData[0] : null;
+    // --- Background gradient ---
+    const bgGradient = ctx.createLinearGradient(0, 0, width, height);
+    bgGradient.addColorStop(0, '#232526');
+    bgGradient.addColorStop(1, '#414345');
+    ctx.fillStyle = bgGradient;
+    ctx.fillRect(0, 0, width, height);
 
-    // --- HTML Content ---
-    const htmlContent = `
-        <html>
-        <head>
-            <style>
-                @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap'); /* Example Font */
+    // --- Card background ---
+    ctx.save();
+    ctx.globalAlpha = 0.95;
+    ctx.fillStyle = '#232526';
+    roundRect(ctx, 20, 20, width - 40, height - 40, 15);
+    ctx.fill();
+    ctx.restore();
 
-                body {
-                    margin: 0;
-                    padding: 0;
-                    font-family: 'Roboto', sans-serif;
-                    background-color: #1a1a1a; /* Dark background */
-                    color: #e0e0e0; /* Light text */
-                    width: ${width}px;
-                    height: ${height}px;
-                }
-                .leaderboard-card {
-                    width: 100%;
-                    height: 100%;
-                    background: linear-gradient(145deg, #232526, #414345); /* Dark gradient */
-                    border-radius: 15px; /* Keep rounded corners if desired */
-                    box-shadow: 0 8px 16px rgba(0,0,0,0.4);
-                    padding: 20px;
-                    box-sizing: border-box;
-                    display: flex;
-                    flex-direction: column;
-                }
-                .header {
-                    text-align: center;
-                    margin-bottom: 20px;
-                    padding-bottom: 15px;
-                    border-bottom: 2px solid #f8d56b; /* Gold accent */
-                }
-                .header .title {
-                    font-size: 28px;
-                    font-weight: bold;
-                    color: #f8d56b; /* Gold title */
-                    margin-bottom: 15px;
-                    text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
-                }
-                .top-avatar {
-                    width: 100px;
-                    height: 100px;
-                    border-radius: 50%;
-                    border: 4px solid #f8d56b; /* Gold border */
-                    margin: 0 auto 10px auto;
-                    object-fit: cover;
-                    display: block; /* Center image */
-                    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-                }
-                .header .username {
-                    font-size: 20px;
-                    font-weight: bold;
-                    color: #fff;
-                }
-                .leaderboard-list {
-                    flex-grow: 1; /* Takes remaining space */
-                    overflow-y: auto; /* Allows scrolling if content exceeds height */
-                    padding-right: 10px; /* Space for scrollbar */
-                }
-                .list-item {
-                    display: flex;
-                    align-items: center;
-                    background-color: rgba(255, 255, 255, 0.05);
-                    border-radius: 8px;
-                    padding: 10px 15px;
-                    margin-bottom: 10px;
-                    border-left: 4px solid #f8d56b; /* Gold accent */
-                    gap: 15px; /* Spacing between elements */
-                }
-                 .list-item:nth-child(1) { border-left-color: #FFD700; } /* Gold */
-                 .list-item:nth-child(2) { border-left-color: #C0C0C0; } /* Silver */
-                 .list-item:nth-child(3) { border-left-color: #CD7F32; } /* Bronze */
+    // --- Header ---
+    ctx.save();
+    ctx.font = 'bold 32px Roboto, Arial, sans-serif';
+    ctx.fillStyle = '#f8d56b';
+    ctx.textAlign = 'center';
+    ctx.shadowColor = 'rgba(0,0,0,0.5)';
+    ctx.shadowBlur = 4;
+    ctx.fillText('Strongest In The World', width / 2, 60);
 
-                .rank {
-                    font-size: 18px;
-                    font-weight: bold;
-                    color: #f8d56b;
-                    min-width: 30px; /* Ensure rank number aligns */
-                    text-align: right;
-                }
-                .user-info {
-                    display: flex;
-                    align-items: center;
-                    flex-grow: 1;
-                    gap: 10px;
-                }
-                 .list-avatar {
-                    width: 35px;
-                    height: 35px;
-                    border-radius: 50%;
-                    object-fit: cover;
-                }
-                .username {
-                    font-size: 18px;
-                    color: #fff;
-                    flex-grow: 1; /* Takes available space */
-                     white-space: nowrap;
-                     overflow: hidden;
-                     text-overflow: ellipsis;
-                }
-                .level {
-                    font-size: 16px;
-                    font-weight: bold;
-                    color: #aaa;
-                    background-color: rgba(0,0,0,0.2);
-                    padding: 3px 8px;
-                    border-radius: 5px;
-                }
-                 /* Scrollbar styling (optional) */
-                .leaderboard-list::-webkit-scrollbar {
-                    width: 8px;
-                }
-                .leaderboard-list::-webkit-scrollbar-track {
-                    background: rgba(0,0,0,0.1);
-                    border-radius: 4px;
-                }
-                .leaderboard-list::-webkit-scrollbar-thumb {
-                    background-color: rgba(248, 213, 107, 0.5); /* Semi-transparent gold */
-                    border-radius: 4px;
-                }
-                .leaderboard-list::-webkit-scrollbar-thumb:hover {
-                    background-color: rgba(248, 213, 107, 0.8);
-                }
-            </style>
-        </head>
-        <body>
-            <div class="leaderboard-card">
-                <div class="header">
-                    <div class="title">Strongest In The World</div>
-                    ${topUser ? `
-                        <img src="${topUser.avatarUrl}" class="top-avatar" alt="Top User Avatar">
-                        <div class="username">${topUser.username} (Lvl ${topUser.level || '?'})</div>
-                    ` : `<div>No users found</div>`}
-                </div>
-                <div class="leaderboard-list">
-                    ${leaderboardData.map((user, index) => `
-                        <div class="list-item">
-                            <span class="rank">${index + 1}.</span>
-                            <div class="user-info">
-                                <img src="${user.avatarUrl}" class="list-avatar" alt="Avatar">
-                                <span class="username">${user.username}</span>
-                            </div>
-                            <span class="level">Lvl ${user.level || '?'}</span>
-                        </div>
-                    `).join('')}
-                </div>
-            </div>
-        </body>
-        </html>
-    `;
-    // --- ---
+    ctx.shadowBlur = 0;
+    ctx.font = 'bold 20px Roboto, Arial, sans-serif';
+    const topUser = leaderboardData[0];
+    if (topUser) {
+        // Draw top avatar
+        try {
+            const avatarImg = await loadImage(topUser.avatarUrl);
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(width / 2, 110, topAvatarSize / 2, 0, Math.PI * 2, true);
+            ctx.closePath();
+            ctx.clip();
+            ctx.drawImage(avatarImg, width / 2 - topAvatarSize / 2, 60, topAvatarSize, topAvatarSize);
+            ctx.restore();
 
-    await page.setContent(htmlContent, { waitUntil: 'networkidle0' }); // Wait for fonts/images potentially
+            // Gold border
+            ctx.save();
+            ctx.strokeStyle = '#f8d56b';
+            ctx.lineWidth = 5;
+            ctx.beginPath();
+            ctx.arc(width / 2, 110, topAvatarSize / 2 + 2, 0, Math.PI * 2, true);
+            ctx.stroke();
+            ctx.restore();
+        } catch (e) {
+            // Ignore avatar loading errors
+        }
 
-    const imagePath = path.join(__dirname, `../temp/leaderboard_${Date.now()}.png`);
-    
-    // Ensure temp directory exists
-    const tempDir = path.dirname(imagePath);
+        // Username
+        ctx.fillStyle = '#fff';
+        ctx.font = 'bold 22px Roboto, Arial, sans-serif';
+        ctx.fillText(`${topUser.username} (Lvl ${topUser.level || '?'})`, width / 2, 185);
+    } else {
+        ctx.fillStyle = '#fff';
+        ctx.fillText('No users found', width / 2, 120);
+    }
+    ctx.restore();
+
+    // --- List items ---
+    let y = listStartY;
+    for (let i = 0; i < leaderboardData.length; i++) {
+        const user = leaderboardData[i];
+        // List item background
+        ctx.save();
+        ctx.globalAlpha = 0.7;
+        ctx.fillStyle = 'rgba(255,255,255,0.05)';
+        roundRect(ctx, 50, y, width - 100, itemHeight, 8);
+        ctx.fill();
+        ctx.restore();
+
+        // Left border color by rank
+        ctx.save();
+        let borderColor = '#f8d56b';
+        if (i === 0) borderColor = '#FFD700';
+        else if (i === 1) borderColor = '#C0C0C0';
+        else if (i === 2) borderColor = '#CD7F32';
+        ctx.fillStyle = borderColor;
+        ctx.fillRect(50, y, 6, itemHeight);
+        ctx.restore();
+
+        // Rank number
+        ctx.save();
+        ctx.font = 'bold 18px Roboto, Arial, sans-serif';
+        ctx.fillStyle = '#f8d56b';
+        ctx.textAlign = 'right';
+        ctx.fillText(`${i + 1}.`, 80, y + itemHeight / 2 + 7);
+        ctx.restore();
+
+        // Avatar
+        try {
+            const avatarImg = await loadImage(user.avatarUrl);
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(100 + avatarSize / 2, y + itemHeight / 2, avatarSize / 2, 0, Math.PI * 2, true);
+            ctx.closePath();
+            ctx.clip();
+            ctx.drawImage(avatarImg, 100, y + (itemHeight - avatarSize) / 2, avatarSize, avatarSize);
+            ctx.restore();
+        } catch (e) {
+            // Ignore avatar loading errors
+        }
+
+        // Username
+        ctx.save();
+        ctx.font = '18px Roboto, Arial, sans-serif';
+        ctx.fillStyle = '#fff';
+        ctx.textAlign = 'left';
+        // Truncate username if too long
+        let username = user.username;
+        if (username.length > 18) username = username.slice(0, 16) + '…';
+        ctx.fillText(username, 145, y + itemHeight / 2 + 7);
+        ctx.restore();
+
+        // Level
+        ctx.save();
+        ctx.font = 'bold 16px Roboto, Arial, sans-serif';
+        ctx.fillStyle = '#aaa';
+        ctx.textAlign = 'right';
+        ctx.fillStyle = '#aaa';
+        ctx.beginPath();
+        ctx.roundRect(width - 120, y + itemHeight / 2 - 14, 60, 28, 5);
+        ctx.fillStyle = 'rgba(0,0,0,0.2)';
+        ctx.fill();
+        ctx.fillStyle = '#aaa';
+        ctx.fillText(`Lvl ${user.level || '?'}`, width - 90, y + itemHeight / 2 + 7);
+        ctx.restore();
+
+        y += itemHeight + rowGap;
+    }
+
+    // --- Save image ---
+    const tempDir = path.join(__dirname, '../temp');
     if (!fs.existsSync(tempDir)) {
         fs.mkdirSync(tempDir, { recursive: true });
     }
-    
-    await page.screenshot({ path: imagePath });
-    await browser.close();
-    
+    const imagePath = path.join(tempDir, `leaderboard_${Date.now()}.png`);
+    const out = fs.createWriteStream(imagePath);
+    const stream = canvas.createPNGStream();
+    await new Promise((resolve, reject) => {
+        stream.pipe(out);
+        out.on('finish', resolve);
+        out.on('error', reject);
+    });
     return imagePath;
+}
+
+// --- Helper: rounded rectangle ---
+function roundRect(ctx, x, y, w, h, r) {
+    if (ctx.roundRect) {
+        ctx.roundRect(x, y, w, h, r);
+        return;
+    }
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
 }

@@ -39,13 +39,13 @@
     "requirements": [
       {
         "description": "Complete B-rank mission 5 times",
-        "completed": 2,
+        "completed": 5,
         "needed": 5,
         "type": "b_mission"
       },
       {
         "description": "Complete S-rank mission 2 times",
-        "completed": 1,
+        "completed": 2,
         "needed": 2,
         "type": "s_mission"
       },

@@ -1,9 +1,9 @@
 const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, StringSelectMenuBuilder, ButtonBuilder, ButtonStyle, AttachmentBuilder } = require('discord.js');
-const puppeteer = require('puppeteer');
 const fs = require('fs');
 const path = require('path');
 const math = require('mathjs');
 const { updateRequirements } = require('./scroll');
+const { createCanvas, loadImage, registerFont } = require('canvas');
 
 // Emoji constants (same as arank.js)
 const EMOJIS = {
@@ -205,11 +205,14 @@ const CHAKRA_REGEN = {
     'Jounin': 3
 };
 
-// Add at the top with other constants
-let browser = null;
-(async () => {
-    browser = await puppeteer.launch({ args: ['--no-sandbox'] });
-})();
+// Register a font (optional, for better appearance)
+try {
+    registerFont(path.join(__dirname, '../assets/Roboto-Bold.ttf'), { family: 'Roboto', weight: 'bold' });
+    registerFont(path.join(__dirname, '../assets/Roboto-Regular.ttf'), { family: 'Roboto', weight: 'regular' });
+} catch (e) {
+    // If font files are missing, fallback to system fonts
+}
+
 
 // Add these utility functions near the top (after requires)
 function getCooldownString(ms) {
@@ -250,9 +253,7 @@ module.exports = {
 
     async execute(interaction) {
         try {
-            // Check cooldown
-           
-
+            // Remove any reply/editReply before deferReply
             await interaction.deferReply();
 
             const userId = interaction.user.id;
@@ -261,12 +262,12 @@ module.exports = {
 
             // Load user data
             if (!fs.existsSync(usersPath)) {
-                return await interaction.editReply({ content: "Database not found." });
+                return await interaction.followUp({ content: "Database not found.", ephemeral: true });
             }
 
             const users = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
             if (!users[userId]) {
-                return await interaction.editReply({ content: "You need to enroll first!" });
+                return await interaction.followUp({ content: "You need to enroll first!", ephemeral: true });
             }
 
             let players = [
@@ -293,7 +294,7 @@ module.exports = {
             const now = Date.now();
             if (users[userId].lastsrank && now - users[userId].lastsrank < 18 * 60 * 1000) {
                 const left = 18 * 60 * 1000 - (now - users[userId].lastsrank);
-                return interaction.reply({ content: `You can do this again in ${getCooldownString(left)}.`, ephemeral: true });
+                return interaction.followUp({ content: `You can do this again in ${getCooldownString(left)}.`, ephemeral: true });
             }
             users[userId].lastsrank = now;
             fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
@@ -318,7 +319,7 @@ module.exports = {
                             .setStyle(ButtonStyle.Danger)
                     );
 
-                const inviteMsg = await interaction.editReply({
+                const inviteMsg = await interaction.followUp({
                     embeds: [inviteEmbed],
                     components: [inviteRow]
                 });
@@ -346,7 +347,7 @@ module.exports = {
                 });
 
                 if (result !== 'accepted') {
-                    return await interaction.editReply({
+                    return await interaction.followUp({
                         content: "Mission cancelled - not all players accepted.",
                         embeds: [],
                         components: []
@@ -358,7 +359,7 @@ module.exports = {
 
             if (player2) {
                 if (!users[player2.id]) {
-                    return await interaction.editReply({ content: `${player2.username} needs to enroll first!` });
+                    return await interaction.followUp({ content: `${player2.username} needs to enroll first!` });
                 }
                 players.push({ 
                     id: player2.id, 
@@ -372,7 +373,7 @@ module.exports = {
 
             if (player3) {
                 if (!users[player3.id]) {
-                    return await interaction.editReply({ content: `${player3.username} needs to enroll first!` });
+                    return await interaction.followUp({ content: `${player3.username} needs to enroll first!` });
                 }
                 players.push({ 
                     id: player3.id, 
@@ -403,7 +404,7 @@ module.exports = {
                     bossOptions.map((boss, index) => `${index + 1}️⃣: ${boss.label}`).join('\n'))
                 .setColor('#006400')
 
-            const message = await interaction.editReply({
+            const message = await interaction.followUp({
                 embeds: [embed],
                 components: [row]
             });
@@ -437,118 +438,183 @@ module.exports = {
                     const totalPlayerHealth = players.reduce((sum, p) => sum + p.health, 0);
                     let currentPlayerHealth = totalPlayerHealth;  // Initialize currentPlayerHealth
 
-                    // Generate battle image with proper player positioning
+                    // Generate battle image with proper player positioning (Canvas version)
                     const generateBattleImage = async () => {
-                        if (!browser) {
-                            browser = await puppeteer.launch({ args: ['--no-sandbox'] });
-                        }
-                        const page = await browser.newPage();
-                        
-                        // Adjust viewport based on player count
                         const width = 800;
+                        const playerCount = players.length;
                         const height = playerCount === 1 ? 400 : 500;
-                        await page.setViewport({ width, height });
+                        const canvas = createCanvas(width, height);
+                        const ctx = canvas.getContext('2d');
 
-                        const playerHealthPercent = Math.max((currentPlayerHealth / totalPlayerHealth) * 100, 0);
-                        const npcHealthPercent = Math.max((npc.currentHealth / npc.health) * 100, 0);
-
-                        // Player positioning logic
-                        const playerPositions = [];
-                        const playerSize = playerCount === 1 ? 150 : 100;
-                        if (playerCount === 1) {
-                            playerPositions.push({ left: 600, top: 120, size: playerSize });
-                        } else if (playerCount === 2) {
-                            playerPositions.push({ left: 600, top: 100, size: playerSize });
-                            playerPositions.push({ left: 600, top: 250, size: playerSize });
-                        } else {
-                            playerPositions.push({ left: 600, top: 80, size: playerSize });
-                            playerPositions.push({ left: 600, top: 200, size: playerSize });
-                            playerPositions.push({ left: 600, top: 320, size: playerSize });
+                        // Load images
+                        let bgImg, npcImg;
+                        try { bgImg = await loadImage('https://i.pinimg.com/originals/5d/e5/62/5de5622ecdd4e24685f141f10e4573e3.jpg'); } catch { bgImg = null; }
+                        try { npcImg = await loadImage(npc.image); } catch { npcImg = null; }
+                        // Player avatars
+                        const playerImgs = [];
+                        for (const p of players) {
+                            let url;
+                            if (interaction.guild && interaction.guild.members.cache.get(p.id)?.user.avatar) {
+                                url = `https://cdn.discordapp.com/avatars/${p.id}/${interaction.guild.members.cache.get(p.id).user.avatar}.png?size=256`;
+                            } else {
+                                const defaultAvatarNumber = parseInt(p.id) % 5;
+                                url = `https://cdn.discordapp.com/embed/avatars/${defaultAvatarNumber}.png`;
+                            }
+                            try { playerImgs.push(await loadImage(url)); } catch { playerImgs.push(null); }
                         }
 
-                        const playerImages = players.map((p, i) => `
-                            <div class="player" style="position: absolute; left: ${playerPositions[i].left}px; top: ${playerPositions[i].top}px;">
-                                ${playerCount === 1 ? `
-                                    <div class="name-tag" style="position: absolute; top: -30px; left: 0; width: 150px; text-align: center; color: white; font-family: Arial, sans-serif; font-size: 16px; font-weight: bold; text-shadow: 2px 2px 4px #000; background: rgba(0,0,0,0.5); border-radius: 5px; padding: 2px 0;">
-                                        ${p.username}
-                                    </div>
-                                ` : ''}
-                                <img src="${interaction.guild.members.cache.get(p.id)?.user.displayAvatarURL({ format: 'png', size: 256 }) || 'https://cdn.discordapp.com/embed/avatars/0.png'}" 
-                                    width="${playerPositions[i].size}" style="border-radius: 10px; border: 3px solid #6e1515;">
-                                <div class="health-bar" style="position: absolute; bottom: -30px; left: 50%; transform: translateX(-50%);">
-                                    <div class="health-fill player-health-fill"></div>
-                                </div>
-                            </div>
-                        `).join('');
+                        // Draw background
+                        if (bgImg) ctx.drawImage(bgImg, 0, 0, width, height);
+                        else { ctx.fillStyle = '#222'; ctx.fillRect(0, 0, width, height); }
 
-                        const htmlContent = `
-                            <html>
-                            <style>
-                                body {
-                                    margin: 0;
-                                    padding: 0;
-                                    background: url('https://i.pinimg.com/originals/5d/e5/62/5de5622ecdd4e24685f141f10e4573e3.jpg') center center no-repeat;
-                                    background-size: cover;
-                                    width: ${width}px;
-                                    height: ${height}px;
-                                }
-                                .vs-text {
-                                    position: absolute;
-                                    left: 50%;
-                                    top: 50%;
-                                    transform: translate(-50%, -50%);
-                                    color: white;
-                                    font-family: Arial, sans-serif;
-                                    font-size: 48px;
-                                    font-weight: bold;
-                                    text-shadow: 2px 2px 4px #000;
-                                }
-                                .health-bar {
-                                    position: absolute;
-                                    width: 120px;
-                                    height: 20px;
-                                    background-color: #333;
-                                    border-radius: 5px;
-                                    overflow: hidden;
-                                    direction: rtl;
-                                }
-                                .health-fill {
-                                    height: 100%;
-                                    float: right;
-                                }
-                                .npc-health-fill {
-                                    background-color: #ff4444;
-                                    width: ${npcHealthPercent}%;
-                                    float: left;
-                                }
-                                .player-health-fill {
-                                    background-color: #4CAF50;
-                                    width: ${playerHealthPercent}%;
-                                }
-                            </style>
-                            <body>
-                                ${playerImages}
-                                
-                                <div style="position: absolute; left: 50px; top: ${height/2 - 60}px;">
-                                    <div class="name-tag" style="position: absolute; top: -30px; left: 0; width: ${playerSize}px; text-align: center; color: white; font-family: Arial, sans-serif; font-size: 16px; font-weight: bold; text-shadow: 2px 2px 4px #000; background: rgba(0,0,0,0.5); border-radius: 5px; padding: 2px 0;">
-                                        ${npc.name}
-                                    </div>
-                                    <img src="${npc.image}" width="${playerSize}" style="border-radius: 10px; border: 3px solid #6e1515;">
-                                    <div class="health-bar" style="position: absolute; bottom: -30px; left: 50%; transform: translateX(-50%);">
-                                        <div class="health-fill npc-health-fill"></div>
-                                    </div>
-                                </div>
-                                
-                                <div class="vs-text">VS</div>
-                            </body>
-                            </html>
-                        `;
+                        // Helper for rounded rectangles
+                        function roundRect(ctx, x, y, w, h, r) {
+                            ctx.beginPath();
+                            ctx.moveTo(x + r, y);
+                            ctx.lineTo(x + w - r, y);
+                            ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+                            ctx.lineTo(x + w, y + h - r);
+                            ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+                            ctx.lineTo(x + r, y + h);
+                            ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+                            ctx.lineTo(x, y + r);
+                            ctx.quadraticCurveTo(x, y, x + r, y);
+                            ctx.closePath();
+                        }
 
-                        await page.setContent(htmlContent);
-                        const imagePath = path.join(imagesPath, `battle_${userId}_${Date.now()}.png`);
-                        await page.screenshot({ path: imagePath });
-                        await page.close(); // Close page but keep browser
-                        return imagePath;
+                        // Positions
+                        const charW = playerCount === 1 ? 150 : 100, charH = playerCount === 1 ? 150 : 100;
+                        const npcX = 50, npcY = height / 2 - charH / 2;
+                        const nameY = 80, barY = 280;
+                        const nameH = 28, barH = 22;
+
+                        // Draw NPC character
+                        if (npcImg) {
+                            ctx.save();
+                            roundRect(ctx, npcX, npcY, charW, charH, 10);
+                            ctx.clip();
+                            ctx.drawImage(npcImg, npcX, npcY, charW, charH);
+                            ctx.restore();
+                            ctx.lineWidth = 3;
+                            ctx.strokeStyle = "#6e1515";
+                            roundRect(ctx, npcX, npcY, charW, charH, 10);
+                            ctx.stroke();
+                        }
+
+                        // Draw NPC name tag
+                        ctx.font = "bold 18px Arial";
+                        ctx.textAlign = "center";
+                        ctx.textBaseline = "middle";
+                        ctx.save();
+                        ctx.globalAlpha = 0.7;
+                        ctx.fillStyle = "#000";
+                        roundRect(ctx, npcX, nameY, charW, nameH, 5);
+                        ctx.fill();
+                        ctx.restore();
+                        ctx.fillStyle = "#fff";
+                        ctx.shadowColor = "#000";
+                        ctx.shadowBlur = 4;
+                        ctx.fillText(npc.name, npcX + charW / 2, nameY + nameH / 2);
+                        ctx.shadowBlur = 0;
+
+                        // Draw players
+                        let playerPositions = [];
+                        if (playerCount === 1) {
+                            playerPositions.push({ x: width - 50 - charW, y: 120 });
+                        } else if (playerCount === 2) {
+                            playerPositions.push({ x: width - 50 - charW, y: 100 });
+                            playerPositions.push({ x: width - 50 - charW, y: 250 });
+                        } else {
+                            playerPositions.push({ x: width - 50 - charW, y: 80 });
+                            playerPositions.push({ x: width - 50 - charW, y: 200 });
+                            playerPositions.push({ x: width - 50 - charW, y: 320 });
+                        }
+                        for (let i = 0; i < playerCount; i++) {
+                            const p = players[i];
+                            const img = playerImgs[i];
+                            const pos = playerPositions[i];
+                            if (img) {
+                                ctx.save();
+                                roundRect(ctx, pos.x, pos.y, charW, charH, 10);
+                                ctx.clip();
+                                ctx.drawImage(img, pos.x, pos.y, charW, charH);
+                                ctx.restore();
+                                ctx.lineWidth = 3;
+                                ctx.strokeStyle = "#6e1515";
+                                roundRect(ctx, pos.x, pos.y, charW, charH, 10);
+                                ctx.stroke();
+                            }
+                            // Name tag
+                            ctx.save();
+                            ctx.globalAlpha = 0.7;
+                            ctx.fillStyle = "#000";
+                            roundRect(ctx, pos.x, nameY, charW, nameH, 5);
+                            ctx.fill();
+                            ctx.restore();
+                            ctx.fillStyle = "#fff";
+                            ctx.shadowColor = "#000";
+                            ctx.shadowBlur = 4;
+                            ctx.fillText(p.username, pos.x + charW / 2, nameY + nameH / 2);
+                            ctx.shadowBlur = 0;
+                        }
+
+                        // Health bars
+                        // NPC
+                        const npcHealthPercent = Math.max((npc.currentHealth ?? npc.health) / npc.health, 0);
+                        ctx.save();
+                        ctx.fillStyle = "#333";
+                        roundRect(ctx, npcX, barY, charW, barH, 5);
+                        ctx.fill();
+                        ctx.fillStyle = "#ff4444";
+                        roundRect(ctx, npcX, barY, charW * npcHealthPercent, barH, 5);
+                        ctx.fill();
+                        ctx.fillStyle = "#fff";
+                        ctx.font = "13px Arial";
+                        ctx.textAlign = "center";
+                        ctx.textBaseline = "middle";
+                        ctx.shadowColor = "#000";
+                        ctx.shadowBlur = 1;
+                        ctx.shadowBlur = 0;
+                        ctx.restore();
+
+                        // Players (refer to brank.js: always use p.health and p.maxHealth for bar and text)
+                        for (let i = 0; i < playerCount; i++) {
+                            const p = players[i];
+                            const pos = playerPositions[i];
+                            // Use p.maxHealth if available, else fallback to p.health as max
+                            const maxHP = typeof p.maxHealth === 'number' ? p.maxHealth : (typeof p.health === 'number' ? p.health : 100);
+                            const currHP = typeof p.health === 'number' ? p.health : maxHP;
+                            const playerHealthPercent = Math.max(currHP / maxHP, 0);
+                            ctx.save();
+                            ctx.fillStyle = "#333";
+                            roundRect(ctx, pos.x, barY, charW, barH, 5);
+                            ctx.fill();
+                            ctx.fillStyle = "#4CAF50";
+                            roundRect(ctx, pos.x, barY, charW * playerHealthPercent, barH, 5);
+                            ctx.fill();
+                            ctx.fillStyle = "#fff";
+                            ctx.font = "13px Arial";
+                            ctx.textAlign = "center";
+                            ctx.textBaseline = "middle";
+                            ctx.shadowColor = "#000";
+                            ctx.shadowBlur = 1;
+                            ctx.shadowBlur = 0;
+                            ctx.restore();
+                        }
+
+                        // VS text
+                        ctx.save();
+                        ctx.font = "bold 48px Arial";
+                        ctx.textAlign = "center";
+                        ctx.textBaseline = "middle";
+                        ctx.fillStyle = "#fff";
+                        ctx.shadowColor = "#000";
+                        ctx.shadowBlur = 4;
+                        ctx.fillText("VS", width / 2, height / 2);
+                        ctx.restore();
+
+                        // Return buffer instead of saving to file
+                        return canvas.toBuffer('image/png');
                     };
 
                     // Execute a jutsu (same as arank.js)
@@ -1290,14 +1356,10 @@ module.exports = {
             });
 
             collector.on('end', async () => {
-                if (browser) {
-                    await browser.close();
-                    browser = null;
-                }
             });
         } catch (error) {
             console.error("Command error:", error);
-            await interaction.editReply({ content: "An error occurred while executing this command." });
+            await interaction.followUp({ content: "An error occurred while executing this command." });
         }
     }
 };
