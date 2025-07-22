@@ -349,8 +349,11 @@ module.exports = {
             if (enemy.currentHealth <= 0) {
                 // Update user stats on victory
                 player.wins += 1;
-                player.exp += 100;
+                player.exp += 0.1;
                 player.money += 5000;
+                // Restore player health and chakra to max after enrollment battle
+                player.health = 1000;
+                player.chakra = 10;
                 fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
                 
                 return { 

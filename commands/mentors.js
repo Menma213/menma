@@ -73,7 +73,7 @@ module.exports = {
                 .setDescription(
                     `Use \`/mentor action:select mentor:<mentor>\` to select a mentor.\n\n` +
                     `**Your Mentor EXP:** ${player.mentorExp || 0}\n\n` +
-                    `Here are the mentors available for your rank:`
+                    `Here are the mentors available for your rank:\n If you don't see any mentors, it's probably because you are not high enough rank yet. Rankup through ranked.`
                 )
                 .setColor('#0099ff');
             for (const [name, data] of Object.entries(rankMentors)) {
@@ -95,19 +95,27 @@ module.exports = {
             if (!mentorName) {
                 return interaction.reply({ content: "Please specify a mentor name.", ephemeral: true });
             }
-            const mentorData = rankMentors[mentorName];
+            // --- Case-insensitive mentor lookup ---
+            const mentorKey = Object.keys(rankMentors).find(
+                k => k.toLowerCase() === mentorName.toLowerCase()
+            );
+            const mentorData = mentorKey ? rankMentors[mentorKey] : undefined;
             if (!mentorData) {
                 return interaction.reply({ content: "That mentor doesn't exist for your rank.", ephemeral: true });
             }
             // If story completed, directly select mentor
-            if (player.completedMentorStories?.[mentorName]) {
-                player.mentor = mentorName;
+            if (player.completedMentorStories?.[mentorKey]) {
+                player.mentor = mentorKey;
                 users[userId] = player;
                 await saveJsonFile(DATA_PATH, users);
-                return interaction.reply({ content: `You have selected **${mentorName}** as your mentor!`, ephemeral: true });
+                return interaction.reply({ content: `You have selected **${mentorKey}** as your mentor!`, ephemeral: true });
             }
             // Otherwise, start storyline/minigame
-            const storyline = storylines[mentorName];
+            // --- Case-insensitive storyline lookup ---
+            const storylineKey = Object.keys(storylines).find(
+                k => k.toLowerCase() === mentorName.toLowerCase()
+            );
+            const storyline = storylineKey ? storylines[storylineKey] : undefined;
             if (!storyline) {
                 return interaction.reply({ content: "This mentor doesn't have a storyline yet.", ephemeral: true });
             }
@@ -147,7 +155,7 @@ module.exports = {
                     currentPage++;
                     if (currentPage >= storyline.pages.length - 1) {
                         collector.stop();
-                        await showMinigame(i, player, userId, users, mentorName, storyline);
+                        await showMinigame(i, player, userId, users, mentorKey, storyline);
                         return;
                     }
                 } else {
@@ -217,7 +225,11 @@ async function handleSelectMentor(interaction, player, userId, users, mentors, s
 
     // Handle specific mentor selection
     const mentorName = interaction.options.getString('mentor');
-    const mentorData = rankMentors[mentorName];
+    // --- Case-insensitive mentor lookup ---
+    const mentorKey = Object.keys(rankMentors).find(
+        k => k.toLowerCase() === mentorName.toLowerCase()
+    );
+    const mentorData = mentorKey ? rankMentors[mentorKey] : undefined;
 
     if (!mentorData) {
         return interaction.reply({ 
@@ -227,15 +239,19 @@ async function handleSelectMentor(interaction, player, userId, users, mentors, s
     }
 
     // Check if story already completed
-    if (player.completedMentorStories?.[mentorName]) {
+    if (player.completedMentorStories?.[mentorKey]) {
         return interaction.reply({ 
-            content: `You've already completed ${mentorName}'s storyline.`, 
+            content: `You've already completed ${mentorKey}'s storyline.`, 
             ephemeral: true 
         });
     }
 
     // Start the storyline
-    const storyline = storylines[mentorName];
+    // --- Case-insensitive storyline lookup ---
+    const storylineKey = Object.keys(storylines).find(
+        k => k.toLowerCase() === mentorName.toLowerCase()
+    );
+    const storyline = storylineKey ? storylines[storylineKey] : undefined;
     if (!storyline) {
         return interaction.reply({ 
             content: "This mentor doesn't have a storyline yet.", 
@@ -243,7 +259,7 @@ async function handleSelectMentor(interaction, player, userId, users, mentors, s
         });
     }
 
-    await startStoryline(interaction, player, userId, users, mentorName, storyline);
+    await startStoryline(interaction, player, userId, users, mentorKey, storyline);
 }
 
 // Storyline handler
@@ -398,9 +414,14 @@ async function handleLearnJutsu(interaction, player, userId, users, mentors) {
         });
     }
 
+    // --- Case-insensitive mentor lookup for mentorData ---
     const mentorName = player.mentor;
     const playerRank = player.rank || 'Genin';
-    const mentorData = mentors[playerRank]?.[mentorName];
+    const rankMentors = mentors[playerRank] || {};
+    const mentorKey = Object.keys(rankMentors).find(
+        k => k.toLowerCase() === mentorName.toLowerCase()
+    );
+    const mentorData = mentorKey ? rankMentors[mentorKey] : undefined;
 
     if (!mentorData) {
         return interaction.reply({
@@ -410,9 +431,9 @@ async function handleLearnJutsu(interaction, player, userId, users, mentors) {
     }
 
     // Check if story completed
-    if (!player.completedMentorStories?.[mentorName]) {
+    if (!player.completedMentorStories?.[mentorKey]) {
         return interaction.reply({
-            content: `Complete ${mentorName}'s storyline first with /mentor select ${mentorName}`,
+            content: `Complete ${mentorKey}'s storyline first with /mentor select ${mentorKey}`,
             ephemeral: true
         });
     }

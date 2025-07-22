@@ -66,18 +66,18 @@
     "ramen": 1
   },
   "835408109899219004": {
-    "level": 13,
-    "exp": 56.961571623279006,
-    "wins": 142,
+    "level": 104,
+    "exp": 44620,
+    "wins": 138,
     "losses": 4,
     "rankedPoints": 0,
     "clan": "Thundie's clan",
-    "bloodline": "Hyuga",
+    "bloodline": "Uchiha",
     "mentor": "Kakashi",
     "rank": "The Shinobi God",
-    "health": 2,
-    "power": 12295181,
-    "defense": 314,
+    "health": 1391,
+    "power": 12295164,
+    "defense": 297,
     "chakra": 15,
     "jutsu": {
       "slot_0": "Attack",
@@ -87,7 +87,7 @@
       "slot_4": "Analysis",
       "slot_5": "Flying Raijin Jutsu"
     },
-    "money": 451000007105948,
+    "money": 449999996646437,
     "ramen": 9,
     "lastClaim": "2025-04-24T08:51:48.586Z",
     "nextClaim": "2025-04-25T08:51:48.586Z",
@@ -99,9 +99,9 @@
     "occupation": "Anbu",
     "perks": "Jinchuriki",
     "lastguard": 1750175065990,
-    "lastdrank": 1753092222822,
-    "lastbrank": 1753198280432,
-    "lastsrank": 1753205515831,
+    "lastdrank": 1751825195645,
+    "lastbrank": 1751825247458,
+    "lastsrank": 1752085533627,
     "role": "Spy",
     "lastrob": 1747052628716,
     "elo": 1304,
@@ -109,12 +109,12 @@
     "completedMentorStories": {
       "Kakashi": true
     },
-    "mentorExp": 47,
+    "mentorExp": 32,
     "ranked": {
-      "totalElo": 12725,
+      "totalElo": 12650,
       "rank": "The Shinobi God",
       "division": 1,
-      "elo": 25,
+      "elo": 50,
       "claimedRewards": [
         100,
         200,
@@ -127,9 +127,9 @@
         2400
       ]
     },
-    "ss": 99999997400,
+    "ss": 99999998400,
     "tutorialStory": true,
-    "srankResult": "lose",
+    "srankResult": "win",
     "brankWon": true,
     "drankCompleted": true,
     "LastTrials": 1751826087436,
@@ -138,18 +138,16 @@
     "trialsResult": "lose",
     "tutorialTrialsComplete": true,
     "premiumRoles": [
-      {},
-      {},
       {
-        "roleId": "1385641469507010640",
-        "expiresAt": 1755604997665
+        "roleId": "1385640798581952714",
+        "expiresAt": 1754496870745
       }
     ],
     "bloodlineTuto": true,
     "bloodline_pending": null,
     "bloodline_shrine_visits_needed": null,
     "bloodline_shrine_visits": null,
-    "lastShrineVisit": 1753017196587
+    "lastShrineVisit": 1752773616782
   },
   "741142009670271010": {
     "level": 1,
@@ -281,10 +279,10 @@
     "bloodline": null,
     "mentor": "Kakashi",
     "rank": "Genin",
-    "health": 1.0349999999999996e+124,
-    "power": 1.0453499999999995e+123,
-    "defense": 7.49999999999999e+92,
-    "chakra": 1.0349999999999989e+49,
+    "health": 6.899999999999998e+123,
+    "power": 6.968999999999997e+122,
+    "defense": 4.999999999999993e+92,
+    "chakra": 6.899999999999992e+48,
     "jutsu": {
       "slot_0": "Attack",
       "slot_1": "Asura",
@@ -297,11 +295,11 @@
     "ramen": 1,
     "firstusescroll": true,
     "speed": 0,
-    "sanninSince": "2025-07-20T11:39:40.328Z",
+    "sanninSince": "2025-05-12T10:19:59.222Z",
     "lastsrank": 1750169879376,
     "lastArank": 1749375082831,
     "occupation": "Akatsuki",
-    "role": "Sannin",
+    "role": "Co-Leader",
     "lastbrank": 1749388985623,
     "bloodlineAttempts": 1,
     "completedMentorStories": {
@@ -612,18 +610,18 @@
     "current_scroll": "Needle Assault Scroll"
   },
   "1355490065899585737": {
-    "level": 2,
-    "exp": 1714.8000000000002,
-    "wins": 5,
+    "level": 1,
+    "exp": 1340,
+    "wins": 4,
     "losses": 0,
     "rankedPoints": 0,
     "clan": "None",
     "bloodline": "Unknown",
     "mentor": "Shikamaru",
     "rank": "Genin",
-    "health": 1040.8,
-    "power": 102,
-    "defense": 52,
+    "health": 955.8,
+    "power": 100,
+    "defense": 50,
     "chakra": 10,
     "jutsu": {
       "slot_0": "Attack",
@@ -633,27 +631,27 @@
       "slot_4": "None",
       "slot_5": "asura"
     },
-    "money": 1129645,
-    "ramen": 9,
+    "money": 6990,
+    "ramen": 1,
     "Combo": "Intermediate Combo",
-    "lastdrank": 1753198979550,
-    "mentorExp": 11,
+    "lastdrank": 1751384718998,
+    "mentorExp": 6,
     "drankCompleted": true,
-    "lastbrank": 1753198927572,
+    "lastbrank": 1751384630037,
     "brankWon": true,
     "firstusescroll": true,
     "ranked": {
-      "totalElo": 100,
+      "totalElo": 50,
       "rank": "Genin",
-      "division": 4,
-      "elo": 0
+      "division": 5,
+      "elo": 50
     },
     "completedMentorStories": {
       "Shikamaru": true
     },
     "lastArank": 1751384722215,
-    "lastsrank": 1753199008457,
-    "srankResult": "win",
+    "lastsrank": 1751385550411,
+    "srankResult": "lose",
     "giftInventory": [
       {
         "id": 3999,
@@ -661,9 +659,7 @@
         "type": "money"
       }
     ],
-    "tutorialStory": true,
-    "bloodlineTuto": true,
-    "profileColor": "cyan"
+    "tutorialStory": true
   },
   "1311760847307145257": {
     "level": 1,
@@ -703,41 +699,5 @@
     "srankResult": "win",
     "occupation": "Akatsuki",
     "role": "Bruiser"
-  },
-  "874591871412879361": {
-    "level": 1,
-    "exp": 350,
-    "wins": 1,
-    "losses": 0,
-    "rankedPoints": 0,
-    "clan": "None",
-    "bloodline": "Unknown",
-    "mentor": "None",
-    "rank": "Genin",
-    "health": 1000,
-    "power": 100,
-    "defense": 50,
-    "chakra": 10,
-    "jutsu": {
-      "slot_0": "Attack",
-      "slot_1": "Transformation Jutsu",
-      "slot_2": "None",
-      "slot_3": "None",
-      "slot_4": "None",
-      "slot_5": "None"
-    },
-    "money": 15430,
-    "ramen": 1,
-    "Combo": "Basic Combo",
-    "lastdrank": 1753019804670,
-    "mentorExp": 2,
-    "drankCompleted": true,
-    "lastbrank": 1753019807792,
-    "ranked": {
-      "totalElo": 0,
-      "rank": "Genin",
-      "division": 5,
-      "elo": 0
-    }
   }
 }

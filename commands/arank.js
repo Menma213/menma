@@ -1,5 +1,4 @@
 const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, AttachmentBuilder } = require('discord.js');
-const puppeteer = require('puppeteer');
 const fs = require('fs');
 const path = require('path');
 const math = require('mathjs');
@@ -25,7 +24,7 @@ const usersPath = path.resolve(__dirname, '../../menma/data/users.json');
 const jutsusPath = path.resolve(__dirname, '../../menma/data/jutsus.json');
 
 // Cooldown time in milliseconds (18 minutes)
-const COOLDOWN_TIME = 18 * 60 * 1000;
+const COOLDOWN_TIME = 20 * 60 * 1000;
 
 // Chakra regen rates per rank
 const CHAKRA_REGEN = {
@@ -223,10 +222,26 @@ module.exports = {
                 return interaction.followUp({ content: "You need to enroll first!", ephemeral: true });
             }
 
-            // Check cooldown
+            // --- PREMIUM COOLDOWN PATCH ---
+            // Role IDs
+            const JINCHURIKI_ROLE = "1385641469507010640";
+            const LEGENDARY_ROLE = "1385640798581952714";
+            const DONATOR_ROLE = "1385640728130097182";
+            let cooldownMs = 20 * 60 * 1000; // default 20 min
+
+            // Check premium roles (jinchuriki > legendary > donator)
+            const memberRoles = interaction.member.roles.cache;
+            if (memberRoles.has(JINCHURIKI_ROLE)) {
+                cooldownMs = 12 * 60 * 1000; // 12 min
+            } else if (memberRoles.has(LEGENDARY_ROLE)) {
+                cooldownMs = Math.round(12 * 60 * 1000 * 1.1); // 13.2 min
+            } else if (memberRoles.has(DONATOR_ROLE)) {
+                cooldownMs = Math.round(12 * 60 * 1000 * 1.1 * 1.1); // 14.52 min
+            }
+
             const now = Date.now();
             const lastUsed = users[userId].lastArank || 0;
-            const timeLeft = COOLDOWN_TIME - (now - lastUsed);
+            const timeLeft = cooldownMs - (now - lastUsed);
 
             if (timeLeft > 0) {
                 const minutes = Math.ceil(timeLeft / 60000);
@@ -275,17 +290,17 @@ module.exports = {
                     baseDefense: 0.8,
                     baseHealth: 0.9,
                     accuracy: 85,
-                    dodge: 15,
+                    dodge: 0,
                     jutsu: ["Attack", "Substitution Jutsu", "Cursed Seal Transformation"]
                 },
                 {
                     name: "Temari",
                     image: "https://i.postimg.cc/1tS7G4Gv/6-CCACDF3-9612-4831-8-D31-046-BEA1586-D9.png",
-                    basePower: 0.95,
-                    baseDefense: 0.7,
+                    basePower: 0.3,
+                    baseDefense: 0.2,
                     baseHealth: 0.8,
                     accuracy: 90,
-                    dodge: 20,
+                    dodge: 0,
                     jutsu: ["Attack", "Substitution Jutsu", "Wind Scythe Jutsu"]
                 },
                 {
@@ -293,19 +308,19 @@ module.exports = {
                     image: "https://i.postimg.cc/y8wbNLk4/5-F95788-A-754-C-4-BA6-B0-E0-39-BCE2-FDCF04.png",
                     basePower: 0.85,
                     baseDefense: 0.9,
-                    baseHealth: 0.85,
+                    baseHealth: 0.6,
                     accuracy: 80,
-                    dodge: 25,
+                    dodge: 0,
                     jutsu: ["Attack", "Substitution Jutsu", "Puppet Technique"]
                 },
                 {
                     name: "Suigetsu",
                     image: "https://i.postimg.cc/GmBfrW3x/54-AE56-B1-E2-EE-4179-BD24-EEC282-A8-B3-BF.png",
                     basePower: 0.8,
-                    baseDefense: 1.0,
-                    baseHealth: 1.0,
+                    baseDefense: 0.5,
+                    baseHealth: 0.9,
                     accuracy: 75,
-                    dodge: 30,
+                    dodge: 0,
                     jutsu: ["Attack", "Substitution Jutsu", "Water Transformation"]
                 },
                 {
@@ -313,9 +328,9 @@ module.exports = {
                     image: "https://i.postimg.cc/QMJJrm7q/064262-C0-1-BC4-47-B2-A06-A-59-DC193-C0285.png",
                     basePower: 1.0,
                     baseDefense: 0.95,
-                    baseHealth: 1.1,
+                    baseHealth: 0.9,
                     accuracy: 70,
-                    dodge: 10,
+                    dodge: 0,
                     jutsu: ["Attack", "Substitution Jutsu", "Samehada Slash"]
                 },
                 {
@@ -325,7 +340,7 @@ module.exports = {
                     baseDefense: 0.85,
                     baseHealth: 0.95,
                     accuracy: 85,
-                    dodge: 20,
+                    dodge: 0,
                     jutsu: ["Attack", "Substitution Jutsu", "Blaze Release"]
                 },
                 {
@@ -335,17 +350,17 @@ module.exports = {
                     baseDefense: 0.75,
                     baseHealth: 0.9,
                     accuracy: 95,
-                    dodge: 25,
+                    dodge: 0,
                     jutsu: ["Attack", "Substitution Jutsu", "Silent Killing"]
                 },
                 {
                     name: "Baki",
                     image: "https://i.postimg.cc/Jn7c7XcC/5997-D785-7-C7-D-4-BC0-93-DB-CCF7-CA3-CDB56.png",
-                    basePower: 1.1,
+                    basePower: 0.9,
                     baseDefense: 0.9,
-                    baseHealth: 1.0,
+                    baseHealth: 0.9,
                     accuracy: 85,
-                    dodge: 20,
+                    dodge: 0,
                     jutsu: ["Attack", "Substitution Jutsu", "Wind Blade"]
                 }
             ];
@@ -948,22 +963,34 @@ module.exports = {
                 return embed;
             };
 
-            // Calculate rewards with bonus every 4th enemy
+            // Calculate rewards with bonus every 5th enemy, scaling bonus by player level
             const calculateRewards = () => {
-                const baseExp = 300 + Math.floor(player.level * 30);
-                const baseMoney = 500 + Math.floor(player.level * 20);
-                
-                if ((totalEnemiesDefeated + 1) % 4 === 0) {
+                // Normal rewards: lower base
+                const baseExp = 0.2;
+                const baseMoney = 200 + Math.floor(player.level * 5);
+
+                // Bonus every 5th enemy
+                if ((totalEnemiesDefeated + 1) % 5 === 0) {
+                    // --- NEW BONUS MULTIPLIER LOGIC ---
+                    let bonusExp = baseExp, bonusMoney = baseMoney;
+                    if (player.level > 100) {
+                        // 300x - 500x (linear scale)
+                        const minMult = 2, maxMult = 2;
+                        const mult = minMult + ((maxMult - minMult) * (player.level / 99));
+                        bonusExp = Math.floor(baseExp * mult);
+                        bonusMoney = Math.floor(baseMoney * mult);
+                    }
+                    // Jackpot for 50th enemy
                     if (totalEnemiesDefeated + 1 === 50) {
                         return {
-                            exp: baseExp * 5,
-                            money: baseMoney * 5,
+                            exp: Math.floor(bonusExp * 2),
+                            money: Math.floor(bonusMoney * 2),
                             isJackpot: true
                         };
                     }
                     return {
-                        exp: baseExp * 3,
-                        money: baseMoney * 3,
+                        exp: Math.floor(bonusExp),
+                        money: Math.floor(bonusMoney),
                         isBonus: true
                     };
                 }

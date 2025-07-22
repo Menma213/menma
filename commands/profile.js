@@ -1,17 +1,91 @@
-const { SlashCommandBuilder, AttachmentBuilder } = require('discord.js');
+const { SlashCommandBuilder, AttachmentBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const fs = require('fs');
 const path = require('path');
 const { createCanvas, loadImage, registerFont } = require('canvas');
 const https = require('https');
-const { URL } = require('url');
-const { updateRequirements } = require('./scroll');
+const { updateRequirements } = require('./scroll'); // Assuming this path is correct
 
+// --- Cooldown Map ---
+const cooldowns = new Map(); // Stores { userId: lastUsedTimestamp }
+
+// Paths
 const usersPath = path.resolve(__dirname, '../../menma/data/users.json');
 const usersJutsuPath = path.resolve(__dirname, '../../menma/data/usersjutsu.json');
 const jutsusPath = path.resolve(__dirname, '../../menma/data/jutsus.json');
 const bloodlinesPath = path.resolve(__dirname, '../../menma/data/bloodlines.json');
 
-// Register fonts (make sure you have these font files in your project)
+// Gamepass IDs (for theme determination)
+const GAMEPASS_IDS = {
+    DONATOR: '1385640728130097182',
+    LEGENDARY_NINJA: '1385640798581952714',
+    JINCHURIKI: '1385641469507010640'
+};
+
+// Color Themes
+const THEMES = {
+    DEFAULT: { // For users without premium roles
+        primary: '#6e1515', // This will be ignored for non-donators, but kept for structure
+        secondary: '#302b63',
+        accent: '#f8d56b',
+        background: ['#0f0c29', '#302b63', '#24243e'],
+        isPremium: false
+    },
+    GREY_BASIC: { // New theme for non-donators
+        primary: '#555555', // Grey border/accents
+        secondary: '#333333', // Darker grey for sections
+        accent: '#AAAAAA', // Lighter grey for text
+        background: ['#1a1a1a', '#2a2a2a', '#3a3a3a'], // Grey gradient
+        isPremium: false
+    },
+    DONATOR: {
+        primary: '#6e15a8', // Purple
+        secondary: '#4a2b63',
+        accent: '#d56bf8',
+        background: ['#1f0c29', '#4a2b63', '#34243e'],
+        flexText: 'DONATOR',
+        isPremium: true
+    },
+    LEGENDARY_NINJA: {
+        primary: '#d4af37', // Gold
+        secondary: '#63582b',
+        accent: '#f8e56b',
+        background: ['#2f2c09', '#63582b', '#44423e'],
+        flexText: 'LEGENDARY NINJA',
+        isPremium: true
+    },
+    JINCHURIKI: {
+        primary: '#a81515', // Red
+        secondary: '#632b2b',
+        accent: '#f86b6b',
+        background: ['#290c0c', '#632b2b', '#3e2424'],
+        flexText: 'JINCHURIKI',
+        isPremium: true
+    },
+    BLUE: {
+        primary: '#1e90ff',
+        secondary: '#274472',
+        accent: '#a7c7e7',
+        background: ['#0a2740', '#1e90ff', '#274472'],
+        isPremium: false
+    },
+    CYAN_MIX: {
+        primary: '#00e6d3',
+        secondary: '#00bfae',
+        accent: '#aaffec',
+        background: ['#0f3d3e', '#00e6d3', '#aaffec'],
+        isPremium: false
+    }
+};
+
+const BLOODLINES = {
+    Uchiha: { title: 'Sharingan', description: 'Unlocks the Sharinga, Uchiha clans trademark.' },
+    Hyuga: { title: 'Byakugan', description: 'Has the ability to attack pressure points and drain chakra.' },
+    Uzumaki: { title: 'Uzumaki Will', description: 'Plot armor bloodline.' },
+    Senju: { title: 'Hyper Regeneration', description: 'Grants incredible healing effects.' },
+    Nara: { title: 'Battle IQ', description: 'Nobody beats a nara when its about battle iq.' }
+};
+
+// Register fonts
 try {
     registerFont(path.resolve(__dirname, '../fonts/arial.ttf'), { family: 'Arial' });
     registerFont(path.resolve(__dirname, '../fonts/arial-bold.ttf'), { family: 'Arial', weight: 'bold' });
@@ -28,320 +102,768 @@ module.exports = {
                 .setDescription('View another player\'s profile')
                 .setRequired(false)
         ),
-
     async execute(interaction) {
+        // --- Cooldown Logic Start ---
+        const COOLDOWN_SECONDS = 30;
+        const currentTime = Date.now();
+        const commandInvokerId = interaction.user.id; // The user who ran the command
+
+        if (cooldowns.has(commandInvokerId)) {
+            const lastUsed = cooldowns.get(commandInvokerId);
+            const timeElapsed = currentTime - lastUsed;
+            const timeLeft = (COOLDOWN_SECONDS * 1000) - timeElapsed;
+
+            if (timeLeft > 0) {
+                const secondsLeft = Math.ceil(timeLeft / 1000);
+                return await interaction.reply({
+                    content: `You need to wait ${secondsLeft} more second(s) before using the \`/profile\` command again.`,
+                    ephemeral: true
+                });
+            }
+        }
+        cooldowns.set(commandInvokerId, currentTime);
+        // --- Cooldown Logic End ---
+
+        // --- Timeout Logic Start ---
+        let interactionFinished = false;
+        const timeout = setTimeout(async () => {
+            if (!interactionFinished) {
+                interactionFinished = true;
+                try {
+                    await interaction.editReply({ content: "Profile request expired (took too long).", files: [], components: [] });
+                } catch {}
+            }
+        }, 15000);
+        // --- Timeout Logic End ---
+
         try {
+            // Defer reply immediately to prevent "Interaction has already been acknowledged."
             await interaction.deferReply();
 
             const targetUser = interaction.options.getUser('user') || interaction.user;
-            const userId = targetUser.id;
+            const isSelfView = targetUser.id === commandInvokerId;
 
             if (!fs.existsSync(usersPath)) {
                 return await interaction.editReply({ content: "Database not found." });
             }
 
-            const users = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
-            if (!users[userId]) {
-                return await interaction.editReply({ content: targetUser.id === interaction.user.id ? "You need to enroll first!" : "This user has not enrolled yet!" });
-            }
-
-            const user = users[userId];
+            const usersData = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
+            const userProfileData = usersData[targetUser.id];
             const jutsuList = fs.existsSync(jutsusPath) ? JSON.parse(fs.readFileSync(jutsusPath, 'utf8')) : {};
             const usersJutsu = fs.existsSync(usersJutsuPath) ? JSON.parse(fs.readFileSync(usersJutsuPath, 'utf8')) : {};
             const bloodlines = fs.existsSync(bloodlinesPath) ? JSON.parse(fs.readFileSync(bloodlinesPath, 'utf8')) : {};
 
-            const bloodlineInfo = user.bloodline ? bloodlines[user.bloodline] : null;
-            const bloodlineName = bloodlineInfo?.name || 'None';
-            const bloodlineDescription = bloodlineInfo?.description || 'No bloodline awakened';
 
-            const equippedJutsu = Object.values(user.jutsu || {})
-                .filter(jutsu => jutsu && jutsu !== 'Attack' && jutsu !== 'None')
-                .map(jutsu => jutsuList[jutsu]?.name || jutsu);
+            // --- Fetch custom profile color if set ---
+            let customTheme = null;
+            if (userProfileData && userProfileData.profileColor) {
+                const color = userProfileData.profileColor;
+                if (color === 'blue') customTheme = THEMES.BLUE;
+                else if (color === 'cyan') customTheme = THEMES.CYAN_MIX;
+                else if (color === 'donator') customTheme = THEMES.DONATOR;
+                else if (color === 'legendary') customTheme = THEMES.LEGENDARY_NINJA;
+                else if (color === 'jinchuriki') customTheme = THEMES.JINCHURIKI;
+                else if (color === 'grey') customTheme = THEMES.GREY_BASIC;
+                else if (color === 'default') customTheme = THEMES.DEFAULT;
+            }
+            const theme = customTheme || determineTheme(userProfileData);
 
-            const learnedJutsu = usersJutsu[userId]?.usersjutsu || [];
-
-            if (userId === interaction.user.id) {
-                await updateRequirements(interaction.user.id, 'profile_check');
+            // --- Robust image generation with fallback ---
+            let pages = {};
+            let imageError = false;
+            try {
+                pages = {
+                    main: await generateMainProfilePage(targetUser, userProfileData, theme, jutsuList, usersJutsu, isSelfView),
+                    ranked: await generateRankedProfilePage(targetUser, userProfileData, theme, isSelfView),
+                    jutsu: await generateJutsuPage(targetUser, userProfileData, theme, jutsuList, usersJutsu)
+                };
+            } catch (err) {
+                imageError = true;
+                console.error("Error generating profile image(s):", err);
             }
 
-            // Generate profile card with Canvas
-            const generateProfileCard = async () => {
-                const canvas = createCanvas(600, 900);
-                const ctx = canvas.getContext('2d');
-
-                // Background gradient
-                const gradient = ctx.createLinearGradient(0, 0, 600, 900);
-                gradient.addColorStop(0, '#0f0c29');
-                gradient.addColorStop(0.5, '#302b63');
-                gradient.addColorStop(1, '#24243e');
-                ctx.fillStyle = gradient;
-                ctx.fillRect(0, 0, 600, 900);
-
-                // Header section
-                ctx.fillStyle = 'rgba(0,0,0,0.7)';
-                ctx.fillRect(0, 0, 600, 220);
-                ctx.strokeStyle = '#6e1515';
-                ctx.lineWidth = 2;
-                ctx.strokeRect(0, 0, 600, 220);
-
-                // Load avatar using user id and Discord CDN (bypassing displayAvatarURL)
-                try {
-                    // Try to get the avatar hash from the user object if available
-                    let avatarUrl;
-                    if (targetUser.avatar) {
-                        avatarUrl = `https://cdn.discordapp.com/avatars/${targetUser.id}/${targetUser.avatar}.png?size=256`;
-                    } else {
-                        // Default avatar
-                        const defaultAvatarNumber = parseInt(targetUser.discriminator) % 5;
-                        avatarUrl = `https://cdn.discordapp.com/embed/avatars/${defaultAvatarNumber}.png`;
-                    }
-                    let avatar;
-                    try {
-                        avatar = await loadImageWithRetry(avatarUrl);
-                    } catch (err) {
-                        // Draw placeholder avatar if all fails
-                        ctx.fillStyle = '#333333';
-                        ctx.beginPath();
-                        ctx.arc(300, 90, 75, 0, Math.PI * 2, true);
-                        ctx.fill();
-                        ctx.fillStyle = '#ffffff';
-                        ctx.font = 'bold 24px Arial';
-                        ctx.textAlign = 'center';
-                        ctx.fillText('AVATAR', 300, 100);
-                        avatar = null;
-                    }
-                    if (avatar) {
-                        ctx.save();
-                        ctx.beginPath();
-                        ctx.arc(300, 90, 75, 0, Math.PI * 2, true);
-                        ctx.closePath();
-                        ctx.clip();
-                        ctx.drawImage(avatar, 225, 15, 150, 150);
-                        ctx.restore();
-
-                        // Avatar border
-                        ctx.strokeStyle = '#6e1515';
-                        ctx.lineWidth = 4;
-                        ctx.beginPath();
-                        ctx.arc(300, 90, 75, 0, Math.PI * 2, true);
-                        ctx.stroke();
-                    }
-                } catch (err) {
-                    console.error('Error loading avatar:', err);
+            if (imageError) {
+                await interaction.editReply({
+                    content: "Failed to generate profile image. Please try again later.",
+                    files: [],
+                    components: []
+                });
+                if (!interactionFinished) {
+                    interactionFinished = true;
+                    clearTimeout(timeout);
                 }
+                return;
+            }
 
-                // Username
-                ctx.font = '24px Arial';
-                ctx.fillStyle = '#ffffff';
-                ctx.textAlign = 'center';
-                ctx.shadowColor = '#6e1515';
-                ctx.shadowBlur = 5;
-                ctx.fillText(targetUser.username, 300, 190);
-                ctx.shadowBlur = 0;
+            // Create buttons for pagination (now 3 pages)
+            const buttons = new ActionRowBuilder()
+                .addComponents(
+                    new ButtonBuilder()
+                        .setCustomId('profile_previous')
+                        .setLabel('Previous')
+                        .setStyle(ButtonStyle.Secondary)
+                        .setDisabled(true),
+                    new ButtonBuilder()
+                        .setCustomId('profile_next')
+                        .setLabel('Next')
+                        .setStyle(ButtonStyle.Primary)
+                        .setDisabled(false),
+                    new ButtonBuilder()
+                        .setCustomId('profile_jutsu')
+                        .setLabel('Jutsu')
+                        .setStyle(ButtonStyle.Secondary)
+                        .setDisabled(false)
+                );
 
-                // Rank
-                ctx.font = '18px Arial';
-                ctx.fillStyle = '#f8d56b';
-                ctx.fillText(user.rank || 'Academy Student', 300, 215);
-
-                // Bloodline
-                ctx.font = '16px Arial';
-                ctx.fillStyle = '#6eaff8';
-                ctx.fontStyle = 'italic';
-                ctx.fillText(bloodlineName, 300, 235);
-                ctx.fontStyle = 'normal';
-
-                // Bloodline section
-                drawSection(ctx, 15, 250, 570, 100, '#6eaff8');
-                ctx.fillStyle = '#6eaff8';
-                ctx.font = 'bold 18px Arial';
-                ctx.textAlign = 'left';
-                ctx.fillText('BLOODLINE ABILITY', 30, 275);
-                
-                // Bloodline description
-                ctx.fillStyle = '#cccccc';
-                ctx.font = 'italic 14px Arial';
-                wrapText(ctx, bloodlineDescription, 30, 295, 540, 24);
-
-                // Level progression section
-                drawSection(ctx, 15, 365, 570, 100, '#6e1515');
-                ctx.fillStyle = '#f8d56b';
-                ctx.font = 'bold 18px Arial';
-                ctx.fillText('LEVEL PROGRESSION', 30, 390);
-
-                const xpPercentage = Math.min(100, (user.exp / (user.level * 1000 + 1000)) * 100);
-                const level = user.level || 1;
-                const exp = user.exp || 0;
-                const nextLevelExp = level * 1000 + 1000;
-
-                // Level and XP
-                ctx.fillStyle = '#aaaaaa';
-                ctx.font = '14px Arial';
-                ctx.fillText('Level:', 30, 415);
-                ctx.fillStyle = '#ffffff';
-                ctx.fillText(level.toString(), 100, 415);
-
-                ctx.fillStyle = '#aaaaaa';
-                ctx.fillText('XP:', 30, 435);
-                ctx.fillStyle = '#ffffff';
-                ctx.fillText(`${exp}/${nextLevelExp}`, 100, 435);
-
-                // XP Bar
-                ctx.fillStyle = '#333333';
-                ctx.fillRect(30, 445, 540, 10);
-                const xpGradient = ctx.createLinearGradient(30, 445, 570, 445);
-                xpGradient.addColorStop(0, '#6e1515');
-                xpGradient.addColorStop(1, '#f8d56b');
-                ctx.fillStyle = xpGradient;
-                ctx.fillRect(30, 445, 540 * (xpPercentage / 100), 10);
-
-                // Battle stats section
-                drawSection(ctx, 15, 480, 570, 120, '#6e1515');
-                ctx.fillStyle = '#f8d56b';
-                ctx.font = 'bold 18px Arial';
-                ctx.fillText('BATTLE STATS', 30, 505);
-
-                // Stats grid
-                const stats = [
-                    { name: 'Health:', value: user.health || 100 },
-                    { name: 'Power:', value: user.power || 10 },
-                    { name: 'Defense:', value: user.defense || 10 },
-                    { name: 'Chakra:', value: user.chakra || 10 }
-                ];
-
-                stats.forEach((stat, i) => {
-                    const row = Math.floor(i / 2);
-                    const col = i % 2;
-                    const x = 30 + (col * 270);
-                    const y = 530 + (row * 25);
-
-                    ctx.fillStyle = '#aaaaaa';
-                    ctx.fillText(stat.name, x, y);
-                    ctx.fillStyle = '#ffffff';
-                    ctx.fillText(stat.value.toString(), x + 80, y);
-                });
-
-                // Battle record section
-                drawSection(ctx, 15, 615, 570, 90, '#6e1515');
-                ctx.fillStyle = '#f8d56b';
-                ctx.font = 'bold 18px Arial';
-                ctx.fillText('BATTLE RECORD', 30, 640);
-
-                const records = [
-                    { name: 'Wins:', value: user.wins || 0 },
-                    { name: 'Losses:', value: user.losses || 0 },
-                    { name: 'Ranked:', value: user.rankedPoints || 0 }
-                ];
-
-                records.forEach((record, i) => {
-                    const x = 30 + (i * 180);
-                    const y = 665;
-
-                    ctx.fillStyle = '#aaaaaa';
-                    ctx.fillText(record.name, x, y);
-                    ctx.fillStyle = '#ffffff';
-                    ctx.fillText(record.value.toString(), x + 60, y);
-                });
-
-                // Equipped jutsu section
-                drawSection(ctx, 15, 720, 570, 80, '#6e1515');
-                ctx.fillStyle = '#f8d56b';
-                ctx.font = 'bold 18px Arial';
-                ctx.fillText('EQUIPPED JUTSU', 30, 745);
-
-                // Jutsu tags
-                let xPos = 30;
-                let yPos = 765;
-                equippedJutsu.forEach(jutsu => {
-                    ctx.font = '12px Arial';
-                    const jutsuWidth = ctx.measureText(jutsu).width + 20;
-                    
-                    if (xPos + jutsuWidth > 570) {
-                        xPos = 30;
-                        yPos += 30;
-                    }
-                    
-                    // Jutsu tag background
-                    ctx.fillStyle = 'rgba(110, 21, 21, 0.3)';
-                    ctx.strokeStyle = '#6e1515';
-                    ctx.lineWidth = 1;
-                    ctx.beginPath();
-                    ctx.roundRect(xPos, yPos - 15, jutsuWidth, 20, 10);
-                    ctx.fill();
-                    ctx.stroke();
-                    
-                    // Jutsu text
-                    ctx.fillStyle = '#ffffff';
-                    ctx.textAlign = 'center';
-                    ctx.fillText(jutsu, xPos + (jutsuWidth / 2), yPos - 2);
-                    ctx.textAlign = 'left';
-                    
-                    xPos += jutsuWidth + 10;
-                });
-
-                // Inventory section
-                drawSection(ctx, 15, 815, 570, 50, '#6e1515');
-                ctx.fillStyle = '#f8d56b';
-                ctx.font = 'bold 18px Arial';
-                ctx.fillText('INVENTORY', 30, 840);
-
-                const inventory = [
-                    { name: 'Money:', value: `${user.money || 0} Ryo` },
-                    { name: 'Ramen:', value: user.ramen || 0 }
-                ];
-
-                inventory.forEach((item, i) => {
-                    const x = 30 + (i * 270);
-                    const y = 860;
-
-                    ctx.fillStyle = '#aaaaaa';
-                    ctx.fillText(item.name, x, y);
-                    ctx.fillStyle = '#ffffff';
-                    ctx.fillText(item.value.toString(), x + 80, y);
-                });
-
-                // Footer
-                ctx.fillStyle = 'rgba(0,0,0,0.7)';
-                ctx.fillRect(0, 880, 600, 20);
-                ctx.fillStyle = '#aaaaaa';
-                ctx.font = '12px Arial';
-                ctx.textAlign = 'center';
-                ctx.fillText(`${user.clan || 'No Clan'} | Mentor: ${user.mentor || 'None'}`, 300, 895);
-
-                // Convert to buffer and return
-                return canvas.toBuffer('image/png');
-            };
-
-            const profileBuffer = await generateProfileCard();
-            const attachment = new AttachmentBuilder(profileBuffer, { name: 'profile.png' });
-
+            // Send the main page as the initial reply
             await interaction.editReply({
                 content: `${targetUser.username}'s Ninja Card`,
-                files: [attachment]
+                files: [new AttachmentBuilder(pages.main, { name: 'profile.png' })],
+                components: [buttons]
             });
 
+            // Button interaction collector
+            const collector = interaction.channel.createMessageComponentCollector({
+                filter: i => i.user.id === commandInvokerId,
+                time: 60000
+            });
+
+            let currentPage = 'main';
+
+            collector.on('collect', async i => {
+                if (!i.deferred && !i.replied) await i.deferUpdate();
+
+                // Page logic
+                if (i.customId === 'profile_next') {
+                    currentPage = currentPage === 'main' ? 'ranked' : (currentPage === 'ranked' ? 'jutsu' : 'main');
+                } else if (i.customId === 'profile_previous') {
+                    currentPage = currentPage === 'main' ? 'jutsu' : (currentPage === 'ranked' ? 'main' : 'ranked');
+                } else if (i.customId === 'profile_jutsu') {
+                    currentPage = 'jutsu';
+                }
+
+                // Update buttons
+                const updatedButtons = new ActionRowBuilder()
+                    .addComponents(
+                        new ButtonBuilder()
+                            .setCustomId('profile_previous')
+                            .setLabel('Previous')
+                            .setStyle(ButtonStyle.Secondary)
+                            .setDisabled(currentPage === 'main'),
+                        new ButtonBuilder()
+                            .setCustomId('profile_next')
+                            .setLabel('Next')
+                            .setStyle(ButtonStyle.Primary)
+                            .setDisabled(currentPage === 'jutsu'),
+                        new ButtonBuilder()
+                            .setCustomId('profile_jutsu')
+                            .setLabel('Jutsu')
+                            .setStyle(ButtonStyle.Secondary)
+                            .setDisabled(false)
+                    );
+
+                // Instead of editing, send a new image for each page switch
+                await interaction.followUp({
+                    content: `${targetUser.username}'s Ninja Card (${currentPage.charAt(0).toUpperCase() + currentPage.slice(1)})`,
+                    files: [new AttachmentBuilder(pages[currentPage], { name: 'profile.png' })],
+                    components: [updatedButtons],
+                    ephemeral: true // Only the user sees their own page switches
+                });
+            });
+
+            collector.on('end', () => {
+                interaction.editReply({ components: [] }).catch(() => {});
+            });
+
+            if (isSelfView) {
+                await updateRequirements(commandInvokerId, 'profile_check');
+            }
+
+            // --- Timeout clear ---
+            if (!interactionFinished) {
+                interactionFinished = true;
+                clearTimeout(timeout);
+            }
         } catch (error) {
             console.error('Error generating profile card:', error);
-            if (interaction.deferred || interaction.replied) {
-                await interaction.editReply({
-                    content: "An error occurred while generating the profile card. Please try again later."
-                });
-            } else {
-                await interaction.reply({
-                    content: "An error occurred while generating the profile card. Please try again later."
-                });
+            cooldowns.delete(commandInvokerId);
+            await interaction.editReply({
+                content: "An error occurred while generating the profile card. Please try again later.",
+                files: [],
+                components: []
+            });
+            if (!interactionFinished) {
+                interactionFinished = true;
+                clearTimeout(timeout);
             }
         }
     }
 };
 
-// Helper function to draw sections
+// Helper function to determine user's theme based on premium roles
+// 'user' here is the userProfileData (the target user's data)
+function determineTheme(userProfileData) {
+    // Assuming userProfileData.premiumRoles is an array of objects like { roleId: '...' }
+    // or just an array of role IDs. Adjust 'role.roleId' if it's just 'role'.
+    const userRoles = userProfileData.premiumRoles || [];
+
+    const hasJinchuriki = userRoles.some(role => role.roleId === GAMEPASS_IDS.JINCHURIKI);
+    if (hasJinchuriki) return THEMES.JINCHURIKI;
+
+    const hasLegendaryNinja = userRoles.some(role => role.roleId === GAMEPASS_IDS.LEGENDARY_NINJA);
+    if (hasLegendaryNinja) return THEMES.LEGENDARY_NINJA;
+
+    const hasDonator = userRoles.some(role => role.roleId === GAMEPASS_IDS.DONATOR);
+    if (hasDonator) return THEMES.DONATOR;
+
+    return THEMES.GREY_BASIC; // Default to basic grey for non-donators
+}
+
+// Generate main profile page
+async function generateMainProfilePage(targetUser, userProfileData, theme, jutsuList, usersJutsu, isSelfView) {
+    const bloodlineName = userProfileData.bloodline || 'None';
+    const bloodlineData = BLOODLINES[bloodlineName] || {};
+    const bloodlineTitle = bloodlineData.title || 'No bloodline awakened';
+    const bloodlineDescription = bloodlineData.description || 'No bloodline awakened';
+
+    // Use targetUser.id for usersJutsu lookup
+    const equippedJutsu = Object.values(userProfileData.jutsu || {})
+        .filter(jutsu => jutsu && jutsu !== 'Attack' && jutsu !== 'None')
+        .map(jutsu => jutsuList[jutsu]?.name || jutsu);
+
+    const learnedJutsu = usersJutsu[targetUser.id]?.usersjutsu || []; // Use targetUser.id here
+
+    const canvas = createCanvas(600, 900);
+    const ctx = canvas.getContext('2d');
+
+    // Background gradient or solid grey
+    if (theme.isPremium) {
+        const gradient = ctx.createLinearGradient(0, 0, 600, 900);
+        gradient.addColorStop(0, theme.background[0]);
+        gradient.addColorStop(0.5, theme.background[1]);
+        gradient.addColorStop(1, theme.background[2]);
+        ctx.fillStyle = gradient;
+    } else {
+        ctx.fillStyle = theme.background[0];
+    }
+    ctx.fillRect(0, 0, 600, 900);
+
+    // --- Sparkling Effects (for premium themes) ---
+    if (theme.isPremium) {
+        for (let i = 0; i < 150; i++) {
+            const x = Math.random() * canvas.width;
+            const y = Math.random() * canvas.height;
+            const radius = Math.random() * 1.5 + 0.5;
+            const alpha = Math.random() * 0.6 + 0.2;
+            ctx.beginPath();
+            ctx.arc(x, y, radius, 0, Math.PI * 2, false);
+            ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+            ctx.fill();
+        }
+    }
+
+    // --- Flex Perk Background Text (keep as is, for extra effect) ---
+    if (theme.isPremium && theme.flexText) {
+        ctx.save();
+        ctx.font = 'bold 80px Arial';
+        ctx.fillStyle = `rgba(${hexToRgb(theme.accent)}, 0.03)`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.translate(canvas.width / 2, canvas.height / 2);
+        ctx.rotate(-Math.PI / 8);
+        const text = theme.flexText;
+        const repeatCount = 5;
+        const spacing = 100;
+        for (let i = -repeatCount; i <= repeatCount; i++) {
+            ctx.fillText(text, 0, i * spacing);
+        }
+        ctx.restore();
+    }
+
+    // Header section
+    ctx.fillStyle = 'rgba(0,0,0,0.7)';
+    ctx.fillRect(0, 0, 600, 220);
+    ctx.strokeStyle = theme.primary;
+    ctx.lineWidth = 2;
+    ctx.strokeRect(0, 0, 600, 220);
+
+    // Center avatar in header (restore old style)
+    try {
+        let avatarUrl;
+        if (targetUser.avatar) {
+            avatarUrl = `https://cdn.discordapp.com/avatars/${targetUser.id}/${targetUser.avatar}.png?size=256`;
+        } else {
+            const defaultAvatarNumber = parseInt(targetUser.discriminator) % 5;
+            avatarUrl = `https://cdn.discordapp.com/embed/avatars/${defaultAvatarNumber}.png`;
+        }
+        let avatar;
+        try {
+            avatar = await loadImageWithRetry(avatarUrl);
+        } catch (err) {
+            console.error('Error loading avatar:', err);
+            ctx.fillStyle = '#333333';
+            ctx.beginPath();
+            ctx.arc(300, 90, 75, 0, Math.PI * 2, true);
+            ctx.fill();
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 24px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('AVATAR', 300, 100);
+            avatar = null;
+        }
+        if (avatar) {
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(300, 90, 75, 0, Math.PI * 2, true);
+            ctx.closePath();
+            ctx.clip();
+            ctx.drawImage(avatar, 225, 15, 150, 150);
+            ctx.restore();
+            ctx.strokeStyle = theme.primary;
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.arc(300, 90, 75, 0, Math.PI * 2, true);
+            ctx.stroke();
+        }
+    } catch (err) {
+        console.error('Error in avatar drawing block:', err);
+    }
+
+    // Username (centered under avatar)
+    ctx.font = '24px Arial';
+    ctx.fillStyle = '#ffffff';
+    ctx.textAlign = 'center';
+    ctx.shadowColor = theme.primary;
+    ctx.shadowBlur = 5;
+    ctx.fillText(targetUser.username, 300, 190);
+    ctx.shadowBlur = 0;
+
+    // Rank (centered)
+    ctx.font = '18px Arial';
+    ctx.fillStyle = theme.accent;
+    ctx.fillText(userProfileData.rank || 'Academy Student', 300, 215);
+
+    // Bloodline (centered)
+    ctx.font = '16px Arial';
+    ctx.fillStyle = '#6eaff8';
+    ctx.fontStyle = 'italic';
+    ctx.fillText(bloodlineName, 300, 235);
+    ctx.fontStyle = 'normal';
+
+    // Bloodline section (Always display)
+    drawSection(ctx, 15, 250, 570, 100, theme.primary);
+    ctx.fillStyle = theme.accent;
+    ctx.font = 'bold 18px Arial';
+    ctx.textAlign = 'left';
+    ctx.fillText('BLOODLINE ABILITY', 30, 275);
+
+    // Bloodline description
+    ctx.fillStyle = '#cccccc';
+    ctx.font = 'italic 14px Arial';
+    wrapText(ctx, bloodlineTitle, 30, 295, 540, 24);
+
+
+    // Level progression section (Always display)
+    drawSection(ctx, 15, 365, 570, 100, theme.primary);
+    ctx.fillStyle = theme.accent;
+    ctx.font = 'bold 18px Arial';
+    ctx.fillText('LEVEL PROGRESSION', 30, 390);
+
+    const xpPercentage = Math.min(100, (userProfileData.exp / (userProfileData.level * 1000 + 1000)) * 100);
+    const level = userProfileData.level || 1;
+    const exp = userProfileData.exp || 0;
+    const nextLevelExp = level * 1000 + 1000;
+
+    // Level and XP
+    ctx.fillStyle = '#aaaaaa';
+    ctx.font = '14px Arial';
+    ctx.fillText('Level:', 30, 415);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(level.toString(), 100, 415);
+
+    ctx.fillStyle = '#aaaaaa';
+    ctx.fillText('XP:', 30, 435);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(`${exp}/${nextLevelExp}`, 100, 435);
+
+    // XP Bar
+    ctx.fillStyle = '#333333';
+    ctx.fillRect(30, 445, 540, 10);
+    const xpGradient = ctx.createLinearGradient(30, 445, 570, 445);
+    xpGradient.addColorStop(0, theme.primary);
+    xpGradient.addColorStop(1, theme.accent);
+    ctx.fillStyle = xpGradient;
+    ctx.fillRect(30, 445, 540 * (xpPercentage / 100), 10);
+
+    // Battle stats section (Only for self-view)
+    if (isSelfView) {
+        drawSection(ctx, 15, 480, 570, 120, theme.primary);
+        ctx.fillStyle = theme.accent;
+        ctx.font = 'bold 18px Arial';
+        ctx.fillText('BATTLE STATS', 30, 505);
+
+        // Stats grid
+        const stats = [
+            { name: 'Health:', value: userProfileData.health || 100 },
+            { name: 'Power:', value: userProfileData.power || 10 },
+            { name: 'Defense:', value: userProfileData.defense || 10 },
+            { name: 'Chakra:', value: userProfileData.chakra || 10 }
+        ];
+
+        stats.forEach((stat, i) => {
+            const row = Math.floor(i / 2);
+            const col = i % 2;
+            const x = 30 + (col * 270);
+            const y = 530 + (row * 25);
+
+            ctx.fillStyle = '#aaaaaa';
+            ctx.fillText(stat.name, x, y);
+            ctx.fillStyle = '#ffffff';
+            ctx.fillText(stat.value.toString(), x + 80, y);
+        });
+    }
+
+    // Battle record section (Always display)
+    // Adjust Y position if Battle Stats section is hidden
+    const battleRecordY = isSelfView ? 615 : 480; // If battle stats hidden, move up
+    drawSection(ctx, 15, battleRecordY, 570, 90, theme.primary);
+    ctx.fillStyle = theme.accent;
+    ctx.font = 'bold 18px Arial';
+    ctx.fillText('BATTLE RECORD', 30, battleRecordY + 25);
+
+    const records = [
+        { name: 'Wins:', value: userProfileData.wins || 0 },
+        { name: 'Losses:', value: userProfileData.losses || 0 },
+        { name: 'Ranked:', value: userProfileData.rankedPoints || 0 }
+    ];
+
+    records.forEach((record, i) => {
+        const x = 30 + (i * 180);
+        const y = battleRecordY + 50;
+
+        ctx.fillStyle = '#aaaaaa';
+        ctx.fillText(record.name, x, y);
+        ctx.fillStyle = '#ffffff';
+        ctx.fillText(record.value.toString(), x + 78, y);
+    });
+
+    // --- Gamepass/Perk Banner (free banner space) ---
+    // Draw a banner at the top (below header) showing the user's current gamepass/perk
+   
+
+    // REMOVE equipped jutsu section from main page
+    // (delete or comment out the entire equipped jutsu drawing block)
+
+    // Inventory section (Only for self-view)
+    // ...existing code...
+
+    return canvas.toBuffer('image/png');
+}
+
+// Generate ranked profile page
+async function generateRankedProfilePage(targetUser, userProfileData, theme, isSelfView) {
+    const bloodlineName = userProfileData.bloodline || 'None';
+    const canvas = createCanvas(600, 900);
+    const ctx = canvas.getContext('2d');
+
+    // Background gradient or solid grey
+    if (theme.isPremium) {
+        const gradient = ctx.createLinearGradient(0, 0, 600, 900);
+        gradient.addColorStop(0, theme.background[0]);
+        gradient.addColorStop(0.5, theme.background[1]);
+        gradient.addColorStop(1, theme.background[2]);
+        ctx.fillStyle = gradient;
+    } else {
+        ctx.fillStyle = theme.background[0];
+    }
+    ctx.fillRect(0, 0, 600, 900);
+
+    // --- Sparkling Effects (for premium themes) ---
+    if (theme.isPremium) {
+        for (let i = 0; i < 150; i++) {
+            const x = Math.random() * canvas.width;
+            const y = Math.random() * canvas.height;
+            const radius = Math.random() * 1.5 + 0.5;
+            const alpha = Math.random() * 0.6 + 0.2;
+            ctx.beginPath();
+            ctx.arc(x, y, radius, 0, Math.PI * 2, false);
+            ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+            ctx.fill();
+        }
+    }
+
+    // --- Flex Perk Background Text (keep as is, for extra effect) ---
+    if (theme.isPremium && theme.flexText) {
+        ctx.save();
+        ctx.font = 'bold 80px Arial';
+        ctx.fillStyle = `rgba(${hexToRgb(theme.accent)}, 0.03)`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.translate(canvas.width / 2, canvas.height / 2);
+        ctx.rotate(-Math.PI / 8);
+        const text = theme.flexText;
+        const repeatCount = 5;
+        const spacing = 100;
+        for (let i = -repeatCount; i <= repeatCount; i++) {
+            ctx.fillText(text, 0, i * spacing);
+        }
+        ctx.restore();
+    }
+
+    // Header section
+    ctx.fillStyle = 'rgba(0,0,0,0.7)';
+    ctx.fillRect(0, 0, 600, 220);
+    ctx.strokeStyle = theme.primary;
+    ctx.lineWidth = 2;
+    ctx.strokeRect(0, 0, 600, 220);
+
+    // Center avatar in header (restore old style)
+    try {
+        let avatarUrl;
+        if (targetUser.avatar) {
+            avatarUrl = `https://cdn.discordapp.com/avatars/${targetUser.id}/${targetUser.avatar}.png?size=256`;
+        } else {
+            const defaultAvatarNumber = parseInt(targetUser.discriminator) % 5;
+            avatarUrl = `https://cdn.discordapp.com/embed/avatars/${defaultAvatarNumber}.png`;
+        }
+        let avatar;
+        try {
+            avatar = await loadImageWithRetry(avatarUrl);
+        } catch (err) {
+            console.error('Error loading avatar:', err);
+            ctx.fillStyle = '#333333';
+            ctx.beginPath();
+            ctx.arc(300, 90, 75, 0, Math.PI * 2, true);
+            ctx.fill();
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 24px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('AVATAR', 300, 100);
+            avatar = null;
+        }
+        if (avatar) {
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(300, 90, 75, 0, Math.PI * 2, true);
+            ctx.closePath();
+            ctx.clip();
+            ctx.drawImage(avatar, 225, 15, 150, 150);
+            ctx.restore();
+            ctx.strokeStyle = theme.primary;
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.arc(300, 90, 75, 0, Math.PI * 2, true);
+            ctx.stroke();
+        }
+    } catch (err) {
+        console.error('Error in avatar drawing block:', err);
+    }
+
+    // Username (centered under avatar)
+    ctx.font = '24px Arial';
+    ctx.fillStyle = '#ffffff';
+    ctx.textAlign = 'center';
+    ctx.shadowColor = theme.primary;
+    ctx.shadowBlur = 5;
+    ctx.fillText(targetUser.username, 300, 190);
+    ctx.shadowBlur = 0;
+
+    // Rank title (centered)
+    ctx.font = '18px Arial';
+    ctx.fillStyle = theme.accent;
+    ctx.fillText('Ranked Profile', 300, 215);
+
+    // Bloodline (centered)
+    ctx.font = '16px Arial';
+    ctx.fillStyle = theme.accent;
+    ctx.fontStyle = 'italic';
+    ctx.fillText(bloodlineName, 300, 235);
+    ctx.fontStyle = 'normal';
+
+    // Rank section (Always display)
+    // Adjusted for better alignment and padding
+    // Match the main page section size and alignment
+    const rankedSectionX = 15, rankedSectionWidth = 570;
+    drawSection(ctx, rankedSectionX, 250, rankedSectionWidth, 150, theme.primary);
+    ctx.fillStyle = theme.accent;
+    ctx.font = 'bold 18px Arial';
+    ctx.textAlign = 'left';
+    ctx.fillText('RANK INFORMATION', rankedSectionX + 15, 275);
+
+    // Rank and division
+    const rankedData = userProfileData.ranked || {};
+    ctx.fillStyle = '#aaaaaa';
+    ctx.font = '18px Arial';
+    ctx.fillText('Rank:', rankedSectionX + 15, 300);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(rankedData.rank || 'Unranked', rankedSectionX + 85, 300);
+
+    ctx.fillStyle = '#aaaaaa';
+    ctx.fillText('Division:', rankedSectionX + 15, 320);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(rankedData.division ? `Division ${rankedData.division}` : 'None', rankedSectionX + 85, 320);
+
+    // ELO bar
+    const elo = rankedData.elo || 0;
+    const maxElo = 2000; // Adjust based on your ELO system
+    const eloPercentage = Math.min(100, (elo / maxElo) * 100);
+
+    ctx.fillStyle = '#aaaaaa';
+    ctx.fillText('ELO:', rankedSectionX + 15, 340);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(elo.toString(), rankedSectionX + 85, 340);
+
+    ctx.fillStyle = '#333333';
+    ctx.fillRect(rankedSectionX + 15, 350, rankedSectionWidth - 30, 15);
+    const eloGradient = ctx.createLinearGradient(rankedSectionX + 15, 350, rankedSectionX + rankedSectionWidth - 15, 350);
+    eloGradient.addColorStop(0, theme.primary);
+    eloGradient.addColorStop(1, theme.accent);
+    ctx.fillStyle = eloGradient;
+    ctx.fillRect(rankedSectionX + 15, 350, (rankedSectionWidth - 30) * (eloPercentage / 100), 15);
+
+    // Ranked record section (Always display)
+    drawSection(ctx, 15, 415, 570, 100, theme.primary);
+    ctx.fillStyle = theme.accent;
+    ctx.font = 'bold 18px Arial';
+    ctx.fillText('RANKED RECORD', 30, 440);
+
+    const rankedRecords = [
+        { name: 'Wins:', value: rankedData.wins || 0 },
+        { name: 'Losses:', value: rankedData.losses || 0 },
+        { name: 'Win Rate:', value: rankedData.wins && rankedData.losses
+            ? `${Math.round((rankedData.wins / (rankedData.wins + rankedData.losses)) * 100)}%`
+            : '0%' }
+    ];
+
+    rankedRecords.forEach((record, i) => {
+        const x = 30 + (i * 180);
+        const y = 465;
+
+        ctx.fillStyle = '#aaaaaa';
+        ctx.fillText(record.name, x, y);
+        ctx.fillStyle = '#ffffff';
+        ctx.fillText(record.value.toString(), x + 78, y);
+    });
+
+    // Ranked Stats section (Only for self-view)
+    const rankedStatsY = isSelfView ? 530 : 530; // If you decide to hide more, adjust this. Currently always displayed.
+    if (isSelfView) {
+        drawSection(ctx, 15, rankedStatsY, 570, 120, theme.primary);
+        ctx.fillStyle = theme.accent;
+        ctx.font = 'bold 18px Arial';
+        ctx.fillText('RANKED STATS', 30, rankedStatsY + 25);
+
+        const stats = [
+            { name: 'Average Damage:', value: rankedData.avgDamage || 'N/A' },
+            { name: 'Most Used Jutsu:', value: rankedData.mostUsedJutsu || 'None' }
+        ];
+
+        stats.forEach((stat, i) => {
+            const x = 30;
+            const y = rankedStatsY + 50 + (i * 25);
+
+            ctx.fillStyle = '#aaaaaa';
+            ctx.fillText(stat.name, x, y);
+            ctx.fillStyle = '#ffffff';
+            ctx.fillText(stat.value.toString(), x + 150, y);
+        });
+    }
+
+
+    // Footer
+    ctx.fillStyle = 'rgba(0,0,0,0.7)';
+    ctx.fillRect(0, 880, 600, 20);
+    ctx.fillStyle = '#aaaaaa';
+    ctx.font = '12px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText(`Total ELO: ${rankedData.totalElo || 0}`, 300, 895);
+
+    return canvas.toBuffer('image/png');
+}
+
+// --- Jutsu/Combo/Scroll Page (NO learned jutsu, no gamepass) ---
+async function generateJutsuPage(targetUser, userProfileData, theme, jutsuList, usersJutsu) {
+    const canvas = createCanvas(600, 900);
+    const ctx = canvas.getContext('2d');
+
+    // Background
+    ctx.fillStyle = theme.background[0];
+    ctx.fillRect(0, 0, 600, 900);
+
+    // --- Sparkling Effects (for premium themes) ---
+    if (theme.isPremium) {
+        for (let i = 0; i < 150; i++) {
+            const x = Math.random() * canvas.width;
+            const y = Math.random() * canvas.height;
+            const radius = Math.random() * 1.5 + 0.5;
+            const alpha = Math.random() * 0.6 + 0.2;
+            ctx.beginPath();
+            ctx.arc(x, y, radius, 0, Math.PI * 2, false);
+            ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+            ctx.fill();
+        }
+    }
+
+   
+
+    ctx.fillStyle = 'rgba(0,0,0,0.7)';
+    ctx.fillRect(0, 0, 600, 120);
+    ctx.strokeStyle = theme.primary;
+    ctx.lineWidth = 2;
+    ctx.strokeRect(0, 0, 600, 120);
+
+    ctx.font = '24px Arial';
+    ctx.fillStyle = '#ffffff';
+    ctx.textAlign = 'center';
+    // --- Equipped Jutsu only ---
+    // Adjusted section: more padding, better alignment, and consistent margins
+    const sectionX = 40, sectionWidth = 520;
+    drawSection(ctx, sectionX, 140, sectionWidth, 180, theme.primary);
+    ctx.fillStyle = theme.accent;
+    ctx.font = 'bold 18px Arial';
+    ctx.textAlign = 'left';
+    ctx.fillText('EQUIPPED JUTSU', sectionX + 15, 165);
+
+    const equipped = userProfileData.jutsu || {};
+    ctx.font = '14px Arial';
+    ctx.fillStyle = '#ffffff';
+    let y2 = 190;
+    Object.entries(equipped).forEach(([slot, jutsuKey]) => {
+        const jutsu = jutsuList[jutsuKey];
+        ctx.fillText(`Slot ${slot.replace('slot_', '')}: ${jutsu ? jutsu.name : jutsuKey}`, sectionX + 25, y2);
+        y2 += 22;
+    });
+
+    // Combo
+    drawSection(ctx, sectionX, 340, sectionWidth, 60, theme.primary);
+    ctx.fillStyle = theme.accent;
+    ctx.font = 'bold 18px Arial';
+    ctx.fillText('COMBO', sectionX + 15, 365);
+    ctx.font = '14px Arial';
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(userProfileData.Combo || 'None', sectionX + 25, 390);
+
+    // Current Scroll
+    drawSection(ctx, sectionX, 420, sectionWidth, 60, theme.primary);
+    ctx.fillStyle = theme.accent;
+    ctx.font = 'bold 18px Arial';
+    ctx.fillText('CURRENT SCROLL', sectionX + 15, 445);
+    ctx.font = '14px Arial';
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(userProfileData.current_scroll || 'None', sectionX + 25, 470);
+
+    return canvas.toBuffer('image/png');
+
+    return canvas.toBuffer('image/png');
+}
+
+// Helper functions (same as before)
 function drawSection(ctx, x, y, width, height, borderColor) {
     ctx.fillStyle = 'rgba(0,0,0,0.5)';
     ctx.beginPath();
     ctx.roundRect(x, y, width, height, 10);
     ctx.fill();
-    
+
     ctx.strokeStyle = borderColor;
     ctx.lineWidth = 3;
     ctx.beginPath();
@@ -350,7 +872,6 @@ function drawSection(ctx, x, y, width, height, borderColor) {
     ctx.stroke();
 }
 
-// Helper function to wrap text
 function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
     const words = text.split(' ');
     let line = '';
@@ -362,7 +883,7 @@ function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
         testLine = line + words[n] + ' ';
         const metrics = ctx.measureText(testLine);
         const testWidth = metrics.width;
-        
+
         if (testWidth > maxWidth && n > 0) {
             if (lineCount < maxLines - 1) {
                 ctx.fillText(line, x, y);
@@ -377,59 +898,26 @@ function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
             line = testLine;
         }
     }
-    
+
     ctx.fillText(line, x, y);
 }
 
-// Helper to robustly download remote images to a temp file and return the local path
-async function downloadImageToFile(url) {
-    return new Promise((resolve, reject) => {
-        try {
-            const tmpDir = path.resolve(__dirname, '../images/tmp');
-            if (!fs.existsSync(tmpDir)) fs.mkdirSync(tmpDir, { recursive: true });
-            // Always use .png for Discord avatars (since we request format: 'png')
-            const tmpFile = path.join(tmpDir, `img_${Date.now()}_${Math.floor(Math.random()*10000)}.png`);
-            const file = fs.createWriteStream(tmpFile);
-            https.get(url, res => {
-                if (res.statusCode !== 200) {
-                    file.close(() => {});
-                    try { fs.unlinkSync(tmpFile); } catch {}
-                    return reject(new Error(`Failed to download image: ${url}`));
-                }
-                res.pipe(file);
-                file.on('finish', () => {
-                    file.close(() => {
-                        fs.stat(tmpFile, (err, stats) => {
-                            if (err || !stats || stats.size === 0) {
-                                try { fs.unlinkSync(tmpFile); } catch {}
-                                return reject(new Error(`Downloaded image is empty: ${url}`));
-                            }
-                            resolve(tmpFile);
-                        });
-                    });
-                });
-            }).on('error', err => {
-                file.close(() => {});
-                try { fs.unlinkSync(tmpFile); } catch {}
-                reject(err);
-            });
-        } catch (e) {
-            reject(e);
-        }
-    });
-}
-
-// Add this helper at the bottom or top of the file:
 async function loadImageWithRetry(url) {
     try {
         return await loadImage(url);
     } catch (error) {
         try {
-            // Try jpg fallback if png fails
             const jpgUrl = url.replace(/\.png(\?.*)?$/, '.jpg$1');
             return await loadImage(jpgUrl);
         } catch (error2) {
             throw error2;
         }
     }
+}
+
+function hexToRgb(hex) {
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result ?
+        `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` :
+        '110, 21, 21'; // Default to a dark red if conversion fails
 }

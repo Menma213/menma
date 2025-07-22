@@ -1,7 +1,7 @@
 const { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, AttachmentBuilder } = require('discord.js');
 const fs = require('fs');
 const path = require('path');
-const puppeteer = require('puppeteer');
+const { createCanvas, loadImage } = require('canvas');
 
 // Constants
 const ADMIN_ID = "961918563382362122";
@@ -9,7 +9,6 @@ const ADMIN_ID = "961918563382362122";
 // Path setup
 const dataPath = path.resolve(__dirname, '../../menma/data');
 const usersPath = path.join(dataPath, 'users.json');
-52
 const jutsusPath = path.join(dataPath, 'jutsu.json');  // Fixed path
 const requirementsPath = path.join(dataPath, 'requirements.json');
 
@@ -33,13 +32,13 @@ const saveData = (path, data) => {
 
 // Constants for requirements
 const REQUIREMENT_TYPES = [
-    { type: 'd_mission', desc: "Complete D-rank mission {value} times", min: 2, max: 10 },
-    { type: 'b_mission', desc: "Complete B-rank mission {value} times", min: 2, max: 6 },
-    { type: 's_mission', desc: "Complete S-rank mission {value} times", min: 2, max: 5 },
+    { type: 'd_mission', desc: "Complete D-rank mission {value} times", min: 2, max: 6 },
+    { type: 'b_mission', desc: "Complete B-rank mission {value} times", min: 2, max: 4 },
+    { type: 's_mission', desc: "Complete S-rank mission {value} times", min: 2, max: 3 },
     { type: 'pvp', desc: "Fight another ninja {value} times", min: 1, max: 3 },
-    { type: 'profile_check', desc: "Check profile {value} times", min: 10, max: 10 },
-    { type: 's_mission_with_friends', desc: "Complete an S-rank with friends {value} time", min: 1, max: 1 },
-    { type: 'train', desc: "Train {value} times", min: 2, max: 5 },
+    { type: 'profile_check', desc: "Check profile {value} times", min: 3, max: 7 },
+    { type: 's_mission_with_friends', desc: "Complete an S-rank with friends {value} time", min: 1, max: 2 },
+    { type: 'train', desc: "Train {value} times", min: 2, max: 2},
     { type: 'equip_jutsu', desc: "Equip a jutsu {value} time", min: 1, max: 1 }
 ];
 
@@ -48,7 +47,7 @@ const TUTORIAL_PAGES = [
     {
         title: "Welcome to the Sacred Temple",
         content: "Young one. Welcome to the sacred temple of Konoha. I am Asukky, the well-known Asukky The Sage.",
-        image: "https://i.pinimg.com/736x/ae/ae/80/aeae806eee029af71359a78bb38ea7e4.jpg"
+        image: "https://i.pinimg.com/736x/ae/ae/80/aeae806eee029af71359a7.jpg8bb38ea7e4"
     },
     {
         title: "The History of Scrolls",
@@ -72,251 +71,251 @@ const TUTORIAL_PAGES = [
     }
 ];
 
-// Generate tutorial page HTML with complete styling
-const generateTutorialHtml = (page) => `
-<html>
-<head>
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: 'Arial', sans-serif;
-            background-color: #1a1a1a;
-            color: white;
-        }
-        .tutorial-container {
-            width: 600px;
-            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
-            border-radius: 15px;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
-            padding: 20px;
-            margin: 20px auto;
-        }
-        .tutorial-header {
-            display: flex;
-            align-items: center;
-            margin-bottom: 20px;
-            border-bottom: 2px solid #6e1515;
-            padding-bottom: 10px;
-        }
-        .tutorial-avatar {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            border: 3px solid #6e1515;
-            margin-right: 15px;
-        }
-        .tutorial-name {
-            font-size: 20px;
-            color: #f8d56b;
-            font-weight: bold;
-        }
-        .tutorial-content {
-            font-size: 16px;
-            line-height: 1.6;
-            color: #fff;
-            padding: 15px;
-            background: rgba(0,0,0,0.3);
-            border-radius: 10px;
-            margin-bottom: 20px;
-        }
-    </style>
-</head>
-<body>
-    <div class="tutorial-container">
-        <div class="tutorial-header">
-            <img src="${page.image}" class="tutorial-avatar">
-            <div class="tutorial-name">Asukky The Sage</div>
-        </div>
-        <div class="tutorial-content">
-            <h2>${page.title}</h2>
-            ${page.content}
-        </div>
-    </div>
-</body>
-</html>
-`;
 
-async function generateTutorialImage(page, interaction) {
-    const browser = await puppeteer.launch({ args: ['--no-sandbox'] });
-    const browserPage = await browser.newPage();
-    await browserPage.setViewport({ width: 600, height: 400 });
 
-    const htmlContent = `
-        <html>
-        <head>
-            <style>
-                body {
-                    margin: 0;
-                    padding: 0;
-                    font-family: 'Arial', sans-serif;
-                    background-color: #1a1a1a;
-                    color: white;
-                }
-                .card {
-                    width: 600px;
-                    height: 400px;
-                    background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
-                    border-radius: 15px;
-                    box-shadow: 0 10px 20px rgba(0,0,0,0.5);
-                    position: relative;
-                    overflow: hidden;
-                }
-                .header {
-                    background-color: rgba(0,0,0,0.7);
-                    padding: 20px;
-                    display: flex;
-                    align-items: center;
-                    border-bottom: 2px solid #6e1515;
-                }
-                .sage-avatar {
-                    width: 50px;
-                    height: 50px;
-                    border-radius: 50%;
-                    border: 3px solid #6e1515;
-                    margin-right: 15px;
-                }
-                .sage-name {
-                    font-size: 20px;
-                    color: #f8d56b;
-                }
-                .content {
-                    padding: 20px;
-                }
-                .title {
-                    font-size: 24px;
-                    color: #f8d56b;
-                    margin-bottom: 15px;
-                    text-shadow: 0 0 5px #6e1515;
-                }
-                .text {
-                    font-size: 16px;
-                    line-height: 1.6;
-                    color: #fff;
-                }
-            </style>
-        </head>
-        <body>
-            <div class="card">
-                <div class="header">
-                    <img src="https://i.pinimg.com/736x/ae/ae/80/aeae806eee029af71359a78bb38ea7e4.jpg" class="sage-avatar">
-                    <div class="sage-name">Asukky The Sage</div>
-                </div>
-                <div class="content">
-                    <div class="title">${TUTORIAL_PAGES[page].title}</div>
-                    <div class="text">${TUTORIAL_PAGES[page].content}</div>
-                </div>
-            </div>
-        </body>
-        </html>
-    `;
+async function generateTutorialImage(pageIdx, interaction) {
+    const page = TUTORIAL_PAGES[pageIdx];
+    const width = 600, height = 400;
+    const canvas = createCanvas(width, height);
+    const ctx = canvas.getContext('2d');
 
-    await browserPage.setContent(htmlContent);
-    const screenshot = await browserPage.screenshot();
-    await browser.close();
-    return screenshot;
+    // Background gradient
+    const grad = ctx.createLinearGradient(0, 0, width, height);
+    grad.addColorStop(0, "#0f0c29");
+    grad.addColorStop(0.5, "#302b63");
+    grad.addColorStop(1, "#24243e");
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, width, height);
+
+    // Card border
+    ctx.save();
+    ctx.strokeStyle = "#6e1515";
+    ctx.lineWidth = 5;
+    ctx.strokeRect(0, 0, width, height);
+    ctx.restore();
+
+    // Avatar
+    let avatarImg;
+    try {
+        avatarImg = await loadImage(page.image);
+    } catch {
+        avatarImg = null;
+    }
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(60, 60, 35, 0, 2 * Math.PI);
+    ctx.closePath();
+    ctx.clip();
+    if (avatarImg) ctx.drawImage(avatarImg, 25, 25, 70, 70);
+    else {
+        ctx.fillStyle = "#333";
+        ctx.fillRect(25, 25, 70, 70);
+    }
+    ctx.restore();
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(60, 60, 35, 0, 2 * Math.PI);
+    ctx.closePath();
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = "#6e1515";
+    ctx.stroke();
+    ctx.restore();
+
+    // Sage name
+    ctx.font = "bold 22px Arial";
+    ctx.fillStyle = "#f8d56b";
+    ctx.textAlign = "left";
+    ctx.fillText("Asukky The Sage", 110, 60);
+
+    // Title
+    ctx.font = "bold 24px Arial";
+    ctx.fillStyle = "#f8d56b";
+    ctx.textAlign = "center";
+    ctx.fillText(page.title, width / 2, 120);
+
+    // Content box
+    ctx.save();
+    ctx.fillStyle = "rgba(0,0,0,0.3)";
+    ctx.beginPath();
+    ctx.roundRect(40, 140, 520, 220, 18);
+    ctx.fill();
+    ctx.restore();
+
+    // Content text
+    ctx.font = "16px Arial";
+    ctx.fillStyle = "#fff";
+    ctx.textAlign = "left";
+    // Wrap text
+    const content = page.content;
+    let y = 170;
+    const lineHeight = 26;
+    const maxWidth = 500;
+    function wrapText(text) {
+        const words = text.split(' ');
+        let line = '';
+        for (let n = 0; n < words.length; n++) {
+            const testLine = line + words[n] + ' ';
+            const metrics = ctx.measureText(testLine);
+            if (metrics.width > maxWidth && n > 0) {
+                ctx.fillText(line, 60, y);
+                line = words[n] + ' ';
+                y += lineHeight;
+            } else {
+                line = testLine;
+            }
+        }
+        ctx.fillText(line, 60, y);
+    }
+    wrapText(content);
+
+    return canvas.toBuffer('image/png');
+}
+
+// --- Canvas-based info image generation ---
+async function generateInfoImage(title, content, commands = false) {
+    const width = 600, height = commands ? 600 : 400;
+    const canvas = createCanvas(width, height);
+    const ctx = canvas.getContext('2d');
+
+    // Background gradient
+    const grad = ctx.createLinearGradient(0, 0, width, height);
+    grad.addColorStop(0, "#0f0c29");
+    grad.addColorStop(0.5, "#302b63");
+    grad.addColorStop(1, "#24243e");
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, width, height);
+
+    // Card border
+    ctx.save();
+    ctx.strokeStyle = "#6e1515";
+    ctx.lineWidth = 5;
+    ctx.strokeRect(0, 0, width, height);
+    ctx.restore();
+
+    // Avatar
+    let avatarImg;
+    try {
+        avatarImg = await loadImage("https://i.imgur.com/sage_avatar.png");
+    } catch {
+        avatarImg = null;
+    }
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(60, 60, 35, 0, 2 * Math.PI);
+    ctx.closePath();
+    ctx.clip();
+    if (avatarImg) ctx.drawImage(avatarImg, 25, 25, 70, 70);
+    else {
+        ctx.fillStyle = "#333";
+        ctx.fillRect(25, 25, 70, 70);
+    }
+    ctx.restore();
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(60, 60, 35, 0, 2 * Math.PI);
+    ctx.closePath();
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = "#6e1515";
+    ctx.stroke();
+    ctx.restore();
+
+    // Sage name
+    ctx.font = "bold 22px Arial";
+    ctx.fillStyle = "#f8d56b";
+    ctx.textAlign = "left";
+    ctx.fillText("Asukky The Sage", 110, 60);
+
+    // Title
+    ctx.font = "bold 24px Arial";
+    ctx.fillStyle = "#f8d56b";
+    ctx.textAlign = "center";
+    ctx.fillText(title, width / 2, 120);
+
+    // Content box
+    ctx.save();
+    ctx.fillStyle = "rgba(0,0,0,0.3)";
+    ctx.beginPath();
+    ctx.roundRect(40, 140, 520, commands ? 320 : 220, 18);
+    ctx.fill();
+    ctx.restore();
+
+    // Content text
+    ctx.font = "16px Arial";
+    ctx.fillStyle = "#fff";
+    ctx.textAlign = "left";
+    // Wrap text
+    let y = 170;
+    const lineHeight = 26;
+    const maxWidth = 500;
+    function wrapText(text) {
+        const words = text.split(' ');
+        let line = '';
+        for (let n = 0; n < words.length; n++) {
+            const testLine = line + words[n] + ' ';
+            const metrics = ctx.measureText(testLine);
+            if (metrics.width > maxWidth && n > 0) {
+                ctx.fillText(line, 60, y);
+                line = words[n] + ' ';
+                y += lineHeight;
+            } else {
+                line = testLine;
+            }
+        }
+        ctx.fillText(line, 60, y);
+        return y;
+    }
+    y = wrapText(content);
+
+    // Commands section
+    if (commands) {
+        ctx.font = "bold 18px Arial";
+        ctx.fillStyle = "#f8d56b";
+        ctx.fillText("Available Commands", 60, y + 40);
+
+        ctx.font = "16px Arial";
+        ctx.fillStyle = "#fff";
+        const cmds = [
+            "/scroll info - View your current scroll progress",
+            "/scroll set <scrollname> - Set a scroll to work on",
+            "/learnjutsu - Attempt to learn from your current scroll"
+        ];
+        let cy = y + 70;
+        for (const cmd of cmds) {
+            ctx.save();
+            ctx.fillStyle = "rgba(110,21,21,0.3)";
+            ctx.beginPath();
+            ctx.roundRect(60, cy - 18, 480, 32, 8);
+            ctx.fill();
+            ctx.restore();
+            ctx.fillStyle = "#fff";
+            ctx.fillText(cmd, 75, cy);
+            cy += 40;
+        }
+    }
+
+    return canvas.toBuffer('image/png');
 }
 
 // Add scroll-jutsu mapping
 const SCROLL_JUTSU = {
     "Needle Assault Scroll": "Needle Assault",
     "Silent Assassination Scroll": "Silent Assassination",
-    "Serpents Wrath Scroll": "Serpents Wrath"
+    "Serpents Wrath Scroll": "Serpents Wrath",
+    "Infused Chakra Blade Scroll": "Infused Chakra Blade",
 };
 
-async function generateInfoImage(title, content, commands = false) {
-    const browser = await puppeteer.launch({ args: ['--no-sandbox'] });
-    const page = await browser.newPage();
-    await page.setViewport({ width: 600, height: commands ? 600 : 400 });
+// Add new method to track requirements
+async function updateRequirements(userId, type, value = 1) {
+    const requirements = loadData(requirementsPath);
+    const userReqs = requirements[userId];
+    
+    if (!userReqs) return;
 
-    const htmlContent = `
-        <html>
-        <head>
-            <style>
-                body {
-                    margin: 0;
-                    padding: 0;
-                    font-family: 'Arial', sans-serif;
-                    background-color: #1a1a1a;
-                    color: white;
-                }
-                .card {
-                    width: 600px;
-                    height: ${commands ? '600px' : '400px'};
-                    background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
-                    border-radius: 15px;
-                    box-shadow: 0 10px 20px rgba(0,0,0,0.5);
-                    position: relative;
-                    overflow: hidden;
-                }
-                .header {
-                    background-color: rgba(0,0,0,0.7);
-                    padding: 20px;
-                    display: flex;
-                    align-items: center;
-                    border-bottom: 2px solid #6e1515;
-                }
-                .sage-avatar {
-                    width: 50px;
-                    height: 50px;
-                    border-radius: 50%;
-                    border: 3px solid #6e1515;
-                    margin-right: 15px;
-                }
-                .content {
-                    padding: 20px;
-                }
-                .title {
-                    font-size: 24px;
-                    color: #f8d56b;
-                    margin-bottom: 15px;
-                    text-shadow: 0 0 5px #6e1515;
-                }
-                .text {
-                    font-size: 16px;
-                    line-height: 1.6;
-                    color: #fff;
-                }
-                .commands {
-                    margin-top: 20px;
-                    padding: 15px;
-                    background: rgba(0,0,0,0.3);
-                    border-radius: 10px;
-                }
-                .command {
-                    margin: 10px 0;
-                    padding: 8px;
-                    background: rgba(110,21,21,0.3);
-                    border-left: 3px solid #6e1515;
-                }
-            </style>
-        </head>
-        <body>
-            <div class="card">
-                <div class="header">
-                    <img src="https://i.imgur.com/sage_avatar.png" class="sage-avatar">
-                    <div class="sage-name">Asukky The Sage</div>
-                </div>
-                <div class="content">
-                    <div class="title">${title}</div>
-                    <div class="text">${content}</div>
-                    ${commands ? `
-                    <div class="commands">
-                        <div class="command">/scroll info - View your current scroll progress</div>
-                        <div class="command">/scroll set <scrollname> - Set a scroll to work on</div>
-                        <div class="command">/learnjutsu - Attempt to learn from your current scroll</div>
-                    </div>
-                    ` : ''}
-                </div>
-            </div>
-        </body>
-        </html>
-    `;
-
-    await page.setContent(htmlContent);
-    const screenshot = await page.screenshot();
-    await browser.close();
-    return screenshot;
+    const requirementToUpdate = userReqs.requirements.find(r => r.type === type);
+    if (requirementToUpdate && requirementToUpdate.completed < requirementToUpdate.needed) {
+        requirementToUpdate.completed += value;
+        saveData(requirementsPath, requirements);
+    }
 }
 
 module.exports = {
@@ -526,9 +525,10 @@ module.exports = {
             });
         }
 
-        // Check if scroll exists in user's collection
+        // --- Case-insensitive scroll lookup ---
         const userScrolls = jutsuData[userId].scrolls;
-        if (!userScrolls.includes(scrollName)) {
+        const matchedScroll = userScrolls.find(s => s.toLowerCase() === scrollName.toLowerCase());
+        if (!matchedScroll) {
             return interaction.reply({
                 content: `You don't have the "${scrollName}"!\nAvailable scrolls: ${userScrolls.join(", ")}`,
                 ephemeral: true
@@ -551,9 +551,9 @@ module.exports = {
         }
 
         // Update user data
-        users[userId].current_scroll = scrollName;
+        users[userId].current_scroll = matchedScroll;
         requirements[userId] = {
-            scroll: scrollName,
+            scroll: matchedScroll,
             requirements: selectedReqs
         };
 
@@ -563,26 +563,12 @@ module.exports = {
         const embed = new EmbedBuilder()
             .setColor('#4BB543')
             .setTitle('📜 Scroll Selected')
-            .setDescription(`You are now working on **${scrollName}**\nUse \`/scroll info\` to check requirements!`)
+            .setDescription(`You are now working on **${matchedScroll}**\nUse \`/scroll info\` to check requirements!`)
             .setThumbnail(interaction.user.displayAvatarURL());
 
         await interaction.reply({ embeds: [embed] });
-    }
+    },
+
+    updateRequirements
 };
 
-// Add new method to track requirements
-async function updateRequirements(userId, type, value = 1) {
-    const requirements = loadData(requirementsPath);
-    const userReqs = requirements[userId];
-    
-    if (!userReqs) return;
-
-    const requirementToUpdate = userReqs.requirements.find(r => r.type === type);
-    if (requirementToUpdate && requirementToUpdate.completed < requirementToUpdate.needed) {
-        requirementToUpdate.completed += value;
-        saveData(requirementsPath, requirements);
-    }
-}
-
-// Export the update function
-module.exports.updateRequirements = updateRequirements;

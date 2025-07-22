@@ -45,6 +45,11 @@ for (const file of commandFiles) {
             continue;
         }
         client.commands.set(command.data.name, command);
+
+        // Register event-based commands (like admincommand102.js)
+        if (typeof command.setup === 'function') {
+            command.setup(client);
+        }
     } catch (error) {
         console.error(`❌ Error loading command "${file}":`, error);
     }

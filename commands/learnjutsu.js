@@ -13,7 +13,8 @@ const saveData = (path, data) => fs.writeFileSync(path, JSON.stringify(data, nul
 const SCROLL_JUTSU = {
     "Needle Assault Scroll": "Needle Assault",
     "Silent Assassination Scroll": "Silent Assassination",
-    "Serpents Wrath Scroll": "Serpents Wrath"
+    "Serpents Wrath Scroll": "Serpents Wrath",
+    "Infused Chakra Blade Scroll": "Infused Chakra Blade"
 };
 
 module.exports = {

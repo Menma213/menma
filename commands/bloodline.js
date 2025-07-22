@@ -1,507 +1,455 @@
-const { SlashCommandBuilder, ActionRowBuilder, StringSelectMenuBuilder, EmbedBuilder } = require('discord.js');
+const { SlashCommandBuilder, ActionRowBuilder, EmbedBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const fs = require('fs');
 const path = require('path');
-
-// Load environment variables
-require('dotenv').config();
-
-// Constants
-const ADMIN_ID = process.env.BOT_OWNER_ID || "961918563382362122";
-const BASE_LEVEL_REQ = 5;
-const LEVEL_INCREASE_PER_ATTEMPT = 5;
-const REMOVAL_COST = 250000;
-const MAX_ATTEMPTS = 5;
 
 // Path setup
 const dataPath = path.resolve(__dirname, '../../menma/data');
 const usersPath = path.join(dataPath, 'users.json');
-const bloodlinesPath = path.join(dataPath, 'bloodlines.json');
-
-// Emoji system
-const BLOODLINE_EMOJIS = {
-    'Uzumaki': { name: '🌀', color: 0xe74c3c },
-    'Uchiha': { name: '👁️', color: 0xe91e63 },
-    'Hyuga': { name: '👁️', color: 0x3498db },
-    'Nara': { name: '🦌', color: 0x2ecc71 },
-    'Aburame': { name: '🐛', color: 0x1abc9c },
-    'Akimichi': { name: '🍖', color: 0xe67e22 },
-    'Inuzuka': { name: '🐕', color: 0xf39c12 },
-    'Yamanaka': { name: '💭', color: 0x9b59b6 },
-    'Yuki': { name: '❄️', color: 0x00b4d8 },
-    'Senju': { name: '🌿', color: 0x27ae60 },
-    'Kaguya': { name: '🦴', color: 0xecf0f1 },
-    'Hozuki': { name: '💧', color: 0x0984e3 }
+const shrineGif = 'https://static.wikia.nocookie.net/naruto/images/7/76/Naka_Shrine.png/revision/latest/scale-to-width-down/1200?cb=20150816111302'; // Replace with your shrine GIF URL
+// Bloodline data
+const BLOODLINES = {
+	'Uchiha': {
+		title: 'Sharingan',
+		description: 'Unlocks the Sharinga, Uchiha clans trademark.',
+		cost: 100000,
+		emoji: '<:uchiha:123456789>', // Replace with your emoji ID
+		shrine: shrineGif
+	},
+	'Hyuga': {
+		title: 'Byakugan',
+		description: 'Has the ability to attack pressure points and drain chakra.',
+		cost: 100000,
+		emoji: '<:hyuga:123456789>', // Replace with your emoji ID
+		shrine: shrineGif
+	},
+	'Uzumaki': {
+		title: 'Uzumaki Will',
+		description: 'Plot armor bloodline.',
+		cost: 100000,
+		emoji: '<:uzumaki:123456789>', // Replace with your emoji ID
+		shrine: shrineGif
+	},
+	'Senju': {
+		title: 'Hyper Regeneration',
+		description: 'Grants incredible healing effects.',
+		cost: 100000,
+		emoji: '<:senju:123456789>', // Replace with your emoji ID
+		shrine: shrineGif
+	},
+	'Nara': {
+		title: 'Battle IQ',
+		description: 'Nobody beats a nara when its about battle iq.',
+		cost: 100000,
+		emoji: '<:nara:123456789>', // Replace with your emoji ID
+		shrine: shrineGif
+	}
 };
 
-const getBloodlineData = (id) => BLOODLINE_EMOJIS[id] || { name: '🔹', color: 0x7289da };
+const REMOVAL_COST = 250000;
+const SHRINE_COOLDOWN = 2 * 60 * 60 * 1000; // 2 hours in ms
 
-// Data handling
-const loadData = (path) => {
-    try {
-        if (!fs.existsSync(path)) {
-            fs.writeFileSync(path, JSON.stringify({}));
-            return {};
-        }
-        return JSON.parse(fs.readFileSync(path, 'utf8'));
-    } catch (err) {
-        console.error(`Error loading ${path}:`, err);
-        return {};
-    }
-};
+// Helper functions
+function loadUserData(userId) {
+	const users = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
+	if (!users[userId]) {
+		users[userId] = { money: 0, level: 0 };
+		fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
+	}
+	return users[userId];
+}
 
-const saveData = (path, data) => {
-    try {
-        const dir = path.split('/').slice(0, -1).join('/');
-        if (!fs.existsSync(dir)) {
-            fs.mkdirSync(dir, { recursive: true });
-        }
-        fs.writeFileSync(path, JSON.stringify(data, null, 2));
-    } catch (err) {
-        console.error(`Error saving ${path}:`, err);
-    }
-};
+function saveUserData(userId, data) {
+	const users = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
+	users[userId] = { ...users[userId], ...data };
+	fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
+}
 
-const bloodlines = loadData(bloodlinesPath);
-
-// Helper function to safely respond to interactions
-async function safeReply(interaction, options) {
-    try {
-        if (interaction.deferred || interaction.replied) {
-            return await interaction.editReply(options);
-        }
-        return await interaction.reply({ ...options, fetchReply: true });
-    } catch (err) {
-        if (err.code !== 40060 && err.code !== 10062) {
-            console.error('Interaction response failed:', err);
-        }
-    }
+async function getAsumaWebhook(channel) {
+	const webhooks = await channel.fetchWebhooks();
+	let asumaWebhook = webhooks.find(wh => wh.name === 'Asuma');
+	if (!asumaWebhook) {
+		asumaWebhook = await channel.createWebhook({
+			name: 'Asuma',
+			avatar: 'https://pm1.aminoapps.com/7847/98cca195c3bc0047d813f25357661be5f67818b3r1-750-754v2_hq.jpg',
+		});
+	}
+	return asumaWebhook;
 }
 
 module.exports = {
-    data: new SlashCommandBuilder()
-        .setName('bloodline')
-        .setDescription('Manage your ninja bloodline abilities')
-        .addSubcommand(subcommand =>
-            subcommand
-                .setName('choose')
-                .setDescription('Awaken your bloodline (Level 5 required)')
-        )
-        .addSubcommand(subcommand =>
-            subcommand
-                .setName('remove')
-                .setDescription(`Remove your current bloodline (${REMOVAL_COST.toLocaleString()} Ryo)`)
-        )
-        .addSubcommand(subcommand =>
-            subcommand
-                .setName('info')
-                .setDescription('View detailed bloodline information')
-                .addStringOption(option =>
-                    option.setName('bloodline')
-                        .setDescription('Specific bloodline to view')
-                        .setAutocomplete(true)
-                        .setRequired(true))
-        )
-        .addSubcommand(subcommand =>
-            subcommand
-                .setName('list')
-                .setDescription('List all available bloodlines')),
+	data: new SlashCommandBuilder()
+		.setName('bloodline')
+		.setDescription('Manage your ninja bloodline abilities')
+		.addStringOption(option =>
+			option.setName('option')
+				.setDescription('Choose an action')
+				.setRequired(false)
+				.addChoices(
+					{ name: 'awaken', value: 'awaken' },
+					{ name: 'remove', value: 'remove' },
+					{ name: 'shrine', value: 'shrine' }
+				)
+		)
+		.addStringOption(option =>
+			option.setName('bloodline')
+				.setDescription('Bloodline to awaken')
+				.setRequired(false)
+				.addChoices(
+					{ name: 'Uchiha', value: 'Uchiha' },
+					{ name: 'Hyuga', value: 'Hyuga' },
+					{ name: 'Uzumaki', value: 'Uzumaki' },
+					{ name: 'Senju', value: 'Senju' },
+					{ name: 'Nara', value: 'Nara' }
+				)
+		),
 
-    async execute(interaction) {
-        try {
-            const subcommand = interaction.options.getSubcommand();
-            const isEphemeral = subcommand !== 'list';
-            
-            try {
-                await interaction.deferReply({ ephemeral: isEphemeral });
-            } catch (error) {
-                if (error.code === 10062) {
-                    console.log('Interaction timed out before response');
-                    return;
-                }
-                throw error;
-            }
+	async execute(interaction) {
+		const userId = interaction.user.id;
+		const user = loadUserData(userId);
 
-            const users = loadData(usersPath);
-            const userId = interaction.user.id;
-            const user = users[userId] || { level: 0, money: 0 };
+		// Tutorial check
+		if (!user.bloodlineTuto) {
+			return await this.handleTutorial(interaction);
+		}
 
-            if (!user.level && subcommand !== 'info' && subcommand !== 'list') {
-                return await safeReply(interaction, {
-                    embeds: [
-                        new EmbedBuilder()
-                            .setColor(0xe74c3c)
-                            .setTitle('❌ Enrollment Required')
-                            .setDescription('You need to enroll as a ninja first!')
-                    ]
-                });
-            }
+		const option = interaction.options.getString('option');
+		const bloodline = interaction.options.getString('bloodline');
 
-            switch (subcommand) {
-                case 'choose': 
-                    await this.handleChoose(interaction, user, userId, users);
-                    break;
-                case 'remove':
-                    await this.handleRemove(interaction, user, userId, users);
-                    break;
-                case 'info':
-                    await this.handleInfo(interaction);
-                    break;
-                case 'list':
-                    await this.handleList(interaction);
-                    break;
-            }
-        } catch (error) {
-            console.error('Bloodline command error:', error);
-            await this.handleCommandError(interaction, error);
-        }
-    },
+		if (!option) {
+			return await this.showBloodlines(interaction);
+		}
 
-    async autocomplete(interaction) {
-        const focusedValue = interaction.options.getFocused().toLowerCase();
-        const filtered = Object.entries(bloodlines)
-            .filter(([_, bl]) => bl && bl.name && bl.name.toLowerCase().includes(focusedValue))
-            .slice(0, 25)
-            .map(([id, bl]) => ({ 
-                name: `${getBloodlineData(id).name} ${bl.name}`, 
-                value: id 
-            }));
-        
-        await interaction.respond(filtered).catch(() => {});
-    },
+		if (option === 'awaken') {
+			if (user.bloodline) {
+				return interaction.reply({
+					content: `You already have the ${user.bloodline} bloodline! Use \`/bloodline remove\` first.`,
+					ephemeral: true
+				});
+			}
+			if (!bloodline || !BLOODLINES[bloodline]) {
+				return interaction.reply({
+					content: "Please specify a valid bloodline to awaken.",
+					ephemeral: true
+				});
+			}
+			if (user.money < BLOODLINES[bloodline].cost) {
+				return interaction.reply({
+					content: `You need ${BLOODLINES[bloodline].cost.toLocaleString()} Ryo to awaken the ${bloodline} bloodline!`,
+					ephemeral: true
+				});
+			}
+			// Generate random shrine visits needed
+			const shrineVisitsNeeded = Math.floor(Math.random() * 10) + 1;
+			saveUserData(userId, {
+				bloodline_pending: bloodline,
+				bloodline_shrine_visits_needed: shrineVisitsNeeded,
+				bloodline_shrine_visits: 0
+			});
+			return interaction.reply({
+				content: `To awaken the ${BLOODLINES[bloodline].emoji} **${bloodline}** bloodline, you must visit its shrine **${shrineVisitsNeeded}** times using \`/bloodline option:shrine\`.`,
+				ephemeral: false
+			});
+		}
 
-    async handleChoose(interaction, player, userId, users) {
-        const isAdmin = userId === ADMIN_ID;
-        
-        if (player.bloodline) {
-            const current = bloodlines[player.bloodline];
-            return await safeReply(interaction, {
-                embeds: [
-                    new EmbedBuilder()
-                        .setColor(0xe74c3c)
-                        .setTitle('❌ Bloodline Already Awakened')
-                        .setDescription(`You already have the ${current?.name || 'unknown'} bloodline!`)
-                        .addFields({
-                            name: 'Want to change?',
-                            value: `Use \`/bloodline remove\` (costs ${REMOVAL_COST.toLocaleString()} Ryo)`
-                        })
-                ]
-            });
-        }
+		if (option === 'shrine') {
+			// Only need to check user's pending bloodline
+			const pendingBloodline = user.bloodline_pending;
+			if (!pendingBloodline || !BLOODLINES[pendingBloodline]) {
+				return interaction.reply({
+					content: "You are not currently awakening any bloodline. Use `/bloodline option:awaken bloodline:<name>` first.",
+					ephemeral: true
+				});
+			}
+			// Shrine cooldown check
+			const now = Date.now();
+			if (user.lastShrineVisit && now - user.lastShrineVisit < SHRINE_COOLDOWN) {
+				const remaining = Math.ceil((SHRINE_COOLDOWN - (now - user.lastShrineVisit)) / (1000 * 60 * 60));
+				return interaction.reply({
+					content: `You can only visit a shrine once every 2 hours. Please wait ${remaining} more hours.`,
+					ephemeral: true
+				});
+			}
+			// Update shrine visit count
+			const visits = (user.bloodline_shrine_visits || 0) + 1;
+			saveUserData(userId, {
+				lastShrineVisit: now,
+				bloodline_shrine_visits: visits
+			});
 
-        let requiredLevel = BASE_LEVEL_REQ;
-        if (!isAdmin) {
-            const attempts = player.bloodlineAttempts || 0;
-            const cappedAttempts = Math.min(attempts, MAX_ATTEMPTS);
-            requiredLevel += cappedAttempts * LEVEL_INCREASE_PER_ATTEMPT;
-            
-            if (player.level < requiredLevel) {
-                users[userId].bloodlineAttempts = attempts + 1;
-                saveData(usersPath, users);
-                
-                const nextAttempt = Math.min(attempts + 1, MAX_ATTEMPTS);
-                const nextRequirement = BASE_LEVEL_REQ + (nextAttempt * LEVEL_INCREASE_PER_ATTEMPT);
-                
-                return await safeReply(interaction, {
-                    embeds: [
-                        new EmbedBuilder()
-                            .setColor(0xf39c12)
-                            .setTitle('🛑 Level Requirement Not Met')
-                            .setDescription(`You're too weak to awaken your bloodline!`)
-                            .addFields(
-                                { name: 'Current Level', value: `${player.level}`, inline: true },
-                                { name: 'Required Level', value: `${requiredLevel}`, inline: true },
-                                { name: 'Attempts', value: `${attempts + 1}/${MAX_ATTEMPTS}`, inline: true },
-                                { 
-                                    name: 'Next Attempt', 
-                                    value: `Will require level ${nextRequirement}`,
-                                    inline: false 
-                                }
-                            )
-                    ]
-                });
-            }
-        }
+			// 40% chance to reset a cooldown
+			let bonusText = "Nothing special happened this time.";
+			if (Math.random() < 0.4) {
+				const cooldowns = ['lastdrank', 'lastbrank', 'lastsrank', 'lastArank'].filter(cd => user[cd]);
+			 if (cooldowns.length > 0) {
+					const resetCD = cooldowns[Math.floor(Math.random() * cooldowns.length)];
+					saveUserData(userId, { [resetCD]: null });
+					bonusText = `Your ${resetCD.replace('last', '')} cooldown has been reset!`;
+				}
+			}
 
-        const availableBloodlines = Object.entries(bloodlines)
-            .filter(([id, bl]) => bl && (isAdmin || player.level >= (bl.requiredLevel || BASE_LEVEL_REQ)))
-            .map(([id, bl]) => ({
-                label: bl.name || 'Unknown',
-                description: bl.passive ? `${bl.passive.substring(0, 50)}...` : 'No description available',
-                value: id,
-                emoji: getBloodlineData(id).name
-            }));
+			// Use shrine GIF from bloodline config
+			const shrineGif = BLOODLINES[pendingBloodline].shrine;
 
-        if (availableBloodlines.length === 0) {
-            return await safeReply(interaction, {
-                embeds: [
-                    new EmbedBuilder()
-                        .setColor(0xe74c3c)
-                        .setTitle('❌ No Bloodlines Available')
-                        .setDescription('You do not qualify for any bloodlines at your current level!')
-                ]
-            });
-        }
+			const embed = new EmbedBuilder()
+				.setTitle(`Visiting the ${pendingBloodline} Shrine`)
+				.setDescription(`You pray at the ${BLOODLINES[pendingBloodline].emoji} ${pendingBloodline} shrine and perform the blood ritual.\n\n${bonusText}`)
+				.setImage(shrineGif)
+				.setColor(0x8B4513); // Brown color for shrine
 
-        const selectMenu = new StringSelectMenuBuilder()
-            .setCustomId('bloodlineSelect')
-            .setPlaceholder('Choose your bloodline...')
-            .addOptions(availableBloodlines);
+			if (visits >= user.bloodline_shrine_visits_needed) {
+				// Grant bloodline
+				saveUserData(userId, {
+					bloodline: pendingBloodline,
+					bloodline_pending: null,
+					bloodline_shrine_visits_needed: null,
+					bloodline_shrine_visits: null,
+					money: user.money - BLOODLINES[pendingBloodline].cost
+				});
+				return interaction.reply({
+					embeds: [embed],
+					content: `Congratulations! You've awakened the ${BLOODLINES[pendingBloodline].emoji} **${pendingBloodline}** bloodline and gained **${BLOODLINES[pendingBloodline].title}**!\n${BLOODLINES[pendingBloodline].description}`,
+					ephemeral: false
+				});
+			} else {
+				return interaction.reply({
+					embeds: [embed],
+					content: `You prayed at the ${BLOODLINES[pendingBloodline].emoji} ${pendingBloodline} shrine. (${visits}/${user.bloodline_shrine_visits_needed} visits)\nKeep visiting until you reach the required number!`,
+					ephemeral: false
+				});
+			}
+		}
 
-        const embed = new EmbedBuilder()
-            .setColor(0x3498db)
-            .setTitle('🔮 Bloodline Awakening')
-            .setDescription('Choose your bloodline carefully! This is a permanent decision.')
-            .addFields(
-                { 
-                    name: 'Available Bloodlines', 
-                    value: `${availableBloodlines.length}/${Object.keys(bloodlines).length}`,
-                    inline: true 
-                },
-                { 
-                    name: 'Level Requirement', 
-                    value: `${requiredLevel}+`,
-                    inline: true 
-                }
-            )
-            .setFooter({ text: 'Select from the menu below' });
+		if (option === 'remove') {
+			if (!user.bloodline) {
+				return interaction.reply({
+					content: "You don't have a bloodline to remove!",
+					ephemeral: true
+				});
+			}
+			if (user.money < REMOVAL_COST) {
+				return interaction.reply({
+					content: `You need ${REMOVAL_COST.toLocaleString()} Ryo to remove your bloodline!`,
+					ephemeral: true
+				});
+			}
+			const removedBloodline = user.bloodline;
+			saveUserData(userId, {
+				bloodline: null,
+				money: user.money - REMOVAL_COST
+			});
+			return interaction.reply({
+				content: `You've removed your ${removedBloodline} bloodline for ${REMOVAL_COST.toLocaleString()} Ryo.`,
+				ephemeral: false
+			});
+		}
+	},
 
-        await safeReply(interaction, {
-            embeds: [embed],
-            components: [new ActionRowBuilder().addComponents(selectMenu)]
-        });
-    },
+	async handleTutorial(interaction) {
+		const asumaWebhook = await getAsumaWebhook(interaction.channel);
 
-    async handleRemove(interaction, player, userId, users) {
-        if (!player.bloodline) {
-            return await safeReply(interaction, {
-                embeds: [
-                    new EmbedBuilder()
-                        .setColor(0xe74c3c)
-                        .setTitle('❌ No Bloodline Found')
-                        .setDescription("You don't have a bloodline to remove!")
-                ]
-            });
-        }
+		// Step 1: Introduction
+		await asumaWebhook.send({
+			content: "**Asuma:** Hold up! Are you here to learn about bloodlines? I'll guide you.",
+			components: [
+				new ActionRowBuilder().addComponents(
+					new ButtonBuilder()
+						.setCustomId('bloodline_continue_1')
+						.setLabel('Continue')
+						.setStyle(ButtonStyle.Primary)
+				)
+			]
+		});
 
-        if (player.money < REMOVAL_COST) {
-            return await safeReply(interaction, {
-                embeds: [
-                    new EmbedBuilder()
-                        .setColor(0xf39c12)
-                        .setTitle('💰 Insufficient Funds')
-                        .setDescription(`You need ${REMOVAL_COST.toLocaleString()} Ryo to remove your bloodline!`)
-                        .addFields(
-                            { name: 'Your Balance', value: `${player.money?.toLocaleString() || 0} Ryo`, inline: true },
-                            { name: 'Missing', value: `${(REMOVAL_COST - (player.money || 0)).toLocaleString()} Ryo`, inline: true }
-                        )
-                ]
-            });
-        }
+		const collector = interaction.channel.createMessageComponentCollector({
+			filter: i => i.customId.startsWith('bloodline_continue_') || i.customId === 'bloodline_finish',
+			time: 60000
+		});
 
-        const removedBloodline = bloodlines[player.bloodline]?.name || 'unknown';
-        users[userId] = {
-            ...player,
-            bloodline: null,
-            money: (player.money || 0) - REMOVAL_COST,
-            bloodlineAttempts: (player.bloodlineAttempts || 0) + 1
-        };
-        saveData(usersPath, users);
+		let step = 1;
+		collector.on('collect', async i => {
+			await i.deferUpdate();
+			step++;
+			if (step === 2) {
+				await asumaWebhook.send({
+					content: "**Asuma:** Bloodlines are a strange awakening that have been passed down the generations. The first ever bloodline was the Otsutsuki Bloodline. It then divided into various bloodlines through Hagoromo and Hamura.",
+					components: [
+						new ActionRowBuilder().addComponents(
+							new ButtonBuilder()
+								.setCustomId('bloodline_continue_2')
+								.setLabel('Continue')
+								.setStyle(ButtonStyle.Primary)
+						)
+					]
+				});
+			} else if (step === 3) {
+				await asumaWebhook.send({
+					content: "**Asuma:** But before I give you a history class, I must warn you that awakening a bloodline is not simple! Each bloodline has its own traditions and limits. First, you must prove your loyalty by visiting the bloodline's shrine with `/bloodline shrine`.",
+					components: [
+						new ActionRowBuilder().addComponents(
+							new ButtonBuilder()
+								.setCustomId('bloodline_continue_3')
+								.setLabel('Continue')
+								.setStyle(ButtonStyle.Primary)
+						)
+					]
+				});
+			} else if (step === 4) {
+				await asumaWebhook.send({
+					content: "**Asuma:** The tradition involves dropping your blood on Karui Kami, a substance lighter than paper. It moves to check your worth and determines how many shrine visits you need. Also, awakening costs 100,000 Ryo and removing costs 250,000 Ryo. Good luck!",
+					components: [
+						new ActionRowBuilder().addComponents(
+							new ButtonBuilder()
+								.setCustomId('bloodline_finish')
+								.setLabel('Complete')
+								.setStyle(ButtonStyle.Success)
+						)
+					]
+				});
+			} else if (step === 5 || i.customId === 'bloodline_finish') {
+				saveUserData(interaction.user.id, { bloodlineTuto: true });
+				await asumaWebhook.send("**Asuma:** You're all set! Use `/bloodline` to get started.");
+				collector.stop();
+			}
+		});
+	},
 
-        await safeReply(interaction, {
-            embeds: [
-                new EmbedBuilder()
-                    .setColor(0x2ecc71)
-                    .setTitle('✅ Bloodline Removed')
-                    .setDescription(`**${removedBloodline}** bloodline has been removed for ${REMOVAL_COST.toLocaleString()} Ryo`)
-                    .addFields({
-                        name: 'Note',
-                        value: 'You can now attempt to awaken a new bloodline, but the level requirement will be higher.'
-                    })
-            ]
-        });
-    },
+	async showBloodlines(interaction) {
+		const user = loadUserData(interaction.user.id);
+		const embed = new EmbedBuilder()
+			.setTitle(' Available Bloodlines')
+			.setDescription('Each bloodline grants unique abilities. Use `/bloodline awaken` to begin.')
+			.setColor(0x9b59b6);
 
-    async handleInfo(interaction) {
-        const bloodlineId = interaction.options.getString('bloodline');
-        const bl = bloodlines[bloodlineId];
-        
-        if (!bl) {
-            return await safeReply(interaction, {
-                embeds: [
-                    new EmbedBuilder()
-                        .setColor(0xe74c3c)
-                        .setTitle('❌ Bloodline Not Found')
-                        .setDescription('The specified bloodline could not be found!')
-                ]
-            });
-        }
+		for (const [name, data] of Object.entries(BLOODLINES)) {
+			embed.addFields({
+				name: `${data.emoji} ${name} - ${data.title}`,
+				value: `${data.description}\n**Cost:** ${data.cost.toLocaleString()} Ryo`,
+				inline: false
+			});
+		}
 
-        const emojiData = getBloodlineData(bloodlineId);
-        const embed = new EmbedBuilder()
-            .setTitle(`${emojiData.name} ${bl.name || 'Unknown'} Bloodline`)
-            .setDescription(bl.description || 'No description available')
-            .setColor(emojiData.color)
-            .addFields(
-                { 
-                    name: 'Passive Ability', 
-                    value: bl.passive || 'No passive ability defined',
-                    inline: false 
-                },
-                { 
-                    name: 'Requirements', 
-                    value: `• Level: ${bl.requiredLevel || BASE_LEVEL_REQ}\n• Removal Cost: ${REMOVAL_COST.toLocaleString()} Ryo`,
-                    inline: true 
-                },
-                { 
-                    name: 'Specialty', 
-                    value: bl.specialty || 'General',
-                    inline: true 
-                }
-            )
-            .setThumbnail(interaction.user.displayAvatarURL())
-            .setFooter({ text: 'Bloodline abilities activate automatically in battle' });
+		embed.addFields({
+			name: 'Removal Cost',
+			value: `${REMOVAL_COST.toLocaleString()} Ryo`,
+			inline: true
+		});
 
-        await safeReply(interaction, { embeds: [embed] });
-    },
+		await interaction.reply({ embeds: [embed] });
+	},
 
-    async handleList(interaction) {
-        const groupedBloodlines = Object.entries(bloodlines).reduce((acc, [id, bl]) => {
-            if (!bl) return acc;
-            const specialty = bl.specialty || 'General';
-            if (!acc[specialty]) acc[specialty] = [];
-            acc[specialty].push({ id, ...bl });
-            return acc;
-        }, {});
+	async handleAwaken(interaction, user) {
+		if (user.bloodline) {
+			return interaction.reply({
+				content: `You already have the ${user.bloodline} bloodline! Use \`/bloodline remove\` first.`,
+				ephemeral: true
+			});
+		}
 
-        const embed = new EmbedBuilder()
-            .setTitle('🩸 Available Bloodlines')
-            .setDescription(`Each grants unique powers starting at level ${BASE_LEVEL_REQ}\nUse \`/bloodline info [name]\` for details`)
-            .setColor(0x9b59b6);
+		await interaction.reply({
+			content: "What bloodline are you here to awaken? (Uchiha, Hyuga, Uzumaki, Senju, or Nara)",
+			ephemeral: true
+		});
 
-        for (const [specialty, bls] of Object.entries(groupedBloodlines)) {
-            embed.addFields({
-                name: `▸ ${specialty}`,
-                value: bls.map(bl => {
-                    const emoji = getBloodlineData(bl.id).name;
-                    return `${emoji} **${bl.name || 'Unknown'}** - ${(bl.description || '').substring(0, 50)}...`;
-                }).join('\n'),
-                inline: false
-            });
-        }
+		const filter = m => m.author.id === interaction.user.id;
+		const collector = interaction.channel.createMessageCollector({ filter, time: 30000 });
 
-        embed.setFooter({ text: `Total bloodlines: ${Object.keys(bloodlines).length}` });
+		collector.on('collect', async m => {
+			const choice = m.content.toLowerCase();
+			const bloodline = Object.keys(BLOODLINES).find(bl => bl.toLowerCase() === choice);
 
-        await safeReply(interaction, { embeds: [embed] });
-    },
+			if (!bloodline) {
+				await interaction.followUp({
+					content: "Invalid bloodline choice. Please try again with a valid bloodline name.",
+					ephemeral: true
+				});
+				return;
+			}
 
-    async handleCommandError(interaction, error) {
-        try {
-            const content = "❌ An error occurred. Please try again later.";
-            await safeReply(interaction, { content });
-        } catch (err) {
-            console.error('Failed to handle error:', err);
-        }
-    },
+			collector.stop();
 
-    async handleSelection(interaction) {
-        try {
-            await interaction.deferReply({ ephemeral: true });
-            
-            const { user, values } = interaction;
-            const bloodlineId = values[0];
-            const bloodline = bloodlines[bloodlineId];
+			const bloodlineData = BLOODLINES[bloodline];
+			if (user.money < bloodlineData.cost) {
+				return interaction.followUp({
+					content: `You need ${bloodlineData.cost.toLocaleString()} Ryo to awaken the ${bloodline} bloodline!`,
+					ephemeral: true
+				});
+			}
 
-            if (!bloodline) {
-                return await interaction.editReply({
-                    embeds: [
-                        new EmbedBuilder()
-                            .setColor(0xe74c3c)
-                            .setTitle('❌ Bloodline Not Found')
-                            .setDescription('The selected bloodline no longer exists!')
-                    ]
-                });
-            }
+			saveUserData(interaction.user.id, {
+				bloodline,
+				money: user.money - bloodlineData.cost
+			});
 
-            const users = loadData(usersPath);
-            const player = users[user.id] || { level: 0 };
+			await interaction.followUp({
+				content: `Congratulations! You've awakened the ${bloodlineData.emoji} **${bloodline}** bloodline and gained **${bloodlineData.title}**!\n${bloodlineData.description}`,
+				ephemeral: false
+			});
+		});
+	},
 
-            if (player.bloodline) {
-                return await interaction.editReply({
-                    embeds: [
-                        new EmbedBuilder()
-                            .setColor(0xe74c3c)
-                            .setTitle('❌ Bloodline Already Awakened')
-                            .setDescription('You already have a bloodline!')
-                    ]
-                });
-            }
+	async handleRemove(interaction, user) {
+		if (!user.bloodline) {
+			return interaction.reply({
+				content: "You don't have a bloodline to remove!",
+				ephemeral: true
+			});
+		}
 
-            const isAdmin = user.id === ADMIN_ID;
-            const requiredLevel = bloodline.requiredLevel || BASE_LEVEL_REQ;
-            const attempts = player.bloodlineAttempts || 0;
-            const actualRequiredLevel = requiredLevel + (Math.min(attempts, MAX_ATTEMPTS) * LEVEL_INCREASE_PER_ATTEMPT);
-            
-            if (!isAdmin && player.level < actualRequiredLevel) {
-                return await interaction.editReply({ 
-                    embeds: [
-                        new EmbedBuilder()
-                            .setColor(0xf39c12)
-                            .setTitle('❌ Level Requirement Not Met')
-                            .setDescription(`You need level ${actualRequiredLevel} for the ${bloodline.name} bloodline!`)
-                            .addFields(
-                                { name: 'Your Level', value: `${player.level}`, inline: true }
-                            )
-                    ]
-                });
-            }
+		if (user.money < REMOVAL_COST) {
+			return interaction.reply({
+				content: `You need ${REMOVAL_COST.toLocaleString()} Ryo to remove your bloodline!`,
+				ephemeral: true
+			});
+		}
 
-            users[user.id] = {
-                ...player,
-                bloodline: bloodlineId,
-                bloodlineAttempts: 0
-            };
-            saveData(usersPath, users);
+		const removedBloodline = user.bloodline;
+		saveUserData(interaction.user.id, {
+			bloodline: null,
+			money: user.money - REMOVAL_COST
+		});
 
-            const emojiData = getBloodlineData(bloodlineId);
-            const embed = new EmbedBuilder()
-                .setTitle(`✨ ${emojiData.name} Bloodline Awakened: ${bloodline.name || 'Unknown'}`)
-                .setDescription(`**${bloodline.description || 'No description available'}**`)
-                .setColor(emojiData.color)
-                .addFields(
-                    { 
-                        name: 'Passive Ability', 
-                        value: bloodline.passive || 'No passive ability defined',
-                        inline: false 
-                    },
-                    { 
-                        name: 'Specialty', 
-                        value: bloodline.specialty || 'General',
-                        inline: true 
-                    }
-                )
-                .setThumbnail(user.displayAvatarURL())
-                .setFooter({ text: 'This power is now yours to command' });
+		await interaction.reply({
+			content: `You've removed your ${removedBloodline} bloodline for ${REMOVAL_COST.toLocaleString()} Ryo.`,
+			ephemeral: false
+		});
+	},
 
-            await interaction.editReply({ embeds: [embed] });
-            
-            if (!isAdmin && player.level >= 20) {
-                await interaction.followUp({
-                    content: `🎉 **${user.username}** has awakened the **${bloodline.name || 'Unknown'}** bloodline!`,
-                    ephemeral: false
-                }).catch(() => {});
-            }
-        } catch (error) {
-            console.error('Bloodline selection error:', error);
-            try {
-                const content = "❌ An error occurred during bloodline selection.";
-                if (interaction.deferred || interaction.replied) {
-                    await interaction.editReply({ content }).catch(() => {});
-                } else {
-                    await interaction.reply({ content, ephemeral: true }).catch(() => {});
-                }
-            } catch (err) {
-                console.error('Failed to handle selection error:', err);
-            }
-        }
-    }
+	async handleShrine(interaction, user) {
+		const bloodline = interaction.options.getString('bloodline');
+		const bloodlineData = BLOODLINES[bloodline];
+
+		// Check cooldown
+		const now = Date.now();
+		if (user.lastShrineVisit && now - user.lastShrineVisit < SHRINE_COOLDOWN) {
+			const remaining = Math.ceil((SHRINE_COOLDOWN - (now - user.lastShrineVisit)) / (1000 * 60 * 60));
+			return interaction.reply({
+				content: `You can only visit a shrine once every 2 hours. Please wait ${remaining} more hours.`,
+				ephemeral: true
+			});
+		}
+
+		// Update last visit time
+		saveUserData(interaction.user.id, { lastShrineVisit: now });
+
+		// 40% chance to reset a cooldown
+		const resetCooldown = Math.random() < 0.4;
+		let bonusText = "Nothing special happened this time.";
+
+		if (resetCooldown) {
+			const cooldowns = ['drank', 'brank', 'srank', 'arank'].filter(cd => user[`last${cd}`]);
+			if (cooldowns.length > 0) {
+				const resetCD = cooldowns[Math.floor(Math.random() * cooldowns.length)];
+				saveUserData(interaction.user.id, { [`last${resetCD}`]: 0 });
+				bonusText = `Your ${resetCD} cooldown has been reset!`;
+			}
+		}
+
+		const embed = new EmbedBuilder()
+			.setTitle(`Visiting the ${bloodline} Shrine`)
+			.setDescription(`You pray at the ${bloodlineData.emoji} ${bloodline} shrine and perform the blood ritual.\n\n${bonusText}`)
+			.setImage(bloodlineData.shrine)
+			.setColor(0x8B4513); // Brown color for shrine
+
+		await interaction.reply({ embeds: [embed] });
+	}
 };

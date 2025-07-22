@@ -51,12 +51,12 @@ const srankBosses = {
     "haku": {
         name: "Haku",
         image: "https://static.wikia.nocookie.net/naruto/images/3/35/Haku%27s_shinobi_attire.png/revision/latest/scale-to-width-down/1200?cb=20160610212143", // Replace with actual image
-        health: 25000,
-        power: 800,
-        defense: 400,
-        jutsu: ["Needle Assault"],  // Changed to use their signature move"],
+        health: 250,
+        power: 100,
+        defense: 50,
+        jutsu: ["Attack, Needle Assault"],  // Changed to use their signature move"],
         reward: "Needle Assault",
-        rewardChance: 1.0,
+        rewardChance: 0.5,
         rewardScroll: "Needle Assault Scroll",
         accuracy: 90,
         dodge: 15
@@ -64,28 +64,28 @@ const srankBosses = {
     "zabuza": {
         name: "Zabuza",
         image: "https://static.wikia.nocookie.net/villains/images/7/7d/Zabuza.png/revision/latest?cb=20181118072602", // Replace with actual image
-        health: 30000,
-        power: 1000,
-        defense: 600,
-        jutsu: ["Silent Assassination"],  // Changed to use their signature move
+        health: 300,
+        power: 150,
+        defense: 100,
+        jutsu: ["Attack, Silent Assassination"],  // Changed to use their signature move
         reward: "Silent Assassination",
         rewardChance: 0.3,
         rewardScroll: "Silent Assassination Scroll",
         accuracy: 85,
-        dodge: 20
+        dodge: 40
     },
     "orochimaru": {
         name: "Orochimaru",
         image: "https://www.pngplay.com/wp-content/uploads/12/Orochimaru-PNG-Free-File-Download.png", // Replace with actual image
-        health: 35000,
-        power: 1200,
-        defense: 800,
-        jutsu: ["Serpents Wrath"],  // Changed to use their signature move
+        health: 400,
+        power: 300,
+        defense: 200,
+        jutsu: ["Attack, Serpents Wrath"],  // Changed to use their signature move
         reward: "Serpents Wrath",
         rewardChance: 0.3,
         rewardScroll: "Serpents Wrath Scroll",
         accuracy: 95,
-        dodge: 25
+        dodge: 20
     }
 };
 
@@ -240,16 +240,51 @@ function getRandomMaterial() {
     return mats[Math.floor(Math.random() * mats.length)];
 }
 
+// Bloodline emoji/gif/name/department definitions (future-proofed)
+const BLOODLINE_EMOJIS = {
+    Uchiha: "🩸", // fallback to unicode for button
+    Hyuga: "👁️",
+    Uzumaki: "🌀",
+    Senju: "🌳",
+    Nara: "🪙"
+};
+const BLOODLINE_GIFS = {
+    Uchiha: "https://media.tenor.com/0QwQvQkQwQwAAAAd/sharingan.gif",
+    Hyuga: "https://media.tenor.com/Hyuga.gif",
+    Uzumaki: "https://media.tenor.com/Uzumaki.gif",
+    Senju: "https://media.tenor.com/Senju.gif",
+    Nara: "https://media.tenor.com/Nara.gif"
+};
+const BLOODLINE_NAMES = {
+    Uchiha: "Sharingan",
+    Hyuga: "Byakugan",
+    Uzumaki: "Uzumaki Will",
+    Senju: "Hyper Regeneration",
+    Nara: "Battle IQ"
+};
+// Department/flavor text for each bloodline
+const BLOODLINE_DEPARTMENTS = {
+    Uchiha: "A crimson aura flickers in your eyes.",
+    Hyuga: "Your veins bulge as your vision sharpens.",
+    Uzumaki: "A spiral of energy wells up from deep within.",
+    Senju: "Your body pulses with ancient vitality.",
+    Nara: "Your mind sharpens, calculating every move."
+};
+
+// Helper to parse custom emoji string
+function parseCustomEmoji(emojiStr) {
+    if (!emojiStr) return null;
+    const match = emojiStr.match(/^<:([a-zA-Z0-9_]+):(\d+)>$/);
+    if (match) {
+        return { id: match[2], name: match[1] };
+    }
+    return null;
+}
+
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('srank')
-        .setDescription('Embark on a dangerous S-Rank mission')
-        .addUserOption(option =>
-            option.setName('player2')
-                .setDescription('Optional second player'))
-        .addUserOption(option =>
-            option.setName('player3')
-                .setDescription('Optional third player')),
+        .setDescription('Embark on a dangerous S-Rank mission'),
 
     async execute(interaction) {
         try {
@@ -257,8 +292,6 @@ module.exports = {
             await interaction.deferReply();
 
             const userId = interaction.user.id;
-            const player2 = interaction.options.getUser('player2');
-            const player3 = interaction.options.getUser('player3');
 
             // Load user data
             if (!fs.existsSync(usersPath)) {
@@ -270,6 +303,7 @@ module.exports = {
                 return await interaction.followUp({ content: "You need to enroll first!", ephemeral: true });
             }
 
+            // Only allow solo play
             let players = [
                 { 
                     id: userId, 
@@ -277,7 +311,8 @@ module.exports = {
                     ...users[userId],
                     activeEffects: [],
                     accuracy: 100,
-                    dodge: 0
+                    dodge: 0,
+                    bloodline: users[userId].bloodline // keep bloodline for reference
                 }
             ];
 
@@ -292,98 +327,30 @@ module.exports = {
 
             // --- COOLDOWN SYSTEM ---
             const now = Date.now();
-            if (users[userId].lastsrank && now - users[userId].lastsrank < 18 * 60 * 1000) {
-                const left = 18 * 60 * 1000 - (now - users[userId].lastsrank);
+
+            // --- PREMIUM COOLDOWN PATCH ---
+            // Role IDs
+            const JINCHURIKI_ROLE = "1385641469507010640";
+            const LEGENDARY_ROLE = "1385640798581952714";
+            const DONATOR_ROLE = "1385640728130097182";
+            let cooldownMs = 18 * 60 * 1000; // default 18 min
+
+            // Check premium roles (jinchuriki > legendary > donator)
+            const memberRoles = interaction.member.roles.cache;
+            if (memberRoles.has(JINCHURIKI_ROLE)) {
+                cooldownMs = 10 * 60 * 1000; // 10 min
+            } else if (memberRoles.has(LEGENDARY_ROLE)) {
+                cooldownMs = Math.round(12 * 60 * 1000 ); // 11 min
+            } else if (memberRoles.has(DONATOR_ROLE)) {
+                cooldownMs = Math.round(13 * 60 * 1000); // 12.1 min
+            }
+
+            if (users[userId].lastsrank && now - users[userId].lastsrank < cooldownMs) {
+                const left = cooldownMs - (now - users[userId].lastsrank);
                 return interaction.followUp({ content: `You can do this again in ${getCooldownString(left)}.`, ephemeral: true });
             }
             users[userId].lastsrank = now;
             fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
-
-            // Replace reaction-based invite with buttons
-            if (player2 || player3) {
-                const invitedPlayers = [player2, player3].filter(p => p);
-                const inviteEmbed = new EmbedBuilder()
-                    .setTitle('S-Rank Mission Invite!')
-                    .setDescription(`${invitedPlayers.map(p => `<@${p.id}>`).join(', ')}, will you join <@${interaction.user.id}>'s mission?`)
-                    .setColor('#006400');
-
-                const inviteRow = new ActionRowBuilder()
-                    .addComponents(
-                        new ButtonBuilder()
-                            .setCustomId('accept_mission')
-                            .setLabel('Accept')
-                            .setStyle(ButtonStyle.Success),
-                        new ButtonBuilder()
-                            .setCustomId('decline_mission')
-                            .setLabel('Decline')
-                            .setStyle(ButtonStyle.Danger)
-                    );
-
-                const inviteMsg = await interaction.followUp({
-                    embeds: [inviteEmbed],
-                    components: [inviteRow]
-                });
-
-                const accepted = new Set();
-                const filter = i => invitedPlayers.map(p => p.id).includes(i.user.id);
-                const collector = inviteMsg.createMessageComponentCollector({ filter, time: 60000 });
-
-                collector.on('collect', async i => {
-                    if (i.customId === 'accept_mission') {
-                        accepted.add(i.user.id);
-                        await i.reply({ content: `${i.user} has accepted the mission!`, ephemeral: false });
-                    } else {
-                        await i.reply({ content: `${i.user} has declined the mission.`, ephemeral: false });
-                        collector.stop('declined');
-                    }
-                    
-                    if (accepted.size === invitedPlayers.length) {
-                        collector.stop('accepted');
-                    }
-                });
-
-                const result = await new Promise(resolve => {
-                    collector.on('end', (_, reason) => resolve(reason));
-                });
-
-                if (result !== 'accepted') {
-                    return await interaction.followUp({
-                        content: "Mission cancelled - not all players accepted.",
-                        embeds: [],
-                        components: []
-                    });
-                }
-
-                players = players.filter(p => p.id === userId || accepted.has(p.id));
-            }
-
-            if (player2) {
-                if (!users[player2.id]) {
-                    return await interaction.followUp({ content: `${player2.username} needs to enroll first!` });
-                }
-                players.push({ 
-                    id: player2.id, 
-                    username: player2.username, 
-                    ...users[player2.id],
-                    activeEffects: [],
-                    accuracy: 100,
-                    dodge: 0
-                });
-            }
-
-            if (player3) {
-                if (!users[player3.id]) {
-                    return await interaction.followUp({ content: `${player3.username} needs to enroll first!` });
-                }
-                players.push({ 
-                    id: player3.id, 
-                    username: player3.username, 
-                    ...users[player3.id],
-                    activeEffects: [],
-                    accuracy: 100,
-                    dodge: 0
-                });
-            }
 
             // Change boss selection options
             const bossOptions = Object.entries(srankBosses).map(([bossId, boss]) => ({
@@ -415,7 +382,8 @@ module.exports = {
 
             collector.on('collect', async i => {
                 try {
-                    await i.deferUpdate();
+                    // Remove deferUpdate here to avoid double-acknowledgement error
+                    // await i.deferUpdate();
                     collector.stop();
                     
                     const bossId = i.values[0];
@@ -438,34 +406,32 @@ module.exports = {
                     const totalPlayerHealth = players.reduce((sum, p) => sum + p.health, 0);
                     let currentPlayerHealth = totalPlayerHealth;  // Initialize currentPlayerHealth
 
-                    // Generate battle image with proper player positioning (Canvas version)
+                    // Replace S-rank battle image generator with brank's version
                     const generateBattleImage = async () => {
-                        const width = 800;
-                        const playerCount = players.length;
-                        const height = playerCount === 1 ? 400 : 500;
+                        // Canvas setup (copied from brank.js)
+                        const width = 800, height = 400;
                         const canvas = createCanvas(width, height);
                         const ctx = canvas.getContext('2d');
 
-                        // Load images
-                        let bgImg, npcImg;
-                        try { bgImg = await loadImage('https://i.pinimg.com/originals/5d/e5/62/5de5622ecdd4e24685f141f10e4573e3.jpg'); } catch { bgImg = null; }
-                        try { npcImg = await loadImage(npc.image); } catch { npcImg = null; }
-                        // Player avatars
-                        const playerImgs = [];
-                        for (const p of players) {
-                            let url;
-                            if (interaction.guild && interaction.guild.members.cache.get(p.id)?.user.avatar) {
-                                url = `https://cdn.discordapp.com/avatars/${p.id}/${interaction.guild.members.cache.get(p.id).user.avatar}.png?size=256`;
-                            } else {
-                                const defaultAvatarNumber = parseInt(p.id) % 5;
-                                url = `https://cdn.discordapp.com/embed/avatars/${defaultAvatarNumber}.png`;
-                            }
-                            try { playerImgs.push(await loadImage(url)); } catch { playerImgs.push(null); }
+                        // Load images (try direct URL first)
+                        const bgUrl = 'https://i.pinimg.com/originals/5d/e5/62/5de5622ecdd4e24685f141f10e4573e3.jpg';
+                        const npcImgUrl = npc.image;
+                        // Use user id and avatar hash for Discord avatar, fallback to default
+                        let playerImgUrl;
+                        if (interaction.user.avatar) {
+                            playerImgUrl = `https://cdn.discordapp.com/avatars/${interaction.user.id}/${interaction.user.avatar}.png?size=256`;
+                        } else {
+                            const defaultAvatarNumber = parseInt(interaction.user.discriminator) % 5;
+                            playerImgUrl = `https://cdn.discordapp.com/embed/avatars/${defaultAvatarNumber}.png`;
                         }
+
+                        let bgImg, npcImg, playerImg;
+                        try { bgImg = await loadImage(bgUrl); } catch { bgImg = null; }
+                        try { npcImg = await loadImage(npcImgUrl); } catch { npcImg = null; }
+                        try { playerImg = await loadImage(playerImgUrl); } catch { playerImg = null; }
 
                         // Draw background
                         if (bgImg) ctx.drawImage(bgImg, 0, 0, width, height);
-                        else { ctx.fillStyle = '#222'; ctx.fillRect(0, 0, width, height); }
 
                         // Helper for rounded rectangles
                         function roundRect(ctx, x, y, w, h, r) {
@@ -482,9 +448,10 @@ module.exports = {
                             ctx.closePath();
                         }
 
-                        // Positions
-                        const charW = playerCount === 1 ? 150 : 100, charH = playerCount === 1 ? 150 : 100;
-                        const npcX = 50, npcY = height / 2 - charH / 2;
+                        // Positions (copied from brank.js)
+                        const charW = 150, charH = 150;
+                        const playerX = width - 50 - charW, playerY = 120;
+                        const npcX = 50, npcY = 120;
                         const nameY = 80, barY = 280;
                         const nameH = 28, barH = 22;
 
@@ -501,10 +468,24 @@ module.exports = {
                             ctx.stroke();
                         }
 
-                        // Draw NPC name tag
+                        // Draw Player character
+                        if (playerImg) {
+                            ctx.save();
+                            roundRect(ctx, playerX, playerY, charW, charH, 10);
+                            ctx.clip();
+                            ctx.drawImage(playerImg, playerX, playerY, charW, charH);
+                            ctx.restore();
+                            ctx.lineWidth = 3;
+                            ctx.strokeStyle = "#6e1515";
+                            roundRect(ctx, playerX, playerY, charW, charH, 10);
+                            ctx.stroke();
+                        }
+
+                        // Draw name tags
                         ctx.font = "bold 18px Arial";
                         ctx.textAlign = "center";
                         ctx.textBaseline = "middle";
+                        // NPC name
                         ctx.save();
                         ctx.globalAlpha = 0.7;
                         ctx.fillStyle = "#000";
@@ -516,47 +497,18 @@ module.exports = {
                         ctx.shadowBlur = 4;
                         ctx.fillText(npc.name, npcX + charW / 2, nameY + nameH / 2);
                         ctx.shadowBlur = 0;
-
-                        // Draw players
-                        let playerPositions = [];
-                        if (playerCount === 1) {
-                            playerPositions.push({ x: width - 50 - charW, y: 120 });
-                        } else if (playerCount === 2) {
-                            playerPositions.push({ x: width - 50 - charW, y: 100 });
-                            playerPositions.push({ x: width - 50 - charW, y: 250 });
-                        } else {
-                            playerPositions.push({ x: width - 50 - charW, y: 80 });
-                            playerPositions.push({ x: width - 50 - charW, y: 200 });
-                            playerPositions.push({ x: width - 50 - charW, y: 320 });
-                        }
-                        for (let i = 0; i < playerCount; i++) {
-                            const p = players[i];
-                            const img = playerImgs[i];
-                            const pos = playerPositions[i];
-                            if (img) {
-                                ctx.save();
-                                roundRect(ctx, pos.x, pos.y, charW, charH, 10);
-                                ctx.clip();
-                                ctx.drawImage(img, pos.x, pos.y, charW, charH);
-                                ctx.restore();
-                                ctx.lineWidth = 3;
-                                ctx.strokeStyle = "#6e1515";
-                                roundRect(ctx, pos.x, pos.y, charW, charH, 10);
-                                ctx.stroke();
-                            }
-                            // Name tag
-                            ctx.save();
-                            ctx.globalAlpha = 0.7;
-                            ctx.fillStyle = "#000";
-                            roundRect(ctx, pos.x, nameY, charW, nameH, 5);
-                            ctx.fill();
-                            ctx.restore();
-                            ctx.fillStyle = "#fff";
-                            ctx.shadowColor = "#000";
-                            ctx.shadowBlur = 4;
-                            ctx.fillText(p.username, pos.x + charW / 2, nameY + nameH / 2);
-                            ctx.shadowBlur = 0;
-                        }
+                        // Player name
+                        ctx.save();
+                        ctx.globalAlpha = 0.7;
+                        ctx.fillStyle = "#000";
+                        roundRect(ctx, playerX, nameY, charW, nameH, 5);
+                        ctx.fill();
+                        ctx.restore();
+                        ctx.fillStyle = "#fff";
+                        ctx.shadowColor = "#000";
+                        ctx.shadowBlur = 4;
+                        ctx.fillText(players[0].username, playerX + charW / 2, nameY + nameH / 2);
+                        ctx.shadowBlur = 0;
 
                         // Health bars
                         // NPC
@@ -574,33 +526,31 @@ module.exports = {
                         ctx.textBaseline = "middle";
                         ctx.shadowColor = "#000";
                         ctx.shadowBlur = 1;
+                        
                         ctx.shadowBlur = 0;
                         ctx.restore();
 
-                        // Players (refer to brank.js: always use p.health and p.maxHealth for bar and text)
-                        for (let i = 0; i < playerCount; i++) {
-                            const p = players[i];
-                            const pos = playerPositions[i];
-                            // Use p.maxHealth if available, else fallback to p.health as max
-                            const maxHP = typeof p.maxHealth === 'number' ? p.maxHealth : (typeof p.health === 'number' ? p.health : 100);
-                            const currHP = typeof p.health === 'number' ? p.health : maxHP;
-                            const playerHealthPercent = Math.max(currHP / maxHP, 0);
-                            ctx.save();
-                            ctx.fillStyle = "#333";
-                            roundRect(ctx, pos.x, barY, charW, barH, 5);
-                            ctx.fill();
-                            ctx.fillStyle = "#4CAF50";
-                            roundRect(ctx, pos.x, barY, charW * playerHealthPercent, barH, 5);
-                            ctx.fill();
-                            ctx.fillStyle = "#fff";
-                            ctx.font = "13px Arial";
-                            ctx.textAlign = "center";
-                            ctx.textBaseline = "middle";
-                            ctx.shadowColor = "#000";
-                            ctx.shadowBlur = 1;
-                            ctx.shadowBlur = 0;
-                            ctx.restore();
-                        }
+                        // Player
+                        const p = players[0];
+                        const maxHP = typeof p.maxHealth === 'number' ? p.maxHealth : (typeof p.health === 'number' ? p.health : 100);
+                        const currHP = typeof p.health === 'number' ? p.health : maxHP;
+                        const playerHealthPercent = Math.max(currHP / maxHP, 0);
+                        ctx.save();
+                        ctx.fillStyle = "#333";
+                        roundRect(ctx, playerX, barY, charW, barH, 5);
+                        ctx.fill();
+                        ctx.fillStyle = "#4CAF50";
+                        roundRect(ctx, playerX, barY, charW * playerHealthPercent, barH, 5);
+                        ctx.fill();
+                        ctx.fillStyle = "#fff";
+                        ctx.font = "13px Arial";
+                        ctx.textAlign = "center";
+                        ctx.textBaseline = "middle";
+                        ctx.shadowColor = "#000";
+                        ctx.shadowBlur = 1;
+                      
+                        ctx.shadowBlur = 0;
+                        ctx.restore();
 
                         // VS text
                         ctx.save();
@@ -613,7 +563,6 @@ module.exports = {
                         ctx.fillText("VS", width / 2, height / 2);
                         ctx.restore();
 
-                        // Return buffer instead of saving to file
                         return canvas.toBuffer('image/png');
                     };
 
@@ -1018,8 +967,119 @@ module.exports = {
 
                     let battleActive = true;
                     let roundNum = 1;
-                    
+                    // Define mainPlayer and playerBloodline before the battle loop
+                    const mainPlayer = players[0];
+                    const playerBloodline = mainPlayer.bloodline;
+                    let bloodlineActive = false;
+                    let bloodlineRoundsLeft = 0;
+                    let bloodlineUsed = false; // Only allow once per battle except Nara
+
+                    // Ensure maxHealth is set for mainPlayer before the battle loop
+                    if (typeof mainPlayer.maxHealth !== "number" || mainPlayer.maxHealth < mainPlayer.health) {
+                        mainPlayer.maxHealth = typeof mainPlayer.health === "number" ? mainPlayer.health : 100;
+                    }
+
                     while (battleActive) {
+                        // --- Bloodline ability auto-activation (main player only, passive for Nara) ---
+                        let bloodlineEmbed = null;
+                        // Nara is always passive
+                        if (playerBloodline === "Nara") {
+                            mainPlayer.chakra += 3;
+                            bloodlineEmbed = new EmbedBuilder()
+                                .setTitle("Battle IQ")
+                                .setDescription(`${BLOODLINE_DEPARTMENTS[playerBloodline]}\n\n<@${mainPlayer.id}> activates **${BLOODLINE_NAMES[playerBloodline]}**!\nBattle IQ grants +3 chakra this round!`)
+                                .setImage(BLOODLINE_GIFS[playerBloodline])
+                                .setColor(0x8B4513);
+                            await interaction.followUp({ embeds: [bloodlineEmbed] });
+                        }
+
+                        // Uchiha bloodline rounds decrement
+                        if (playerBloodline === "Uchiha" && bloodlineActive) {
+                            bloodlineRoundsLeft--;
+                            if (bloodlineRoundsLeft <= 0) {
+                                bloodlineActive = false;
+                                mainPlayer.accuracy = 100;
+                            }
+                        }
+
+                        // --- Auto-activate bloodline if threshold is met and not used ---
+                        if (!bloodlineUsed && playerBloodline && playerBloodline !== "Nara") {
+                            let shouldActivate = false;
+                            // Always use mainPlayer.maxHealth for threshold checks
+                            const hp = typeof mainPlayer.health === "number" ? mainPlayer.health : 0;
+                            const maxHp = typeof mainPlayer.maxHealth === "number" ? mainPlayer.maxHealth : 100;
+                            const chakra = typeof mainPlayer.chakra === "number" ? mainPlayer.chakra : 0;
+                            switch (playerBloodline) {
+                                case "Senju":
+                                    shouldActivate = hp <= maxHp * 0.5;
+                                    break;
+                                case "Uzumaki":
+                                    shouldActivate = hp <= maxHp * 0.5;
+                                    break;
+                                case "Hyuga":
+                                    shouldActivate = chakra >= 15;
+                                    break;
+                                case "Uchiha":
+                                    shouldActivate =  hp <= maxHp * 0.5;
+                                    break;
+                            }
+                            if (shouldActivate) {
+                                const flavor = BLOODLINE_DEPARTMENTS[playerBloodline] || "You feel a surge of power!";
+                                switch (playerBloodline) {
+                                    case "Senju":
+                                        mainPlayer.health = Math.min(hp + Math.floor(maxHp * 0.5), maxHp);
+                                        bloodlineEmbed = new EmbedBuilder()
+                                            .setTitle(BLOODLINE_NAMES[playerBloodline])
+                                            .setDescription(`${flavor}\n\nYou activate **${BLOODLINE_NAMES[playerBloodline]}**!\nHyper Regeneration restores 50% HP!`)
+                                            .setImage(BLOODLINE_GIFS[playerBloodline])
+                                            .setColor(0x8B4513);
+                                        bloodlineUsed = true;
+                                        break;
+                                    case "Uzumaki":
+                                        mainPlayer.chakra += 15;
+                                        bloodlineEmbed = new EmbedBuilder()
+                                            .setTitle(BLOODLINE_NAMES[playerBloodline])
+                                            .setDescription(`${flavor}\n\nYou activate **${BLOODLINE_NAMES[playerBloodline]}**!\nUzumaki Will surges, chakra increased by 15!`)
+                                            .setImage(BLOODLINE_GIFS[playerBloodline])
+                                            .setColor(0x8B4513);
+                                        bloodlineUsed = true;
+                                        break;
+                                    case "Hyuga":
+                                        {
+                                            const drained = Math.min(npc.chakra, 5);
+                                            npc.chakra -= drained;
+                                            mainPlayer.chakra = Math.min(mainPlayer.chakra + drained, 15);
+                                            bloodlineEmbed = new EmbedBuilder()
+                                                .setTitle(BLOODLINE_NAMES[playerBloodline])
+                                                .setDescription(`${flavor}\n\nYou activate **${BLOODLINE_NAMES[playerBloodline]}**!\nByakugan drains ${drained} chakra from the enemy!`)
+                                                .setImage(BLOODLINE_GIFS[playerBloodline])
+                                                .setColor(0x8B4513);
+                                            bloodlineUsed = true;
+                                        }
+                                        break;
+                                    case "Uchiha":
+                                        mainPlayer.accuracy = 100;
+                                        bloodlineActive = true;
+                                        bloodlineRoundsLeft = 2;
+                                        npc.activeEffects.push({
+                                            type: 'status',
+                                            status: 'stun',
+                                            duration: 2
+                                        });
+                                        bloodlineEmbed = new EmbedBuilder()
+                                            .setTitle(BLOODLINE_NAMES[playerBloodline])
+                                            .setDescription(`${flavor}\n\nYou activate **${BLOODLINE_NAMES[playerBloodline]}**!\nSharingan grants 100% accuracy and stuns the enemy for 2 rounds!`)
+                                            .setImage(BLOODLINE_GIFS[playerBloodline])
+                                            .setColor(0x8B4513);
+                                        bloodlineUsed = true;
+                                        break;
+                                }
+                                if (bloodlineEmbed) {
+                                    await interaction.followUp({ embeds: [bloodlineEmbed] });
+                                }
+                            }
+                        }
+
                         // Update effect durations
                         [...players, npc].forEach(entity => {
                             if (!entity.activeEffects) entity.activeEffects = [];
@@ -1077,8 +1137,13 @@ module.exports = {
                                 continue;
                             }
 
-                            // First send moves embed
-                            const { embed, components } = createMovesEmbed(i);
+                            // --- Moves embed ---
+                            const { embed, components } = (() => {
+                                const base = createMovesEmbed(i);
+                                // Remove bloodline button logic
+                                return base;
+                            })();
+
                             const moveMessage = await interaction.followUp({
                                 content: `${currentPlayer.username}, it's your turn!`,
                                 embeds: [embed],
@@ -1092,13 +1157,14 @@ module.exports = {
 
                             const playerAction = await new Promise(resolve => {
                                 const collector = moveMessage.createMessageComponentCollector({
-                                    filter: i => i.user.id === currentPlayer.id && i.customId.endsWith(`-${currentPlayer.id}-${roundNum}`),
+                                    filter: ii => ii.user.id === currentPlayer.id && ii.customId.endsWith(`-${currentPlayer.id}-${roundNum}`),
                                     time: 60000
                                 });
 
-                                collector.on('collect', async i => {
-                                    await i.deferUpdate();
-                                    resolve(await processPlayerMove(i.customId, currentPlayer, npc, effectivePlayer, effectiveNpc));
+                                collector.on('collect', async ii => {
+                                    await ii.deferUpdate();
+                                    // --- Normal jutsu/rest/flee ---
+                                    resolve(await processPlayerMove(ii.customId, currentPlayer, npc, effectivePlayer, effectiveNpc));
                                     collector.stop();
                                 });
 
@@ -1179,6 +1245,10 @@ module.exports = {
                             );
                         }
 
+                        // Fix chakra display in summary embed
+                        summaryEmbed.data.fields[0].value = players.map(p => `${p.username} | ${Math.round(p.health)} HP (${p.chakra} Chakra)`).join('\n') +
+                            `\n${npc.name} | ${Math.round(npc.currentHealth)} HP (${npc.chakra} Chakra)`;
+
                         await interaction.followUp({
                             embeds: [summaryEmbed],
                             files: [newBattleImage]
@@ -1187,15 +1257,8 @@ module.exports = {
                         // Check battle outcome
                         if (npc.currentHealth <= 0) {
                             // Victory - calculate rewards
-                            const expReward = 500 + Math.floor(players[0].level * 50) * players.length;
-                            const moneyReward = 1000 + Math.floor(players[0].level * 30) * players.length;
-                            
-                            // Track damage for leaderboard
-                            const damageDealt = players.map(p => ({
-                                id: p.id,
-                                username: p.username,
-                                damage: playerActions.filter(action => action.damage).reduce((sum, action) => sum + (action.damage || 0), 0)
-                            })).sort((a, b) => b.damage - a.damage);
+                            const expReward = 0.7;
+                            const moneyReward = 1000 + Math.floor(players[0].level * 30);
 
                             players.forEach(player => {
                                 users[player.id].exp += expReward;
@@ -1240,90 +1303,74 @@ module.exports = {
                                     `<@${p.id}> has earned ${moneyReward} Ryo!`
                                 ).join('\n'));
 
-                            // Add damage leaderboard for multiplayer
-                            if (players.length > 1) {
-                                victoryEmbed.addFields({
-                                    name: 'Damage Leaderboard',
-                                    value: damageDealt.map((p, i) => 
-                                        `${i + 1}. <@${p.id}>: ${Math.floor(p.damage)} damage`
-                                    ).join('\n')
-                                });
-                            }
-
                             await interaction.followUp({ embeds: [victoryEmbed] });
 
                             await updateRequirements(interaction.user.id, 's_mission');
-    
-                            // If mission was completed with friends
-                            if (players.length > 1) {
-                                await updateRequirements(interaction.user.id, 's_mission_with_friends');
-                            }
 
                             // --- MATERIAL DROP SYSTEM ---
                             // Only drop materials if this is a solo mission (players.length === 1)
-                            if (players.length === 1) {
-                                let role = users[userId].role || "";
-                                if (interaction.member.roles.cache.has('1349278752944947240')) role = "Hokage";
-                                const amount = getMaterialDrop(role);
-                                const mat = getRandomMaterial();
+                            let role = users[userId].role || "";
+                            if (interaction.member.roles.cache.has('1349278752944947240')) role = "Hokage";
+                            const amount = getMaterialDrop(role);
+                            const mat = getRandomMaterial();
 
-                                // Village drop
-                                let villageDropMsg = "";
-                                if (amount > 0) {
-                                    const villagePath = path.resolve(__dirname, '../../menma/data/village.json');
-                                    let village = { iron: 0, wood: 0, rope: 0, defense: 0 };
-                                    if (fs.existsSync(villagePath)) {
-                                        village = JSON.parse(fs.readFileSync(villagePath, 'utf8'));
-                                    }
-                                    village[mat.key] = (village[mat.key] || 0) + amount;
-                                    fs.writeFileSync(villagePath, JSON.stringify(village, null, 2));
-                                    villageDropMsg = `You found ${amount} ${mat.name} ${mat.emoji} during the mission\n`;
+                            // Village drop
+                            let villageDropMsg = "";
+                            if (amount > 0) {
+                                const villagePath = path.resolve(__dirname, '../../menma/data/village.json');
+                                let village = { iron: 0, wood: 0, rope: 0, defense: 0 };
+                                if (fs.existsSync(villagePath)) {
+                                    village = JSON.parse(fs.readFileSync(villagePath, 'utf8'));
                                 }
-
-                                // Akatsuki drop
-                                let akatsukiDropMsg = "";
-                                if (users[userId].occupation === "Akatsuki") {
-                                    // Akatsuki drop logic (copy from arank/brank)
-                                    function getAkatsukiMaterialDrop(role) {
-                                        if (role === "Akatsuki Leader") return Math.floor(Math.random() * 3) + 12;
-                                        if (role === "Co-Leader") return Math.floor(Math.random() * 3) + 10;
-                                        if (role === "Bruiser") return Math.floor(Math.random() * 3) + 8;
-                                        if (role === "Scientist") return Math.floor(Math.random() * 3) + 2;
-                                        return 0;
-                                    }
-                                    function getRandomAkatsukiMaterial() {
-                                        const mats = [
-                                            { name: "Metal", emoji: "🪙", key: "metal" },
-                                            { name: "Gunpowder", emoji: "💥", key: "gunpowder" },
-                                            { name: "Copper", emoji: "🔌", key: "copper" }
-                                        ];
-                                        return mats[Math.floor(Math.random() * mats.length)];
-                                    }
-                                    let akatsukiRole = users[userId].role || "";
-                                    let akatsukiAmount = getAkatsukiMaterialDrop(akatsukiRole);
-                                    if (akatsukiAmount > 0) {
-                                        const akatsukiMat = getRandomAkatsukiMaterial();
-                                        const akatsukiPath = path.resolve(__dirname, '../../menma/data/akatsuki.json');
-                                        let akatsuki = { metal: 0, gunpowder: 0, copper: 0, bombs: {} };
-                                        if (fs.existsSync(akatsukiPath)) {
-                                            akatsuki = JSON.parse(fs.readFileSync(akatsukiPath, 'utf8'));
-                                        }
-                                        akatsuki[akatsukiMat.key] = (akatsuki[akatsukiMat.key] || 0) + akatsukiAmount;
-                                        fs.writeFileSync(akatsukiPath, JSON.stringify(akatsuki, null, 2));
-                                        akatsukiDropMsg = `You found ${akatsukiAmount} ${akatsukiMat.name} ${akatsukiMat.emoji} during the mission\n`;
-                                    }
-                                }
-
-                                // Send material drop message (block message)
-                                let dropMsg = "```";
-                                if (users[userId].occupation === "Akatsuki" && akatsukiDropMsg) {
-                                    dropMsg += `\n${akatsukiDropMsg}`;
-                                } else if (villageDropMsg) {
-                                    dropMsg += `\n${villageDropMsg}`;
-                                }
-                                dropMsg += "```";
-                                await interaction.followUp({ content: dropMsg });
+                                village[mat.key] = (village[mat.key] || 0) + amount;
+                                fs.writeFileSync(villagePath, JSON.stringify(village, null, 2));
+                                villageDropMsg = `You found ${amount} ${mat.name} ${mat.emoji} during the mission\n`;
                             }
+
+                            // Akatsuki drop
+                            let akatsukiDropMsg = "";
+                            if (users[userId].occupation === "Akatsuki") {
+                                // Akatsuki drop logic (copy from arank/brank)
+                                function getAkatsukiMaterialDrop(role) {
+                                    if (role === "Akatsuki Leader") return Math.floor(Math.random() * 3) + 12;
+                                    if (role === "Co-Leader") return Math.floor(Math.random() * 3) + 10;
+                                    if (role === "Bruiser") return Math.floor(Math.random() * 3) + 8;
+                                    if (role === "Scientist") return Math.floor(Math.random() * 3) + 2;
+                                    return 0;
+                                }
+                                function getRandomAkatsukiMaterial() {
+                                    const mats = [
+                                        { name: "Metal", emoji: "🪙", key: "metal" },
+                                        { name: "Gunpowder", emoji: "💥", key: "gunpowder" },
+                                        { name: "Copper", emoji: "🔌", key: "copper" }
+                                    ];
+                                    return mats[Math.floor(Math.random() * mats.length)];
+                                }
+                                let akatsukiRole = users[userId].role || "";
+                                let akatsukiAmount = getAkatsukiMaterialDrop(akatsukiRole);
+                                if (akatsukiAmount > 0) {
+                                    const akatsukiMat = getRandomAkatsukiMaterial();
+                                    const akatsukiPath = path.resolve(__dirname, '../../menma/data/akatsuki.json');
+                                    let akatsuki = { metal: 0, gunpowder: 0, copper: 0, bombs: {} };
+                                    if (fs.existsSync(akatsukiPath)) {
+                                        akatsuki = JSON.parse(fs.readFileSync(akatsukiPath, 'utf8'));
+                                    }
+                                    akatsuki[akatsukiMat.key] = (akatsuki[akatsukiMat.key] || 0) + akatsukiAmount;
+                                    fs.writeFileSync(akatsukiPath, JSON.stringify(akatsuki, null, 2));
+                                    akatsukiDropMsg = `You found ${akatsukiAmount} ${akatsukiMat.name} ${akatsukiMat.emoji} during the mission\n`;
+                                }
+                            }
+
+                            // Send material drop message (block message)
+                            let dropMsg = "```";
+                            if (users[userId].occupation === "Akatsuki" && akatsukiDropMsg) {
+                                dropMsg += `\n${akatsukiDropMsg}`;
+                            } else if (villageDropMsg) {
+                                dropMsg += `\n${villageDropMsg}`;
+                            }
+                            dropMsg += "```";
+                            await interaction.followUp({ content: dropMsg });
+
                             battleActive = false;
 
                             // Mark S-rank as win for tutorial
@@ -1334,7 +1381,7 @@ module.exports = {
                             const defeatEmbed = new EmbedBuilder()
                                 .setTitle('Mission Failed')
                                 .setColor('#FF0000')
-                                .setDescription(`Team was defeated by ${npc.name}...`);
+                                .setDescription(`You were defeated by ${npc.name}...`);
                             await interaction.followUp({ embeds: [defeatEmbed] });
                             battleActive = false;
 

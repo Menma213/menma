@@ -44,6 +44,9 @@ const premiumItems = [
     }
 ];
 
+const MAIN_GUILD_ID = '1381268582595297321'; // Main server ID
+const UPGRADE_CHAT_LINK = 'https://upgrade.chat/1381268582595297321/upgrades'; // Replace with your actual link
+
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('shop')
@@ -88,6 +91,14 @@ module.exports = {
 
         collector.on('collect', async i => {
             if (i.customId === 'shinobi_shards') {
+                // Only allow in main server
+                if (i.guildId !== MAIN_GUILD_ID) {
+                    await i.reply({
+                        content: `The Shinobi Shard shop is only available in the main server!\nJoin here: https://discord.gg/yqGDYmtkpf`,
+                        ephemeral: true
+                    });
+                    return;
+                }
                 // Premium shop embed
                 const premiumEmbed = new EmbedBuilder()
                     .setColor(0xffd700)
@@ -112,7 +123,15 @@ module.exports = {
                     )
                     .setFooter({ text: 'Premium Shop' });
 
-                await i.update({ embeds: [premiumEmbed], components: [] });
+                // Add "Buy Shinobi Shards" link button
+                const premiumRow = new ActionRowBuilder().addComponents(
+                    new ButtonBuilder()
+                        .setLabel('Buy Shinobi Shards')
+                        .setStyle(ButtonStyle.Link)
+                        .setURL(UPGRADE_CHAT_LINK)
+                );
+
+                await i.update({ embeds: [premiumEmbed], components: [premiumRow] });
                 collector.stop();
             }
         });

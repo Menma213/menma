@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, AttachmentBuilder } = require('discord.js');
-const puppeteer = require('puppeteer');
+const { createCanvas, loadImage } = require('canvas');
 const fs = require('fs');
 const path = require('path');
 const math = require('mathjs');
@@ -388,7 +388,36 @@ module.exports = {
             return interaction.reply({ content: "You need to enroll first!", ephemeral: true });
         }
 
-        // Initialize player
+        // --- Trials cooldown (LastTrials, 20 minutes) ---
+        const now = Date.now();
+
+        // --- PREMIUM COOLDOWN PATCH ---
+        // Role IDs
+        const JINCHURIKI_ROLE = "1385641469507010640";
+        const LEGENDARY_ROLE = "1385640798581952714";
+        const DONATOR_ROLE = "1385640728130097182";
+        let cooldownMs = 20 * 60 * 1000; // default 20 min
+
+        // Check premium roles (jinchuriki > legendary > donator)
+        const memberRoles = interaction.member.roles.cache;
+        if (memberRoles.has(JINCHURIKI_ROLE)) {
+            cooldownMs = 13 * 60 * 1000; // 13 min
+        } else if (memberRoles.has(LEGENDARY_ROLE)) {
+            cooldownMs = Math.round(14 * 60 * 1000 ); // 14.3 min
+        } else if (memberRoles.has(DONATOR_ROLE)) {
+            cooldownMs = Math.round(15 * 60 * 1000 ); // 15.73 min
+        }
+
+        if (users[userId].LastTrials && now - users[userId].LastTrials < cooldownMs) {
+            const left = cooldownMs - (now - users[userId].LastTrials);
+            const min = Math.floor(left / 60000);
+            const sec = Math.floor((left % 60000) / 1000);
+            return interaction.reply({ content: `You can do this again in ${min}m ${sec}s.`, ephemeral: false });
+        }
+        users[userId].LastTrials = now;
+        fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
+
+        // --- Initialize player ---
         const player = {
             ...users[userId],
             name: interaction.user.username,
@@ -399,6 +428,7 @@ module.exports = {
 
         let currentTrialIndex = 0;
         let battleActive = true;
+        let userLost = false;
 
         // --- Battle loop, no try/catch wrapper ---
         let firstBattle = true;
@@ -439,148 +469,163 @@ module.exports = {
                 };
             }
 
-            // Generate battle image with improved centering, name above, HP bar below, no footer
-            const generateBattleImage = async () => {
-                const browser = await puppeteer.launch({ args: ['--no-sandbox'] });
-                const page = await browser.newPage();
-                await page.setViewport({ width: 800, height: 400 });
+            // Helper to get avatar image URL (like brank.js)
+            function getUserAvatarUrl(user) {
+                if (user.avatar) {
+                    return `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png?size=256`;
+                } else {
+                    const defaultAvatarNumber = parseInt(user.discriminator) % 5;
+                    return `https://cdn.discordapp.com/embed/avatars/${defaultAvatarNumber}.png`;
+                }
+            }
 
-                const currentNpc = npc;
-                if (typeof currentNpc.currentHealth !== 'number') currentNpc.currentHealth = npcHealth;
+            // Helper for rounded rectangles (copied from brank.js)
+            function roundRect(ctx, x, y, w, h, r) {
+                ctx.beginPath();
+                ctx.moveTo(x + r, y);
+                ctx.lineTo(x + w - r, y);
+                ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+                ctx.lineTo(x + w, y + h - r);
+                ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+                ctx.lineTo(x + r, y + h);
+                ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+                ctx.lineTo(x, y + r);
+                ctx.quadraticCurveTo(x, y, x + r, y);
+                ctx.closePath();
+            }
 
-                const playerHealthPercent = Math.max((playerHealth / player.health) * 100, 0);
-                const npcHealthPercent = Math.max((currentNpc.currentHealth / currentNpc.health) * 100, 0);
+            // Canvas-based battle image generator (brank.js style)
+            const generateBattleImage = async (player, npc, playerHealth, npcHealth, interaction) => {
+                const width = 800, height = 400;
+                const canvas = createCanvas(width, height);
+                const ctx = canvas.getContext('2d');
 
+                // Load images
+                const bgUrl = 'https://i.pinimg.com/originals/5d/e5/62/5de5622ecdd4e24685f141f10e4573e3.jpg';
+                const enemyImgUrl = npc.image || 'https://i.pinimg.com/736x/10/92/b0/1092b0aea71f620c1ed7fffe7a8704c1.jpg';
+                const avatarUrl = getUserAvatarUrl(interaction.user);
+
+                const bg = await loadImage(bgUrl);
+                const enemyImg = await loadImage(enemyImgUrl);
+                const playerImg = await loadImage(avatarUrl);
+
+                // Positions and sizes
+                const charW = 150, charH = 150;
+                const playerX = width - 50 - charW, playerY = 120;
+                const npcX = 50, npcY = 120;
+                const nameY = 80, barY = 280;
+                const nameH = 28, barH = 22;
+
+                // Draw background
+                ctx.drawImage(bg, 0, 0, width, height);
+
+                // Draw NPC character (rounded rect)
+                ctx.save();
+                roundRect(ctx, npcX, npcY, charW, charH, 10);
+                ctx.clip();
+                ctx.drawImage(enemyImg, npcX, npcY, charW, charH);
+                ctx.restore();
+                // Border
+                ctx.lineWidth = 3;
+                ctx.strokeStyle = "#6e1515";
+                roundRect(ctx, npcX, npcY, charW, charH, 10);
+                ctx.stroke();
+
+                // Draw Player character (rounded rect)
+                ctx.save();
+                roundRect(ctx, playerX, playerY, charW, charH, 10);
+                ctx.clip();
+                ctx.drawImage(playerImg, playerX, playerY, charW, charH);
+                ctx.restore();
+                ctx.lineWidth = 3;
+                ctx.strokeStyle = "#6e1515";
+                roundRect(ctx, playerX, playerY, charW, charH, 10);
+                ctx.stroke();
+
+                // Draw name tags (rounded rect, semi-transparent)
+                ctx.font = "bold 18px Arial";
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                // NPC name
+                ctx.save();
+                ctx.globalAlpha = 0.7;
+                ctx.fillStyle = "#000";
+                roundRect(ctx, npcX, nameY, charW, nameH, 5);
+                ctx.fill();
+                ctx.restore();
+                ctx.fillStyle = "#fff";
+                ctx.shadowColor = "#000";
+                ctx.shadowBlur = 4;
+                ctx.fillText(npc.name, npcX + charW / 2, nameY + nameH / 2);
+                ctx.shadowBlur = 0;
+                // Player name
+                ctx.save();
+                ctx.globalAlpha = 0.7;
+                ctx.fillStyle = "#000";
+                roundRect(ctx, playerX, nameY, charW, nameH, 5);
+                ctx.fill();
+                ctx.restore();
+                ctx.fillStyle = "#fff";
+                ctx.shadowColor = "#000";
+                ctx.shadowBlur = 4;
+                ctx.fillText(player.name, playerX + charW / 2, nameY + nameH / 2);
+                ctx.shadowBlur = 0;
+
+                // Health bars (rounded rect, with fill and text)
+                // NPC
+                const npcHealthPercent = Math.max((npcHealth / npc.health), 0);
+                ctx.save();
+                ctx.fillStyle = "#333";
+                roundRect(ctx, npcX, barY, charW, barH, 5);
+                ctx.fill();
+                ctx.fillStyle = "#ff4444";
+                roundRect(ctx, npcX, barY, charW * npcHealthPercent, barH, 5);
+                ctx.fill();
+                ctx.fillStyle = "#fff";
+                ctx.font = "13px Arial";
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.shadowColor = "#000";
+                ctx.shadowBlur = 1;
+                ctx.shadowBlur = 0;
+                ctx.restore();
+
+                // Player
+                const playerHealthPercent = Math.max((playerHealth / player.health), 0);
+                ctx.save();
+                ctx.fillStyle = "#333";
+                roundRect(ctx, playerX, barY, charW, barH, 5);
+                ctx.fill();
+                ctx.fillStyle = "#4CAF50";
+                roundRect(ctx, playerX, barY, charW * playerHealthPercent, barH, 5);
+                ctx.fill();
+                ctx.fillStyle = "#fff";
+                ctx.font = "13px Arial";
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.shadowColor = "#000";
+                ctx.shadowBlur = 1;
+                ctx.shadowBlur = 0;
+                ctx.restore();
+
+                // VS text
+                ctx.save();
+                ctx.font = "bold 48px Arial";
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.fillStyle = "#fff";
+                ctx.shadowColor = "#000";
+                ctx.shadowBlur = 4;
+                ctx.fillText("VS", width / 2, height / 2);
+                ctx.restore();
+
+                // Save to file
                 const imagesDir = path.resolve(__dirname, '../images');
                 if (!fs.existsSync(imagesDir)) {
                     fs.mkdirSync(imagesDir, { recursive: true });
                 }
-
-                const htmlContent = `
-                    <html>
-                    <style>
-                        body {
-                            margin: 0;
-                            padding: 0;
-                        }
-                        .battle-container {
-                            width: 800px;
-                            height: 400px;
-                            position: relative;
-                            background: url('https://i.pinimg.com/originals/5d/e5/62/5de5622ecdd4e24685f141f10e4573e3.jpg') center center no-repeat;
-                            background-size: cover;
-                            border-radius: 10px;
-                            overflow: hidden;
-                        }
-                        .character {
-                            position: absolute;
-                            width: 150px;
-                            height: 150px;
-                            border-radius: 10px;
-                            border: 3px solid #6e1515;
-                            object-fit: cover;
-                        }
-                        .player {
-                            right: 50px;
-                            top: 120px;
-                        }
-                        .enemy {
-                            left: 50px;
-                            top: 120px;
-                        }
-                        .name-tag {
-                            position: absolute;
-                            width: 150px;
-                            text-align: center;
-                            color: white;
-                            font-family: Arial, sans-serif;
-                            font-size: 18px;
-                            font-weight: bold;
-                            text-shadow: 2px 2px 4px #000;
-                            top: 80px;
-                            background: rgba(0,0,0,0.5);
-                            border-radius: 5px;
-                            padding: 2px 0;
-                        }
-                        .player-name {
-                            right: 50px;
-                        }
-                        .enemy-name {
-                            left: 50px;
-                        }
-                        .health-bar {
-                            position: absolute;
-                            width: 150px;
-                            height: 22px;
-                            background-color: #333;
-                            border-radius: 5px;
-                            overflow: hidden;
-                            top: 280px;
-                        }
-                        .health-fill {
-                            height: 100%;
-                        }
-                        .npc-health-fill {
-                            background-color: #ff4444;
-                            width: ${npcHealthPercent}%;
-                        }
-                        .player-health-fill {
-                            background-color: #4CAF50;
-                            width: ${playerHealthPercent}%;
-                        }
-                        .health-text {
-                            position: absolute;
-                            width: 100%;
-                            text-align: center;
-                            color: white;
-                            font-family: Arial, sans-serif;
-                            font-size: 13px;
-                            line-height: 22px;
-                            text-shadow: 1px 1px 1px black;
-                        }
-                        .player-health {
-                            right: 50px;
-                        }
-                        .enemy-health {
-                            left: 50px;
-                        }
-                        .vs-text {
-                            position: absolute;
-                            left: 50%;
-                            top: 50%;
-                            transform: translate(-50%, -50%);
-                            color: white;
-                            font-family: Arial, sans-serif;
-                            font-size: 48px;
-                            font-weight: bold;
-                            text-shadow: 2px 2px 4px #000;
-                        }
-                    </style>
-                    <body>
-                        <div class="battle-container">
-                            <div class="name-tag enemy-name">${currentNpc.name}</div>
-                            <img class="character enemy" src="${currentNpc.image || 'https://i.pinimg.com/736x/10/92/b0/1092b0aea71f620c1ed7fffe7a8704c1.jpg'}">
-                            <div class="health-bar enemy-health">
-                                <div class="health-fill npc-health-fill"></div>
-                                <div class="health-text">${Math.round(currentNpc.currentHealth)}/${currentNpc.health}</div>
-                            </div>
-                            
-                            <div class="name-tag player-name">${player.name}</div>
-                            <img class="character player" src="${interaction.user.displayAvatarURL({ format: 'png', size: 256 })}">
-                            <div class="health-bar player-health">
-                                <div class="health-fill player-health-fill"></div>
-                                <div class="health-text">${Math.round(playerHealth)}/${player.health}</div>
-                            </div>
-                            <div class="vs-text">VS</div>
-                        </div>
-                    </body>
-                    </html>
-                `;
-
-                await page.setContent(htmlContent);
-                const imagePath = path.join(imagesDir, `battle_${userId}_${Date.now()}.png`);
-                await page.screenshot({ path: imagePath });
-                await browser.close();
+                const imagePath = path.join(imagesDir, `battle_${interaction.user.id}_${Date.now()}.png`);
+                fs.writeFileSync(imagePath, canvas.toBuffer('image/png'));
                 return imagePath;
             };
 
@@ -1059,7 +1104,7 @@ module.exports = {
                     )
                     .addFields({
                         name: 'Battle Status',
-                        value: `${player.name} || ${Math.round(player.currentHealth ?? playerHealth)} HP\n${currentNpc.name} || ${Math.round(currentNpc.currentHealth ?? npcHealth)} HP\nChakra: ${player.chakra}            Chakra: ${currentNpc.chakra}`
+                        value: `${player.name} | ${Math.round(player.currentHealth ?? playerHealth)} HP\n${currentNpc.name} | ${Math.round(currentNpc.currentHealth ?? npcHealth)} HP\nChakra: ${player.chakra}            Chakra: ${currentNpc.chakra}`
                     });
 
                 // Add jutsu image/gif if available
@@ -1096,7 +1141,9 @@ module.exports = {
                     fetchReply: true
                 });
 
-                const battleImage = new AttachmentBuilder(await generateBattleImage());
+                const battleImage = new AttachmentBuilder(
+                    await generateBattleImage(player, npc, playerHealth, npcHealth, interaction)
+                );
                 await interaction.followUp({ files: [battleImage] });
 
                 // Player turn
@@ -1146,6 +1193,7 @@ module.exports = {
 
                 if (playerAction.fled) {
                     battleActive = false;
+                    userLost = true;
                     if (playerAction.timedOut) {
                         await interaction.followUp(`<@${userId}> fled, did not make a move.`);
                     } else {
@@ -1205,8 +1253,8 @@ module.exports = {
                     const users = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
                     if (playerHealth > 0) {
                         // Give 100k money per Hokage
-                        const expReward = 300 + Math.floor(player.level * 30);
-                        const moneyReward = 100000;
+                        const expReward = 0.2;
+                        const moneyReward = 10000;
                         users[userId].exp += expReward;
                         users[userId].money += moneyReward;
                         users[userId].wins += 1;
@@ -1219,6 +1267,30 @@ module.exports = {
                             .setColor('#006400');
                         await interaction.followUp({ embeds: [rewardEmbed] });
                         await updateRequirements(interaction.user.id, 'trial_mission');
+                        
+                        // --- Jutsu Drop System ---
+                        // Map trial index to jutsu drop
+                        const jutsuDropMap = [
+                            "One Thousand Years of Death", // Kakashi
+                            "Creation Rebirth",           // Tsunade
+                            "Burning Ash",                // Hiruzen
+                            "Water Dragon Jutsu",         // Tobirama
+                            "Flying Raijin Jutsu",        // Minato
+                            "Great Forest Crumbling",     // Hashirama
+                            "Rasenshuriken"               // Naruto
+                        ];
+                        const dropJutsu = jutsuDropMap[currentTrialIndex];
+                        if (dropJutsu) {
+                            const jutsuPath = path.resolve(__dirname, '../../menma/data/jutsu.json');
+                            let jutsuData = fs.existsSync(jutsuPath) ? JSON.parse(fs.readFileSync(jutsuPath, 'utf8')) : {};
+                            if (!jutsuData[userId]) jutsuData[userId] = { usersjutsu: [] };
+                            if (!Array.isArray(jutsuData[userId].usersjutsu)) jutsuData[userId].usersjutsu = [];
+                            if (!jutsuData[userId].usersjutsu.includes(dropJutsu)) {
+                                jutsuData[userId].usersjutsu.push(dropJutsu);
+                                fs.writeFileSync(jutsuPath, JSON.stringify(jutsuData, null, 2));
+                                await interaction.followUp({ content: `🎉 You obtained a new jutsu: **${dropJutsu}**!` });
+                            }
+                        }
                         // Move to next Hokage if any
                         currentTrialIndex++;
                         if (currentTrialIndex < HOKAGE_TRIALS.length) {
@@ -1232,6 +1304,7 @@ module.exports = {
                         users[userId].health = player.health;
                         await interaction.followUp(`**Defeat!** You were defeated by ${npc.name}...`);
                         battleActive = false;
+                        userLost = true;
                     }
                     fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
                 }
@@ -1244,5 +1317,15 @@ module.exports = {
                 if (battleActive) await new Promise(resolve => setTimeout(resolve, 3000));
             } // Closing brace for the inner while loop
         } // Closing brace for the outer while loop
+
+        // Set trialsResult for tutorial tracking
+        const usersFinal = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
+        if (!usersFinal[userId]) usersFinal[userId] = {};
+        if (userLost) {
+            usersFinal[userId].trialsResult = "lose";
+        } else if (currentTrialIndex >= HOKAGE_TRIALS.length) {
+            usersFinal[userId].trialsResult = "win";
+        }
+        fs.writeFileSync(usersPath, JSON.stringify(usersFinal, null, 2));
     }
 };

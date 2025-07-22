@@ -20,7 +20,7 @@
         },
         "Kakashi": {
             "jutsu": [
-                { "name": "Shadow Clone Jutsu", "required_exp": 10 }
+                { "name": "Summon Ninken", "required_exp": 10 }
             ],
             "clan": "Any"
         },
@@ -41,7 +41,7 @@
     "Chuunin": {
         "Naruto": {
             "jutsu": [
-                { "name": "Rasengan", "required_exp": 30 }
+                { "name": "Sexy Jutsu", "required_exp": 30 }
             ],
             "clan": "Any"
         },
@@ -83,7 +83,7 @@
         },
         "Asuma": {
             "jutsu": [
-                { "name": "Fire Style: Ash Pile Burning", "required_exp": 20 }
+                { "name": "Infused Chakra Blade: Enhanced", "required_exp": 20 }
                
             ],
             "clan": "Any"
@@ -98,7 +98,7 @@
     "Jounin": {
         "Naruto Uzumaki": {
             "jutsu": [
-                { "name": "Adamantine Sealing Chains", "required_exp": 50 }
+                { "name": "Rasengan", "required_exp": 50 }
             ],
             "clan": "Any"
         },
@@ -110,13 +110,13 @@
         },
         "Sakura": {
             "jutsu": [
-                { "name": "Creation Rebirth", "required_exp": 50 }
+                { "name": "Improved Mystic Palm", "required_exp": 50 }
             ],
             "clan": "Any"
         },
         "Kakashi": {
             "jutsu": [
-                { "name": "Kamui", "required_exp": 50 }
+                { "name": "Lightning Blade: All Out", "required_exp": 50 }
             ],
             "clan": "Any"
         },

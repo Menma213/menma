@@ -21,7 +21,20 @@
       "Needle Assault",
       "Rasengan",
       "Lightning Blade",
-      "Flying Raijin Jutsu"
+      "Flying Raijin Jutsu",
+      "Infused Chakra Blade",
+      "Infused Chakra Blade",
+      "Infused Chakra Blade",
+      "Infused Chakra Blade",
+      "Infused Chakra Blade",
+      "Infused Chakra Blade",
+      "Reaper Death Seal",
+      "Rasenshuriken",
+      "Water Dragon Jutsu",
+      "Fireball Jutsu",
+      "Great Forest Crumbling",
+      "Creation Rebirth",
+      "Cherry Blossom Impact"
     ],
     "combos": [
       "Basic Combo",
@@ -29,13 +42,17 @@
       "Shadow Dance"
     ],
     "scrolls": [
-      "Needle Assault Scroll"
-    ]
+      "Needle Assault Scroll",
+      "Chakra Infused Blade Scroll",
+      "Infused Chakra Blade Scroll"
+    ],
+    "rankeditems": []
   },
   "843680216022122516": {
     "usersjutsu": [
       "Transformation Jutsu"
-    ]
+    ],
+    "rankeditems": []
   },
   "799979545046155284": {
     "usersjutsu": [
@@ -60,7 +77,8 @@
     "scrolls": [
       "Needle Assault Scroll",
       "Silent Assassination Scroll"
-    ]
+    ],
+    "rankeditems": []
   },
   "737913304214667345": {
     "usersjutsu": [
@@ -69,14 +87,16 @@
     ],
     "scrolls": [
       "Serpents Wrath Scroll"
-    ]
+    ],
+    "rankeditems": []
   },
   "961918563382362122": {
     "usersjutsu": [
       "Transformation Jutsu",
       "Hidden Mist",
       "asura"
-    ]
+    ],
+    "rankeditems": []
   },
   "1112750369609633792": {
     "usersjutsu": [
@@ -89,12 +109,14 @@
       "Serpents Wrath",
       "Needle Assault"
     ],
-    "scrolls": []
+    "scrolls": [],
+    "rankeditems": []
   },
   "741142009670271010": {
     "usersjutsu": [
       "Transformation Jutsu"
-    ]
+    ],
+    "rankeditems": []
   },
   "920673413268377670": {
     "usersjutsu": [
@@ -103,7 +125,8 @@
     ],
     "scrolls": [
       "Needle Assault Scroll"
-    ]
+    ],
+    "rankeditems": []
   },
   "728522737009819649": {
     "usersjutsu": [
@@ -112,7 +135,8 @@
     ],
     "scrolls": [
       "Needle Assault Scroll"
-    ]
+    ],
+    "rankeditems": []
   },
   "826183795417022555": {
     "usersjutsu": [
@@ -122,7 +146,8 @@
     ],
     "combos": [
       "Basic Combo"
-    ]
+    ],
+    "rankeditems": []
   },
   "1355490065899585737": {
     "usersjutsu": [
@@ -139,7 +164,12 @@
       "Analysis"
     ],
     "combos": [
-      "Basic Combo"
+      "Basic Combo",
+      "Intermediate Combo"
+    ],
+    "rankeditems": [],
+    "scrolls": [
+      "Serpents Wrath Scroll"
     ]
   },
   "818893461881094175": {
@@ -148,7 +178,8 @@
     ],
     "combos": [
       "Basic Combo"
-    ]
+    ],
+    "rankeditems": []
   },
   "1132693590066331828": {
     "usersjutsu": [
@@ -157,29 +188,34 @@
     ],
     "scrolls": [
       "Needle Assault Scroll"
-    ]
+    ],
+    "rankeditems": []
   },
   "1239968214130102424": {
     "usersjutsu": [
       "Transformation Jutsu"
-    ]
+    ],
+    "rankeditems": []
   },
   "1354836327467847864": {
     "usersjutsu": [
       "Transformation Jutsu"
-    ]
+    ],
+    "rankeditems": []
   },
   "1239065381373476894": {
     "usersjutsu": [],
     "scrolls": [
       "Needle Assault Scroll",
       "Silent Assassination Scroll"
-    ]
+    ],
+    "rankeditems": []
   },
   "1383619165843230730": {
     "usersjutsu": [
       "Transformation Jutsu"
-    ]
+    ],
+    "rankeditems": []
   },
   "1071680680616001557": {
     "usersjutsu": [
@@ -187,6 +223,23 @@
     ],
     "scrolls": [
       "Needle Assault Scroll"
+    ],
+    "rankeditems": []
+  },
+  "1311760847307145257": {
+    "usersjutsu": [
+      "Transformation Jutsu",
+      "Rasengan",
+      "Infused Chakra Blade"
+    ],
+    "scrolls": [
+      "Needle Assault Scroll"
+    ],
+    "rankeditems": []
+  },
+  "874591871412879361": {
+    "usersjutsu": [
+      "Transformation Jutsu"
     ]
   }
 }

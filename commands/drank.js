@@ -2,7 +2,6 @@ const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const fs = require('fs');
 const path = require('path');
 const { updateRequirements } = require('./scroll');
-const dataPath = './data/users.json';
 
 const usersPath = path.resolve(__dirname, '../../menma/data/users.json');
 const villagePath = path.resolve(__dirname, '../../menma/data/village.json');
@@ -59,9 +58,9 @@ module.exports = {
         const username = interaction.user.username;
         const userPfp = interaction.user.displayAvatarURL({ dynamic: true, size: 256 });
 
-        // Ensure the data file exists
-        if (!fs.existsSync(dataPath)) fs.writeFileSync(dataPath, JSON.stringify({}, null, 2));
-        let users = JSON.parse(fs.readFileSync(dataPath, 'utf8'));
+        // Ensure the users file exists
+        if (!fs.existsSync(usersPath)) fs.writeFileSync(usersPath, JSON.stringify({}, null, 2));
+        let users = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
 
         // Check if the user is enrolled
         if (!users[userId]) {
@@ -73,11 +72,29 @@ module.exports = {
 
         let player = users[userId];
 
-        // Cooldown: 9 min
+        // Cooldown: 9 min (premium roles reduce this)
         const now = Date.now();
-        if (player.lastdrank && now - player.lastdrank < 9 * 60 * 1000) {
-            const left = 9 * 60 * 1000 - (now - player.lastdrank);
-            return interaction.reply({ content: `You can do this again in ${getCooldownString(left)}.`, ephemeral: true });
+
+        // --- PREMIUM COOLDOWN PATCH ---
+        // Role IDs
+        const JINCHURIKI_ROLE = "1385641469507010640";
+        const LEGENDARY_ROLE = "1385640798581952714";
+        const DONATOR_ROLE = "1385640728130097182";
+        let cooldownMs = 9 * 60 * 1000; // default 9 min
+
+        // Check premium roles (jinchuriki > legendary > donator)
+        const memberRoles = interaction.member.roles.cache;
+        if (memberRoles.has(JINCHURIKI_ROLE)) {
+            cooldownMs = 4 * 60 * 1000; // 4 min
+        } else if (memberRoles.has(LEGENDARY_ROLE)) {
+            cooldownMs = Math.round(4.9 * 60 * 1000); // 4.4 min
+        } else if (memberRoles.has(DONATOR_ROLE)) {
+            cooldownMs = Math.round(5.5 * 60 * 1000); // 4.84 min
+        }
+
+        if (player.lastdrank && now - player.lastdrank < cooldownMs) {
+            const left = cooldownMs - (now - player.lastdrank);
+            return interaction.reply({ content: `You can do this again in ${getCooldownString(left)}.`, ephemeral: false });
         }
         player.lastdrank = now;
 
@@ -97,8 +114,8 @@ module.exports = {
         let taskMessage = tasks[Math.floor(Math.random() * tasks.length)];
 
         // Rewards scale with level
-        let expReward = 100 + Math.floor(player.level * 25);
-        let moneyReward = 200 + Math.floor(player.level * 15);
+        let expReward = 0.2;
+        let moneyReward = 1000
 
         player.exp += expReward;
         player.money += moneyReward;
@@ -137,7 +154,7 @@ module.exports = {
             }
         }
 
-        fs.writeFileSync(dataPath, JSON.stringify(users, null, 2));
+        fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
 
         // Embed Message
         const embed = new EmbedBuilder()
@@ -173,6 +190,6 @@ module.exports = {
         users[userId].drankCompleted = true;
 
         // Save users.json after updating mentorExp
-        fs.writeFileSync(dataPath, JSON.stringify(users, null, 2));
+        fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
     }
 };

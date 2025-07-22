@@ -303,8 +303,26 @@ module.exports = {
 
         // --- COOLDOWN SYSTEM ---
         const now = Date.now();
-        if (player.lastbrank && now - player.lastbrank < 12 * 60 * 1000) {
-            const left = 12 * 60 * 1000 - (now - player.lastbrank);
+
+        // --- PREMIUM COOLDOWN PATCH ---
+        // Role IDs
+        const JINCHURIKI_ROLE = "1385641469507010640";
+        const LEGENDARY_ROLE = "1385640798581952714";
+        const DONATOR_ROLE = "1385640728130097182";
+        let cooldownMs = 12 * 60 * 1000; // default 12 min
+
+        // Check premium roles (jinchuriki > legendary > donator)
+        const memberRoles = interaction.member.roles.cache;
+        if (memberRoles.has(JINCHURIKI_ROLE)) {
+            cooldownMs = 5.5 * 60 * 1000; // 5 min 30 sec
+        } else if (memberRoles.has(LEGENDARY_ROLE)) {
+            cooldownMs = Math.round(7 * 60 * 1000); // 6 min 3 sec
+        } else if (memberRoles.has(DONATOR_ROLE)) {
+            cooldownMs = Math.round(8 * 60 * 1000); // 6 min 39 sec
+        }
+
+        if (player.lastbrank && now - player.lastbrank < cooldownMs) {
+            const left = cooldownMs - (now - player.lastbrank);
             return interaction.reply({ content: `You can do this again in ${getCooldownString(left)}.`, ephemeral: true });
         }
         player.lastbrank = now;
@@ -322,9 +340,9 @@ module.exports = {
         const npc = {
             name: "Bandit Leader",
             health: Math.floor(player.health * 0.5 ),
-            power: Math.floor(player.power * 0.9 + player.level * 2),
+            power: Math.floor(player.power * 0.9),
             defense: Math.floor(player.defense * 0.01),
-            chakra: 10,
+            chakra: 999,
             jutsu: ["Attack", "Serpents Wrath", "Shuriken Throw"],
             activeEffects: [],
             accuracy: 85,
@@ -623,7 +641,7 @@ module.exports = {
                     damage: 0,
                     heal: 0,
                     description: `${baseUser.name} failed to perform ${jutsu.name} (not enough chakra)`,
-                    specialEffects: ["Chakra exhausted!"],
+                    specialEffects: ["Not enough Chakra!"],
                     hit: false
                 };
             }
@@ -1242,7 +1260,7 @@ module.exports = {
             }
 
             // Reward embed
-            const expReward = 300 + Math.floor(player.level * 30);
+            const expReward = 0.4;
             const moneyReward = 500 + Math.floor(player.level * 20);
             const rewardEmbed = new EmbedBuilder()
                 .setTitle(`Battle End! ${player.name} has won!`)

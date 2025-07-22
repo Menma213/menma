@@ -1,17 +1,20 @@
-const { EmbedBuilder } = require('discord.js'); // Use EmbedBuilder for discord.js v14+
+const { EmbedBuilder, SlashCommandBuilder } = require('discord.js'); // Add SlashCommandBuilder
 const fs = require('fs');
 const path = require('path');
 
 module.exports = {
+  data: new SlashCommandBuilder()
+    .setName('ramen')
+    .setDescription('Displays the ramen menu and your available coupons.'),
   name: 'ramen', // Command name for prefix
   description: 'Displays the ramen menu and your available coupons.', // Optional description
-  async execute(message, args) { // Prefix command handler
+  async execute(interactionOrMessage, args) { // Prefix command handler
     // Load users.json
     const usersPath = path.resolve(__dirname, '../../data/users.json');
     const users = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
 
     // Get the user's data
-    const userId = message.author.id;
+    const userId = interactionOrMessage.user ? interactionOrMessage.user.id : interactionOrMessage.author.id;
     const user = users[userId] || { ramen: 0 }; // Default to 0 if user doesn't exist
 
     // Create the embed
@@ -37,6 +40,12 @@ module.exports = {
       .setColor('#006400'); // Dark green color for the embed
 
     // Send the embed
-    await message.channel.send({ embeds: [embed] });
+    if (interactionOrMessage.reply) {
+      // If interaction (slash command)
+      await interactionOrMessage.reply({ embeds: [embed], ephemeral: false });
+    } else {
+      // If message (prefix)
+      await interactionOrMessage.channel.send({ embeds: [embed] });
+    }
   },
 };

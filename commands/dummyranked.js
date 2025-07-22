@@ -2,7 +2,7 @@ const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, Butt
 const fs = require('fs');
 const path = require('path');
 const math = require('mathjs');
-const { createCanvas, loadImage } = require('canvas');
+const Canvas = require('canvas'); // Use Canvas only
 
 // Path configurations
 const usersPath = path.resolve(__dirname, '../../menma/data/users.json');
@@ -12,12 +12,22 @@ const imagesPath = path.resolve(__dirname, '../images');
 const rankedRewardsPath = path.resolve(__dirname, '../../menma/data/rankedrewards.json');
 const giftPath = path.resolve(__dirname, '../../menma/data/gift.json');
 
-// Server constants
-const SERVER_ID = "1381268582595297321";
-const LOG_CHANNEL_ID = "1381278641144467637";
-const SUMMARY_CHANNEL_ID = "1381601428740505660";
+const WIN_BG = 'https://i.imgur.com/XQJKVEp.gif';
+const LOSS_BG = 'https://i.imgur.com/mxqUWZJ.gif';
 
-// Rank configuration
+// Load jutsus from JSON file
+let jutsuList = {};
+if (fs.existsSync(jutsusPath)) {
+    jutsuList = JSON.parse(fs.readFileSync(jutsusPath, 'utf8'));
+}
+
+// Load combos from combos.json
+let comboList = {};
+if (fs.existsSync(combosPath)) {
+    comboList = JSON.parse(fs.readFileSync(combosPath, 'utf8'));
+}
+
+// Replace old rank names with new ones
 const RANK_CONFIG = {
     ranks: [
         "Genin",
@@ -33,74 +43,15 @@ const RANK_CONFIG = {
     lossElo: 25
 };
 
-// NPC data for ranked matches
-const rankedNPCs = [
-    {
-        name: "Kakashi",
-        image: "https://static.wikia.nocookie.net/naruto/images/2/27/Kakashi_Hatake.png/revision/latest/scale-to-width-down/300?cb=20230803224121", // Replace with actual image URL
-        basePower: 1.25,
-        baseDefense: 1.25,
-        baseHealth: 1.25,
-        accuracy: 90,
-        dodge: 20,
-        jutsu: ["Attack", "Lightning Blade", "One Thousand Years of Death"]
-    },
-    {
-        name: "Guy",
-        image: "https://static.wikia.nocookie.net/naruto/images/3/31/Might_Guy.png/revision/latest/scale-to-width-down/300?cb=20150401084456", // Replace with actual image URL
-        basePower: 1.25,
-        baseDefense: 1.25,
-        baseHealth: 1.25,
-        accuracy: 85,
-        dodge: 15,
-        jutsu: ["Attack", "Dynamic Entry"]
-    },
-    {
-        name: "Asuma",
-        image: "https://pm1.aminoapps.com/7847/98cca195c3bc0047d813f25357661be5f67818b3r1-750-754v2_hq.jpg", // Replace with actual image URL
-        basePower: 1.25,
-        baseDefense: 1.25,
-        baseHealth: 1.25,
-        accuracy: 85,
-        dodge: 15,
-        jutsu: ["Attack", "Burning Ash"]
-    },
-    {
-        name: "Kurenai",
-        image: "https://static.wikia.nocookie.net/naruto/images/6/67/Kurenai_Part_I.png/revision/latest?cb=20150207094753", // Replace with actual image URL
-        basePower: 1.25,
-        baseDefense: 1.25,
-        baseHealth: 1.25,
-        accuracy: 90,
-        dodge: 25,
-        jutsu: ["Attack", "Rasengan"]
-    }
-];
-
 // Ranked queue system
 const rankedQueue = {
-    standard: new Map(), // Map of user IDs to queue entry timestamps
-    custom: new Map(),   // For future use
-    matches: new Map(),  // Ongoing matches (channelId -> matchData)
-    logChannel: null
+    standard: new Set(), // Set of user IDs in standard queue
+    custom: new Set(),   // Set of user IDs in custom queue (for future use)
+    matches: new Map(),  // Map of ongoing matches (channelId -> matchData)
+    logChannel: null     // Channel ID for logging matches
 };
 
-// Load jutsus and combos
-let jutsuList = {};
-let comboList = {};
-let rankedRewards = [];
-
-if (fs.existsSync(jutsusPath)) {
-    jutsuList = JSON.parse(fs.readFileSync(jutsusPath, 'utf8'));
-}
-if (fs.existsSync(combosPath)) {
-    comboList = JSON.parse(fs.readFileSync(combosPath, 'utf8'));
-}
-if (fs.existsSync(rankedRewardsPath)) {
-    rankedRewards = JSON.parse(fs.readFileSync(rankedRewardsPath, 'utf8'));
-}
-
-// Effect handlers
+// Effect handlers (copy from brank.js)
 const effectHandlers = {
     damage: (user, target, formula, effect = {}) => {
         try {
@@ -121,7 +72,8 @@ const effectHandlers = {
                 },
                 hasHiddenMist: target.activeEffects?.some(e => e.type === 'status' && e.status === 'mist'),
                 isTargetIncapacitated: target.activeEffects?.some(e =>
-                    e.type === 'status' && ['stun', 'flinch'].includes(e.status)
+                    e.type === 'status' &&
+                    ['stun', 'flinch'].includes(e.status)
                 ),
                 max: Math.max
             };
@@ -221,7 +173,7 @@ const effectHandlers = {
     getAccuracyBonus: (effect, baseAccuracy) => baseAccuracy + (effect.accuracyBonus || 0)
 };
 
-// Emoji constants
+// Emoji constants (from brank.js)
 const EMOJIS = {
     buff: "<:buff:1364946947055816856>",
     debuff: "<:debuff:1368242212374188062>",
@@ -235,56 +187,7 @@ const EMOJIS = {
 const COMBO_EMOJI_FILLED = ":o:";
 const COMBO_EMOJI_EMPTY = ":white_circle:";
 
-// Utility functions
-function getRandomChannelId() {
-    return Math.floor(Math.random() * 900000 + 100000).toString();
-}
-
-function getTierAndDivision(elo) {
-    if (!elo && elo !== 0) return { rank: "Genin", division: 5, elo: 0 };
-    let totalDivisions = RANK_CONFIG.ranks.length * 5;
-    let currentDivision = Math.floor(elo / RANK_CONFIG.eloPerDivision);
-    if (currentDivision >= totalDivisions) {
-        return {
-            rank: "The Shinobi God",
-            division: 1,
-            elo: elo % RANK_CONFIG.eloPerDivision
-        };
-    }
-    let rankIndex = Math.floor(currentDivision / 5);
-    let division = 5 - (currentDivision % 5);
-    return {
-        rank: RANK_CONFIG.ranks[rankIndex],
-        division: division,
-        elo: elo % RANK_CONFIG.eloPerDivision
-    };
-}
-
-function updateElo(winnerId, loserId) {
-    const users = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
-    
-    if (!users[winnerId].ranked) users[winnerId].ranked = { totalElo: 0 };
-    if (!users[loserId].ranked) users[loserId].ranked = { totalElo: 0 };
-
-    users[winnerId].ranked.totalElo += RANK_CONFIG.winElo;
-    users[loserId].ranked.totalElo = Math.max(0, users[loserId].ranked.totalElo - RANK_CONFIG.lossElo);
-
-    const winnerRank = getTierAndDivision(users[winnerId].ranked.totalElo);
-    const loserRank = getTierAndDivision(users[loserId].ranked.totalElo);
-
-    users[winnerId].ranked = { ...users[winnerId].ranked, ...winnerRank };
-    users[loserId].ranked = { ...users[loserId].ranked, ...loserRank };
-
-    fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
-
-    return {
-        winnerChange: RANK_CONFIG.winElo,
-        loserChange: RANK_CONFIG.lossElo,
-        winnerNew: winnerRank,
-        loserNew: loserRank
-    };
-}
-
+// --- Utility functions (from brank.js) ---
 function getEffectiveStats(entity) {
     const stats = { ...entity };
     delete stats.activeEffects;
@@ -308,24 +211,52 @@ function getEffectiveStats(entity) {
     return effectiveStats;
 }
 
-// Image generation functions
-async function generateBattleImage(player1, player2) {
+// --- Battle image generation (Canvas version, PvP) ---
+async function generateBattleImage(player1, player2, interaction = null) {
+    // --- Use brank.js style avatar logic for both players ---
+    const CanvasLib = require('canvas');
+    let p1AvatarUrl, p2AvatarUrl;
+    if (interaction && interaction.client) {
+        try {
+            const userObj1 = await interaction.client.users.fetch(player1.userId || player1.id);
+            player1.userId = userObj1.id;
+            player1.avatar = userObj1.avatar;
+            player1.discriminator = userObj1.discriminator;
+            player1.name = userObj1.username || player1.name;
+        } catch {}
+        try {
+            const userObj2 = await interaction.client.users.fetch(player2.userId || player2.id);
+            player2.userId = userObj2.id;
+            player2.avatar = userObj2.avatar;
+            player2.discriminator = userObj2.discriminator;
+            player2.name = userObj2.username || player2.name;
+        } catch {}
+    }
+    // Always use userId and avatar hash, fallback to default avatar
+    if (player1.avatar) {
+        p1AvatarUrl = `https://cdn.discordapp.com/avatars/${player1.userId}/${player1.avatar}.png?size=256`;
+    } else {
+        const disc = player1.discriminator ? parseInt(player1.discriminator) % 5 : 0;
+        p1AvatarUrl = `https://cdn.discordapp.com/embed/avatars/${disc}.png`;
+    }
+    if (player2.avatar) {
+        p2AvatarUrl = `https://cdn.discordapp.com/avatars/${player2.userId}/${player2.avatar}.png?size=256`;
+    } else {
+        const disc = player2.discriminator ? parseInt(player2.discriminator) % 5 : 0;
+        p2AvatarUrl = `https://cdn.discordapp.com/embed/avatars/${disc}.png`;
+    }
+
     const width = 800, height = 400;
-    const canvas = createCanvas(width, height);
+    const canvas = CanvasLib.createCanvas(width, height);
     const ctx = canvas.getContext('2d');
 
     // Load background
     let bgImg;
     try {
-        bgImg = await loadImage('https://i.pinimg.com/originals/5d/e5/62/5de5622ecdd4e24685f141f10e4573e3.jpg');
-    } catch { 
-        ctx.fillStyle = '#222';
-        ctx.fillRect(0, 0, width, height);
-    }
-
-    if (bgImg) {
-        ctx.drawImage(bgImg, 0, 0, width, height);
-    }
+        bgImg = await CanvasLib.loadImage('https://i.pinimg.com/originals/5d/e5/62/5de5622ecdd4e24685f141f10e4573e3.jpg');
+    } catch { bgImg = null; }
+    if (bgImg) ctx.drawImage(bgImg, 0, 0, width, height);
+    else { ctx.fillStyle = '#222'; ctx.fillRect(0, 0, width, height); }
 
     // Helper for rounded rectangles
     function roundRect(ctx, x, y, w, h, r) {
@@ -349,32 +280,17 @@ async function generateBattleImage(player1, player2) {
     const nameY = 80, barY = 280;
     const nameH = 28, barH = 22;
 
-    // Get avatars
-    let p1AvatarUrl, p2AvatarUrl;
-
-    // Player 1: always a user
-    if (player1.avatar) {
-        p1AvatarUrl = `https://cdn.discordapp.com/avatars/${player1.userId || player1.id}/${player1.avatar}.png?size=256`;
-    } else {
-        const defaultAvatarNumber = parseInt(player1.discriminator) % 5;
-        p1AvatarUrl = `https://cdn.discordapp.com/embed/avatars/${defaultAvatarNumber}.png`;
-    }
-
-    // Player 2: could be user or NPC
-    if (player2.image) {
-        // NPC: use their image property
-        p2AvatarUrl = player2.image;
-    } else if (player2.avatar) {
-        p2AvatarUrl = `https://cdn.discordapp.com/avatars/${player2.userId || player2.id}/${player2.avatar}.png?size=256`;
-    } else {
-        const defaultAvatarNumber = parseInt(player2.discriminator) % 5;
-        p2AvatarUrl = `https://cdn.discordapp.com/embed/avatars/${defaultAvatarNumber}.png`;
-    }
-
-    // Load and draw avatars
-    let p1Img, p2Img;
+    // --- Avatar logic: always use userId and avatar ---
+    let p1Img = null, p2Img = null;
     try {
-        p1Img = await loadImage(p1AvatarUrl);
+        p1Img = await CanvasLib.loadImage(p1AvatarUrl);
+    } catch { p1Img = null; }
+    try {
+        p2Img = await CanvasLib.loadImage(p2AvatarUrl);
+    } catch { p2Img = null; }
+
+    // Draw player 1
+    if (p1Img) {
         ctx.save();
         roundRect(ctx, p1X, p1Y, charW, charH, 10);
         ctx.clip();
@@ -384,12 +300,9 @@ async function generateBattleImage(player1, player2) {
         ctx.strokeStyle = "#6e1515";
         roundRect(ctx, p1X, p1Y, charW, charH, 10);
         ctx.stroke();
-    } catch (err) {
-        console.error("Error loading player 1 avatar:", err);
     }
-
-    try {
-        p2Img = await loadImage(p2AvatarUrl);
+    // Draw player 2
+    if (p2Img) {
         ctx.save();
         roundRect(ctx, p2X, p2Y, charW, charH, 10);
         ctx.clip();
@@ -399,16 +312,13 @@ async function generateBattleImage(player1, player2) {
         ctx.strokeStyle = "#6e1515";
         roundRect(ctx, p2X, p2Y, charW, charH, 10);
         ctx.stroke();
-    } catch (err) {
-        console.error("Error loading player 2 avatar:", err);
     }
 
     // Name tags
     ctx.font = "bold 18px Arial";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    
-    // Player 1 name
+    // Player 1
     ctx.save();
     ctx.globalAlpha = 0.7;
     ctx.fillStyle = "#000";
@@ -420,8 +330,7 @@ async function generateBattleImage(player1, player2) {
     ctx.shadowBlur = 4;
     ctx.fillText(player1.name, p1X + charW / 2, nameY + nameH / 2);
     ctx.shadowBlur = 0;
-    
-    // Player 2 name
+    // Player 2
     ctx.save();
     ctx.globalAlpha = 0.7;
     ctx.fillStyle = "#000";
@@ -435,10 +344,8 @@ async function generateBattleImage(player1, player2) {
     ctx.shadowBlur = 0;
 
     // Health bars
+    // Player 1
     const p1HealthPercent = Math.max(player1.currentHealth / player1.health, 0);
-    const p2HealthPercent = Math.max(player2.currentHealth / player2.health, 0);
-    
-    // Player 1 health
     ctx.save();
     ctx.fillStyle = "#333";
     roundRect(ctx, p1X, barY, charW, barH, 5);
@@ -450,10 +357,13 @@ async function generateBattleImage(player1, player2) {
     ctx.font = "13px Arial";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    
+    ctx.shadowColor = "#000";
+    ctx.shadowBlur = 1;
+    ctx.shadowBlur = 0;
     ctx.restore();
-    
-    // Player 2 health
+
+    // Player 2
+    const p2HealthPercent = Math.max(player2.currentHealth / player2.health, 0);
     ctx.save();
     ctx.fillStyle = "#333";
     roundRect(ctx, p2X, barY, charW, barH, 5);
@@ -465,7 +375,9 @@ async function generateBattleImage(player1, player2) {
     ctx.font = "13px Arial";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    
+    ctx.shadowColor = "#000";
+    ctx.shadowBlur = 1;
+    ctx.shadowBlur = 0;
     ctx.restore();
 
     // VS text
@@ -479,27 +391,24 @@ async function generateBattleImage(player1, player2) {
     ctx.fillText("VS", width / 2, height / 2);
     ctx.restore();
 
-    // Save to file
-    if (!fs.existsSync(imagesPath)) {
-        fs.mkdirSync(imagesPath, { recursive: true });
-    }
-    const filename = `battle_${player1.userId || player1.id}_${player2.userId || player2.id}_${Date.now()}.png`;
-    const fullPath = path.join(imagesPath, filename);
-    const out = fs.createWriteStream(fullPath);
+    // Save to file and return path
+    const imagesDir = path.resolve(__dirname, '../images');
+    if (!fs.existsSync(imagesDir)) fs.mkdirSync(imagesDir, { recursive: true });
+    const imagePath = path.join(imagesDir, `battle_${player1.userId || player1.id}_${player2.userId || player2.id}_${Date.now()}.png`);
+    const out = fs.createWriteStream(imagePath);
     const stream = canvas.createPNGStream();
-    
     await new Promise((resolve, reject) => {
         stream.pipe(out);
         out.on('finish', resolve);
         out.on('error', reject);
     });
-    
-    return fullPath;
+    return imagePath;
 }
 
+// --- Canvas-based match summary image ---
 async function generateEloImage(user, oldElo, newElo, isWinner) {
     const width = 600, height = 220;
-    const canvas = createCanvas(width, height);
+    const canvas = Canvas.createCanvas(width, height);
     const ctx = canvas.getContext('2d');
 
     // Theme colors
@@ -517,7 +426,6 @@ async function generateEloImage(user, oldElo, newElo, isWinner) {
     const oldRank = getTierAndDivision(oldElo);
     const newRank = getTierAndDivision(newElo);
     const progress = Math.max(0, Math.min(1, (newElo % 100) / 100));
-    
     ctx.save();
     ctx.fillStyle = '#222c';
     ctx.beginPath();
@@ -561,193 +469,192 @@ async function generateEloImage(user, oldElo, newElo, isWinner) {
     ctx.textAlign = 'center';
     ctx.fillText(`${newElo % 100}/100`, barX + barW / 2, barY + barH + 16);
 
-    // Save to file
-    if (!fs.existsSync(imagesPath)) {
-        fs.mkdirSync(imagesPath, { recursive: true });
-    }
+    // Save to file and return path
+    const imagesDir = path.resolve(__dirname, '../images');
+    if (!fs.existsSync(imagesDir)) fs.mkdirSync(imagesDir, { recursive: true });
     const filename = `elo_${user.id || user.userId}_${Date.now()}.png`;
-    const fullPath = path.join(imagesPath, filename);
+    const fullPath = path.join(imagesDir, filename);
     const out = fs.createWriteStream(fullPath);
     const stream = canvas.createPNGStream();
-    
     await new Promise((resolve, reject) => {
         stream.pipe(out);
         out.on('finish', resolve);
         out.on('error', reject);
     });
-    
     return fullPath;
 }
 
-async function generateRankedRewardsImage(user, userElo, userRank, userDiv, claimable, nextReward) {
-    const width = 700, height = 500;
-    const canvas = createCanvas(width, height);
-    const ctx = canvas.getContext('2d');
+// Ranked command
+module.exports = {
+    data: new SlashCommandBuilder()
+        .setName('ranked')
+        .setDescription('Ranked queue and rewards')
+        .addStringOption(option =>
+            option.setName('option')
+                .setDescription('Show rewards or join ranked')
+                .addChoices(
+                    { name: 'rewards', value: 'rewards' }
+                )
+                .setRequired(false)
+        ),
 
-    // Theme colors by rank
-    const themes = {
-        "Genin":    { bg: "#0a1a3a", accent: "#1e3a8a", text: "#e0eaff", border: "#274690" },
-        "Chuunin":  { bg: "#1e4023", accent: "#4ade80", text: "#eaffea", border: "#22c55e" },
-        "Jounin":   { bg: "#0e3c3c", accent: "#2dd4bf", text: "#eafffa", border: "#14b8a6" },
-        "Sannin":   { bg: "#2a1a3a", accent: "#a78bfa", text: "#f3eaff", border: "#7c3aed" },
-        "Master Shinobi": { bg: "#3a3a1a", accent: "#fde68a", text: "#fffbe0", border: "#facc15" },
-        "The Shinobi God": { bg: "#0a2a3a", accent: "#67e8f9", text: "#e0faff", border: "#06b6d4" }
-    };
-    const theme = themes[userRank] || themes["Genin"];
+    async execute(interaction) {
+        // Only allow in main server
+        if (!interaction.guild || interaction.guild.id !== '1381268582595297321') {
+            return interaction.reply({ content: 'This command can only be used in the main server.', ephemeral: true });
+        }
 
-    // Background
-    ctx.fillStyle = theme.bg;
-    ctx.fillRect(0, 0, width, height);
-    ctx.strokeStyle = theme.border;
-    ctx.lineWidth = 4;
-    ctx.strokeRect(0, 0, width, height);
+        const userId = interaction.user.id;
+        const opt = interaction.options.getString('option');
 
-    // Title
-    ctx.font = 'bold 36px Arial';
-    ctx.fillStyle = theme.accent;
-    ctx.textAlign = 'center';
-    ctx.fillText('Ranked Rewards', width / 2, 50);
+        if (opt === 'rewards') {
+            return await handleRankedRewards(interaction);
+        }
 
-    // Rank box
-    ctx.fillStyle = `${theme.accent}33`;
-    ctx.beginPath();
-    ctx.roundRect(50, 80, width - 100, 60, 10);
-    ctx.fill();
-    ctx.strokeStyle = theme.accent;
-    ctx.lineWidth = 2;
-    ctx.stroke();
+        const mode = 'standard';
 
-    ctx.font = 'bold 18px Arial';
-    ctx.fillStyle = theme.accent;
-    ctx.textAlign = 'left';
-    ctx.fillText('Your Rank:', 70, 110);
-
-    ctx.font = 'bold 24px Arial';
-    ctx.fillStyle = theme.text;
-    ctx.fillText(`${userRank} Div. ${userDiv} (${userElo} ELO)`, 180, 110);
-
-    // Upcoming rewards
-    ctx.font = 'bold 22px Arial';
-    ctx.fillStyle = theme.accent;
-    ctx.textAlign = 'left';
-    ctx.fillText('Upcoming Rewards', 70, 170);
-
-    ctx.fillStyle = `${theme.bg}cc`;
-    ctx.beginPath();
-    ctx.roundRect(50, 180, width - 100, 100, 10);
-    ctx.fill();
-    ctx.strokeStyle = theme.accent;
-    ctx.lineWidth = 2;
-    ctx.stroke();
-
-    if (nextReward) {
-        ctx.font = 'bold 18px Arial';
-        ctx.fillStyle = theme.text;
-        ctx.fillText(`${nextReward.rank} Div. ${nextReward.division} (${nextReward.elo} ELO)`, 70, 210);
+        // Load user data
+        if (!fs.existsSync(usersPath)) {
+            if (!interaction.replied && !interaction.deferred)
+                return interaction.reply({ content: "Database not found.", ephemeral: true });
+            return;
+        }
         
-        ctx.font = '16px Arial';
-        ctx.fillText(`1️⃣ ${nextReward.reward1.name}: ${nextReward.reward1.desc}`, 70, 240);
-        ctx.fillText(`2️⃣ ${nextReward.reward2.name}: ${nextReward.reward2.desc}`, 70, 270);
-    } else {
-        ctx.font = '18px Arial';
-        ctx.fillStyle = theme.text;
-        ctx.fillText('No more upcoming rewards', 70, 230);
-    }
-
-    // Available claims
-    ctx.font = 'bold 22px Arial';
-    ctx.fillStyle = theme.accent;
-    ctx.fillText('Available Claims', 70, 310);
-
-    ctx.fillStyle = `${theme.bg}cc`;
-    ctx.beginPath();
-    ctx.roundRect(50, 320, width - 100, 100, 10);
-    ctx.fill();
-    ctx.strokeStyle = theme.accent;
-    ctx.lineWidth = 2;
-    ctx.stroke();
-
-    if (claimable) {
-        ctx.font = 'bold 18px Arial';
-        ctx.fillStyle = theme.text;
-        ctx.fillText(`${claimable.rank} Div. ${claimable.division} (${claimable.elo} ELO)`, 70, 350);
+        const users = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
+        if (!users[userId]) {
+            if (!interaction.replied && !interaction.deferred)
+                return interaction.reply({ content: "You need to enroll first!", ephemeral: true });
+            return;
+        }
         
-        ctx.font = '16px Arial';
-        ctx.fillText(`1️⃣ ${claimable.reward1.name}: ${claimable.reward1.desc}`, 70, 380);
-        ctx.fillText(`2️⃣ ${claimable.reward2.name}: ${claimable.reward2.desc}`, 70, 410);
-    } else {
-        ctx.font = '18px Arial';
-        ctx.fillStyle = theme.text;
-        ctx.fillText('No claimable rewards at this time', 70, 370);
+        // Prevent double reply by using a flag
+        let replied = false;
+        try {
+            // Check if already in queue
+            if (rankedQueue[mode].has(userId)) {
+                if (!interaction.replied && !interaction.deferred && !replied) {
+                    replied = true;
+                    return interaction.reply({ content: "You're already in the ranked queue!", ephemeral: true });
+                }
+                return;
+            }
+
+            // Check if already in a match
+            for (const match of rankedQueue.matches.values()) {
+                if (match.player1 === userId || match.player2 === userId) {
+                    if (!interaction.replied && !interaction.deferred && !replied) {
+                        replied = true;
+                        return interaction.reply({ content: "You're already in a ranked match!", ephemeral: true });
+                    }
+                    return;
+                }
+            }
+
+            // Add to queue
+            rankedQueue[mode].add(userId);
+
+            // Log queue entry
+            try {
+                const logChannel = await interaction.client.channels.fetch(LOG_CHANNEL_ID);
+                if (logChannel) {
+                    await logChannel.send(`[RANKED] ${interaction.user.tag} (${userId}) has entered the ${mode} queue.`);
+                }
+            } catch (e) { /* ignore log errors */ }
+
+            // Reply to user (only if not already replied/deferred)
+            if (!interaction.replied && !interaction.deferred && !replied) {
+                replied = true;
+                await interaction.reply({
+                    content: `You've entered the ${mode} ranked queue. Waiting for an opponent...`,
+                    ephemeral: true
+                });
+            }
+
+            // Check for matchmaking
+            if (rankedQueue[mode].size >= 2) {
+                // Get first two players in queue
+                const players = Array.from(rankedQueue[mode]).slice(0, 2);
+                const [player1, player2] = players;
+
+                // Remove from queue
+                rankedQueue[mode].delete(player1);
+                rankedQueue[mode].delete(player2);
+
+                // Log match found
+                try {
+                    const logChannel = await interaction.client.channels.fetch(LOG_CHANNEL_ID);
+                    if (logChannel) {
+                        await logChannel.send(`[RANKED] Match found: <@${player1}> vs <@${player2}>`);
+                    }
+                } catch (e) { /* ignore log errors */ }
+
+                // Start the match (do NOT reply again here)
+                await startRankedBattle(interaction.client, player1, player2, mode);
+            }
+        } catch (err) {
+            // Only reply if not already replied/deferred
+            if (!interaction.replied && !interaction.deferred && !replied) {
+                replied = true;
+                await interaction.reply({
+                    content: "⚠️ An error occurred while executing this command.",
+                    ephemeral: true
+                });
+            } else {
+                // Optionally log error somewhere else
+                console.error("Ranked command error:", err);
+            }
+        }
     }
+};
 
-    // Footer
-    ctx.font = 'italic 15px Arial';
-    ctx.fillStyle = `${theme.text}cc`;
-    ctx.textAlign = 'center';
-    ctx.fillText('*All these gifts are sent to your gift inventory, check using /gift inventory.*', width / 2, 470);
+// Add your server ID here
+const SERVER_ID = "1381268582595297321";
 
-    // Save to file
-    if (!fs.existsSync(imagesPath)) {
-        fs.mkdirSync(imagesPath, { recursive: true });
-    }
-    const filename = `rewards_${user.id}_${Date.now()}.png`;
-    const fullPath = path.join(imagesPath, filename);
-    const out = fs.createWriteStream(fullPath);
-    const stream = canvas.createPNGStream();
-    
-    await new Promise((resolve, reject) => {
-        stream.pipe(out);
-        out.on('finish', resolve);
-        out.on('error', reject);
-    });
-    
-    return fullPath;
-}
+// Add your log channel ID here
+const LOG_CHANNEL_ID = "1381278641144467637"; // <-- Replace with your log channel ID
 
-// Battle functions
+// Add a constant for the summary channel (if needed)
+const SUMMARY_CHANNEL_ID = "1381601428740505660"; // <-- Replace with your summary channel ID
+
+// --- 1v1 Battle Logic using brank.js features ---
 async function startRankedBattle(client, player1Id, player2Id, mode) {
+    // Load users and fetch Discord user objects
     const users = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
     const player1User = await client.users.fetch(player1Id);
-    const player2User = player2Id.startsWith('NPC_') ? 
-        rankedNPCs.find(npc => npc.name === player2Id.replace('NPC_', '')) : 
-        await client.users.fetch(player2Id);
+    const player2User = await client.users.fetch(player2Id);
 
+    // Fetch the correct guild by SERVER_ID
     const guild = await client.guilds.fetch(SERVER_ID);
+
+    // Create a private channel for the match
     const channelName = `ranked-${getRandomChannelId()}`;
-    
-    const permissionOverwrites = [
-        {
-            id: guild.roles.everyone.id,
-            deny: [PermissionFlagsBits.ViewChannel]
-        },
-        {
-            id: player1Id,
-            allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages]
-        }
-    ];
-
-    if (!player2Id.startsWith('NPC_')) {
-        permissionOverwrites.push({
-            id: player2Id,
-            allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages]
-        });
-    }
-
     const channel = await guild.channels.create({
         name: channelName,
         type: 0,
-        permissionOverwrites
+        permissionOverwrites: [
+            {
+                id: guild.roles.everyone.id,
+                deny: [PermissionFlagsBits.ViewChannel]
+            },
+            {
+                id: player1Id,
+                allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages]
+            },
+            {
+                id: player2Id,
+                allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages]
+            }
+        ]
     });
 
-    // Invitation Embed
+    // --- Invitation Embed ---
     const invitationEmbed = new EmbedBuilder()
         .setTitle('🏆 RANKED: STANDARD MODE')
         .setDescription(
             `Welcome to the ultimate test of strength and will!\n\n` +
             `Step into the arena and prove yourself as the strongest shinobi. ` +
             `Climb the ranks, defeat your rivals, and aim to become the next Hokage!\n\n` +
-            `**Do <@${player1Id}> and ${player2Id.startsWith('NPC_') ? player2Id.replace('NPC_', '') : `<@${player2Id}>`} swear to fight fairly under the gaze of the Shinigami, god of death?**\n` +
+            `**Do <@${player1Id}> and <@${player2Id}> swear to fight fairly under the gaze of the Shinigami, god of death?**\n` +
             `*Ορκίζομαι να πολεμήσω δίκαια υπό το βλέμμα του Shinigami!*\n\n` +
             `:hourglass: **Invitation expires in 1 minute.**`
         )
@@ -766,21 +673,21 @@ async function startRankedBattle(client, player1Id, player2Id, mode) {
             .setStyle(ButtonStyle.Danger)
     );
 
+    // Ping both users with the embed
     const invitationMsg = await channel.send({
-        content: player2Id.startsWith('NPC_') ? 
-            `<@${player1Id}>` : 
-            `<@${player1Id}> <@${player2Id}>`,
+        content: `<@${player1Id}> <@${player2Id}>`,
         embeds: [invitationEmbed],
         components: [acceptRow]
     });
 
+    // Await both players to accept
     const accepted = new Set();
     let declined = false;
 
     await new Promise((resolve) => {
         const collector = invitationMsg.createMessageComponentCollector({
             filter: i => [player1Id, player2Id].includes(i.user.id),
-            time: 60000
+            time: 60000 // 1 minute
         });
 
         collector.on('collect', async i => {
@@ -788,8 +695,7 @@ async function startRankedBattle(client, player1Id, player2Id, mode) {
                 accepted.add(i.user.id);
                 await i.reply({ content: `You have accepted the challenge!`, ephemeral: true });
                 await channel.send(`<@${i.user.id}> has accepted.`);
-                
-                if (accepted.size === (player2Id.startsWith('NPC_') ? 1 : 2)) {
+                if (accepted.has(player1Id) && accepted.has(player2Id)) {
                     collector.stop('both_accepted');
                 }
             } else if (i.customId === 'ranked_decline') {
@@ -801,6 +707,7 @@ async function startRankedBattle(client, player1Id, player2Id, mode) {
         });
 
         collector.on('end', async (collected, reason) => {
+            // Disable buttons
             await invitationMsg.edit({
                 components: [
                     new ActionRowBuilder().addComponents(
@@ -817,103 +724,86 @@ async function startRankedBattle(client, player1Id, player2Id, mode) {
                     )
                 ]
             });
-
-            if (reason === 'both_accepted' || (player2Id.startsWith('NPC_') && accepted.size === 1)) {
+            if (reason === 'both_accepted') {
                 await channel.send('**# RANKED: STANDARD MODE**\nLet the battle begin!');
                 resolve();
             } else if (declined) {
-                // Always delete the channel on decline
-                setTimeout(async () => {
-                    try { await channel.delete("Ranked match invitation declined (auto-cleanup)"); } catch (e) {}
-                }, 2000);
+                // Already handled above
                 resolve();
             } else {
+                // Timeout: only one accepted
                 if (accepted.size === 1) {
                     const winnerId = [...accepted][0];
                     const loserId = winnerId === player1Id ? player2Id : player1Id;
-                    await channel.send(`<@${winnerId}> has accepted, but ${loserId.startsWith('NPC_') ? loserId.replace('NPC_', '') : `<@${loserId}>`} did not respond in time. <@${winnerId}> wins by default!`);
-                    
-                    if (!loserId.startsWith('NPC_')) {
-                        const eloUpdate = updateElo(winnerId, loserId);
-                        try {
-                            const logChannel = await client.channels.fetch(LOG_CHANNEL_ID);
-                            if (logChannel) {
-                                await logChannel.send(`[RANKED] ${winnerId} wins by default (opponent did not accept) +${eloUpdate.winnerChange} ELO`);
-                            }
-                        } catch (e) {}
-                    }
+                    await channel.send(`<@${winnerId}> has accepted, but <@${loserId}> did not respond in time. <@${WinnerId}> wins by default!`);
+                    // ELO update logic for default win
+                    const eloUpdate = updateElo(winnerId, loserId);
+                    try {
+                        const logChannel = await client.channels.fetch(LOG_CHANNEL_ID);
+                        if (logChannel) {
+                            await logChannel.send(`[RANKED] ${winnerId} wins by default (opponent did not accept) +${eloUpdate.winnerChange} ELO`);
+                        }
+                    } catch (e) {}
                 } else {
                     await channel.send('The ranked match has been cancelled due to no response.');
                 }
-                // Always delete the channel on timeout or no response
+                // Auto-delete channel after 15 seconds
                 setTimeout(async () => {
-                    try { await channel.delete("Ranked match invitation expired (auto-cleanup)"); } catch (e) {}
-                }, 2000);
+                    try {
+                        await channel.delete("Ranked match invitation expired (auto-cleanup)");
+                    } catch (e) {}
+                }, 15000);
                 resolve();
             }
         });
     });
 
-    if (declined || (player2Id.startsWith('NPC_') ? accepted.size !== 1 : accepted.size !== 2)) {
-        // Channel will be deleted above, just return
-        return;
-    }
+    if (declined || accepted.size !== 2) return;
 
-    // Initialize player objects
+    // Initialize player objects (adapted from brank.js)
+    // Add avatarURL for battle image
+    const player1Avatar = (await client.users.fetch(player1Id)).displayAvatarURL({ format: 'png', size: 256 });
+    const player2Avatar = (await client.users.fetch(player2Id)).displayAvatarURL({ format: 'png', size: 256 });
+
     let player1 = {
         ...users[player1Id],
         userId: player1Id,
         name: player1User.username,
-        avatar: player1User.avatar,
-        discriminator: player1User.discriminator,
         activeEffects: [],
         accuracy: 100,
         dodge: 0,
         currentHealth: users[player1Id].health,
-        chakra: users[player1Id].chakra || 10
+        chakra: users[player1Id].chakra || 10,
+        avatarURL: player1Avatar
+    };
+    let player2 = {
+        ...users[player2Id],
+        userId: player2Id,
+        name: player2User.username,
+        activeEffects: [],
+        accuracy: 100,
+        dodge: 0,
+        currentHealth: users[player2Id].health,
+        chakra: users[player2Id].chakra || 10,
+        avatarURL: player2Avatar
     };
 
-    let player2;
-    if (player2Id.startsWith('NPC_')) {
-        const npcData = rankedNPCs.find(npc => npc.name === player2Id.replace('NPC_', ''));
-        player2 = {
-            ...npcData,
-            userId: player2Id,
-            name: npcData.name,
-            health: Math.floor(users[player1Id].health * npcData.baseHealth),
-            currentHealth: Math.floor(users[player1Id].health * npcData.baseHealth),
-            power: Math.floor(users[player1Id].power * npcData.basePower),
-            defense: Math.floor(users[player1Id].defense * npcData.baseDefense),
-            accuracy: npcData.accuracy,
-            dodge: npcData.dodge,
-            chakra: 10,
-            activeEffects: []
-        };
-    } else {
-        player2 = {
-            ...users[player2Id],
-            userId: player2Id,
-            name: player2User.username,
-            avatar: player2User.avatar,
-            discriminator: player2User.discriminator,
-            activeEffects: [],
-            accuracy: 100,
-            dodge: 0,
-            currentHealth: users[player2Id].health,
-            chakra: users[player2Id].chakra || 10
-        };
-    }
-
-    // Combo state
+    // Combo state for each player
     let comboState1 = null, comboState2 = null;
     if (player1.Combo && comboList[player1.Combo]) {
         comboState1 = { combo: comboList[player1.Combo], usedJutsus: new Set() };
     }
-    if (!player2Id.startsWith('NPC_') && player2.Combo && comboList[player2.Combo]) {
+    if (player2.Combo && comboList[player2.Combo]) {
         comboState2 = { combo: comboList[player2.Combo], usedJutsus: new Set() };
     }
 
     let roundNum = 1;
+    let activePlayer = player1;
+    let opponent = player2;
+    let activeComboState = comboState1;
+    let opponentComboState = comboState2;
+
+    // --- Damage tracking ---
     let totalDamageDealt1 = 0;
     let totalDamageTaken1 = 0;
     let totalDamageDealt2 = 0;
@@ -922,7 +812,7 @@ async function startRankedBattle(client, player1Id, player2Id, mode) {
     // Battle loop
     let battleActive = true;
     while (battleActive) {
-        // Update effect durations
+        // Update effect durations at start of turn for both players
         [player1, player2].forEach(entity => {
             entity.activeEffects.forEach(effect => {
                 if (effect.duration > 0) effect.duration--;
@@ -930,11 +820,11 @@ async function startRankedBattle(client, player1Id, player2Id, mode) {
             entity.activeEffects = entity.activeEffects.filter(e => e.duration > 0);
         });
 
-        // Calculate effective stats
+        // Calculate effective stats for both players
         const effective1 = getEffectiveStats(player1);
         const effective2 = getEffectiveStats(player2);
 
-        // Player 1's turn
+        // --- Player 1's turn ---
         const { embed: embed1, components: components1 } = createMovesEmbedPvP(player1, roundNum);
         const moveMessage1 = await channel.send({
             content: `<@${player1.userId}>`,
@@ -942,17 +832,18 @@ async function startRankedBattle(client, player1Id, player2Id, mode) {
             components: components1,
             fetchReply: true
         });
-
         const battleImagePath1 = await generateBattleImage(player1, player2);
         const battleImage1 = new AttachmentBuilder(battleImagePath1);
-        await channel.send({ files: [battleImage1] });
+        await channel.send({
+            content: `**Battle Image:**`,
+            files: [battleImage1]
+        });
 
         const player1Action = await new Promise(resolve => {
             const collector = moveMessage1.createMessageComponentCollector({
                 filter: i => i.user.id === player1.userId && i.customId.endsWith(`-${player1.userId}-${roundNum}`),
                 time: 90000
             });
-
             collector.on('collect', async i => {
                 await i.deferUpdate();
                 if (i.customId.startsWith('move')) {
@@ -968,7 +859,6 @@ async function startRankedBattle(client, player1Id, player2Id, mode) {
                 }
                 collector.stop();
             });
-
             collector.on('end', (collected, reason) => {
                 if (reason === 'time') {
                     resolve({
@@ -993,6 +883,7 @@ async function startRankedBattle(client, player1Id, player2Id, mode) {
         if (player1Action.fled) {
             battleActive = false;
             await channel.send(`${player1.name} fled from the battle!`);
+            // Log flee
             try {
                 const logChannel = await client.channels.fetch(LOG_CHANNEL_ID);
                 if (logChannel) {
@@ -1002,81 +893,83 @@ async function startRankedBattle(client, player1Id, player2Id, mode) {
             break;
         }
 
-        // Player 2's turn (NPC or player)
-        let player2Action;
-        if (player2Id.startsWith('NPC_')) {
-            // --- PATCH: Use npcChooseMove for NPC logic ---
-            player2Action = npcChooseMove(player2, player1, effective2, effective1);
-            await channel.send(`${player2.name} uses ${player2Action.jutsuUsed || player2Action.description}!`);
-        } else {
-            // Player turn
-            const { embed: embed2, components: components2 } = createMovesEmbedPvP(player2, roundNum);
-            const moveMessage2 = await channel.send({
-                content: `<@${player2.userId}>`,
-                embeds: [embed2],
-                components: components2,
-                fetchReply: true
+        // --- Player 2's turn ---
+        const { embed: embed2, components: components2 } = createMovesEmbedPvP(player2, roundNum);
+        const moveMessage2 = await channel.send({
+            content: `<@${player2.userId}>`,
+            embeds: [embed2],
+            components: components2,
+            fetchReply: true
+        });
+        // Remove the extra battle image after player 2's embed
+        // const battleImagePath2 = await generateBattleImage(player1, player2);
+        // const battleImage2 = new AttachmentBuilder(battleImagePath2);
+        // await channel.send({
+        //     content: `**Battle Image:**`,
+        //     files: [battleImage2]
+        // });
+
+        const player2Action = await new Promise(resolve => {
+            const collector = moveMessage2.createMessageComponentCollector({
+                filter: i => i.user.id === player2.userId && i.customId.endsWith(`-${player2.userId}-${roundNum}`),
+                time: 90000
             });
-
-            player2Action = await new Promise(resolve => {
-                const collector = moveMessage2.createMessageComponentCollector({
-                    filter: i => i.user.id === player2.userId && i.customId.endsWith(`-${player2.userId}-${roundNum}`),
-                    time: 90000
-                });
-
-                collector.on('collect', async i => {
-                    await i.deferUpdate();
-                    if (i.customId.startsWith('move')) {
-                        const jutsuName = getJutsuByButtonPvP(i.customId, player2);
-                        const result = executeJutsu(player2, player1, effective2, effective1, jutsuName);
-                        if (comboState2?.combo.requiredJutsus.includes(jutsuName)) {
-                            comboState2.usedJutsus.add(jutsuName);
-                        }
-                        result.jutsuUsed = jutsuName;
-                        resolve(result);
-                    } else {
-                        resolve(await processPlayerMove(i.customId, player2, player1, effective2, effective1));
+            collector.on('collect', async i => {
+                await i.deferUpdate();
+                if (i.customId.startsWith('move')) {
+                    const jutsuName = getJutsuByButtonPvP(i.customId, player2);
+                    const result = executeJutsu(player2, player1, effective2, effective1, jutsuName);
+                    if (comboState2?.combo.requiredJutsus.includes(jutsuName)) {
+                        comboState2.usedJutsus.add(jutsuName);
                     }
-                    collector.stop();
-                });
-
-                collector.on('end', (collected, reason) => {
-                    if (reason === 'time') {
-                        resolve({
-                            damage: 0,
-                            heal: 0,
-                            description: `${player2.name} did not make a move.`,
-                            specialEffects: ["Missed opportunity!"],
-                            hit: false,
-                            fled: true
-                        });
-                    }
-                    moveMessage2.edit({
-                        components: components2.map(row => {
-                            const disabledRow = ActionRowBuilder.from(row);
-                            disabledRow.components.forEach(c => c.setDisabled(true));
-                            return disabledRow;
-                        })
-                    }).catch(() => {});
-                });
+                    result.jutsuUsed = jutsuName;
+                    resolve(result);
+                } else {
+                    resolve(await processPlayerMove(i.customId, player2, player1, effective2, effective1));
+                }
+                collector.stop();
             });
+            collector.on('end', (collected, reason) => {
+                if (reason === 'time') {
+                    resolve({
+                        damage: 0,
+                        heal: 0,
+                        description: `${player2.name} did not make a move.`,
+                        specialEffects: ["Missed opportunity!"],
+                        hit: false,
+                        fled: true
+                    });
+                }
+                moveMessage2.edit({
+                    components: components2.map(row => {
+                        const disabledRow = ActionRowBuilder.from(row);
+                        disabledRow.components.forEach(c => c.setDisabled(true));
+                        return disabledRow;
+                    })
+                }).catch(() => {});
+            });
+        });
 
-            if (player2Action.fled) {
-                battleActive = false;
-                await channel.send(`${player2.name} fled from the battle!`);
-                try {
-                    const logChannel = await client.channels.fetch(LOG_CHANNEL_ID);
-                    if (logChannel) {
-                        await logChannel.send(`[RANKED] ${player2.name} (${player2.userId}) fled from the match against ${player1.name} (${player1.userId})`);
-                    }
-                } catch (e) {}
-                break;
-            }
+        if (player2Action.fled) {
+            battleActive = false;
+            await channel.send(`${player2.name} fled from the battle!`);
+            // Log flee
+            try {
+                const logChannel = await client.channels.fetch(LOG_CHANNEL_ID);
+                if (logChannel) {
+                    await logChannel.send(`[RANKED] ${player2.name} (${player2.userId}) fled from the match against ${player1.name} (${player1.userId})`);
+                }
+            } catch (e) {}
+            break;
         }
 
-        // Apply both actions
+        // --- Apply both actions after both have chosen ---
+        // Combo completion check for player 1
         let comboCompleted1 = false, comboDamageText1 = "";
-        if (comboState1 && comboState1.combo.requiredJutsus.every(jutsu => comboState1.usedJutsus.has(jutsu))) {
+        if (
+            comboState1 &&
+            comboState1.combo.requiredJutsus.every(jutsu => comboState1.usedJutsus.has(jutsu))
+        ) {
             const combo = comboState1.combo;
             let comboResult = {
                 damage: combo.damage || 0,
@@ -1084,7 +977,6 @@ async function startRankedBattle(client, player1Id, player2Id, mode) {
                 specialEffects: [],
                 hit: true
             };
-            
             if (combo.effects && Array.isArray(combo.effects)) {
                 combo.effects.forEach(effect => {
                     switch (effect.type) {
@@ -1121,7 +1013,6 @@ async function startRankedBattle(client, player1Id, player2Id, mode) {
                     }
                 });
             }
-            
             player2.currentHealth -= comboResult.damage;
             if (comboResult.heal) {
                 player1.currentHealth = Math.min(player1.currentHealth + comboResult.heal, player1.health);
@@ -1129,11 +1020,15 @@ async function startRankedBattle(client, player1Id, player2Id, mode) {
             comboCompleted1 = true;
             comboDamageText1 = `\n${player1.name} lands a ${combo.name}! ${comboResult.specialEffects.join(' ')}`;
             comboState1.usedJutsus.clear();
-            totalDamageDealt1 += comboResult.damage || 0;
+            totalDamageDealt1 += comboResult.damage || 0; // Track combo damage dealt
         }
 
+        // Combo completion check for player 2
         let comboCompleted2 = false, comboDamageText2 = "";
-        if (comboState2 && comboState2.combo.requiredJutsus.every(jutsu => comboState2.usedJutsus.has(jutsu))) {
+        if (
+            comboState2 &&
+            comboState2.combo.requiredJutsus.every(jutsu => comboState2.usedJutsus.has(jutsu))
+        ) {
             const combo = comboState2.combo;
             let comboResult = {
                 damage: combo.damage || 0,
@@ -1141,7 +1036,6 @@ async function startRankedBattle(client, player1Id, player2Id, mode) {
                 specialEffects: [],
                 hit: true
             };
-            
             if (combo.effects && Array.isArray(combo.effects)) {
                 combo.effects.forEach(effect => {
                     switch (effect.type) {
@@ -1178,7 +1072,6 @@ async function startRankedBattle(client, player1Id, player2Id, mode) {
                     }
                 });
             }
-            
             player1.currentHealth -= comboResult.damage;
             if (comboResult.heal) {
                 player2.currentHealth = Math.min(player2.currentHealth + comboResult.heal, player2.health);
@@ -1186,10 +1079,10 @@ async function startRankedBattle(client, player1Id, player2Id, mode) {
             comboCompleted2 = true;
             comboDamageText2 = `\n${player2.name} lands a ${combo.name}! ${comboResult.specialEffects.join(' ')}`;
             comboState2.usedJutsus.clear();
-            totalDamageDealt2 += comboResult.damage || 0;
+            totalDamageDealt2 += comboResult.damage || 0; // Track combo damage dealt
         }
 
-        // Apply player actions
+        // Apply player 1's action to player 2
         player2.currentHealth -= player1Action.damage || 0;
         if (player1Action.heal) {
             player1.currentHealth = Math.min(player1.currentHealth + player1Action.heal, player1.health);
@@ -1197,6 +1090,7 @@ async function startRankedBattle(client, player1Id, player2Id, mode) {
         totalDamageDealt1 += player1Action.damage || 0;
         totalDamageTaken2 += player1Action.damage || 0;
 
+        // Apply player 2's action to player 1
         player1.currentHealth -= player2Action.damage || 0;
         if (player2Action.heal) {
             player2.currentHealth = Math.min(player2.currentHealth + player2Action.heal, player2.health);
@@ -1204,48 +1098,45 @@ async function startRankedBattle(client, player1Id, player2Id, mode) {
         totalDamageDealt2 += player2Action.damage || 0;
         totalDamageTaken1 += player2Action.damage || 0;
 
-        // Show round summary
+        // Show round summary for both players
         let summaryEmbed1 = createBattleSummaryPvP(player1Action, player1, player2, roundNum, comboCompleted1, comboDamageText1);
+        // let summaryEmbed2 = createBattleSummaryPvP(player2Action, player2, player1, roundNum, comboCompleted2, comboDamageText2);
         await channel.send({ embeds: [summaryEmbed1] });
+        // await channel.send({ embeds: [summaryEmbed2] });
 
-        // Check for win/loss
+        // Win/loss check
         if (player1.currentHealth <= 0 || player2.currentHealth <= 0) {
             battleActive = false;
             let winner, loser;
-            
             if (player1.currentHealth > 0 && player2.currentHealth <= 0) {
-                winner = player1;
-                loser = player2;
+                winner = player1; loser = player2;
             } else if (player2.currentHealth > 0 && player1.currentHealth <= 0) {
-                winner = player2;
-                loser = player1;
+                winner = player2; loser = player1;
             } else {
+                // Both at 0 or below, draw
                 await channel.send(`It's a draw!`);
                 break;
             }
 
-            // Handle match end
-            if (!loser.userId.startsWith('NPC_')) {
-                const eloUpdate = await handleMatchEnd(channel, winner, loser, users, roundNum, {
-                    winner: {
-                        dealt: totalDamageDealt1,
-                        taken: totalDamageTaken1
-                    },
-                    loser: {
-                        dealt: totalDamageDealt2,
-                        taken: totalDamageTaken2
-                    }
-                });
+            // Handle match end with new ELO visualizations
+            const eloUpdate = await handleMatchEnd(channel, winner, loser, users, roundNum, {
+                winner: {
+                    dealt: totalDamageDealt1,
+                    taken: totalDamageTaken1
+                },
+                loser: {
+                    dealt: totalDamageDealt2,
+                    taken: totalDamageTaken2
+                }
+            });
 
-                try {
-                    const logChannel = await client.channels.fetch(LOG_CHANNEL_ID);
-                    if (logChannel) {
-                        await logChannel.send(`[RANKED] ${winner.name} (${winner.userId}) has won against ${loser.name} (${loser.userId})`);
-                    }
-                } catch (e) {}
-            } else {
-                await channel.send(`${winner.name} has defeated ${loser.name}!`);
-            }
+            // Log match result
+            try {
+                const logChannel = await client.channels.fetch(LOG_CHANNEL_ID);
+                if (logChannel) {
+                    await logChannel.send(`[RANKED] ${winner.name} (${winner.userId}) has won against ${loser.name} (${loser.userId})`);
+                }
+            } catch (e) {}
             break;
         }
 
@@ -1256,7 +1147,7 @@ async function startRankedBattle(client, player1Id, player2Id, mode) {
         roundNum++;
     }
 
-    // Auto-delete channel after 15 seconds
+    // --- Auto-delete channel after 15 seconds ---
     setTimeout(async () => {
         try {
             await channel.delete("Ranked match ended (auto-cleanup)");
@@ -1264,21 +1155,97 @@ async function startRankedBattle(client, player1Id, player2Id, mode) {
     }, 15000);
 }
 
+// --- Canvas-based match summary image ---
+async function generateMatchSummaryCanvas(user, oldElo, newElo, isWinner, rounds, maxDamage) {
+    const width = 700, height = 220;
+    const canvas = Canvas.createCanvas(width, height);
+    const ctx = canvas.getContext('2d');
+
+    // Load and draw background GIF (first frame, as Canvas can't animate)
+    const bg = await Canvas.loadImage(isWinner ? WIN_BG : LOSS_BG);
+    ctx.globalAlpha = 0.3;
+    ctx.drawImage(bg, 0, 0, width, height);
+    ctx.globalAlpha = 1;
+
+    // Theme
+    const colors = isWinner
+        ? { bar: '#4ade80', bar2: '#22c55e', text: '#eaffea' }
+        : { bar: '#f87171', bar2: '#dc2626', text: '#ffeaea' };
+
+    // ELO bar
+    const barX = 120, barY = 90, barW = 460, barH = 28;
+    const oldRank = getTierAndDivision(oldElo);
+    const newRank = getTierAndDivision(newElo);
+    const nextRank = rankedRewards.find(r => r.elo > newElo);
+    const progress = Math.max(0, Math.min(1, (newElo % 100) / 100));
+    ctx.save();
+    ctx.fillStyle = '#222c';
+    ctx.beginPath();
+    ctx.roundRect(barX, barY, barW, barH, 14);
+    ctx.fill();
+    ctx.restore();
+
+    // Progress bar
+    ctx.save();
+    const grad = ctx.createLinearGradient(barX, 0, barX + barW, 0);
+    grad.addColorStop(0, colors.bar);
+    grad.addColorStop(1, colors.bar2);
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.roundRect(barX, barY, barW * progress, barH, 14);
+    ctx.fill();
+    ctx.restore();
+
+    // ELO gained/lost in center
+    ctx.font = 'bold 22px Segoe UI';
+    ctx.fillStyle = colors.text;
+    ctx.textAlign = 'center';
+    ctx.fillText(`${isWinner ? '+' : ''}${newElo - oldElo} ELO`, barX + barW / 2, barY + barH / 2 + 7);
+
+    // Current rank (left)
+    ctx.font = 'bold 15px Segoe UI';
+    ctx.textAlign = 'left';
+    ctx.fillText(`${newRank.rank} Div. ${newRank.division}`, barX, barY - 8);
+    ctx.font = '10px Segoe UI';
+    ctx.fillText('Current Rank', barX, barY + barH + 16);
+
+    // Next rank (right)
+    ctx.font = 'bold 15px Segoe UI';
+    ctx.textAlign = 'right';
+    ctx.fillText(
+        nextRank ? `${nextRank.rank} Div. ${nextRank.division}` : 'Max Rank',
+        barX + barW,
+        barY - 8
+    );
+    ctx.font = '10px Segoe UI';
+    ctx.fillText('Next Rank', barX + barW, barY + barH + 16);
+
+    // Progress text below bar
+    ctx.font = '11px Segoe UI';
+    ctx.textAlign = 'center';
+    ctx.fillText(`${newElo % 100}/100`, barX + barW / 2, barY + barH + 16);
+
+    return canvas.toBuffer('image/png');
+}
+
+// --- Canvas-based match summary embed handler ---
 async function handleMatchEnd(channel, winner, loser, users, roundNum = 0, damageStats = { winner: {}, loser: {} }) {
+    // Update ELO and rank
     const oldWinnerElo = users[winner.userId].ranked?.totalElo || 0;
     const oldLoserElo = users[loser.userId].ranked?.totalElo || 0;
     const eloUpdate = updateElo(winner.userId, loser.userId);
 
-    // Update ranks in users.json
+    // Update "rank" variable in users.json directly based on ELO
     const updatedUsers = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
     updatedUsers[winner.userId].rank = getTierAndDivision(updatedUsers[winner.userId].ranked.totalElo).rank;
     updatedUsers[loser.userId].rank = getTierAndDivision(updatedUsers[loser.userId].ranked.totalElo).rank;
     fs.writeFileSync(usersPath, JSON.stringify(updatedUsers, null, 2));
 
+    // Fetch updated user objects for summary
     const winnerUser = updatedUsers[winner.userId];
     const loserUser = updatedUsers[loser.userId];
 
-    // Calculate stats
+    // Calculate stats for summary
     const winnerStats = {
         power: winnerUser.power || 0,
         defense: winnerUser.defense || 0,
@@ -1300,14 +1267,26 @@ async function handleMatchEnd(channel, winner, loser, users, roundNum = 0, damag
         rank: loserUser.rank || "Genin"
     };
 
+    // Calculate total damage dealt/taken (for now, just use maxDamage and rounds)
+    // You can expand this with more detailed tracking if needed
     const winnerDamageDealt = damageStats?.winner?.dealt ?? "N/A";
     const winnerDamageTaken = damageStats?.winner?.taken ?? "N/A";
     const loserDamageDealt = damageStats?.loser?.dealt ?? "N/A";
     const loserDamageTaken = damageStats?.loser?.taken ?? "N/A";
 
-    // Generate ELO images
-    const winnerImagePath = await generateEloImage(winner, oldWinnerElo, winnerUser.ranked.totalElo, true);
-    const loserImagePath = await generateEloImage(loser, oldLoserElo, loserUser.ranked.totalElo, false);
+    // Generate ELO image for winner and loser
+    const winnerImagePath = await generateEloImage(
+        winner, 
+        oldWinnerElo, 
+        winnerUser.ranked.totalElo, 
+        true
+    );
+    const loserImagePath = await generateEloImage(
+        loser, 
+        oldLoserElo, 
+        loserUser.ranked.totalElo, 
+        false
+    );
 
     // Prepare summary embeds
     const winnerEmbed = new EmbedBuilder()
@@ -1370,14 +1349,19 @@ async function handleMatchEnd(channel, winner, loser, users, roundNum = 0, damag
         .setImage(`attachment://loser_elo.png`)
         .setFooter({ text: "Better luck next time!" });
 
-    // Send to summary channel
-    let summaryChannel;
+    // Send to summary channel or original queue channel
+    let summaryChannel = channel;
     try {
-        summaryChannel = await channel.client.channels.fetch(SUMMARY_CHANNEL_ID);
+        // Try to fetch the original channel if possible, else use summary channel
+        if (!summaryChannel || typeof summaryChannel.send !== "function") {
+            summaryChannel = await winner.client.channels.fetch(SUMMARY_CHANNEL_ID);
+        }
     } catch (e) {
-        summaryChannel = channel;
+        // fallback to summary channel
+        summaryChannel = await winner.client.channels.fetch(SUMMARY_CHANNEL_ID);
     }
 
+    // Send winner and loser summary
     await summaryChannel.send({
         content: `🏆 <@${winner.userId}>`,
         embeds: [winnerEmbed],
@@ -1392,8 +1376,37 @@ async function handleMatchEnd(channel, winner, loser, users, roundNum = 0, damag
     return eloUpdate;
 }
 
-// Battle helper functions
+// --- Helper functions for PvP ---
+function getEffectiveStats(entity) {
+    const stats = { ...entity };
+    delete stats.activeEffects;
+
+    // Start with base stats
+    const effectiveStats = {
+        power: stats.power || 10,
+        defense: stats.defense || 10,
+        chakra: stats.chakra || 10,
+        health: stats.health || 100,
+        accuracy: stats.accuracy || 100,
+        dodge: stats.dodge || 0
+    };
+
+    // Apply all active effects
+    if (entity.activeEffects) {
+        entity.activeEffects.forEach(effect => {
+            if (effect.type === 'buff' || effect.type === 'debuff') {
+                Object.entries(effect.stats).forEach(([stat, value]) => {
+                    effectiveStats[stat] = (effectiveStats[stat] || 0) + value;
+                });
+            }
+        });
+    }
+
+    return effectiveStats;
+}
+
 function createMovesEmbedPvP(player, roundNum) {
+    // Create an embed and button rows for the player's available jutsu, rest, and flee
     const embed = new EmbedBuilder()
         .setTitle(`${player.name}`)
         .setColor('#006400')
@@ -1422,12 +1435,13 @@ function createMovesEmbedPvP(player, roundNum) {
         });
 
     const rows = [];
+    // First row: up to 5 jutsu buttons
     if (jutsuButtons.length > 0) {
         const row1 = new ActionRowBuilder();
         jutsuButtons.slice(0, 5).forEach(btn => row1.addComponents(btn));
         rows.push(row1);
     }
-    
+    // Second row: 6th jutsu (if any), rest, flee
     if (jutsuButtons.length > 5) {
         const row2 = new ActionRowBuilder();
         row2.addComponents(jutsuButtons[5]);
@@ -1443,6 +1457,7 @@ function createMovesEmbedPvP(player, roundNum) {
         );
         rows.push(row2);
     } else {
+        // If 5 or fewer jutsu, put rest/flee on a new row
         const row2 = new ActionRowBuilder();
         row2.addComponents(
             new ButtonBuilder()
@@ -1499,7 +1514,6 @@ function executeJutsu(baseUser, baseTarget, effectiveUser, effectiveTarget, juts
             hit: false
         };
     }
-    
     const result = {
         damage: 0,
         heal: 0,
@@ -1507,7 +1521,6 @@ function executeJutsu(baseUser, baseTarget, effectiveUser, effectiveTarget, juts
         specialEffects: [],
         hit: true
     };
-    
     if ((baseUser.chakra || 0) < (jutsu.chakraCost || 0)) {
         return {
             damage: 0,
@@ -1517,9 +1530,7 @@ function executeJutsu(baseUser, baseTarget, effectiveUser, effectiveTarget, juts
             hit: false
         };
     }
-    
     baseUser.chakra -= jutsu.chakraCost || 0;
-    
     jutsu.effects.forEach(effect => {
         try {
             switch (effect.type) {
@@ -1587,7 +1598,6 @@ function executeJutsu(baseUser, baseTarget, effectiveUser, effectiveTarget, juts
             result.specialEffects.push(`Error applying ${effect.type} effect`);
         }
     });
-    
     return result;
 }
 
@@ -1601,7 +1611,6 @@ function createBattleSummaryPvP(playerAction, player, opponent, roundNum, comboC
         });
         return emojis.length ? `[${emojis.join('')}] ` : '';
     };
-    
     const playerEffectEmojis = getEffectEmojis(player);
     const opponentEffectEmojis = getEffectEmojis(opponent);
 
@@ -1612,6 +1621,7 @@ function createBattleSummaryPvP(playerAction, player, opponent, roundNum, comboC
         ) :
         (jutsuList[playerAction.jutsuUsed]?.description || playerAction.description);
 
+    // Combo progress UI
     let comboProgressText = "";
     if (player.Combo && comboList[player.Combo]) {
         const combo = comboList[player.Combo];
@@ -1640,11 +1650,79 @@ function createBattleSummaryPvP(playerAction, player, opponent, roundNum, comboC
     if (playerJutsu?.image_url) {
         embed.setImage(playerJutsu.image_url);
     }
-    
     return embed;
 }
 
-// Gift inventory functions
+// Utility functions
+function getRandomChannelId() {
+    // Returns a random 6-digit number as a string for channel uniqueness
+    return Math.floor(Math.random() * 900000 + 100000).toString();
+}
+
+function getTierAndDivision(elo) {
+    if (!elo && elo !== 0) return { rank: "Genin", division: 5, elo: 0 };
+    let totalDivisions = RANK_CONFIG.ranks.length * 5;
+    let currentDivision = Math.floor(elo / RANK_CONFIG.eloPerDivision);
+    if (currentDivision >= totalDivisions) {
+        return {
+            rank: "The Shinobi God",
+            division: 1,
+            elo: elo % RANK_CONFIG.eloPerDivision
+        };
+    }
+    let rankIndex = Math.floor(currentDivision / 5);
+    let division = 5 - (currentDivision % 5);
+    return {
+        rank: RANK_CONFIG.ranks[rankIndex],
+        division: division,
+        elo: elo % RANK_CONFIG.eloPerDivision
+    };
+}
+
+// ELO update logic: +50 on win, -30 on loss, always keep >= 0
+function updateElo(winnerId, loserId) {
+    const users = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
+    
+    // Initialize ranked data if not exists
+    if (!users[winnerId].ranked) users[winnerId].ranked = { totalElo: 0 };
+    if (!users[loserId].ranked) users[loserId].ranked = { totalElo: 0 };
+
+    // Update ELO
+    users[winnerId].ranked.totalElo += RANK_CONFIG.winElo;
+    users[loserId].ranked.totalElo = Math.max(0, users[loserId].ranked.totalElo - RANK_CONFIG.lossElo);
+
+    // Calculate new ranks
+    const winnerRank = getTierAndDivision(users[winnerId].ranked.totalElo);
+    const loserRank = getTierAndDivision(users[loserId].ranked.totalElo);
+
+    // Update full rank info
+    users[winnerId].ranked = {
+        ...users[winnerId].ranked,
+        ...winnerRank
+    };
+    
+    users[loserId].ranked = {
+        ...users[loserId].ranked,
+        ...loserRank
+    };
+
+    fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
+
+    return {
+        winnerChange: RANK_CONFIG.winElo,
+        loserChange: RANK_CONFIG.lossElo,
+        winnerNew: winnerRank,
+        loserNew: loserRank
+    };
+}
+
+// Load ranked ladder rewards
+let rankedRewards = [];
+if (fs.existsSync(rankedRewardsPath)) {
+    rankedRewards = JSON.parse(fs.readFileSync(rankedRewardsPath, 'utf8'));
+}
+
+// Load or initialize gift inventory
 function getGiftInventory(userId) {
     let giftData = {};
     if (fs.existsSync(giftPath)) {
@@ -1653,60 +1731,22 @@ function getGiftInventory(userId) {
     if (!giftData[userId]) giftData[userId] = {};
     return giftData;
 }
-
 function saveGiftInventory(giftData) {
     fs.writeFileSync(giftPath, JSON.stringify(giftData, null, 2));
 }
 
-function generateGiftId(userGifts) {
-    let id;
-    do {
-        id = Math.floor(Math.random() * 5000) + 1;
-    } while (userGifts && userGifts.some(g => g.id === id));
-    return id;
-}
-
-// Ranked rewards handler
+// --- Ranked Ladder Rewards Handler ---
 async function handleRankedRewards(interaction) {
     const userId = interaction.user.id;
     const users = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
     const user = users[userId];
-    
     if (!user || !user.ranked) {
         return interaction.reply({ content: "You haven't played ranked yet!" });
     }
-    
     const userElo = user.ranked.totalElo || 0;
     const userRankObj = getTierAndDivision(userElo);
     const userRank = userRankObj.rank;
-    const userDiv = userRankObj.division;
-
-    // Find next reward and claimable reward
-    let nextReward = null;
-    let claimable = null;
-    
-    for (const reward of rankedRewards) {
-        if (reward.elo > userElo && (!nextReward || reward.elo < nextReward.elo)) {
-            nextReward = reward;
-        }
-        
-        if (reward.elo <= userElo && !user.ranked.claimedRewards?.includes(reward.elo)) {
-            if (!claimable || reward.elo > claimable.elo) {
-                claimable = reward;
-            }
-        }
-    }
-
-    // Generate rewards image
-    const imagePath = await generateRankedRewardsImage(
-        interaction.user,
-        userElo,
-        userRank,
-        userDiv,
-        claimable,
-        nextReward
-    );
-
+    const userDiv = user
     const row = claimable
         ? new ActionRowBuilder().addComponents(
             new ButtonBuilder()
@@ -1716,6 +1756,7 @@ async function handleRankedRewards(interaction) {
         )
         : null;
 
+    // Use deferReply/followUp to avoid "Unknown interaction" error if Puppeteer takes time
     await interaction.deferReply();
     await interaction.followUp({
         content: '',
@@ -1726,21 +1767,20 @@ async function handleRankedRewards(interaction) {
     if (claimable) {
         const filter = i => i.customId === 'ranked_claim' && i.user.id === userId;
         const collector = interaction.channel.createMessageComponentCollector({ filter, time: 60000, max: 1 });
-        
         collector.on('collect', async i => {
+            // Add reward to gift inventory with random id 1-5000
             let giftData = getGiftInventory(userId);
             if (!giftData[userId]) giftData[userId] = [];
             const id = generateGiftId(giftData[userId]);
-            
             giftData[userId].push({
                 id,
                 type: 'ranked_reward',
                 reward: claimable,
                 date: Date.now()
             });
-            
             saveGiftInventory(giftData);
 
+            // Mark reward as claimed
             const users = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
             if (!users[userId].ranked.claimedRewards) users[userId].ranked.claimedRewards = [];
             users[userId].ranked.claimedRewards.push(claimable.elo);
@@ -1751,285 +1791,135 @@ async function handleRankedRewards(interaction) {
     }
 }
 
-// Queue management
-async function checkQueue(client, mode = 'standard') {
-    // Check for players who have been in queue for over 1 minute
-    const now = Date.now();
-    const queueTimeout = 60000; // 1 minute
-
-    // Collect users who have timed out
-    const timedOutUsers = [];
-    for (const [userId, entryTime] of rankedQueue[mode].entries()) {
-        if (now - entryTime >= queueTimeout) {
-            timedOutUsers.push(userId);
-        }
-    }
-
-    // Immediately match each timed out user with an NPC and remove from queue
-    for (const userId of timedOutUsers) {
-        rankedQueue[mode].delete(userId);
-
-        // Select random NPC
-        const npc = rankedNPCs[Math.floor(Math.random() * rankedNPCs.length)];
-        const npcId = `NPC_${npc.name}`;
-
-        try {
-            const logChannel = await client.channels.fetch(LOG_CHANNEL_ID);
-            if (logChannel) {
-                await logChannel.send(`[RANKED] Matching ${userId} with NPC ${npc.name} after queue timeout`);
-            }
-        } catch (e) {}
-
-        await startRankedBattle(client, userId, npcId, mode);
-    }
-
-    // After handling timeouts, match any remaining users in pairs
-    while (rankedQueue[mode].size >= 2) {
-        const players = Array.from(rankedQueue[mode].keys()).slice(0, 2);
-        const [player1, player2] = players;
-
-        rankedQueue[mode].delete(player1);
-        rankedQueue[mode].delete(player2);
-
-        try {
-            const logChannel = await client.channels.fetch(LOG_CHANNEL_ID);
-            if (logChannel) {
-                await logChannel.send(`[RANKED] Match found: <@${player1}> vs <@${player2}>`);
-            }
-        } catch (e) {}
-
-        await startRankedBattle(client, player1, player2, mode);
-    }
+// --- Generate random gift id (1-5000, unique per user) ---
+function generateGiftId(userGifts) {
+    let id;
+    do {
+        id = Math.floor(Math.random() * 5000) + 1;
+    } while (userGifts && userGifts.some(g => g.id === id));
+    return id;
 }
 
-// --- PATCH: NPC MOVE LOGIC ---
-// Helper for NPC move selection (similar to brank.js)
-function npcChooseMove(baseNpc, basePlayer, effectiveNpc, effectivePlayer) {
-    // Check for stun
-    const stunnedEffect = baseNpc.activeEffects.find(e => e.type === 'status' && e.status === 'stun');
-    if (stunnedEffect) {
-        return {
-            damage: 0,
-            heal: 0,
-            description: `${baseNpc.name} is stunned and can't move!`,
-            specialEffects: ["Stun active"],
-            hit: false
-        };
+// --- Puppeteer image for ranked rewards ---
+async function generateRankedRewardsImage(user, userElo, userRank, userDiv, claimable, nextReward) {
+    const browser = await puppeteer.launch({ args: ['--no-sandbox'] });
+    const page = await browser.newPage();
+    await page.setViewport({ width: 700, height: 500 });
+
+    // Theme colors by rank
+    const themes = {
+        "Genin":    { bg: "#0a1a3a", accent: "#1e3a8a", text: "#e0eaff", border: "#274690" },
+        "Chuunin":  { bg: "#1e4023", accent: "#4ade80", text: "#eaffea", border: "#22c55e" },
+        "Jounin":   { bg: "#0e3c3c", accent: "#2dd4bf", text: "#eafffa", border: "#14b8a6" },
+        "Sannin":   { bg: "#2a1a3a", accent: "#a78bfa", text: "#f3eaff", border: "#7c3aed" },
+        "Master Shinobi": { bg: "#3a3a1a", accent: "#fde68a", text: "#fffbe0", border: "#facc15" },
+        "The Shinobi God": { bg: "#0a2a3a", accent: "#67e8f9", text: "#e0faff", border: "#06b6d4" }
+    };
+    const theme = themes[userRank] || themes["Genin"];
+
+    // HTML/CSS for rewards
+    const html = `
+    <html>
+    <head>
+    <style>
+    body { margin: 0; padding: 0; background: ${theme.bg}; }
+    .container {
+        width: 700px; height: 500px; background: ${theme.bg}; border-radius: 18px;
+        box-shadow: 0 8px 32px #000a; display: flex; flex-direction: column; align-items: center; padding: 0;
+        border: 4px solid ${theme.border};
+        font-family: 'Segoe UI', Arial, sans-serif;
     }
-
-    // Flying Raijin patch: If player has flying_raijin, set npc accuracy to 0 for this attack
-    let originalAccuracy = baseNpc.accuracy;
-    let flyingRaijinIdx = basePlayer.activeEffects.findIndex(e => e.type === 'status' && e.status === 'flying_raijin');
-    let usedFlyingRaijin = false;
-    if (flyingRaijinIdx !== -1) {
-        baseNpc.accuracy = 0;
-        usedFlyingRaijin = true;
+    .title {
+        font-size: 36px; font-weight: bold; color: ${theme.accent}; margin: 32px 0 8px 0; letter-spacing: 2px;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
     }
-
-    // Filter available jutsu based on chakra
-    const availableJutsu = baseNpc.jutsu.filter(j => {
-        const jutsu = jutsuList[j];
-        return jutsu && (jutsu.chakraCost || 0) <= baseNpc.chakra;
-    });
-
-    if (availableJutsu.length === 0) {
-        baseNpc.chakra = Math.min(baseNpc.chakra + 1, 10);
-        return {
-            damage: 0,
-            heal: 0,
-            description: `${baseNpc.name} gathered chakra and rested`,
-            specialEffects: ["+1 Chakra"],
-            hit: true
-        };
+    .rank-box {
+        background: linear-gradient(90deg, ${theme.accent}33, transparent 80%);
+        border-radius: 10px; padding: 18px 32px; margin-bottom: 18px; margin-top: 8px;
+        border: 2px solid ${theme.accent}; color: ${theme.text}; font-size: 22px; font-weight: bold;
+        box-shadow: 0 2px 12px #0004;
+        display: flex; flex-direction: row; align-items: center; gap: 18px;
     }
-
-    const randomJutsu = availableJutsu[Math.floor(Math.random() * availableJutsu.length)];
-    const result = executeJutsu(baseNpc, basePlayer, effectiveNpc, effectivePlayer, randomJutsu);
-
-    // Restore accuracy after attack if Flying Raijin was used
-    if (usedFlyingRaijin) {
-        baseNpc.accuracy = originalAccuracy;
-        // Remove the flying_raijin status so it only works for one attack
-        basePlayer.activeEffects.splice(flyingRaijinIdx, 1);
+    .rank-label { font-size: 18px; color: ${theme.accent}; font-weight: bold; margin-right: 8px; }
+    .rank-value { font-size: 24px; color: ${theme.text}; }
+    .upcoming-title {
+        font-size: 22px; color: ${theme.accent}; font-weight: bold; margin: 18px 0 6px 0;
+        letter-spacing: 1px;
     }
-
-    result.jutsuUsed = randomJutsu;
-    return result;
-}
-
-// --- PERIODIC QUEUE CHECK PATCH ---
-// Start a periodic queue check every 10 seconds
-if (!global.__rankedQueueIntervalStarted) {
-    global.__rankedQueueIntervalStarted = true;
-    setInterval(() => {
-        // You may need to pass your Discord client instance here if available
-        // For most bots, you can require the client from your main file or pass it in
-        // For this patch, assume client is globally available as global.client
-        if (global.client) {
-            module.exports.checkQueue(global.client, 'standard');
-        }
-    }, 10000); // every 10 seconds
-}
-
-// Main command
-module.exports = {
-    data: new SlashCommandBuilder()
-        .setName('ranked')
-        .setDescription('Ranked queue and rewards')
-        .addStringOption(option =>
-            option.setName('option')
-                .setDescription('Show rewards or join ranked')
-                .addChoices(
-                    { name: 'rewards', value: 'rewards' }
-                )
-                .setRequired(false)
-        ),
-
-    async execute(interaction) {
-        if (!interaction.guild || interaction.guild.id !== SERVER_ID) {
-            return interaction.reply({ content: 'This command can only be used in the main server.', ephemeral: true });
-        }
-
-        const userId = interaction.user.id;
-        const opt = interaction.options.getString('option');
-
-        if (opt === 'rewards') {
-            return await handleRankedRewards(interaction);
-        }
-
-        const mode = 'standard';
-
-        if (!fs.existsSync(usersPath)) {
-            return interaction.reply({ content: "Database not found.", ephemeral: true });
-        }
-        
-        const users = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
-        if (!users[userId]) {
-            return interaction.reply({ content: "You need to enroll first!", ephemeral: true });
-        }
-        
-        // Check if already in queue
-        if (rankedQueue[mode].has(userId)) {
-            return interaction.reply({ content: "You're already in the ranked queue!", ephemeral: true });
-        }
-
-        // Check if already in a match
-        for (const match of rankedQueue.matches.values()) {
-            if (match.player1 === userId || match.player2 === userId) {
-                return interaction.reply({ content: "You're already in a ranked match!", ephemeral: true });
-            }
-        }
-
-        // Add to queue with timestamp
-        rankedQueue[mode].set(userId, Date.now());
-
-        // Log queue entry
-        try {
-            const logChannel = await interaction.client.channels.fetch(LOG_CHANNEL_ID);
-            if (logChannel) {
-                await logChannel.send(`[RANKED] ${interaction.user.tag} (${userId}) has entered the ${mode} queue.`);
-            }
-        } catch (e) {}
-
-        // Timer embed logic
-        let seconds = 60;
-        const embed = new EmbedBuilder()
-            .setTitle("Ranked Queue")
-            .setDescription(`Searching for an opponent...\n\nTime left: **${seconds}** seconds`)
-            .setColor("#e67e22")
-            .setFooter({ text: "You will be matched with a bot if no user is found." });
-
-        const row = new ActionRowBuilder().addComponents(
-            new ButtonBuilder()
-                .setCustomId('ranked_cancel_queue')
-                .setLabel('Cancel')
-                .setStyle(ButtonStyle.Danger)
-        );
-
-        await interaction.reply({ embeds: [embed], components: [row], ephemeral: true });
-        const message = await interaction.fetchReply();
-
-        let matched = false;
-        const filter = i => i.customId === 'ranked_cancel_queue' && i.user.id === userId;
-        const collector = interaction.channel.createMessageComponentCollector({ filter, time: 60000 });
-
-        // Timer update interval
-        const interval = setInterval(async () => {
-            if (matched) return;
-            seconds--;
-            if (seconds <= 0) return;
-            try {
-                await message.edit({
-                    embeds: [
-                        EmbedBuilder.from(embed)
-                            .setDescription(`Searching for an opponent...\n\nTime left: **${seconds}** seconds`)
-                    ],
-                    components: [row]
-                });
-            } catch (e) {}
-        }, 1000);
-
-        // Listen for cancel
-        collector.on('collect', async i => {
-            matched = true;
-            clearInterval(interval);
-            rankedQueue[mode].delete(userId);
-            await i.update({ content: "You have left the ranked queue.", embeds: [], components: [], ephemeral: true });
-        });
-
-        // Poll for match every 2 seconds
-        for (let t = 0; t < 60 && !matched; t += 2) {
-            await new Promise(res => setTimeout(res, 2000));
-            // Check for another user in queue
-            const others = Array.from(rankedQueue[mode].keys()).filter(id => id !== userId);
-            if (others.length > 0) {
-                matched = true;
-                clearInterval(interval);
-                const opponentId = others[0];
-                rankedQueue[mode].delete(userId);
-                rankedQueue[mode].delete(opponentId);
-                try {
-                    await message.edit({
-                        content: "Opponent found! Starting match...",
-                        embeds: [],
-                        components: []
-                    });
-                } catch (e) {}
-                try {
-                    const logChannel = await interaction.client.channels.fetch(LOG_CHANNEL_ID);
-                    if (logChannel) {
-                        await logChannel.send(`[RANKED] Match found: <@${userId}> vs <@${opponentId}>`);
-                    }
-                } catch (e) {}
-                await startRankedBattle(interaction.client, userId, opponentId, mode);
-                return;
-            }
-        }
-
-        // Timer expired, match with bot if not cancelled
-        if (!matched) {
-            matched = true;
-            clearInterval(interval);
-            rankedQueue[mode].delete(userId);
-            try {
-                await message.edit({
-                    content: "No users found. You are being matched with a bot...",
-                    embeds: [],
-                    components: []
-                });
-            } catch (e) {}
-            const npc = rankedNPCs[Math.floor(Math.random() * rankedNPCs.length)];
-            const npcId = `NPC_${npc.name}`;
-            try {
-                const logChannel = await interaction.client.channels.fetch(LOG_CHANNEL_ID);
-                if (logChannel) {
-                    await logChannel.send(`[RANKED] ${interaction.user.tag} (${userId}) matched with bot (${npc.name}) after timer.`);
+    .upcoming-box {
+        background: ${theme.bg}cc; border-radius: 10px; padding: 14px 24px; margin-bottom: 10px;
+        border: 2px solid ${theme.accent}; color: ${theme.text}; font-size: 18px;
+        box-shadow: 0 2px 8px #0004;
+    }
+    .claim-title {
+        font-size: 22px; color: ${theme.accent}; font-weight: bold; margin: 18px 0 6px 0;
+        letter-spacing: 1px;
+    }
+    .claim-box {
+        background: ${theme.bg}cc; border-radius: 10px; padding: 14px 24px; margin-bottom: 10px;
+        border: 2px solid ${theme.accent}; color: ${theme.text}; font-size: 18px;
+        box-shadow: 0 2px 8px #0004;
+    }
+    .footer {
+        margin-top: 18px; font-size: 15px; color: ${theme.text}cc; font-style: italic; text-align: center;
+        width: 90%;
+    }
+    .reward-choice { margin-left: 10px; }
+    </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="title">Ranked Rewards</div>
+            <div class="rank-box">
+                <span class="rank-label">Your Rank:</span>
+                <span class="rank-value">${userRank} <span style="font-size:18px;opacity:.7;">Div. ${userDiv}</span> <span style="font-size:16px;opacity:.7;">(${userElo} ELO)</span></span>
+            </div>
+            <div class="upcoming-title">Upcoming</div>
+            <div class="upcoming-box">
+                ${
+                    nextReward
+                        ? `<b>${nextReward.rank} Div. ${nextReward.division} (${nextReward.elo} ELO)</b><br>
+                        <span>1️⃣ ${nextReward.reward1.name}: ${nextReward.reward1.desc}</span><br>
+                        <span>2️⃣ ${nextReward.reward2.name}: ${nextReward.reward2.desc}</span>`
+                        : `<span>No more upcoming rewards.</span>`
                 }
-            } catch (e) {}
-            await startRankedBattle(interaction.client, userId, npcId, mode);
-        }
-    },
+            </div>
+            <div class="claim-title">Available Claims</div>
+            <div class="claim-box">
+                ${
+                    claimable
+                        ? `<b>${claimable.rank} Div. ${claimable.division} (${claimable.elo} ELO)</b><br>
+                        <span>1️⃣ ${claimable.reward1.name}: ${claimable.reward1.desc}</span><br>
+                        <span>2️⃣ ${claimable.reward2.name}: ${claimable.reward2.desc}</span>`
+                        : `<span>No claimable rewards at this time.</span>`
+                }
+            </div>
+            <div class="footer">
+                *All these gifts are sent to your gift inventory, check using <b>/gift inventory</b>.*
+            </div>
+        </div>
+    </body>
+    </html>
+    `;
 
-    // Export queue check for regular intervals
-    checkQueue
-};
+    const filename = `rewards_${user.id}_${Date.now()}.png`;
+    const fullPath = path.join(imagesPath, filename);
+    await page.setContent(html);
+    await page.screenshot({ path: fullPath });
+    await browser.close();
+    return fullPath;
+}
+
+// --- Optimize battle image generation ---
+// Only generate battle image at the start and at the end, not every round.
+// In the battle loop, comment out or remove per-turn battle image generation:
+// ...existing code...
+// const battleImagePath1 = await generateBattleImage(player1, player2);
+// const battleImage1 = new AttachmentBuilder(battleImagePath1);
+// await channel.send({
+//     content: `**Battle Image:**`,
+//     files: [battleImage1]
+// });
+// ...existing code...
+
+// Optionally, you can generate a single battle image at the start or end of the match only.

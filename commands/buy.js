@@ -125,7 +125,8 @@ module.exports = {
                 return interaction.reply('You need to be enrolled first!');
             }
 
-            if (users[userId].roles && users[userId].roles.includes(premium.roleId)) {
+            // Check if user already has this premium role in premiumRoles
+            if (users[userId].premiumRoles && users[userId].premiumRoles.some(r => r.roleId === premium.roleId)) {
                 return interaction.reply('You already own this premium item!');
             }
 
@@ -134,8 +135,11 @@ module.exports = {
             }
 
             users[userId].ss -= premium.price;
-            if (!users[userId].roles) users[userId].roles = [];
-            users[userId].roles.push(premium.roleId);
+
+            // Remove roles property if it exists (cleanup)
+            if (users[userId].roles) {
+                delete users[userId].roles;
+            }
 
             // Track premium role with expiration
             if (!users[userId].premiumRoles) users[userId].premiumRoles = [];

@@ -1,17 +1,18 @@
-const { EmbedBuilder } = require('discord.js'); // Use EmbedBuilder for discord.js v14+
+const { EmbedBuilder, SlashCommandBuilder } = require('discord.js'); // Add SlashCommandBuilder
 const fs = require('fs');
 const path = require('path');
 
 module.exports = {
+  data: new SlashCommandBuilder()
+    .setName('claim')
+    .setDescription('Claim your daily Ramen Coupon.'),
   name: 'claim', // Command name
   description: 'Claim your daily Ramen Coupon.', // Command description
-  async execute(message, args) {
-    // Load users.json
+  async execute(interactionOrMessage, args) {
+    // Support both message and interaction
+    const userId = interactionOrMessage.user ? interactionOrMessage.user.id : interactionOrMessage.author.id;
     const usersPath = path.resolve(__dirname, '../../data/users.json');
     const users = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
-
-    // Get the user's data
-    const userId = message.author.id;
     const user = users[userId] || { ramen: 0, lastClaim: null, nextClaim: null }; // Default values if user doesn't exist
 
     // Check if the user is on cooldown
@@ -25,7 +26,11 @@ module.exports = {
       const minutes = Math.floor((remainingTime % (60 * 60 * 1000)) / (60 * 1000));
 
       // Send cooldown message
-      return message.reply(`You can claim your next Ramen Coupon in **${hours} hours and ${minutes} minutes**.`);
+      if (interactionOrMessage.reply) {
+        return interactionOrMessage.reply({ content: `You can claim your next Ramen Coupon in **${hours} hours and ${minutes} minutes**.`, ephemeral: true });
+      } else {
+        return interactionOrMessage.reply(`You can claim your next Ramen Coupon in **${hours} hours and ${minutes} minutes**.`);
+      }
     }
 
     // Update user's data
@@ -44,6 +49,10 @@ module.exports = {
       .setColor('#006400'); // Dark green color for the embed
 
     // Send the embed
-    await message.channel.send({ embeds: [embed] });
+    if (interactionOrMessage.reply) {
+      await interactionOrMessage.reply({ embeds: [embed], ephemeral: false });
+    } else {
+      await interactionOrMessage.channel.send({ embeds: [embed] });
+    }
   },
 };

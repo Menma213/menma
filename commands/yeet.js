@@ -1,6 +1,7 @@
 const { SlashCommandBuilder } = require('discord.js');
 const fs = require('fs');
-const dataPath = './data/users.json';
+const path = require('path');
+const usersPath = path.resolve(__dirname, '../../menma/data/users.json');
 
 // IDs of users allowed to use this command
 const allowedUsers = ['961918563382362122', '835408109899219004']; // Replace 'user1' and 'user2' with actual user IDs
@@ -31,11 +32,11 @@ module.exports = {
         const userId = targetUser.id;
 
         // Ensure the user data file exists
-        if (!fs.existsSync(dataPath)) {
-            fs.writeFileSync(dataPath, JSON.stringify({}, null, 2));
+        if (!fs.existsSync(usersPath)) {
+            fs.writeFileSync(usersPath, JSON.stringify({}, null, 2));
         }
 
-        let users = JSON.parse(fs.readFileSync(dataPath, 'utf8'));
+        let users = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
 
         // Check if the user exists in the database
         if (!users[userId]) {
@@ -49,7 +50,7 @@ module.exports = {
         delete users[userId];
 
         // Save the updated user data
-        fs.writeFileSync(dataPath, JSON.stringify(users, null, 2));
+        fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
 
         await interaction.reply({
             content: `✅ Profile for <@${userId}> has been deleted.`,

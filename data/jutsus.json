@@ -2,7 +2,9 @@
     "Attack": {
       "name": "Attack",
       "description": "attacks",
+      "info": "Your Basic Attack",
       "chakraCost": 0,
+      "category": "No Category",
       "effects": [
         {
           "type": "damage",
@@ -14,11 +16,13 @@
     "Transformation Jutsu": {
       "name": "Transformation Jutsu",
       "description": "uses transormation jutsu",
+      "info": "User Transforms, gaining a boost in power.",
       "chakraCost": 5,
       "effects": [
         {
           "type": "buff",
           "target": "user",
+          "category": "No Category",
           "stats": {
             "power": 5
           },
@@ -30,6 +34,7 @@
       "name": "Asura's Blade of Execution",
       "description": "Unleashes god-like power",
       "chakraCost": 0,
+      "category": "No Category",
       "image_url": "https://static.wikia.nocookie.net/naruto/images/c/c0/Amenomihashira.png/revision/latest?cb=20160721141416",
       "effects": [
         {
@@ -59,13 +64,15 @@
           "target": "target",
           "status": "stun",
           "duration": 1,
-          "chance": 0.7
+          "chance": 1.0
         }
       ]
     },
     "Mystic Palm": {
       "name": "Mystic Palm",
       "description": "heals",
+      "info": "User heals based on their missing health",
+      "category": "Genin",
       "chakraCost": 4,
       "effects": [
         {
@@ -78,7 +85,9 @@
     "Summon Ninken": {
       "name": "Summon Ninken",
       "description": "Summons ninja dogs to stun the opponent",
+      "info": "User summons ninja dogs to stun the opponent for 2 rounds.",
       "chakraCost": 11,
+      "category": "Genin",
       "effects": [
         {
           "type": "status",
@@ -92,7 +101,9 @@
     "Analysis": {
       "name": "Analysis",
       "description": "User concentrates, forming a plan +5 chakra!",
+      "info": "User concentrades, forming a plan. Grants +5 chakra",
       "chakraCost": 0,
+      "category": "Genin",
       "effects": [
         {
           "type": "chakra_gain", 
@@ -103,7 +114,9 @@
     "Fireball Jutsu": {
       "name": "Fireball Jutsu",
       "description": "Launches a massive fireball at the enemy",
+      "info": "Launches a massive fireball at the enemy",
       "chakraCost": 7,
+      "category": "Genin",
       "effects": [
         {
           "type": "damage",
@@ -114,6 +127,8 @@
     "Smoke Bomb": {
       "name": "Smoke Bomb",
       "description": "Throws a Smoke Bomb",
+      "info": "User Throws a smoke bomb, increases dodge.",
+      "category": "No Category",
       "chakracost": 3,
       "effects":[{
         "type": "buff",
@@ -127,7 +142,10 @@
     },
     "Shadow Clone Jutsu": {
         "name": "Shadow Clone Jutsu",
-        "description": "Attacks\n Their clone attacks",
+        "description": "Attacks for 119\n Their clone attacks",
+        "info": "User summons their clones for assistance in battle",
+
+        "category": "Genin",  
         "chakraCost": 5,
         "effects": [
             {
@@ -138,8 +156,10 @@
     },
     "Sexy Jutsu": {
         "name": "Sexy Jutsu",
-        "description": "Transforms into a sexy version of the user",
+        "description": "Transforms into a dazzling lady",
+        "info": "Distracts the opponent by transforming into a dazzling lady",
         "chakraCost": 3,
+        "category": "Chuunin",
         "effects": [
             {
                 "type": "status",
@@ -153,7 +173,9 @@
     "Kirin": {
         "name": "Kirin",
         "description": "summons a lightning bolt from the sky",
+        "info": "User Summons a lightning bolt from the thunder clouds above, striking the enemy for massive damage.",
         "chakraCost": 7,
+        "category": "Chuunin",
         "effects": [
             {
                 "type": "damage",
@@ -164,7 +186,9 @@
     "Lightning Blade": {
         "name": "Lightning Blade",
         "description": "Gathers chakra into a thunderous blade and strikes",
+        "info": "User gathers their chakra into a thunderous blade of lightning and strikes the opponent.",
         "chakraCost": 6,
+        "category": "Chuunin",
         "effects": [
             {
                 "type": "damage",
@@ -175,6 +199,8 @@
     "Cherry Blossom Impact": {
         "name": "Cherry Blossom Impact",
         "description": "attacks with cherry blossoms",
+        "info": "User Attacks the enemy with Cherry Blossoms, trust me bro it's strong.",
+        "category": "Chuunin",
         "chakraCost": 4,
         "effects": [
             {
@@ -186,7 +212,9 @@
     "Water Prison": {
         "name": "Water Prison",
         "description": "Traps the enemy in a sphere of water, slowly drowning them",
+        "info": "User traps the opponent in a sphere of water drowning them each round for chakra.",
         "chakraCost": 5,
+        "category": "S-Rank",
         "effects": [
             {
                 "type": "status",
@@ -201,7 +229,9 @@
     "Needle Assault": {
         "name": "Needle Assault",
         "description": "Launches a barrage of senbon needles that causes bleeding",
+        "info": "User launches senbon needles at the opponent inflicting bleed and dealing damage.",
         "chakraCost": 4,
+        "category": "S-Rank",
         "effects": [
             {
                 "type": "damage",
@@ -220,7 +250,9 @@
     "Silent Assassination": {
         "name": "Silent Assassination",
         "description": "uses Silent Assassination technique",
+        "info": "User gets into the opponents blind spot and attacks them.",
         "chakraCost": 4,
+        "category": "S-Rank",
         "effects": [
             {
                 "type": "damage",
@@ -238,7 +270,9 @@
     "Serpents Wrath": {
         "name": "Serpents Wrath",
         "description": "unleashes a devastating Serpent Wrath",
+        "info": "User unleashes a devestating serpent wrath on the opponent, deals alot of damage. ",
         "chakraCost": 5,
+        "category": "S-Rank",
         "effects": [
             {
                 "type": "damage",
@@ -248,14 +282,16 @@
                 "type": "status",
                 "status": "poison",
                 "duration": 3,
-                "chance": 0.4
+                "chance": 1.0
             }
         ]
     },
     "Creation Rebirth": {
         "name": "Creation Rebirth",
-        "description": "A powerful healing technique that continuously restores health",
+        "description": "uses powerful healing technique that continuously restores health",
+        "info": "A powerful healing technique that continuously restores health every round for chakra",
         "chakraCost": 5,
+        "category": "Hokage",
         "effects": [
           {
             "type": "heal",
@@ -265,28 +301,18 @@
         "image_url": "https://example.com/creation-rebirth.gif"
       },
     
-      "Reaper Death Seal": {
-        "name": "Reaper Death Seal",
-        "description": "A forbidden jutsu that summons the Death God",
-        "chakraCost": 0,
-        "effects": [
-          {
-            "type": "status",
-            "status": "reaper_seal",
-            "duration": 999
-          }
-        ],
-        "image_url": "https://example.com/reaper-death-seal.gif"
-      },
+     
     
       "Water Dragon Jutsu": {
         "name": "Water Dragon Jutsu",
         "description": "Creates a powerful water dragon that strikes the enemy",
+        "info": "User summons a water dragon which deals massive damage to the opponent.",
         "chakraCost": 4,
+        "category": "Hokage",
         "effects": [
           {
             "type": "damage",
-            "formula": "user.power * 1.5"
+            "formula": "user.power * 2.5"
           }
         ],
         "image_url": "https://example.com/water-dragon.gif"
@@ -295,11 +321,13 @@
       "Rasengan": {
         "name": "Rasengan",
         "description": "Gathers chakra in his palm and attacks the enemy",
+        "info": "User uses Naruto's trademark move why are you still checking this description?",
         "chakraCost": 3,
+        "category": "Jounin",
         "effects": [
           {
             "type": "damage",
-            "formula": "user.power * 1.8"
+            "formula": "user.power * 2.8"
           }
         ],
         "image_url": "https://example.com/rasengan.gif"
@@ -308,7 +336,9 @@
       "Flying Raijin Jutsu": {
         "name": "Flying Raijin Jutsu",
         "description": "dodges all incoming attacks and strikes the enemy",
+        "info": "User dodges all incoming attacks and attacks the enemy.",
         "chakraCost": 5,
+        "category": "Hokage",
         "effects": [
           {
             "type": "damage",
@@ -328,11 +358,20 @@
       "Great Forest Crumbling": {
         "name": "Great Forest Crumbling",
         "description": "summons a barrage of wooden branches that crushes the enemy",
+        "info": "User summonns a barrage of dead trees that crush the enemy and stun them.",
         "chakraCost": 6,
+        "category": "Hokage",
         "effects": [
           {
             "type": "damage",
             "formula": "user.power * 2.2"
+          },
+          {
+           "type": "status",
+          "target": "target",
+          "status": "stun",
+          "duration": 2,
+          "chance": 1.0
           }
         ],
         "image_url": "https://example.com/great-forest.gif"
@@ -341,13 +380,165 @@
       "Rasenshuriken": {
         "name": "Rasenshuriken",
         "description": "Gathers a massive amount of Spiralling wind chakra into the form of a shuriken then strikes the enemy",
+        "info": "User Gathers a massive amount of Spiralling wind chakra into the form of a shuriken then strikes the enemy and also applies bleed.",
         "chakraCost": 7,
+        "category": "Hokage",
         "effects": [
           {
             "type": "damage",
             "formula": "user.power * 2.5"
-          }
+          },
+          {
+                "type": "status",
+                "target": "target",
+                "status": "bleed",
+                "duration": 2,
+                "chance": 1.0,
+                "damagePerTurn": "target.health * 0.2"}
         ],
         "image_url": "https://example.com/rasenshuriken.gif"
+      },
+      "Infused Chakra Blade": {
+        "name": "Infused Chakra Blade",
+        "description": "Strikes with chakra-infused blades, causing bleeding and greatly increasing power.",
+        "chakraCost": 6,
+        "info": "User Strikes with chakra-infused blades, causing bleeding and greatly increasing power.",
+        "category": "No Category",
+        "effects": [
+            {
+                "type": "damage",
+                "formula": "user.power * 1.5 + 50"
+            },
+            {
+                "type": "buff",
+                "target": "user",
+                "stats": {
+                    "power": "user.power * 1.5"
+                },
+                "duration": 2
+            },
+            {
+                "type": "status",
+                "target": "target",
+                "status": "bleed",
+                "duration": 1,
+                "chance": 1.0,
+                "damagePerTurn": "target.health * 0.15"
+            }
+        ]
+    },
+    "One Thousand Years of Death": {
+        "name": "One Thousand Years of Death",
+        "description": "Pokes the Enemy Butt",
+        "info": "Pokes the Enemy butt. :)",
+        "chakraCost": 1,
+        "category": "Genin",
+        "effects": [
+          {
+            "type": "damage",
+            "formula": "1"
+          }
+        ]
+      },
+      "Burning Ash": {
+        "name": "Burning Ash",
+        "description": "Burns the opponent, causing damage over time.",
+        "info": "User spews ash over the battlefield which Burns the opponent, causing damage over time.",
+        "chakraCost": 5,
+        "category": "Chuunin",
+        "effects": [
+          {
+            "type": "damage",
+            "formula": "user.power * 1.2"
+          },
+          {
+            "type": "status",
+            "target": "target",
+            "status": "burn",
+            "duration": 2,
+            "chance": 1.0,
+            "damagePerTurn": "target.health * 0.1"
+          }
+        ]
+      },
+      "Swamp Grasp": {
+        "name": "Swamp Grasp",
+        "description": "A slimy hand grabs the target, dealing damage.",
+        "chakraCost": 2,
+        "category": "No Category",
+        "effects": [
+          { "type": "damage", "formula": "user.power * 1.1" }
+        ]
+      },
+      "Mire Slam": {
+        "name": "Mire Slam",
+        "description": "The guardian slams the ground, shaking the earth.",
+        "chakraCost": 3,
+        "category": "No Category",
+        "effects": [
+          { "type": "damage", "formula": "user.power * 1.3" }
+        ]
+      },
+      "Forbidden Drain": {
+        "name": "Forbidden Drain",
+        "description": "Kagami drains the target's chakra and health.",
+        "chakraCost": 4,
+        "category": "No Category",
+        "effects": [
+          { "type": "damage", "formula": "user.power * 1.2" },
+          { "type": "debuff", "stats": { "chakra": 3 }, "duration": 1 }
+        ]
+      },
+      "Shadow Bind": {
+        "name": "Shadow Bind",
+        "description": "Kagami binds the target, lowering their defense.",
+        "chakraCost": 3,
+        "category": "No Category",
+        "effects": [
+          { "type": "debuff", "stats": { "defense": -50 }, "duration": 2 }
+        ]
+      },
+      "Lightning Blade: All out": {
+        "name": "Lightning Blade: All Out",
+        "description": "performs the lightning blade jutsu but this time, with rage. Lightning engulfs the battlefield sending shocks through the ground and air and also deals damage",
+        "info": "An Enhanced Version of the jutsu Lightning Blade",
+        "chakraCost": 10,
+        "category": "Jounin",
+        "effects": [
+          {
+             "type": "damage",
+                "formula": "3 * user.power * 100"
+          },
+          {
+             "type": "debuff",
+          "target": "target",
+          "stats": {
+            "power": "-target.power * 0.5",
+            "defense": "-target.defense * 0.5"
+          },
+          "duration": 3
+          },
+          {
+             "type": "status",
+                "target": "target",
+                "status": "bleed",
+                "duration": 2,
+                "chance": 1.0,
+                "damagePerTurn": "target.health * 0.2"}
+        ]
+      },
+      "Mystic Palm Enhanced": {
+        "name": "Mystic Palm Enhanced",
+        "description": "Enhanced version of the jutsu Mystic Palm",
+        "info": "User heals based on their missing health, but this time it's more healing than before.",
+        "chakraCost": 7,
+        "category": "Jounin",
+        "effects": [
+          {
+            "type": "heal",
+            "formula": "user.health * 0.7"
+          }
+        ]
       }
+
   }
