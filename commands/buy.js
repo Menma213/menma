@@ -46,6 +46,14 @@ const premiumItems = [
         price: 500,
         roleId: "1385641469507010640",
         duration: 30 * 24 * 60 * 60 * 1000 // 1 month in ms, use 15000 for 15 seconds
+    },
+    {
+        name: "custom jutsu",
+        display: "Custom Jutsu",
+        description: "Create your own custom jutsu! (single effect)",
+        price: 1000,
+        roleId: "1399097723554234448"
+        // No roleId, no duration, handled in real time
     }
 ];
 
@@ -123,6 +131,26 @@ module.exports = {
 
             if (!users[userId]) {
                 return interaction.reply('You need to be enrolled first!');
+            }
+
+            // Custom Jutsu purchase logic
+            if (premium.name === "custom jutsu") {
+                if (!users[userId].ss || users[userId].ss < premium.price) {
+                    return interaction.reply(`You need ${premium.price} Shinobi Shards to buy this item!`);
+                }
+                users[userId].ss -= premium.price;
+                fs.writeFileSync(usersPath, JSON.stringify(users, null, 4));
+                // Add the role if it exists (for display and real-time)
+                if (premium.roleId) {
+                    try {
+                        const member = await interaction.guild.members.fetch(userId);
+                        await member.roles.add(premium.roleId, "Purchased Custom Jutsu");
+                    } catch (e) {
+                        // Ignore errors
+                    }
+                }
+                await logPurchase(interaction, `<@${userId}> purchased **Custom Jutsu** for ${premium.price} Shinobi Shards.`);
+                return interaction.reply(`<@${userId}> Successfully purchased a Custom Jutsu! Instructions on creating a custom are in <#1399109319051579422>.`);
             }
 
             // Check if user already has this premium role in premiumRoles

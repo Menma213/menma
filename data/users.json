@@ -66,32 +66,32 @@
     "ramen": 1
   },
   "835408109899219004": {
-    "level": 13,
-    "exp": 56.961571623279006,
-    "wins": 142,
-    "losses": 4,
+    "level": 66,
+    "exp": 283.15528743738724,
+    "wins": 150,
+    "losses": 5,
     "rankedPoints": 0,
     "clan": "Thundie's clan",
-    "bloodline": "Hyuga",
+    "bloodline": "Uchaiha",
     "mentor": "Kakashi",
-    "rank": "The Shinobi God",
-    "health": 2,
-    "power": 12295181,
-    "defense": 314,
+    "rank": "Jounin",
+    "health": 7846,
+    "power": 253,
+    "defense": 474,
     "chakra": 15,
     "jutsu": {
       "slot_0": "Attack",
       "slot_1": "asura",
-      "slot_2": "asura",
+      "slot_2": "Transformation Jutsu",
       "slot_3": "Rasengan",
-      "slot_4": "Analysis",
-      "slot_5": "Flying Raijin Jutsu"
+      "slot_4": "Lord of Bloodsea",
+      "slot_5": "The Grand Rebellion"
     },
-    "money": 451000007105948,
+    "money": 451000007151058,
     "ramen": 9,
     "lastClaim": "2025-04-24T08:51:48.586Z",
     "nextClaim": "2025-04-25T08:51:48.586Z",
-    "lastArank": 1751822929254,
+    "lastArank": 1753978358745,
     "Combo": "Intermediate Combo",
     "firstusescroll": true,
     "current_scroll": null,
@@ -99,22 +99,22 @@
     "occupation": "Anbu",
     "perks": "Jinchuriki",
     "lastguard": 1750175065990,
-    "lastdrank": 1753092222822,
-    "lastbrank": 1753198280432,
-    "lastsrank": 1753205515831,
+    "lastdrank": 1753711301037,
+    "lastbrank": 1753984005888,
+    "lastsrank": 1753803240009,
     "role": "Spy",
     "lastrob": 1747052628716,
-    "elo": 1304,
+    "elo": 1344,
     "mentorPoints": 6,
     "completedMentorStories": {
       "Kakashi": true
     },
-    "mentorExp": 47,
+    "mentorExp": 52,
     "ranked": {
-      "totalElo": 12725,
-      "rank": "The Shinobi God",
-      "division": 1,
-      "elo": 25,
+      "totalElo": 50,
+      "rank": "Genin",
+      "division": 5,
+      "elo": 50,
       "claimedRewards": [
         100,
         200,
@@ -127,12 +127,12 @@
         2400
       ]
     },
-    "ss": 99999997400,
+    "ss": 99999995400,
     "tutorialStory": true,
     "srankResult": "lose",
     "brankWon": true,
     "drankCompleted": true,
-    "LastTrials": 1751826087436,
+    "LastTrials": 1753977382922,
     "tutorialStoryComplete": true,
     "tutorialScrollsComplete": true,
     "trialsResult": "lose",
@@ -149,7 +149,12 @@
     "bloodline_pending": null,
     "bloodline_shrine_visits_needed": null,
     "bloodline_shrine_visits": null,
-    "lastShrineVisit": 1753017196587
+    "lastShrineVisit": 1753017196587,
+    "hakuDefeats": 2,
+    "corruptHakuDefeats": 1,
+    "frankAttempts": [
+      1753714609684
+    ]
   },
   "741142009670271010": {
     "level": 1,
@@ -273,7 +278,7 @@
   },
   "961918563382362122": {
     "level": 69,
-    "exp": 11160,
+    "exp": 11164,
     "wins": 73,
     "losses": 0,
     "rankedPoints": 0,
@@ -284,7 +289,7 @@
     "health": 1.0349999999999996e+124,
     "power": 1.0453499999999995e+123,
     "defense": 7.49999999999999e+92,
-    "chakra": 1.0349999999999989e+49,
+    "chakra": 10,
     "jutsu": {
       "slot_0": "Attack",
       "slot_1": "Asura",
@@ -307,8 +312,10 @@
     "completedMentorStories": {
       "Kakashi": true
     },
-    "mentorExp": 10,
-    "elo": 1050
+    "mentorExp": 11,
+    "elo": 1050,
+    "lastdrank": 1754060776941,
+    "drankCompleted": true
   },
   "826183795417022555": {
     "level": 1,
@@ -343,8 +350,8 @@
   },
   "818893461881094175": {
     "level": 1,
-    "exp": 885,
-    "wins": 3,
+    "exp": 890.3,
+    "wins": 4,
     "losses": 0,
     "rankedPoints": 0,
     "clan": "None",
@@ -363,13 +370,17 @@
       "slot_4": "None",
       "slot_5": "None"
     },
-    "money": 16255,
+    "money": 27775,
     "ramen": 1,
-    "lastbrank": 1750159551986,
+    "lastbrank": 1753377399068,
     "Combo": "Basic Combo",
-    "mentorExp": 2,
-    "lastdrank": 1750158127002,
-    "lastsrank": 1750159715479
+    "mentorExp": 4,
+    "lastdrank": 1753377482132,
+    "lastsrank": 1753377486662,
+    "brankWon": true,
+    "drankCompleted": true,
+    "hakuDefeats": 1,
+    "corruptHakuDefeats": 0
   },
   "799979545046155284": {
     "level": 101,
@@ -495,9 +506,9 @@
     "mentor": "None",
     "rank": "Academy Student",
     "health": 964.8,
-    "power": 100,
+    "power": 100000,
     "defense": 50,
-    "chakra": 5,
+    "chakra": 10,
     "jutsu": {
       "slot_0": "Attack",
       "slot_1": "Transformation Jutsu",
@@ -613,8 +624,8 @@
   },
   "1355490065899585737": {
     "level": 2,
-    "exp": 1714.8000000000002,
-    "wins": 5,
+    "exp": 1723.6000000000001,
+    "wins": 6,
     "losses": 0,
     "rankedPoints": 0,
     "clan": "None",
@@ -633,26 +644,26 @@
       "slot_4": "None",
       "slot_5": "asura"
     },
-    "money": 1129645,
+    "money": 1155185,
     "ramen": 9,
     "Combo": "Intermediate Combo",
     "lastdrank": 1753198979550,
-    "mentorExp": 11,
+    "mentorExp": 12,
     "drankCompleted": true,
-    "lastbrank": 1753198927572,
+    "lastbrank": 1753274124291,
     "brankWon": true,
     "firstusescroll": true,
     "ranked": {
-      "totalElo": 100,
+      "totalElo": 75,
       "rank": "Genin",
-      "division": 4,
-      "elo": 0
+      "division": 5,
+      "elo": 75
     },
     "completedMentorStories": {
       "Shikamaru": true
     },
-    "lastArank": 1751384722215,
-    "lastsrank": 1753199008457,
+    "lastArank": 1753975473014,
+    "lastsrank": 1753803383463,
     "srankResult": "win",
     "giftInventory": [
       {
@@ -663,7 +674,12 @@
     ],
     "tutorialStory": true,
     "bloodlineTuto": true,
-    "profileColor": "cyan"
+    "profileColor": "cyan",
+    "frankAttempts": [
+      1753714649818
+    ],
+    "hakuDefeats": 1,
+    "corruptHakuDefeats": 1
   },
   "1311760847307145257": {
     "level": 1,
@@ -706,7 +722,7 @@
   },
   "874591871412879361": {
     "level": 1,
-    "exp": 350,
+    "exp": 351,
     "wins": 1,
     "losses": 0,
     "rankedPoints": 0,
@@ -726,18 +742,97 @@
       "slot_4": "None",
       "slot_5": "None"
     },
-    "money": 15430,
+    "money": 16430,
     "ramen": 1,
     "Combo": "Basic Combo",
-    "lastdrank": 1753019804670,
-    "mentorExp": 2,
+    "lastdrank": 1753552025505,
+    "mentorExp": 3,
     "drankCompleted": true,
-    "lastbrank": 1753019807792,
+    "lastbrank": 1753552029415,
     "ranked": {
       "totalElo": 0,
       "rank": "Genin",
       "division": 5,
       "elo": 0
     }
+  },
+  "1210567723097001996": {
+    "level": 1,
+    "exp": 0,
+    "wins": 0,
+    "losses": 0,
+    "rankedPoints": 0,
+    "clan": "None",
+    "bloodline": "Unknown",
+    "mentor": "None",
+    "rank": "Academy Student",
+    "health": 1000,
+    "power": 100,
+    "defense": 50,
+    "chakra": 10,
+    "jutsu": {
+      "slot_0": "Attack",
+      "slot_1": "Transformation Jutsu",
+      "slot_2": "None",
+      "slot_3": "None",
+      "slot_4": "None",
+      "slot_5": "None"
+    },
+    "money": 10000,
+    "ramen": 1,
+    "Combo": "Basic Combo"
+  },
+  "254833691438743552": {
+    "level": 1,
+    "exp": 65.28694677355723,
+    "wins": 3,
+    "losses": 0,
+    "rankedPoints": 0,
+    "clan": "None",
+    "bloodline": "Unknown",
+    "mentor": "None",
+    "rank": "Academy Student",
+    "health": 1000,
+    "power": 100,
+    "defense": 50,
+    "chakra": 10,
+    "jutsu": {
+      "slot_0": "Attack",
+      "slot_1": "Transformation Jutsu",
+      "slot_2": "None",
+      "slot_3": "None",
+      "slot_4": "None",
+      "slot_5": "None"
+    },
+    "money": 19040,
+    "ramen": 1,
+    "Combo": "Basic Combo",
+    "lastdrank": 1753651910437,
+    "mentorExp": 5,
+    "drankCompleted": true,
+    "lastbrank": 1753808828859,
+    "brankWon": true,
+    "frankBoosterAttempts": [
+      1753718988852,
+      1753719046333,
+      1753719063329,
+      1753719072058,
+      1753719224912,
+      1753719412166,
+      1753719471069,
+      1753719480104,
+      1753719567452,
+      1753719591838,
+      1753719732035,
+      1753719755924,
+      1753719769065,
+      1753719777684,
+      1753719795926,
+      1753719795926,
+      1753719814412,
+      1753719814412,
+      1753719867976,
+      1753719867976
+    ]
   }
 }

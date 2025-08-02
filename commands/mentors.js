@@ -105,10 +105,12 @@ module.exports = {
             }
             // If story completed, directly select mentor
             if (player.completedMentorStories?.[mentorKey]) {
+                // Reset mentorExp when switching mentors
                 player.mentor = mentorKey;
+                player.mentorExp = 0;
                 users[userId] = player;
                 await saveJsonFile(DATA_PATH, users);
-                return interaction.reply({ content: `You have selected **${mentorKey}** as your mentor!`, ephemeral: true });
+                return interaction.reply({ content: `You have selected **${mentorKey}** as your mentor! Your Mentor EXP has been reset.`, ephemeral: true });
             }
             // Otherwise, start storyline/minigame
             // --- Case-insensitive storyline lookup ---
@@ -378,9 +380,11 @@ async function showMinigame(interaction, player, userId, users, mentorName, stor
         if (isCorrect) {
             user.completedMentorStories = user.completedMentorStories || {};
             user.completedMentorStories[mentorName] = true;
-            user.mentorExp += (minigame.rewardExp || 10);
+            // Reduce mentorExp reward (was 10, now 3)
+            user.mentorExp += (minigame.rewardExp !== undefined ? minigame.rewardExp : 3);
+            // Reset mentorExp if switching mentors
             user.mentor = mentorName;
-
+            user.mentorExp = 0 + (minigame.rewardExp !== undefined ? minigame.rewardExp : 3);
             users[userId] = user;
             await saveJsonFile(DATA_PATH, users);
 
@@ -389,7 +393,7 @@ async function showMinigame(interaction, player, userId, users, mentorName, stor
                 .setDescription(minigame.successText)
                 .addFields({
                     name: 'Rewards',
-                    value: `+${minigame.rewardExp || 10} Mentor EXP\nYou have selected **${mentorName}** as your mentor!`
+                    value: `+${minigame.rewardExp !== undefined ? minigame.rewardExp : 3} Mentor EXP\nYou have selected **${mentorName}** as your mentor! Your Mentor EXP has been reset.`
                 })
                 .setColor('#2ecc71');
 

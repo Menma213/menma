@@ -41,6 +41,12 @@ const premiumItems = [
         price: 500,
         roleId: "1385641469507010640", // Placeholder
         duration: 30 * 24 * 60 * 60 * 1000 // 1 month in ms, use 15000 for 15 seconds
+    },
+    {
+        name: "Custom Jutsu",
+        description: "Create your own custom jutsu! (single effect)",
+        price: 1000,
+        // No roleId, no duration, handled in real time
     }
 ];
 
@@ -119,9 +125,14 @@ module.exports = {
                             name: `3) ${premiumItems[2].name}`,
                             value: `${premiumItems[2].description}\nPrice: ${premiumItems[2].price} Shinobi Shards\nRole: <@&${premiumItems[2].roleId}>`,
                             inline: false
+                        },
+                        {
+                            name: `4) ${premiumItems[3].name}`,
+                            value: `${premiumItems[3].description}\nPrice: ${premiumItems[3].price} Shinobi Shards`,
+                            inline: false
                         }
                     )
-                    .setFooter({ text: 'Premium Shop' });
+                    .setFooter({ text: 'To buy, use `/buy option: ss itemname:`' });
 
                 // Add "Buy Shinobi Shards" link button
                 const premiumRow = new ActionRowBuilder().addComponents(

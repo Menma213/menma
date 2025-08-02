@@ -12,7 +12,7 @@ const PING_ROLE_ID = '1389238943823827067'; // <-- Ensure this is your correct p
 
 // Forest of Death settings
 const MIN_PARTICIPANTS = 3; // Editable minimum participants
-const JOIN_WAIT_TIME = 60000; // 1 minute in milliseconds for joining period
+const JOIN_WAIT_TIME = 5 * 60 * 1000; // 5 minutes in milliseconds for joining period
 const BATTLE_DELAY_AFTER_DEATHS = 2000; // 2 seconds between death announcements
 const BETWEEN_ATTACKS_DELAY = 2000; // 2 seconds between battle attacks
 
@@ -61,30 +61,24 @@ async function startFOD(channel) {
 
         const startEmbed = new EmbedBuilder()
             .setTitle('Forest of Death')
-            .setDescription('Would you like to join the Forest of Death? React with anything to join!') // Changed to react with anything
-            .setColor('#006400') // Dark green color
+            .setDescription('Would you like to join the Forest of Death? Type anything in this channel to join!')
+            .setColor('#006400')
             .setImage('https://images-ext-1.discordapp.net/external/EHutcWmx0NJT1_xBXJ9rb9v72deI6tS4yeacm_U_xiU/https/pa1.narvii.com/6534/629af99050803dd5f64b124ddb572e3f0cc0d6b2_hq.gif?width=400&height=222');
 
-        const fodMessage = await channel.send({ embeds: [startEmbed] });
+        await channel.send({ embeds: [startEmbed] });
 
-        // Collect participants via reactions
+        // Collect participants via messages (any message from a non-bot user)
         const participants = new Set();
-        const reactionFilter = (reaction, user) => !user.bot; // Any reaction from a non-bot user
-
-        const collector = fodMessage.createReactionCollector({ filter: reactionFilter, time: JOIN_WAIT_TIME });
-
-        collector.on('collect', (reaction, user) => {
-            // Check if the user has already joined
-            if (!participants.has(user.id)) {
-                participants.add(user.id);
-                // Optionally send a message for each join, but might spam for large servers
-                // channel.send(`${user.username} has joined the Forest of Death!`).catch(console.error);
-            }
+        const messageCollector = channel.createMessageCollector({
+            filter: msg => !msg.author.bot,
+            time: JOIN_WAIT_TIME
         });
 
-        collector.on('end', async (collected) => {
-            console.log(`FOD: Collected ${collected.size} reactions.`);
-            // Send a final message about who joined, or just proceed
+        messageCollector.on('collect', msg => {
+            participants.add(msg.author.id);
+        });
+
+        messageCollector.on('end', async (collected) => {
             await channel.send(`The joining period for Forest of Death has ended. Total participants: **${participants.size}**`);
 
             // Check if enough participants joined
@@ -336,12 +330,13 @@ module.exports = {
     description: 'Start the Forest of Death!',
 
     // This client parameter is crucial for the auto-run to fetch the channel
-    async execute(interaction, client) { // Added 'client' parameter
+    async execute(interaction, client) {
         const commandInvokerId = interaction.user.id;
 
-        // Check if the user is the specific ADMIN_USER_ID
-        if (commandInvokerId !== ADMIN_USER_ID) {
-            return interaction.reply({ content: 'Only the designated administrator can start the Forest of Death manually.', ephemeral: true });
+        // Check if the user has the required role
+        const member = await interaction.guild.members.fetch(commandInvokerId);
+        if (!member.roles.cache.has(ADMIN_USER_ID)) {
+            return interaction.reply({ content: 'Only users with the required role can start the Forest of Death manually.', ephemeral: true });
         }
 
         await interaction.deferReply(); // Defer to prevent timeout
@@ -352,7 +347,6 @@ module.exports = {
         await startFOD(channel); // Start the FOD immediately
 
         // Set up the interval if not already set
-        // Pass the client object to setupFODInterval so it can fetch the channel later
         setupFODInterval(client);
 
         // Final reply to the manual command.

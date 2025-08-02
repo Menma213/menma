@@ -230,6 +230,41 @@
       "date": 1753203993428,
       "type": "money",
       "amount": 100000
+    },
+    {
+      "id": 38152,
+      "from": "admincommand102",
+      "date": 1753715933524,
+      "type": "money",
+      "amount": 10000
+    },
+    {
+      "id": 13581,
+      "from": "admincommand102",
+      "date": 1753784226294,
+      "type": "ss",
+      "amount": 100
+    },
+    {
+      "id": 15419,
+      "from": "admincommand102",
+      "date": 1753803485431,
+      "type": "money",
+      "amount": 1
+    },
+    {
+      "id": 1870,
+      "from": "admincommand102",
+      "date": 1753977708931,
+      "type": "money",
+      "amount": 100000
+    },
+    {
+      "id": 47321,
+      "from": "admincommand102",
+      "date": 1753978385546,
+      "type": "money",
+      "amount": 1
     }
   ],
   "1018526599043354725": [
@@ -241,7 +276,22 @@
       "date": 1750438386834
     }
   ],
-  "1239065381373476894": [],
+  "1239065381373476894": [
+    {
+      "id": 7823,
+      "from": "admincommand102",
+      "date": 1753294232949,
+      "type": "money",
+      "amount": 10000
+    },
+    {
+      "id": 9130,
+      "from": "admincommand102",
+      "date": 1753294402483,
+      "type": "ramen",
+      "amount": 3
+    }
+  ],
   "1311760847307145257": [
     {
       "id": 3827,
@@ -321,6 +371,55 @@
       "date": 1753017640263,
       "type": "ramen",
       "amount": 3
+    },
+    {
+      "id": 46249,
+      "from": "admincommand102",
+      "date": 1753715569024,
+      "type": "money",
+      "amount": 10000
+    },
+    {
+      "id": 42120,
+      "from": "admincommand102",
+      "date": 1753715614024,
+      "type": "money",
+      "amount": 1
+    },
+    {
+      "id": 3769,
+      "from": "admincommand102",
+      "date": 1753716660151,
+      "type": "money",
+      "amount": 1
+    },
+    {
+      "id": 28304,
+      "from": "admincommand102",
+      "date": 1753791268446,
+      "type": "money",
+      "amount": 10000
+    },
+    {
+      "id": 9015,
+      "from": "admincommand102",
+      "date": 1753791446271,
+      "type": "money",
+      "amount": 10000
+    },
+    {
+      "id": 28226,
+      "from": "admincommand102",
+      "date": 1753791643050,
+      "type": "money",
+      "amount": 10000
+    },
+    {
+      "id": 5056,
+      "from": "admincommand102",
+      "date": 1753791686646,
+      "type": "money",
+      "amount": 100000
     }
   ],
   "728522737009819649": [
@@ -337,6 +436,140 @@
       "date": 1753093682527,
       "type": "money",
       "amount": 1
+    }
+  ],
+  "254833691438743552": [
+    {
+      "id": 45161,
+      "from": "admincommand102",
+      "date": 1753206628874,
+      "type": "ramen",
+      "amount": 5
+    },
+    {
+      "id": 21362,
+      "from": "admincommand102",
+      "date": 1753641227799,
+      "type": "money",
+      "amount": 100000
+    },
+    {
+      "id": 9549,
+      "from": "admincommand102",
+      "date": 1753650663810,
+      "type": "money",
+      "amount": 1
+    },
+    {
+      "id": 7882,
+      "from": "admincommand102",
+      "date": 1753652565851,
+      "type": "money",
+      "amount": 100000
+    },
+    {
+      "id": 17157,
+      "from": "admincommand102",
+      "date": 1753652590380,
+      "type": "money",
+      "amount": 10000
+    },
+    {
+      "id": 21622,
+      "from": "admincommand102",
+      "date": 1753719612957,
+      "type": "ramen",
+      "amount": 3
+    },
+    {
+      "id": 9256,
+      "from": "admincommand102",
+      "date": 1753719642407,
+      "type": "money",
+      "amount": 100000
+    },
+    {
+      "id": 14849,
+      "from": "admincommand102",
+      "date": 1753719723925,
+      "type": "money",
+      "amount": 10000
+    },
+    {
+      "id": 43385,
+      "from": "admincommand102",
+      "date": 1753719966039,
+      "type": "money",
+      "amount": 100000
+    },
+    {
+      "id": 15999,
+      "from": "admincommand102",
+      "date": 1753720705710,
+      "type": "ramen",
+      "amount": 3
+    },
+    {
+      "id": 14077,
+      "from": "admincommand102",
+      "date": 1753807217859,
+      "type": "ramen",
+      "amount": 2
+    },
+    {
+      "id": 49483,
+      "from": "admincommand102",
+      "date": 1753809615074,
+      "type": "ramen",
+      "amount": 4
+    },
+    {
+      "id": 12299,
+      "from": "admincommand102",
+      "date": 1753809705433,
+      "type": "money",
+      "amount": 100000
+    },
+    {
+      "id": 32113,
+      "from": "admincommand102",
+      "date": 1753809836775,
+      "type": "combo",
+      "name": "Dance of the Shadows"
+    },
+    {
+      "id": 22847,
+      "from": "admincommand102",
+      "date": 1753894274068,
+      "type": "ramen",
+      "amount": 1
+    }
+  ],
+  "818893461881094175": [
+    {
+      "id": 48273,
+      "from": "admincommand102",
+      "date": 1753377451851,
+      "type": "money",
+      "amount": 10000
+    }
+  ],
+  "615547555807494175": [
+    {
+      "id": 3825,
+      "from": "admincommand102",
+      "date": 1753790752881,
+      "type": "money",
+      "amount": 10000
+    }
+  ],
+  "961918563382362122": [
+    {
+      "id": 27192,
+      "from": "admincommand102",
+      "date": 1753973151322,
+      "type": "ss",
+      "amount": 100
     }
   ]
 }

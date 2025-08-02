@@ -48,6 +48,22 @@ function getRandomAkatsukiMaterial() {
     return mats[Math.floor(Math.random() * mats.length)];
 }
 
+// Add this helper function near the top
+function roundExpSmart(exp) {
+    if (typeof exp !== "number") exp = Number(exp);
+    const str = exp.toString();
+    const dotIdx = str.indexOf(".");
+    if (dotIdx === -1) return exp; // integer, nothing to do
+    const decimals = str.slice(dotIdx + 1);
+    if (decimals.length < 2) return exp; // less than 2 digits after decimal
+    const secondDigit = Number(decimals[1]);
+    if (secondDigit < 5) {
+        return Math.floor(exp);
+    } else {
+        return Math.ceil(exp);
+    }
+}
+
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('drank')
@@ -114,10 +130,11 @@ module.exports = {
         let taskMessage = tasks[Math.floor(Math.random() * tasks.length)];
 
         // Rewards scale with level
-        let expReward = 0.2;
+        let expReward = 1.0;
         let moneyReward = 1000
 
         player.exp += expReward;
+        player.exp = roundExpSmart(player.exp); // <-- round exp after adding
         player.money += moneyReward;
 
         // Material drop for village (Anbu roles)
@@ -193,3 +210,5 @@ module.exports = {
         fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
     }
 };
+
+// NOTE: Make sure any level-up logic elsewhere also uses roundExpSmart or similar rounding for exp!

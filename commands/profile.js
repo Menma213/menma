@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, AttachmentBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+const { SlashCommandBuilder, AttachmentBuilder } = require('discord.js');
 const fs = require('fs');
 const path = require('path');
 const { createCanvas, loadImage, registerFont } = require('canvas');
@@ -66,14 +66,14 @@ const THEMES = {
         secondary: '#274472',
         accent: '#a7c7e7',
         background: ['#0a2740', '#1e90ff', '#274472'],
-        isPremium: false
+        isPremium: true
     },
     CYAN_MIX: {
         primary: '#00e6d3',
         secondary: '#00bfae',
         accent: '#aaffec',
         background: ['#0f3d3e', '#00e6d3', '#aaffec'],
-        isPremium: false
+        isPremium: true
     }
 };
 
@@ -101,6 +101,15 @@ module.exports = {
             option.setName('user')
                 .setDescription('View another player\'s profile')
                 .setRequired(false)
+        )
+        .addStringOption(option =>
+            option.setName('page')
+                .setDescription('Which profile page to view')
+                .setRequired(false)
+                .addChoices(
+                    { name: 'Main', value: 'main' },
+                    { name: 'Ranked', value: 'ranked' }
+                )
         ),
     async execute(interaction) {
         // --- Cooldown Logic Start ---
@@ -142,6 +151,7 @@ module.exports = {
 
             const targetUser = interaction.options.getUser('user') || interaction.user;
             const isSelfView = targetUser.id === commandInvokerId;
+            const page = interaction.options.getString('page') || 'main';
 
             if (!fs.existsSync(usersPath)) {
                 return await interaction.editReply({ content: "Database not found." });
@@ -169,17 +179,17 @@ module.exports = {
             const theme = customTheme || determineTheme(userProfileData);
 
             // --- Robust image generation with fallback ---
-            let pages = {};
             let imageError = false;
+            let imageBuffer;
             try {
-                pages = {
-                    main: await generateMainProfilePage(targetUser, userProfileData, theme, jutsuList, usersJutsu, isSelfView),
-                    ranked: await generateRankedProfilePage(targetUser, userProfileData, theme, isSelfView),
-                    jutsu: await generateJutsuPage(targetUser, userProfileData, theme, jutsuList, usersJutsu)
-                };
+                if (page === 'main') {
+                    imageBuffer = await generateMainProfilePage(targetUser, userProfileData, theme, jutsuList, usersJutsu, isSelfView);
+                } else {
+                    imageBuffer = await generateRankedProfilePage(targetUser, userProfileData, theme, isSelfView);
+                }
             } catch (err) {
                 imageError = true;
-                console.error("Error generating profile image(s):", err);
+                console.error("Error generating profile image:", err);
             }
 
             if (imageError) {
@@ -195,84 +205,9 @@ module.exports = {
                 return;
             }
 
-            // Create buttons for pagination (now 3 pages)
-            const buttons = new ActionRowBuilder()
-                .addComponents(
-                    new ButtonBuilder()
-                        .setCustomId('profile_previous')
-                        .setLabel('Previous')
-                        .setStyle(ButtonStyle.Secondary)
-                        .setDisabled(true),
-                    new ButtonBuilder()
-                        .setCustomId('profile_next')
-                        .setLabel('Next')
-                        .setStyle(ButtonStyle.Primary)
-                        .setDisabled(false),
-                    new ButtonBuilder()
-                        .setCustomId('profile_jutsu')
-                        .setLabel('Jutsu')
-                        .setStyle(ButtonStyle.Secondary)
-                        .setDisabled(false)
-                );
-
-            // Send the main page as the initial reply
             await interaction.editReply({
-                content: `${targetUser.username}'s Ninja Card`,
-                files: [new AttachmentBuilder(pages.main, { name: 'profile.png' })],
-                components: [buttons]
-            });
-
-            // Button interaction collector
-            const collector = interaction.channel.createMessageComponentCollector({
-                filter: i => i.user.id === commandInvokerId,
-                time: 60000
-            });
-
-            let currentPage = 'main';
-
-            collector.on('collect', async i => {
-                if (!i.deferred && !i.replied) await i.deferUpdate();
-
-                // Page logic
-                if (i.customId === 'profile_next') {
-                    currentPage = currentPage === 'main' ? 'ranked' : (currentPage === 'ranked' ? 'jutsu' : 'main');
-                } else if (i.customId === 'profile_previous') {
-                    currentPage = currentPage === 'main' ? 'jutsu' : (currentPage === 'ranked' ? 'main' : 'ranked');
-                } else if (i.customId === 'profile_jutsu') {
-                    currentPage = 'jutsu';
-                }
-
-                // Update buttons
-                const updatedButtons = new ActionRowBuilder()
-                    .addComponents(
-                        new ButtonBuilder()
-                            .setCustomId('profile_previous')
-                            .setLabel('Previous')
-                            .setStyle(ButtonStyle.Secondary)
-                            .setDisabled(currentPage === 'main'),
-                        new ButtonBuilder()
-                            .setCustomId('profile_next')
-                            .setLabel('Next')
-                            .setStyle(ButtonStyle.Primary)
-                            .setDisabled(currentPage === 'jutsu'),
-                        new ButtonBuilder()
-                            .setCustomId('profile_jutsu')
-                            .setLabel('Jutsu')
-                            .setStyle(ButtonStyle.Secondary)
-                            .setDisabled(false)
-                    );
-
-                // Instead of editing, send a new image for each page switch
-                await interaction.followUp({
-                    content: `${targetUser.username}'s Ninja Card (${currentPage.charAt(0).toUpperCase() + currentPage.slice(1)})`,
-                    files: [new AttachmentBuilder(pages[currentPage], { name: 'profile.png' })],
-                    components: [updatedButtons],
-                    ephemeral: true // Only the user sees their own page switches
-                });
-            });
-
-            collector.on('end', () => {
-                interaction.editReply({ components: [] }).catch(() => {});
+                content: `${targetUser.username}'s Ninja Card${page === 'ranked' ? ' (Ranked)' : ''}`,
+                files: [new AttachmentBuilder(imageBuffer, { name: 'profile.png' })]
             });
 
             if (isSelfView) {
@@ -469,10 +404,15 @@ async function generateMainProfilePage(targetUser, userProfileData, theme, jutsu
     ctx.font = 'bold 18px Arial';
     ctx.fillText('LEVEL PROGRESSION', 30, 390);
 
-    const xpPercentage = Math.min(100, (userProfileData.exp / (userProfileData.level * 1000 + 1000)) * 100);
+    // Use the same EXP requirement formula as in levelup.js
+    function getExpRequirement(currentLevel) {
+        if (currentLevel < 1) return 2;
+        return Math.ceil(1.1 ** currentLevel);
+    }
     const level = userProfileData.level || 1;
     const exp = userProfileData.exp || 0;
-    const nextLevelExp = level * 1000 + 1000;
+    const nextLevelExp = getExpRequirement(level);
+    const xpPercentage = Math.min(1, exp / nextLevelExp);
 
     // Level and XP
     ctx.fillStyle = '#aaaaaa';
@@ -493,7 +433,36 @@ async function generateMainProfilePage(targetUser, userProfileData, theme, jutsu
     xpGradient.addColorStop(0, theme.primary);
     xpGradient.addColorStop(1, theme.accent);
     ctx.fillStyle = xpGradient;
-    ctx.fillRect(30, 445, 540 * (xpPercentage / 100), 10);
+    ctx.fillRect(30, 445, 540 * xpPercentage, 10);
+
+    // --- Jinchuriki Chakra Override ---
+    let chakra = userProfileData.chakra || 10;
+    const usersDataPath = path.resolve(__dirname, '../../menma/data/users.json');
+    let usersData = {};
+    try {
+        usersData = JSON.parse(fs.readFileSync(usersDataPath, 'utf8'));
+    } catch (e) {
+        // fallback: do nothing, just use memory
+    }
+    const hasJinchuriki = userProfileData &&
+        Array.isArray(userProfileData.premiumRoles) &&
+        userProfileData.premiumRoles.some(role => role.roleId === GAMEPASS_IDS.JINCHURIKI);
+
+    if (usersData[targetUser.id]) {
+        if (hasJinchuriki) {
+            if (usersData[targetUser.id].chakra !== 15) {
+                usersData[targetUser.id].chakra = 15;
+                fs.writeFileSync(usersDataPath, JSON.stringify(usersData, null, 2));
+            }
+            chakra = 15;
+        } else {
+            if (usersData[targetUser.id].chakra !== 10) {
+                usersData[targetUser.id].chakra = 10;
+                fs.writeFileSync(usersDataPath, JSON.stringify(usersData, null, 2));
+            }
+            chakra = 10;
+        }
+    }
 
     // Battle stats section (Only for self-view)
     if (isSelfView) {
@@ -507,7 +476,7 @@ async function generateMainProfilePage(targetUser, userProfileData, theme, jutsu
             { name: 'Health:', value: userProfileData.health || 100 },
             { name: 'Power:', value: userProfileData.power || 10 },
             { name: 'Defense:', value: userProfileData.defense || 10 },
-            { name: 'Chakra:', value: userProfileData.chakra || 10 }
+            { name: 'Chakra:', value: chakra }
         ];
 
         stats.forEach((stat, i) => {
@@ -547,15 +516,40 @@ async function generateMainProfilePage(targetUser, userProfileData, theme, jutsu
         ctx.fillText(record.value.toString(), x + 78, y);
     });
 
-    // --- Gamepass/Perk Banner (free banner space) ---
-    // Draw a banner at the top (below header) showing the user's current gamepass/perk
-   
+    // --- Money, Ramen, SS section (new, after all categories) ---
+    // Place after battle record, with same alignment and style
+    const moneySectionY = battleRecordY + 110;
+    drawSection(ctx, 15, moneySectionY, 570, 90, theme.primary);
+    ctx.fillStyle = theme.accent;
+    ctx.font = 'bold 18px Arial';
+    ctx.fillText('INVENTORY', 30, moneySectionY + 25);
 
-    // REMOVE equipped jutsu section from main page
-    // (delete or comment out the entire equipped jutsu drawing block)
+    // Money, Ramen, SS values from userProfileData
+    const money = userProfileData.money || 0;
+    const ramen = userProfileData.ramen || 0;
+    const ss = userProfileData.ss || 0;
 
-    // Inventory section (Only for self-view)
-    // ...existing code...
+    const invs = [
+        { name: 'Money:', value: money },
+        { name: 'Ramen:', value: ramen },
+        { name: 'SS:', value: ss }
+    ];
+
+    invs.forEach((item, i) => {
+        const x = 30 + (i * 180);
+        const y = moneySectionY + 55;
+        ctx.font = '18px Arial';
+        ctx.fillStyle = '#aaaaaa';
+        ctx.textAlign = 'left';
+        ctx.fillText(item.name, x, y);
+
+        // Align value right after the label with a fixed padding
+        const labelWidth = ctx.measureText(item.name).width;
+        const valueX = x + labelWidth + 10; // 10px padding after label
+        ctx.fillStyle = '#ffffff';
+        ctx.textAlign = 'left';
+        ctx.fillText(item.value.toString(), valueX, y);
+    });
 
     return canvas.toBuffer('image/png');
 }
@@ -680,9 +674,43 @@ async function generateRankedProfilePage(targetUser, userProfileData, theme, isS
     ctx.fillText(bloodlineName, 300, 235);
     ctx.fontStyle = 'normal';
 
+    // --- Division calculation (match ranked.js logic) ---
+    function getTierAndDivision(elo) {
+        // These should match your ranked.js config
+        const ranks = [
+            "Genin",
+            "Chuunin",
+            "Jounin",
+            "Sannin",
+            "Master Shinobi",
+            "The Shinobi God"
+        ];
+        const divisionsPerRank = 5;
+        const eloPerDivision = 100;
+        if (!elo && elo !== 0) return { rank: "Genin", division: 5, elo: 0 };
+        let totalDivisions = ranks.length * divisionsPerRank;
+        let currentDivision = Math.floor(elo / eloPerDivision);
+        if (currentDivision >= totalDivisions) {
+            return {
+                rank: "The Shinobi God",
+                division: 1,
+                elo: elo % eloPerDivision
+            };
+        }
+        let rankIndex = Math.floor(currentDivision / divisionsPerRank);
+        let division = 5 - (currentDivision % divisionsPerRank);
+        return {
+            rank: ranks[rankIndex],
+            division: division,
+            elo: elo % eloPerDivision
+        };
+    }
+
+    // --- Use correct elo and division ---
+    const elo = typeof userProfileData.elo === "number" ? userProfileData.elo : 0;
+    const tierInfo = getTierAndDivision(elo);
+
     // Rank section (Always display)
-    // Adjusted for better alignment and padding
-    // Match the main page section size and alignment
     const rankedSectionX = 15, rankedSectionWidth = 570;
     drawSection(ctx, rankedSectionX, 250, rankedSectionWidth, 150, theme.primary);
     ctx.fillStyle = theme.accent;
@@ -690,24 +718,19 @@ async function generateRankedProfilePage(targetUser, userProfileData, theme, isS
     ctx.textAlign = 'left';
     ctx.fillText('RANK INFORMATION', rankedSectionX + 15, 275);
 
-    // Rank and division
-    const rankedData = userProfileData.ranked || {};
+    // Rank and division (use tierInfo)
     ctx.fillStyle = '#aaaaaa';
     ctx.font = '18px Arial';
     ctx.fillText('Rank:', rankedSectionX + 15, 300);
     ctx.fillStyle = '#ffffff';
-    ctx.fillText(rankedData.rank || 'Unranked', rankedSectionX + 85, 300);
+    ctx.fillText(tierInfo.rank, rankedSectionX + 85, 300);
 
     ctx.fillStyle = '#aaaaaa';
     ctx.fillText('Division:', rankedSectionX + 15, 320);
     ctx.fillStyle = '#ffffff';
-    ctx.fillText(rankedData.division ? `Division ${rankedData.division}` : 'None', rankedSectionX + 85, 320);
+    ctx.fillText(`${tierInfo.division}`, rankedSectionX + 85, 320);
 
-    // ELO bar
-    const elo = rankedData.elo || 0;
-    const maxElo = 2000; // Adjust based on your ELO system
-    const eloPercentage = Math.min(100, (elo / maxElo) * 100);
-
+    // ELO bar (use correct elo)
     ctx.fillStyle = '#aaaaaa';
     ctx.fillText('ELO:', rankedSectionX + 15, 340);
     ctx.fillStyle = '#ffffff';
@@ -719,7 +742,7 @@ async function generateRankedProfilePage(targetUser, userProfileData, theme, isS
     eloGradient.addColorStop(0, theme.primary);
     eloGradient.addColorStop(1, theme.accent);
     ctx.fillStyle = eloGradient;
-    ctx.fillRect(rankedSectionX + 15, 350, (rankedSectionWidth - 30) * (eloPercentage / 100), 15);
+    ctx.fillRect(rankedSectionX + 15, 350, (rankedSectionWidth - 30) * Math.min(1, (elo % 100) / 100), 15);
 
     // Ranked record section (Always display)
     drawSection(ctx, 15, 415, 570, 100, theme.primary);
@@ -727,12 +750,19 @@ async function generateRankedProfilePage(targetUser, userProfileData, theme, isS
     ctx.font = 'bold 18px Arial';
     ctx.fillText('RANKED RECORD', 30, 440);
 
+    // Use correct win/loss for win rate
+    const rankedData = userProfileData.ranked || {};
+    const wins = rankedData.wins || 0;
+    const losses = rankedData.losses || 0;
+    let winRate = '0%';
+    if ((wins + losses) > 0) {
+        winRate = `${Math.round((wins / (wins + losses)) * 100)}%`;
+    }
+
     const rankedRecords = [
-        { name: 'Wins:', value: rankedData.wins || 0 },
-        { name: 'Losses:', value: rankedData.losses || 0 },
-        { name: 'Win Rate:', value: rankedData.wins && rankedData.losses
-            ? `${Math.round((rankedData.wins / (rankedData.wins + rankedData.losses)) * 100)}%`
-            : '0%' }
+        { name: 'Wins:', value: wins },
+        { name: 'Losses:', value: losses },
+        { name: 'Win Rate:', value: winRate }
     ];
 
     rankedRecords.forEach((record, i) => {
@@ -746,29 +776,25 @@ async function generateRankedProfilePage(targetUser, userProfileData, theme, isS
     });
 
     // Ranked Stats section (Only for self-view)
-    const rankedStatsY = isSelfView ? 530 : 530; // If you decide to hide more, adjust this. Currently always displayed.
+    const rankedStatsY = isSelfView ? 530 : 530;
     if (isSelfView) {
         drawSection(ctx, 15, rankedStatsY, 570, 120, theme.primary);
         ctx.fillStyle = theme.accent;
         ctx.font = 'bold 18px Arial';
         ctx.fillText('RANKED STATS', 30, rankedStatsY + 25);
 
-        const stats = [
-            { name: 'Average Damage:', value: rankedData.avgDamage || 'N/A' },
-            { name: 'Most Used Jutsu:', value: rankedData.mostUsedJutsu || 'None' }
-        ];
+        // Fix overlapping: use vertical spacing, 18px font, left-aligned
+        ctx.font = '18px Arial';
+        ctx.fillStyle = '#aaaaaa';
+        ctx.fillText('Average Damage:', 30, rankedStatsY + 55);
+        ctx.fillStyle = '#ffffff';
+        ctx.fillText(rankedData.avgDamage || 'N/A', 180, rankedStatsY + 55);
 
-        stats.forEach((stat, i) => {
-            const x = 30;
-            const y = rankedStatsY + 50 + (i * 25);
-
-            ctx.fillStyle = '#aaaaaa';
-            ctx.fillText(stat.name, x, y);
-            ctx.fillStyle = '#ffffff';
-            ctx.fillText(stat.value.toString(), x + 150, y);
-        });
+        ctx.fillStyle = '#aaaaaa';
+        ctx.fillText('Most Used Jutsu:', 30, rankedStatsY + 85);
+        ctx.fillStyle = '#ffffff';
+        ctx.fillText(rankedData.mostUsedJutsu || 'None', 180, rankedStatsY + 85);
     }
-
 
     // Footer
     ctx.fillStyle = 'rgba(0,0,0,0.7)';
@@ -776,7 +802,7 @@ async function generateRankedProfilePage(targetUser, userProfileData, theme, isS
     ctx.fillStyle = '#aaaaaa';
     ctx.font = '12px Arial';
     ctx.textAlign = 'center';
-    ctx.fillText(`Total ELO: ${rankedData.totalElo || 0}`, 300, 895);
+    ctx.fillText(`Total ELO: ${elo}`, 300, 895);
 
     return canvas.toBuffer('image/png');
 }

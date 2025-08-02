@@ -5,7 +5,7 @@ const math = require('mathjs');
 const { updateRequirements } = require('./scroll');
 const { createCanvas, loadImage, registerFont } = require('canvas');
 
-// Emoji constants (same as arank.js)
+// Effect emojis (from brank.js)
 const EMOJIS = {
     buff: "<:buff:1364946947055816856>",
     debuff: "<:debuff:1368242212374188062>",
@@ -16,21 +16,6 @@ const EMOJIS = {
     curse: "<:curse:1368243540978827294>",
     status: "<:status:1368243589498540092>"
 };
-
-// Combo system (same as arank.js)
-const COMBOS = {
-    "Basic Combo": {
-        name: "Basic Combo",
-        requiredJutsus: ["Attack", "Transformation Jutsu"],
-        resultMove: {
-            name: "Empowered Attack",
-            damage: 10000,
-            damageType: "true"
-        }
-    }
-};
-
-// Combo emoji constants
 const COMBO_EMOJI_FILLED = "⭕";
 const COMBO_EMOJI_EMPTY = "⚪";
 
@@ -39,53 +24,74 @@ const usersPath = path.resolve(__dirname, '../../menma/data/users.json');
 const jutsuPath = path.resolve(__dirname, '../../menma/data/jutsu.json');
 const jutsusPath = path.resolve(__dirname, '../../menma/data/jutsus.json');
 const imagesPath = path.resolve(__dirname, '../../menma/images');
+const combosPath = path.resolve(__dirname, '../../menma/data/combos.json');
 
 // Load data
 let jutsuList = {};
 let jutsuData = {};
+let COMBOS = {};
 if (fs.existsSync(jutsusPath)) jutsuList = JSON.parse(fs.readFileSync(jutsusPath, 'utf8'));
 if (fs.existsSync(jutsuPath)) jutsuData = JSON.parse(fs.readFileSync(jutsuPath, 'utf8'));
+if (fs.existsSync(combosPath)) COMBOS = JSON.parse(fs.readFileSync(combosPath, 'utf8'));
 
 // Define S-rank bosses directly
 const srankBosses = {
     "haku": {
         name: "Haku",
-        image: "https://static.wikia.nocookie.net/naruto/images/3/35/Haku%27s_shinobi_attire.png/revision/latest/scale-to-width-down/1200?cb=20160610212143", // Replace with actual image
-        health: 250,
-        power: 100,
-        defense: 50,
-        jutsu: ["Attack, Needle Assault"],  // Changed to use their signature move"],
+        image: "https://static.wikia.nocookie.net/naruto/images/3/35/Haku%27s_shinobi_attire.png/revision/latest/scale-to-width-down/1200?cb=20160610212143",
+        health: 2050,
+        power: 900,
+        defense: 340,
+        jutsu: ["Attack", "Needle Assault"],
         reward: "Needle Assault",
         rewardChance: 0.5,
         rewardScroll: "Needle Assault Scroll",
         accuracy: 90,
-        dodge: 15
+        dodge: 15,
+        exp: 2.5,
+        money: 10000,
+        lore: [
+            "Haku was once a child with a tragic past, orphaned by the very powers he possessed. He wandered the snowy lands, shunned and alone, until Zabuza found him. Under Zabuza's wing, Haku found purpose, becoming his loyal protector.",
+            "Haku doesn't want anyone to hurt Zabuza, which is why we need to take him down first."
+        ]
     },
     "zabuza": {
         name: "Zabuza",
-        image: "https://static.wikia.nocookie.net/villains/images/7/7d/Zabuza.png/revision/latest?cb=20181118072602", // Replace with actual image
+        image: "https://static.wikia.nocookie.net/villains/images/7/7d/Zabuza.png/revision/latest?cb=20181118072602",
         health: 300,
         power: 150,
         defense: 100,
-        jutsu: ["Attack, Silent Assassination"],  // Changed to use their signature move
+        jutsu: ["Attack", "Silent Assassination"],
         reward: "Silent Assassination",
         rewardChance: 0.3,
         rewardScroll: "Silent Assassination Scroll",
         accuracy: 85,
-        dodge: 40
+        dodge: 40,
+        exp: 3.5,
+        money: 20000,
+        lore: [
+            "Zabuza Momochi, the Demon of the Hidden Mist, is a legendary swordsman feared for his ruthless tactics. He seeks power above all, and his only bond is with Haku.",
+            "Defeating Zabuza will shake the criminal underworld."
+        ]
     },
     "orochimaru": {
         name: "Orochimaru",
-        image: "https://www.pngplay.com/wp-content/uploads/12/Orochimaru-PNG-Free-File-Download.png", // Replace with actual image
+        image: "https://www.pngplay.com/wp-content/uploads/12/Orochimaru-PNG-Free-File-Download.png",
         health: 400,
         power: 300,
         defense: 200,
-        jutsu: ["Attack, Serpents Wrath"],  // Changed to use their signature move
+        jutsu: ["Attack", "Serpents Wrath"],
         reward: "Serpents Wrath",
         rewardChance: 0.3,
         rewardScroll: "Serpents Wrath Scroll",
         accuracy: 95,
-        dodge: 20
+        dodge: 20,
+        exp: 5,
+        money: 50000,
+        lore: [
+            "Orochimaru, once a Leaf Sannin, now walks a dark path in pursuit of forbidden jutsu and immortality. His experiments have left a trail of terror.",
+            "Facing Orochimaru means facing the unknown."
+        ]
     }
 };
 
@@ -281,6 +287,534 @@ function parseCustomEmoji(emojiStr) {
     return null;
 }
 
+// --- Story avatar and landscape URLs (edit these as needed) ---
+const ASUMA_AVATAR = 'https://pm1.aminoapps.com/7847/98cca195c3bc0047d813f25357661be5f67818b3r1-750-754v2_hq.jpg';
+const HAKU_AVATAR = 'https://www.giantbomb.com/a/uploads/scale_medium/9/95613/2237215-haku22.jpg';
+const KAGAMI_AVATAR = 'https://i.redd.it/n75z59iot9se1.jpeg';
+const HAKU_CORRUPT_AVATAR = 'https://i.postimg.cc/c1kJqHXq/image.png';
+const HAKU_BG = 'https://i.pinimg.com/474x/a6/e4/b6/a6e4b61fd616f4452c7f52f814477bc0.jpg';
+const HAKU_CORRUPT_BG = 'https://i.postimg.cc/SxKGdrVF/image.png';
+
+// --- Helper to get or create a webhook for a character in the current channel ---
+async function getCharacterWebhook(channel, name, avatar) {
+    const webhooks = await channel.fetchWebhooks();
+    let wh = webhooks.find(w => w.name === name);
+    if (!wh) {
+        wh = await channel.createWebhook({ name, avatar });
+    }
+    return wh;
+}
+
+// --- Helper to send a webhook message ---
+async function sendCharacterWebhook(channel, name, avatar, content) {
+    if (!content || !content.trim()) return; // Prevent DiscordAPIError[50006]
+    const wh = await getCharacterWebhook(channel, name, avatar);
+    return wh.send({ content }).catch(() => {});
+}
+
+// --- Battle helpers for S-rank (future-proof, based on brank.js) ---
+
+/**
+ * Generate the moves embed for the current player.
+ * @param {object} player - The player object.
+ * @param {number} roundNum - The current round number.
+ * @param {string} userId - The Discord user ID.
+ * @param {object} jutsuList - The jutsu list.
+ * @returns {object} { embed, components }
+ */
+function createMovesEmbed(player, roundNum, userId, jutsuList) {
+    const { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } = require('discord.js');
+    const embed = new EmbedBuilder()
+        .setTitle(`${player.username}`)
+        .setColor('#006400')
+        .setDescription(
+            `${player.username}, It is your turn!\nUse buttons to make a choice.\n\n` +
+            Object.entries(player.jutsu)
+                .filter(([_, jutsu]) => jutsu !== 'None')
+                .map(([_, jutsuName], index) => {
+                    const jutsuData = jutsuList[jutsuName];
+                    return `${index + 1}: ${jutsuData?.name || jutsuName}${jutsuData?.chakraCost ? ` (${jutsuData.chakraCost} Chakra)` : ''}`;
+                })
+                .join('\n') +
+            `\n\n[😴] to focus your chakra.\n[❌] to flee from battle.\n\nChakra: ${player.chakra}`
+        );
+
+    const jutsuButtons = Object.entries(player.jutsu)
+        .filter(([_, jutsu]) => jutsu !== 'None')
+        .map(([slot, jutsuName], index) => {
+            const jutsu = jutsuList[jutsuName];
+            const disabled = player.chakra < (jutsu?.chakraCost || 0);
+            return new ButtonBuilder()
+                .setCustomId(`move${index + 1}-${userId}-${roundNum}`)
+                .setLabel(`${index + 1}`)
+                .setStyle(disabled ? ButtonStyle.Secondary : ButtonStyle.Primary)
+                .setDisabled(disabled);
+        });
+
+    const rows = [];
+    // First row: up to 5 jutsu buttons
+    if (jutsuButtons.length > 0) {
+        const row1 = new ActionRowBuilder();
+        jutsuButtons.slice(0, 5).forEach(btn => row1.addComponents(btn));
+        rows.push(row1);
+    }
+    // Second row: 6th jutsu (if any), rest, flee
+    if (jutsuButtons.length > 5) {
+        const row2 = new ActionRowBuilder();
+        row2.addComponents(jutsuButtons[5]);
+        row2.addComponents(
+            new ButtonBuilder()
+                .setCustomId(`rest-${userId}-${roundNum}`)
+                .setLabel('😴')
+                .setStyle(ButtonStyle.Primary),
+            new ButtonBuilder()
+                .setCustomId(`flee-${userId}-${roundNum}`)
+                .setLabel('❌')
+                .setStyle(ButtonStyle.Primary)
+        );
+        rows.push(row2);
+    } else {
+        // If 5 or fewer jutsu, put rest/flee on a new row
+        const row2 = new ActionRowBuilder();
+        row2.addComponents(
+            new ButtonBuilder()
+                .setCustomId(`rest-${userId}-${roundNum}`)
+                .setLabel('😴')
+                .setStyle(ButtonStyle.Primary),
+            new ButtonBuilder()
+                .setCustomId(`flee-${userId}-${roundNum}`)
+                .setLabel('❌')
+                .setStyle(ButtonStyle.Primary)
+        );
+        rows.push(row2);
+    }
+
+    return { embed, components: rows.slice(0, 5) };
+}
+
+/**
+ * Generate the battle image for the current round.
+ * @param {object} interaction - The Discord interaction.
+ * @param {object} player - The player object.
+ * @param {number} playerHealth - The player's current health.
+ * @param {object} npc - The NPC/boss object.
+ * @param {string} bgUrl - Background image URL.
+ * @param {string} npcImgUrl - NPC image URL.
+ * @returns {Promise<Buffer>} - PNG buffer.
+ */
+async function generateBattleImage(interaction, player, playerHealth, npc, bgUrl, npcImgUrl) {
+    const { createCanvas, loadImage } = require('canvas');
+    const width = 800, height = 400;
+    const canvas = createCanvas(width, height);
+    const ctx = canvas.getContext('2d');
+
+    // Use user id and avatar hash for Discord avatar, fallback to default
+    let playerImgUrl;
+    if (interaction.user.avatar) {
+        playerImgUrl = `https://cdn.discordapp.com/avatars/${interaction.user.id}/${interaction.user.avatar}.png?size=256`;
+    } else {
+        const defaultAvatarNumber = parseInt(interaction.user.discriminator) % 5;
+        playerImgUrl = `https://cdn.discordapp.com/embed/avatars/${defaultAvatarNumber}.png`;
+    }
+
+    let bgImg, npcImg, playerImg;
+    try { bgImg = await loadImage(bgUrl); } catch { bgImg = null; }
+    try { npcImg = await loadImage(npcImgUrl); } catch { npcImg = null; }
+    try { playerImg = await loadImage(playerImgUrl); } catch { playerImg = null; }
+
+    // Draw background
+    if (bgImg) ctx.drawImage(bgImg, 0, 0, width, height);
+
+    // Helper for rounded rectangles
+    function roundRect(ctx, x, y, w, h, r) {
+        ctx.beginPath();
+        ctx.moveTo(x + r, y);
+        ctx.lineTo(x + w - r, y);
+        ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+        ctx.lineTo(x + w, y + h - r);
+        ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+        ctx.lineTo(x + r, y + h);
+        ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+        ctx.lineTo(x, y + r);
+        ctx.quadraticCurveTo(x, y, x + r, y);
+        ctx.closePath();
+    }
+
+    // Positions
+    const charW = 150, charH = 150;
+    const playerX = width - 50 - charW, playerY = 120;
+    const npcX = 50, npcY = 120;
+    const nameY = 80, barY = 280;
+    const nameH = 28, barH = 22;
+
+    // Draw NPC character
+    if (npcImg) {
+        ctx.save();
+        roundRect(ctx, npcX, npcY, charW, charH, 10);
+        ctx.clip();
+        ctx.drawImage(npcImg, npcX, npcY, charW, charH);
+        ctx.restore();
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = "#6e1515";
+        roundRect(ctx, npcX, npcY, charW, charH, 10);
+        ctx.stroke();
+    }
+
+    // Draw Player character
+    if (playerImg) {
+        ctx.save();
+        roundRect(ctx, playerX, playerY, charW, charH, 10);
+        ctx.clip();
+        ctx.drawImage(playerImg, playerX, playerY, charW, charH);
+        ctx.restore();
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = "#6e1515";
+        roundRect(ctx, playerX, playerY, charW, charH, 10);
+        ctx.stroke();
+    }
+
+    // Draw name tags
+    ctx.font = "bold 18px Arial";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    // NPC name
+    ctx.save();
+    ctx.globalAlpha = 0.7;
+    ctx.fillStyle = "#000";
+    roundRect(ctx, npcX, nameY, charW, nameH, 5);
+    ctx.fill();
+    ctx.restore();
+    ctx.fillStyle = "#fff";
+    ctx.shadowColor = "#000";
+    ctx.shadowBlur = 4;
+    ctx.fillText(npc.name, npcX + charW / 2, nameY + nameH / 2);
+    ctx.shadowBlur = 0;
+    // Player name
+    ctx.save();
+    ctx.globalAlpha = 0.7;
+    ctx.fillStyle = "#000";
+    roundRect(ctx, playerX, nameY, charW, nameH, 5);
+    ctx.fill();
+    ctx.restore();
+    ctx.fillStyle = "#fff";
+    ctx.shadowColor = "#000";
+    ctx.shadowBlur = 4;
+    ctx.fillText(player.username, playerX + charW / 2, nameY + nameH / 2);
+    ctx.shadowBlur = 0;
+
+    // Health bars
+    // NPC
+    const npcHealthPercent = Math.max((npc.currentHealth ?? npc.health) / npc.health, 0);
+    ctx.save();
+    ctx.fillStyle = "#333";
+    roundRect(ctx, npcX, barY, charW, barH, 5);
+    ctx.fill();
+    ctx.fillStyle = "#ff4444";
+    roundRect(ctx, npcX, barY, charW * npcHealthPercent, barH, 5);
+    ctx.fill();
+    ctx.restore();
+
+    // Player
+    const playerHealthPercent = Math.max(playerHealth / player.health, 0);
+    ctx.save();
+    ctx.fillStyle = "#333";
+    roundRect(ctx, playerX, barY, charW, barH, 5);
+    ctx.fill();
+    ctx.fillStyle = "#4CAF50";
+    roundRect(ctx, playerX, barY, charW * playerHealthPercent, barH, 5);
+    ctx.fill();
+    ctx.restore();
+
+    // VS text
+    ctx.save();
+    ctx.font = "bold 48px Arial";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillStyle = "#fff";
+    ctx.shadowColor = "#000";
+    ctx.shadowBlur = 4;
+    ctx.fillText("VS", width / 2, height / 2);
+    ctx.restore();
+
+    return canvas.toBuffer('image/png');
+}
+
+/**
+ * Create a round summary embed (copied from brank.js createBattleSummary).
+ * @param {object} player
+ * @param {object} npc
+ * @param {object} playerAction
+ * @param {object} npcAction
+ * @param {number} roundNum
+ * @param {object} comboState
+ * @returns {EmbedBuilder}
+ */
+function createBattleSummary(player, npc, playerAction, npcAction, roundNum, comboState) {
+    const { EmbedBuilder } = require('discord.js');
+    // Get active effect emojis
+    const getEffectEmojis = (entity) => {
+        const emojis = [];
+        if (!entity.activeEffects) return '';
+        entity.activeEffects.forEach(effect => {
+            if (effect.type === 'buff') emojis.push(EMOJIS.buff);
+            if (effect.type === 'debuff') emojis.push(EMOJIS.debuff);
+            if (effect.type === 'status') {
+                switch (effect.status) {
+                    case 'stun': emojis.push(EMOJIS.stun); break;
+                    case 'bleed': emojis.push(EMOJIS.bleed); break;
+                    case 'flinch': emojis.push(EMOJIS.flinch); break;
+                    case 'cursed': emojis.push(EMOJIS.curse); break;
+                    default: emojis.push(EMOJIS.status);
+                }
+            }
+        });
+        return emojis.length ? `[${emojis.join('')}] ` : '';
+    };
+
+    const playerEffectEmojis = getEffectEmojis(player);
+    const npcEffectEmojis = getEffectEmojis(npc);
+
+    // Player description
+    const playerDesc = playerAction.isRest ? playerAction.description :
+        !playerAction.hit ? (
+            playerAction.specialEffects?.includes("Stun active") ? "is stunned!" :
+            playerAction.specialEffects?.includes("Flinch active") ? "flinched!" : "missed!"
+        ) :
+        (playerAction.description);
+
+    // NPC description
+    const npcDesc = !npcAction.hit ? (
+        npcAction.specialEffects?.includes("Stun active") ? `${npc.name} is stunned!` :
+        npcAction.specialEffects?.includes("Flinch active") ? `${npc.name} flinched!` : `${npc.name} missed!`
+    ) :
+    npcAction.description;
+
+    // Handle active status effects (bleed/drowning)
+    let statusEffects = [];
+    [player, npc].forEach(entity => {
+        if (!entity.activeEffects) return;
+        entity.activeEffects.forEach(effect => {
+            if (effect.type === 'status') {
+                switch(effect.status) {
+                    case 'bleed': {
+                        const bleedDamage = Math.floor(entity.health * 0.1);
+                        statusEffects.push(`${entity.username || entity.name} is bleeding! (-${bleedDamage} HP)`);
+                        break;
+                    }
+                    case 'drowning': {
+                        const drowningDamage = Math.floor(entity.health * 0.1);
+                        statusEffects.push(`${entity.username || entity.name} is drowning! (-${drowningDamage} HP)`);
+                        break;
+                    }
+                }
+            }
+        });
+    });
+
+    // Combo progress UI
+    let comboProgressText = "";
+    if (comboState && comboState.combo) {
+        const usedThisRound = comboState.combo.requiredJutsus.some(jutsu =>
+            comboState.usedJutsus.has(jutsu)
+        );
+        if (usedThisRound) {
+            const filled = comboState.combo.requiredJutsus.filter(jutsu => comboState.usedJutsus.has(jutsu)).length;
+            const total = comboState.combo.requiredJutsus.length;
+            comboProgressText = `\nCombo charging up... ${COMBO_EMOJI_FILLED.repeat(filled)}${COMBO_EMOJI_EMPTY.repeat(total - filled)}`;
+        }
+    }
+
+    const embed = new EmbedBuilder()
+        .setTitle(`Round: ${roundNum}!`)
+        .setColor('#006400')
+        .setDescription(
+            `${playerEffectEmojis}@${player.username} ${playerDesc}` +
+            `${playerAction.damage ? ` for ${Math.round(playerAction.damage)}!` : playerAction.heal ? ` for ${Math.round(playerAction.heal)} HP!` : '!'}` +
+            `\n\n${npcEffectEmojis}${npcDesc}` +
+            `${npcAction.damage ? ` for ${Math.round(npcAction.damage)}!` : npcAction.heal ? ` for ${Math.round(npcAction.heal)} HP!` : '!'}` +
+            (statusEffects.length ? `\n\n${statusEffects.join('\n')}` : '') +
+            comboProgressText
+        )
+        .addFields({
+            name: 'Battle Status',
+            value: `${player.username} | ${Math.round(player.health)} HP\n${npc.name} | ${Math.round(npc.currentHealth ?? npc.health)} HP\nChakra: ${player.chakra}            Chakra: ${npc.chakra}`
+        });
+
+    return embed;
+}
+
+// Placeholder for runHakuBattle function (this needs to be fully implemented)
+// This function will contain the main battle loop and logic
+async function runHakuBattle(interaction, users, userId, players, jutsuList, jutsuData, bossConfig, backgroundUrl, bossAvatarUrl, bossName) {
+    // Initialize the boss based on the bossConfig
+    const playerCount = players.length;
+    let npc = {
+        ...bossConfig,
+        activeEffects: [],
+        jutsu: bossConfig.jutsu.map(j => jutsuList[j] ? j : 'Attack'), // Ensure jutsu are valid
+        currentHealth: bossConfig.health * (1 + (playerCount - 1) * 0.5),
+        power: bossConfig.power * (1 + (playerCount - 1) * 0.2),
+        chakra: 10, // Assuming a base chakra for boss
+        accuracy: bossConfig.accuracy || 85,
+        dodge: bossConfig.dodge || 15
+    };
+
+    // Initialize player's current health and chakra for the battle
+    let player = players.find(p => p.id === userId);
+    let currentPlayerHealth = player.health;
+    let currentPlayerChakra = player.chakra;
+    let playerActiveEffects = []; // Initialize player's active effects for this battle
+
+    await interaction.channel.send({ content: `**The battle against ${bossName} begins!**` });
+    
+    // Main battle loop (simplified example)
+    while (currentPlayerHealth > 0 && npc.currentHealth > 0) {
+        // --- Player's Turn ---
+        const jutsuOptions = player.jutsus.map(jutsuName => ({
+            label: jutsuName,
+            value: jutsuName
+        })).filter(option => jutsuData[option.value] && jutsuData[option.value].chakraCost <= currentPlayerChakra); // Filter by available chakra
+
+        if (jutsuOptions.length === 0) {
+            jutsuOptions.push({ label: "No Jutsus Available (Default Attack)", value: "Attack" });
+        }
+
+        const jutsuSelect = new StringSelectMenuBuilder()
+            .setCustomId('battle_jutsu_selection')
+            .setPlaceholder('Choose your Jutsu')
+            .addOptions(jutsuOptions);
+
+        const attackRow = new ActionRowBuilder().addComponents(jutsuSelect);
+
+        // Display current stats and prompt for action
+        const battleEmbed = new EmbedBuilder()
+            .setTitle(`Battle: ${player.username} vs ${bossName}`)
+            .setDescription(
+                `**${player.username} Health:** ${Math.max(0, currentPlayerHealth)}/${player.health}\n` +
+                `**${player.username} Chakra:** ${Math.max(0, currentPlayerChakra)}/${player.chakra}\n` +
+                `**${bossName} Health:** ${Math.max(0, npc.currentHealth)}/${bossConfig.health}\n` +
+                `**${bossName} Chakra:** ${Math.max(0, npc.chakra)}\n` +
+                `\n_Choose your next move_`
+            )
+            .setImage(backgroundUrl) // Set the background image
+            .setThumbnail(bossAvatarUrl) // Set the boss avatar
+            .setColor('#FF0000');
+
+        const battleMessage = await interaction.channel.send({
+            embeds: [battleEmbed],
+            components: [attackRow],
+            fetchReply: true
+        });
+
+        const turnInteraction = await battleMessage.awaitMessageComponent({
+            filter: i => i.user.id === userId && i.customId === 'battle_jutsu_selection',
+            time: 60000 // 60 seconds to choose
+        }).catch(() => null);
+
+        if (!turnInteraction) {
+            await interaction.channel.send("You took too long to make a move! The battle ends.");
+            return "loss"; // Player loses due to inactivity
+        }
+
+        await turnInteraction.deferUpdate();
+
+        const selectedJutsuName = turnInteraction.values[0];
+        const selectedJutsu = jutsuData[selectedJutsuName] || { name: "Attack", damage: "user.power", chakraCost: 0, type: "damage" }; // Default to basic attack
+
+        let playerActionMessage = `${player.username} used **${selectedJutsu.name}**! `;
+
+        // Apply Jutsu effects
+        if (selectedJutsu.chakraCost) {
+            currentPlayerChakra -= selectedJutsu.chakraCost;
+            if (currentPlayerChakra < 0) currentPlayerChakra = 0; // Prevent negative chakra
+        }
+
+        let damageDealt = 0;
+        let healingDone = 0;
+        let effectsApplied = [];
+
+        if (selectedJutsu.type === 'damage') {
+            const { damage, hit } = effectHandlers.damage(player, npc, selectedJutsu.damage);
+            if (hit) {
+                npc.currentHealth -= damage;
+                damageDealt = damage;
+                playerActionMessage += `Dealt ${damage} damage.`;
+            } else {
+                playerActionMessage += `Missed!`;
+            }
+        } else if (selectedJutsu.type === 'heal') {
+            const healAmount = effectHandlers.heal(player, selectedJutsu.healAmount);
+            currentPlayerHealth += healAmount;
+            healingDone = healAmount;
+            playerActionMessage += `Healed for ${healAmount} health.`;
+            if (currentPlayerHealth > player.health) currentPlayerHealth = player.health; // Cap at max health
+        } else if (selectedJutsu.type === 'buff') {
+            const buffs = effectHandlers.buff(player, selectedJutsu.stats);
+            for (const stat in buffs) {
+                player[stat] += buffs[stat]; // Apply buffs directly to player stats (for current battle instance)
+                playerActionMessage += ` ${EMOJIS.buff} ${stat} increased by ${buffs[stat]}.`;
+                effectsApplied.push(`${EMOJIS.buff} ${stat}`);
+            }
+        } else if (selectedJutsu.type === 'debuff') {
+            const debuffs = effectHandlers.debuff(npc, selectedJutsu.stats);
+            for (const stat in debuffs) {
+                npc[stat] += debuffs[stat]; // Apply debuffs to NPC (negative values)
+                playerActionMessage += ` ${EMOJIS.debuff} ${bossName}'s ${stat} decreased by ${Math.abs(debuffs[stat])}.`;
+                effectsApplied.push(`${EMOJIS.debuff} ${stat}`);
+            }
+        }
+        // Add other effect types (stun, bleed, flinch, curse, status) as needed
+
+        await interaction.channel.send(playerActionMessage);
+        await new Promise(res => setTimeout(res, 2000)); // Short pause for readability
+
+        if (npc.currentHealth <= 0) {
+            await interaction.channel.send(`**${bossName} has been defeated! You win!**`);
+            return "win";
+        }
+
+        // --- Boss's Turn ---
+        const bossAttackJutsuName = npc.jutsu[Math.floor(Math.random() * npc.jutsu.length)];
+        const bossAttackJutsu = jutsuData[bossAttackJutsuName] || { name: "Attack", damage: "target.power", chakraCost: 0, type: "damage" };
+
+        let bossActionMessage = `${bossName} used **${bossAttackJutsu.name}**! `;
+
+        if (bossAttackJutsu.chakraCost) {
+            npc.chakra -= bossAttackJutsu.chakraCost;
+            if (npc.chakra < 0) npc.chakra = 0;
+        }
+
+        if (bossAttackJutsu.type === 'damage') {
+            const { damage, hit } = effectHandlers.damage(npc, player, bossAttackJutsu.damage);
+            if (hit) {
+                currentPlayerHealth -= damage;
+                bossActionMessage += `Dealt ${damage} damage.`;
+            } else {
+                bossActionMessage += `Missed!`;
+            }
+        }
+        // Add other boss attack types
+
+        await interaction.channel.send(bossActionMessage);
+        await new Promise(res => setTimeout(res, 2000));
+
+        // Chakra regeneration for both player and boss
+        currentPlayerChakra += CHAKRA_REGEN[player.rank] || 1;
+        if (currentPlayerChakra > player.chakra) currentPlayerChakra = player.chakra; // Cap at max chakra
+
+        // Boss chakra regeneration (example, you might define this differently)
+        npc.chakra += 5; 
+    }
+
+    if (currentPlayerHealth <= 0) {
+        await interaction.channel.send(`**You have been defeated by ${bossName}! Game Over.**`);
+        return "loss";
+    }
+
+    return "unknown"; // Should not be reached
+}
+
+
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('srank')
@@ -312,7 +846,22 @@ module.exports = {
                     activeEffects: [],
                     accuracy: 100,
                     dodge: 0,
-                    bloodline: users[userId].bloodline // keep bloodline for reference
+                    bloodline: users[userId].bloodline, // keep bloodline for reference
+                    // Ensure jutsu is an object with slots, not an array
+                    jutsu: (() => {
+                        // If users[userId].jutsu is already an object, use it
+                        if (users[userId].jutsu && typeof users[userId].jutsu === "object" && !Array.isArray(users[userId].jutsu)) {
+                            return users[userId].jutsu;
+                        }
+                        // If users[userId].jutsus is an array, convert to slot object
+                        if (Array.isArray(users[userId].jutses)) {
+                            const obj = {};
+                            users[userId].jutses.forEach((j, i) => obj[i] = j);
+                            return obj;
+                        }
+                        // fallback: empty
+                        return {};
+                    })()
                 }
             ];
 
@@ -365,11 +914,14 @@ module.exports = {
 
             const row = new ActionRowBuilder().addComponents(selectMenu);
 
+            // --- Use brank.js style boss selection embed ---
             const embed = new EmbedBuilder()
                 .setTitle('S-Rank Mission')
-                .setDescription('These are the ninja you can fight currently.\n\n' + 
-                    bossOptions.map((boss, index) => `${index + 1}️⃣: ${boss.label}`).join('\n'))
-                .setColor('#006400')
+                .setDescription(
+                    'Select your opponent for the S-Rank mission.\n\n' +
+                    bossOptions.map((boss, index) => `${index + 1}️⃣: ${boss.label}`).join('\n')
+                )
+                .setColor('#006400');
 
             const message = await interaction.followUp({
                 embeds: [embed],
@@ -382,1020 +934,233 @@ module.exports = {
 
             collector.on('collect', async i => {
                 try {
-                    // Remove deferUpdate here to avoid double-acknowledgement error
-                    // await i.deferUpdate();
-                    collector.stop();
-                    
+                    collector.stop(); // Stop the boss selection collector
+                    await i.deferUpdate(); // Defer the interaction for the selection
+
                     const bossId = i.values[0];
                     const boss = srankBosses[bossId];
-                    
-                    // Initialize boss with scaling based on player count
-                    const playerCount = players.length;
-                    const npc = {
-                        ...boss,
-                        activeEffects: [],
-                        jutsu: boss.jutsu.map(j => jutsuList[j] ? j : 'Attack'),
-                        currentHealth: boss.health * (1 + (playerCount - 1) * 0.5), // Scale health with player count
-                        power: boss.power * (1 + (playerCount - 1) * 0.2), // Slightly scale power
-                        chakra: 10,
-                        accuracy: boss.accuracy || 85,
-                        dodge: boss.dodge || 15
-                    };
 
-                    // Calculate total player stats
-                    const totalPlayerHealth = players.reduce((sum, p) => sum + p.health, 0);
-                    let currentPlayerHealth = totalPlayerHealth;  // Initialize currentPlayerHealth
-
-                    // Replace S-rank battle image generator with brank's version
-                    const generateBattleImage = async () => {
-                        // Canvas setup (copied from brank.js)
-                        const width = 800, height = 400;
-                        const canvas = createCanvas(width, height);
-                        const ctx = canvas.getContext('2d');
-
-                        // Load images (try direct URL first)
-                        const bgUrl = 'https://i.pinimg.com/originals/5d/e5/62/5de5622ecdd4e24685f141f10e4573e3.jpg';
-                        const npcImgUrl = npc.image;
-                        // Use user id and avatar hash for Discord avatar, fallback to default
-                        let playerImgUrl;
-                        if (interaction.user.avatar) {
-                            playerImgUrl = `https://cdn.discordapp.com/avatars/${interaction.user.id}/${interaction.user.avatar}.png?size=256`;
-                        } else {
-                            const defaultAvatarNumber = parseInt(interaction.user.discriminator) % 5;
-                            playerImgUrl = `https://cdn.discordapp.com/embed/avatars/${defaultAvatarNumber}.png`;
+                    // --- UNIFIED STORY & BATTLE HANDLER ---
+                    async function runStoryAndBattle(bossId, bossConfig, phase2Config = null) {
+                        let asumaWebhook, hakuWebhook, kagamiWebhook, hakuCorruptWebhook, zabuzaWebhook, orochimaruWebhook;
+                        if (bossId === "haku") {
+                            asumaWebhook = await getCharacterWebhook(interaction.channel, "Asuma", ASUMA_AVATAR);
+                            hakuWebhook = await getCharacterWebhook(interaction.channel, "Haku", HAKU_AVATAR);
+                            kagamiWebhook = await getCharacterWebhook(interaction.channel, "Kagami", KAGAMI_AVATAR);
+                            hakuCorruptWebhook = await getCharacterWebhook(interaction.channel, "Corrupted Haku", HAKU_CORRUPT_AVATAR);
+                        }
+                        // Future-proof: add for Zabuza/Orochimaru
+                        if (bossId === "zabuza") {
+                            zabuzaWebhook = await getCharacterWebhook(interaction.channel, "Zabuza", srankBosses.zabuza.image);
+                        }
+                        if (bossId === "orochimaru") {
+                            orochimaruWebhook = await getCharacterWebhook(interaction.channel, "Orochimaru", srankBosses.orochimaru.image);
                         }
 
-                        let bgImg, npcImg, playerImg;
-                        try { bgImg = await loadImage(bgUrl); } catch { bgImg = null; }
-                        try { npcImg = await loadImage(npcImgUrl); } catch { npcImg = null; }
-                        try { playerImg = await loadImage(playerImgUrl); } catch { playerImg = null; }
-
-                        // Draw background
-                        if (bgImg) ctx.drawImage(bgImg, 0, 0, width, height);
-
-                        // Helper for rounded rectangles
-                        function roundRect(ctx, x, y, w, h, r) {
-                            ctx.beginPath();
-                            ctx.moveTo(x + r, y);
-                            ctx.lineTo(x + w - r, y);
-                            ctx.quadraticCurveTo(x + w, y, x + w, y + r);
-                            ctx.lineTo(x + w, y + h - r);
-                            ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-                            ctx.lineTo(x + r, y + h);
-                            ctx.quadraticCurveTo(x, y + h, x, y + h - r);
-                            ctx.lineTo(x, y + r);
-                            ctx.quadraticCurveTo(x, y, x + r, y);
-                            ctx.closePath();
-                        }
-
-                        // Positions (copied from brank.js)
-                        const charW = 150, charH = 150;
-                        const playerX = width - 50 - charW, playerY = 120;
-                        const npcX = 50, npcY = 120;
-                        const nameY = 80, barY = 280;
-                        const nameH = 28, barH = 22;
-
-                        // Draw NPC character
-                        if (npcImg) {
-                            ctx.save();
-                            roundRect(ctx, npcX, npcY, charW, charH, 10);
-                            ctx.clip();
-                            ctx.drawImage(npcImg, npcX, npcY, charW, charH);
-                            ctx.restore();
-                            ctx.lineWidth = 3;
-                            ctx.strokeStyle = "#6e1515";
-                            roundRect(ctx, npcX, npcY, charW, charH, 10);
-                            ctx.stroke();
-                        }
-
-                        // Draw Player character
-                        if (playerImg) {
-                            ctx.save();
-                            roundRect(ctx, playerX, playerY, charW, charH, 10);
-                            ctx.clip();
-                            ctx.drawImage(playerImg, playerX, playerY, charW, charH);
-                            ctx.restore();
-                            ctx.lineWidth = 3;
-                            ctx.strokeStyle = "#6e1515";
-                            roundRect(ctx, playerX, playerY, charW, charH, 10);
-                            ctx.stroke();
-                        }
-
-                        // Draw name tags
-                        ctx.font = "bold 18px Arial";
-                        ctx.textAlign = "center";
-                        ctx.textBaseline = "middle";
-                        // NPC name
-                        ctx.save();
-                        ctx.globalAlpha = 0.7;
-                        ctx.fillStyle = "#000";
-                        roundRect(ctx, npcX, nameY, charW, nameH, 5);
-                        ctx.fill();
-                        ctx.restore();
-                        ctx.fillStyle = "#fff";
-                        ctx.shadowColor = "#000";
-                        ctx.shadowBlur = 4;
-                        ctx.fillText(npc.name, npcX + charW / 2, nameY + nameH / 2);
-                        ctx.shadowBlur = 0;
-                        // Player name
-                        ctx.save();
-                        ctx.globalAlpha = 0.7;
-                        ctx.fillStyle = "#000";
-                        roundRect(ctx, playerX, nameY, charW, nameH, 5);
-                        ctx.fill();
-                        ctx.restore();
-                        ctx.fillStyle = "#fff";
-                        ctx.shadowColor = "#000";
-                        ctx.shadowBlur = 4;
-                        ctx.fillText(players[0].username, playerX + charW / 2, nameY + nameH / 2);
-                        ctx.shadowBlur = 0;
-
-                        // Health bars
-                        // NPC
-                        const npcHealthPercent = Math.max((npc.currentHealth ?? npc.health) / npc.health, 0);
-                        ctx.save();
-                        ctx.fillStyle = "#333";
-                        roundRect(ctx, npcX, barY, charW, barH, 5);
-                        ctx.fill();
-                        ctx.fillStyle = "#ff4444";
-                        roundRect(ctx, npcX, barY, charW * npcHealthPercent, barH, 5);
-                        ctx.fill();
-                        ctx.fillStyle = "#fff";
-                        ctx.font = "13px Arial";
-                        ctx.textAlign = "center";
-                        ctx.textBaseline = "middle";
-                        ctx.shadowColor = "#000";
-                        ctx.shadowBlur = 1;
-                        
-                        ctx.shadowBlur = 0;
-                        ctx.restore();
-
-                        // Player
-                        const p = players[0];
-                        const maxHP = typeof p.maxHealth === 'number' ? p.maxHealth : (typeof p.health === 'number' ? p.health : 100);
-                        const currHP = typeof p.health === 'number' ? p.health : maxHP;
-                        const playerHealthPercent = Math.max(currHP / maxHP, 0);
-                        ctx.save();
-                        ctx.fillStyle = "#333";
-                        roundRect(ctx, playerX, barY, charW, barH, 5);
-                        ctx.fill();
-                        ctx.fillStyle = "#4CAF50";
-                        roundRect(ctx, playerX, barY, charW * playerHealthPercent, barH, 5);
-                        ctx.fill();
-                        ctx.fillStyle = "#fff";
-                        ctx.font = "13px Arial";
-                        ctx.textAlign = "center";
-                        ctx.textBaseline = "middle";
-                        ctx.shadowColor = "#000";
-                        ctx.shadowBlur = 1;
-                      
-                        ctx.shadowBlur = 0;
-                        ctx.restore();
-
-                        // VS text
-                        ctx.save();
-                        ctx.font = "bold 48px Arial";
-                        ctx.textAlign = "center";
-                        ctx.textBaseline = "middle";
-                        ctx.fillStyle = "#fff";
-                        ctx.shadowColor = "#000";
-                        ctx.shadowBlur = 4;
-                        ctx.fillText("VS", width / 2, height / 2);
-                        ctx.restore();
-
-                        return canvas.toBuffer('image/png');
-                    };
-
-                    // Execute a jutsu (same as arank.js)
-                    const executeJutsu = (baseUser, baseTarget, effectiveUser, effectiveTarget, jutsuName) => {
-                        const jutsu = jutsuList[jutsuName];
-                        if (!jutsu) {
-                            return {
-                                damage: 0,
-                                heal: 0,
-                                description: `${baseUser.name} attempted unknown jutsu: ${jutsuName}`,
-                                specialEffects: ["Jutsu failed!"],
-                                hit: false,
-                                jutsuUsed: jutsuName
-                            };
-                        }
-
-                        const result = {
-                            damage: 0,
-                            heal: 0,
-                            description: jutsu.description || `${baseUser.name} used ${jutsu.name}`,
-                            specialEffects: [],
-                            hit: false,
-                            jutsuUsed: jutsuName
-                        };
-
-                        if ((baseUser.chakra || 0) < (jutsu.chakraCost || 0)) {
-                            return {
-                                damage: 0,
-                                heal: 0,
-                                description: `${baseUser.name} failed to perform ${jutsu.name} (not enough chakra)`,
-                                specialEffects: ["Not enough chakra!"],
-                                hit: false,
-                                jutsuUsed: jutsuName
-                            };
-                        }
-                        baseUser.chakra -= jutsu.chakraCost || 0;
-
-                        jutsu.effects.forEach(effect => {
-                            try {
-                                switch (effect.type) {
-                                    case 'damage':
-                                        const damageResult = effectHandlers.damage(effectiveUser, effectiveTarget, effect.formula);
-                                        result.damage += damageResult.damage;
-                                        result.hit = damageResult.hit;
-                                        if (damageResult.hit && damageResult.damage > 0) {
-                                            result.specialEffects.push(`Dealt ${Math.round(damageResult.damage)} damage`);
-                                        } else if (!damageResult.hit) {
-                                            result.description = `${baseUser.name || 'Unknown'} missed with ${jutsu.name}!`;
-                                            result.specialEffects.push("Attack missed!");
-                                        }
-                                        break;
-
-                                    case 'buff':
-                                        const buffChanges = effectHandlers.buff(baseUser, effect.stats);
-                                        if (!baseUser.activeEffects) baseUser.activeEffects = [];
-                                        baseUser.activeEffects.push({
-                                            type: 'buff',
-                                            stats: buffChanges,
-                                            duration: effect.duration || 1
-                                        });
-                                        result.specialEffects.push(`Gained buffs: ${Object.entries(buffChanges)
-                                            .map(([k, v]) => `${k}: +${v}`)
-                                            .join(', ')} for ${effect.duration || 1} turns`);
-                                        break;
-
-                                    case 'debuff':
-                                        const debuffChanges = effectHandlers.debuff(baseTarget, effect.stats);
-                                        if (!baseTarget.activeEffects) baseTarget.activeEffects = [];
-                                        baseTarget.activeEffects.push({
-                                            type: 'debuff',
-                                            stats: debuffChanges,
-                                            duration: effect.duration || 1
-                                        });
-                                        result.specialEffects.push(`Applied debuffs: ${Object.entries(debuffChanges)
-                                            .map(([k, v]) => `${k}: ${v}`)
-                                            .join(', ')} for ${effect.duration || 1} turns`);
-                                        break;
-
-                                    case 'heal':
-                                        const healAmount = effectHandlers.heal(effectiveUser, effect.formula);
-                                        result.heal += healAmount;
-                                        if (healAmount > 0) {
-                                            result.specialEffects.push(`Healed ${Math.round(healAmount)} HP`);
-                                        }
-                                        break;
-
-                                    case 'instantKill':
-                                        if (effectHandlers.instantKill(effect.chance)) {
-                                            result.damage = effectiveTarget.health;
-                                            result.specialEffects.push("INSTANT KILL!");
-                                        }
-                                        break;
-
-                                    case 'status':
-                                        if (effectHandlers.status(effect.chance)) {
-                                            if (!baseTarget.activeEffects) baseTarget.activeEffects = [];
-                                            const statusEffect = {
-                                                type: 'status',
-                                                status: effect.status,
-                                                duration: effect.duration || 1
-                                            };
-                                            
-                                            if (effect.status === 'bleed' || effect.status === 'drowning') {
-                                                statusEffect.damagePerTurn = baseTarget.health * 0.1;
-                                            }
-                                            
-                                            baseTarget.activeEffects.push(statusEffect);
-                                            result.specialEffects.push(`Applied ${effect.status} for ${effect.duration || 1} turns`);
-                                        }
-                                        break;
-
-                                    case 'chakra_gain':
-                                        let gainAmount = 0;
-                                        if (typeof effect.amount === 'number') {
-                                            gainAmount = effect.amount;
-                                        } else {
-                                            try {
-                                                gainAmount = Math.max(0, math.evaluate(effect.amount, { user: baseUser }));
-                                            } catch(e) { 
-                                                console.error("chakra_gain formula error", e); 
-                                                gainAmount = 0;
-                                            }
-                                        }
-                                        baseUser.chakra += gainAmount;
-                                        if (gainAmount > 0) {
-                                            result.specialEffects.push(`Gained ${Math.round(gainAmount)} Chakra`);
-                                        }
-                                        break;
-                                }
-                            } catch (err) {
-                                console.error(`Error processing ${effect.type} effect for ${jutsuName}:`, err);
-                                result.specialEffects.push(`Error applying ${effect.type} effect`);
-                            }
-                        });
-
-                        return result;
-                    };
-
-                    // Create moves embed for current player 
-                    const createMovesEmbed = (currentPlayerIndex) => {
-                        const currentPlayer = players[currentPlayerIndex];
-                        let currentJutsu = null;
-                        
-                        const embed = new EmbedBuilder()
-                            .setTitle(`${currentPlayer.username}, It is your turn!`)
-                            .setColor('#006400')
-                            .setDescription(
-                                `Use buttons to make a choice.\n\n` +
-                                Object.entries(currentPlayer.jutsu)
-                                    .filter(([_, jutsu]) => jutsu !== 'None')
-                                    .map(([_, jutsuName], index) => {
-                                        const jutsuData = jutsuList[jutsuName];
-                                        if (jutsuData) currentJutsu = jutsuData;
-                                        return `${index + 1}: ${jutsuData?.name || jutsuName}${jutsuData?.chakraCost ? ` (${jutsuData.chakraCost} Chakra)` : ''}`;
-                                    })
-                                    .join('\n') +
-                                '\n\n[😴] to focus your chakra.\n' +
-                                '[❌] to flee from battle.\n\n' +
-                                `Chakra: ${currentPlayer.chakra}`
-                            );
-                    
-                    
-                        const rows = [];
-                        let currentRow = new ActionRowBuilder();
-                        let buttonCount = 0;
-                        
-                        // Add jutsu buttons with unique custom_id per button (slot index)
-                        Object.entries(currentPlayer.jutsu).forEach(([slot, jutsuName], index) => {
-                            if (jutsuName !== 'None') {
-                                const jutsu = jutsuList[jutsuName];
-                                const disabled = currentPlayer.chakra < (jutsu?.chakraCost || 0);
-                                
-                                if (buttonCount === 5) {
-                                    rows.push(currentRow);
-                                    currentRow = new ActionRowBuilder();
-                                    buttonCount = 0;
-                                }
-                                
-                                // Make custom_id unique by including slot and player id and roundNum
-                                currentRow.addComponents(
-                                    new ButtonBuilder()
-                                        .setCustomId(`jutsu${slot}-${currentPlayer.id}-${roundNum}`)
-                                        .setLabel(`${index + 1}`)
-                                        .setStyle(disabled ? ButtonStyle.Secondary : ButtonStyle.Primary)
-                                        .setDisabled(disabled)
-                                );
-                                
-                                buttonCount++;
-                            }
-                        });
-                    
-                        // Add utility buttons with unique custom_id
-                        if (buttonCount < 3) {
-                            currentRow.addComponents(
-                                new ButtonBuilder()
-                                    .setCustomId(`rest-${currentPlayer.id}-${roundNum}`)
-                                    .setLabel('😴')
-                                    .setStyle(ButtonStyle.Primary),
-                                new ButtonBuilder()
-                                    .setCustomId(`flee-${currentPlayer.id}-${roundNum}`)
-                                    .setLabel('❌')
-                                    .setStyle(ButtonStyle.Primary)
-                            );
-                            if (currentRow.components.length > 0) {
-                                rows.push(currentRow);
-                            }
-                        } else {
-                            if (currentRow.components.length > 0) {
-                                rows.push(currentRow);
-                            }
-                            const utilityRow = new ActionRowBuilder()
+                        let skipStory = false;
+                        if (bossId === "haku") {
+                            // Asuma intro + story
+                            const storyRow = new ActionRowBuilder()
                                 .addComponents(
-                                    new ButtonBuilder()
-                                        .setCustomId(`rest-${currentPlayer.id}-${roundNum}`)
-                                        .setLabel('😴')
-                                        .setStyle(ButtonStyle.Success),
-                                    new ButtonBuilder()
-                                        .setCustomId(`flee-${currentPlayer.id}-${roundNum}`)
-                                        .setLabel('❌')
-                                        .setStyle(ButtonStyle.Danger)
+                                    new ButtonBuilder().setCustomId('haku_story_continue').setLabel('Continue').setStyle(ButtonStyle.Primary),
+                                    new ButtonBuilder().setCustomId('haku_story_skip').setLabel('Skip').setStyle(ButtonStyle.Secondary)
                                 );
-                            rows.push(utilityRow);
-                        }
-                    
-                        return { embed, components: rows.slice(0, 5) };
-                    };
-
-                    // Process player move
-                    const processPlayerMove = async (customId, basePlayer, baseNpc, effectivePlayer, effectiveNpc) => {
-                        const action = customId.split('-')[0];
-                        if (action === 'rest') {
-                            basePlayer.chakra += 1;
-                            return {
-                                damage: 0,
-                                heal: 0,
-                                description: `${basePlayer.username} gathered chakra and rested`,
-                                specialEffects: ["+1 Chakra"],
-                                hit: true,
-                                isRest: true
-                            };
-                        }
-                        if (action === 'flee') {
-                            return { fled: true };
-                        }
-                        // If it's a jutsu button, extract slot and use it to get the jutsu name
-                        if (action.startsWith('jutsu')) {
-                            const slot = action.replace('jutsu', '');
-                            const jutsuName = basePlayer.jutsu[slot];
-                            // Combo tracking
-                            if (comboState && comboState.combo.requiredJutsus.includes(jutsuName)) {
-                                comboState.usedJutsus.add(jutsuName);
-                            }
-                            return executeJutsu(basePlayer, baseNpc, effectivePlayer, effectiveNpc, jutsuName);
-                        }
-                        // fallback
-                        return executeJutsu(basePlayer, baseNpc, effectivePlayer, effectiveNpc, action);
-                    };
-
-                    // NPC chooses move
-                    const npcChooseMove = (baseNpc, basePlayer, effectiveNpc, effectivePlayer) => {
-                        // Always use their signature move if they have chakra
-                        const signature = baseNpc.jutsu[0];  // Their signature move is now the only move
-                        
-                        // Don't bother checking chakra, just attack
-                        if (signature) {
-                            const target = players.reduce((lowest, current) => 
-                                (current.health > 0 && (!lowest || current.health < lowest.health)) ? current : lowest, null);
-                                
-                            if (target) {
-                                return executeJutsu(baseNpc, target, effectiveNpc, getEffectiveStats(target), signature);
-                            }
-                        }
-                    
-                        // This should rarely happen since they'll always try to use their signature move
-                        return {
-                            damage: 0,
-                            heal: 0,
-                            description: `${baseNpc.name} failed to attack`,
-                            specialEffects: [],
-                            hit: false
-                        };
-                    };
-
-                    // Calculate effective stats
-                    const getEffectiveStats = (entity) => {
-                        const stats = { ...entity };
-                        delete stats.activeEffects;
-
-                        const effectiveStats = {
-                            power: stats.power || 10,
-                            defense: stats.defense || 10,
-                            chakra: stats.chakra || 10,
-                            health: stats.health || 100,
-                            accuracy: stats.accuracy || 100,
-                            dodge: stats.dodge || 0
-                        };
-
-                        entity.activeEffects.forEach(effect => {
-                            if (effect.type === 'buff' || effect.type === 'debuff') {
-                                Object.entries(effect.stats).forEach(([stat, value]) => {
-                                    effectiveStats[stat] = (effectiveStats[stat] || 0) + value;
-                                });
-                            }
-                        });
-
-                        return effectiveStats;
-                    };
-
-                    // Create battle summary with effect emojis
-                    const createBattleSummary = (playerActions, npcAction) => {
-                        const getEffectEmojis = (entity) => {
-                            const emojis = [];
-                            entity.activeEffects.forEach(effect => {
-                                if (effect.type === 'buff') emojis.push(EMOJIS.buff);
-                                if (effect.type === 'debuff') emojis.push(EMOJIS.debuff);
-                                if (effect.type === 'status') {
-                                    switch (effect.status) {
-                                        case 'stun': emojis.push(EMOJIS.stun); break;
-                                        case 'bleed': emojis.push(EMOJIS.bleed); break;
-                                        case 'flinch': emojis.push(EMOJIS.flinch); break;
-                                        case 'cursed': emojis.push(EMOJIS.curse); break;
-                                        default: emojis.push(EMOJIS.status);
-                                    }
-                                }
+                            const asumaMsg = await asumaWebhook.send({
+                                content: "Venturing on your first S-rank? I'll tag along. Just to be safe. Let me tell you about Haku...",
+                                components: [storyRow]
                             });
-                            return emojis.length ? `[${emojis.join('')}] ` : '';
-                        };
-
-                        const playerEffectEmojis = players.map(p => getEffectEmojis(p));
-                        const npcEffectEmojis = getEffectEmojis(npc);
-
-                        let statusEffects = [];
-                        [...players, npc].forEach(entity => {
-                            entity.activeEffects.forEach(effect => {
-                                if (effect.type === 'status') {
-                                    switch(effect.status) {
-                                        case 'bleed':
-                                            const bleedDamage = Math.floor(entity.health * 0.1);
-                                            statusEffects.push(`${entity.username || entity.name} is bleeding! (-${bleedDamage} HP)`);
-                                            break;
-                                        case 'drowning':
-                                            const drowningDamage = Math.floor(entity.health * 0.1);
-                                            const jutsu = jutsuList['Water Prison'];
-                                            const chakraDrain = jutsu.effects[0].chakraDrain || 3;
-                                            statusEffects.push(`${entity.username || entity.name} is drowning! (-${drowningDamage} HP, -${chakraDrain} Chakra)`);
-                                            break;
-                                    }
-                                }
-                            });
-                        });
-
-                        // Combo progress UI
-                        let comboProgressText = "";
-                        if (comboState && comboState.combo) {
-                            const filled = comboState.combo.requiredJutsus.filter(j => comboState.usedJutsus.has(j)).length;
-                            if (filled > 0) {
-                                const total = comboState.combo.requiredJutsus.length;
-                                comboProgressText = `\nCombo charging up... ${COMBO_EMOJI_FILLED.repeat(filled)}${COMBO_EMOJI_EMPTY.repeat(total - filled)}`;
-                            }
-                        }
-
-                        const embed = new EmbedBuilder()
-                            .setTitle(`Round: ${roundNum}!`)
-                            .setColor('#006400')
-                            .setDescription(
-                                players.map((p, i) => {
-                                    const action = playerActions[i];
-                                    if (!action.hit) {
-                                        return `${playerEffectEmojis[i]}${p.username} ${action.description}`;
-                                    }
-                                    return `${playerEffectEmojis[i]}${p.username} ${action.description}` +
-                                        `${action.damage ? ` for ${Math.round(action.damage)}!` : action.heal ? ` for ${Math.round(action.heal)} HP!` : '!'}`;
-                                }).join('\n\n') +
-                                `\n\n${npcEffectEmojis}${npc.name} ${npcAction.description}` +
-                                `${npcAction.damage ? ` for ${Math.round(npcAction.damage)}!` : npcAction.heal ? ` for ${Math.round(npcAction.heal)} HP!` : '!'}` +
-                                (statusEffects.length ? `\n\n${statusEffects.join('\n')}` : '') +
-                                comboProgressText
-                            )
-                            .addFields({
-                                name: 'Battle Status',
-                                value: players.map(p => `${p.username} | ${Math.round(p.health)} HP (${p.chakra} Chakra)`).join('\n') +
-                                    `\n${npc.name} | ${Math.round(npc.currentHealth)} HP (${npc.chakra} Chakra)`
-                            });
-
-                        // Add jutsu image/gif if available
-                        if (playerActions.length > 0) {
-                            const jutsuUsed = playerActions[0].jutsuUsed;
-                            const jutsuInfo = jutsuList[jutsuUsed];
-                            if (jutsuInfo?.image_url) {
-                                embed.setImage(jutsuInfo.image_url);
-                            }
-                        }
-
-                        return embed;
-                    };
-
-                    // Start battle (remove initial battle image)
-                    await interaction.followUp({ 
-                        content: `**S-Rank Mission**\nDefeat ${npc.name}!`
-                    });
-
-                    let battleActive = true;
-                    let roundNum = 1;
-                    // Define mainPlayer and playerBloodline before the battle loop
-                    const mainPlayer = players[0];
-                    const playerBloodline = mainPlayer.bloodline;
-                    let bloodlineActive = false;
-                    let bloodlineRoundsLeft = 0;
-                    let bloodlineUsed = false; // Only allow once per battle except Nara
-
-                    // Ensure maxHealth is set for mainPlayer before the battle loop
-                    if (typeof mainPlayer.maxHealth !== "number" || mainPlayer.maxHealth < mainPlayer.health) {
-                        mainPlayer.maxHealth = typeof mainPlayer.health === "number" ? mainPlayer.health : 100;
-                    }
-
-                    while (battleActive) {
-                        // --- Bloodline ability auto-activation (main player only, passive for Nara) ---
-                        let bloodlineEmbed = null;
-                        // Nara is always passive
-                        if (playerBloodline === "Nara") {
-                            mainPlayer.chakra += 3;
-                            bloodlineEmbed = new EmbedBuilder()
-                                .setTitle("Battle IQ")
-                                .setDescription(`${BLOODLINE_DEPARTMENTS[playerBloodline]}\n\n<@${mainPlayer.id}> activates **${BLOODLINE_NAMES[playerBloodline]}**!\nBattle IQ grants +3 chakra this round!`)
-                                .setImage(BLOODLINE_GIFS[playerBloodline])
-                                .setColor(0x8B4513);
-                            await interaction.followUp({ embeds: [bloodlineEmbed] });
-                        }
-
-                        // Uchiha bloodline rounds decrement
-                        if (playerBloodline === "Uchiha" && bloodlineActive) {
-                            bloodlineRoundsLeft--;
-                            if (bloodlineRoundsLeft <= 0) {
-                                bloodlineActive = false;
-                                mainPlayer.accuracy = 100;
-                            }
-                        }
-
-                        // --- Auto-activate bloodline if threshold is met and not used ---
-                        if (!bloodlineUsed && playerBloodline && playerBloodline !== "Nara") {
-                            let shouldActivate = false;
-                            // Always use mainPlayer.maxHealth for threshold checks
-                            const hp = typeof mainPlayer.health === "number" ? mainPlayer.health : 0;
-                            const maxHp = typeof mainPlayer.maxHealth === "number" ? mainPlayer.maxHealth : 100;
-                            const chakra = typeof mainPlayer.chakra === "number" ? mainPlayer.chakra : 0;
-                            switch (playerBloodline) {
-                                case "Senju":
-                                    shouldActivate = hp <= maxHp * 0.5;
-                                    break;
-                                case "Uzumaki":
-                                    shouldActivate = hp <= maxHp * 0.5;
-                                    break;
-                                case "Hyuga":
-                                    shouldActivate = chakra >= 15;
-                                    break;
-                                case "Uchiha":
-                                    shouldActivate =  hp <= maxHp * 0.5;
-                                    break;
-                            }
-                            if (shouldActivate) {
-                                const flavor = BLOODLINE_DEPARTMENTS[playerBloodline] || "You feel a surge of power!";
-                                switch (playerBloodline) {
-                                    case "Senju":
-                                        mainPlayer.health = Math.min(hp + Math.floor(maxHp * 0.5), maxHp);
-                                        bloodlineEmbed = new EmbedBuilder()
-                                            .setTitle(BLOODLINE_NAMES[playerBloodline])
-                                            .setDescription(`${flavor}\n\nYou activate **${BLOODLINE_NAMES[playerBloodline]}**!\nHyper Regeneration restores 50% HP!`)
-                                            .setImage(BLOODLINE_GIFS[playerBloodline])
-                                            .setColor(0x8B4513);
-                                        bloodlineUsed = true;
-                                        break;
-                                    case "Uzumaki":
-                                        mainPlayer.chakra += 15;
-                                        bloodlineEmbed = new EmbedBuilder()
-                                            .setTitle(BLOODLINE_NAMES[playerBloodline])
-                                            .setDescription(`${flavor}\n\nYou activate **${BLOODLINE_NAMES[playerBloodline]}**!\nUzumaki Will surges, chakra increased by 15!`)
-                                            .setImage(BLOODLINE_GIFS[playerBloodline])
-                                            .setColor(0x8B4513);
-                                        bloodlineUsed = true;
-                                        break;
-                                    case "Hyuga":
-                                        {
-                                            const drained = Math.min(npc.chakra, 5);
-                                            npc.chakra -= drained;
-                                            mainPlayer.chakra = Math.min(mainPlayer.chakra + drained, 15);
-                                            bloodlineEmbed = new EmbedBuilder()
-                                                .setTitle(BLOODLINE_NAMES[playerBloodline])
-                                                .setDescription(`${flavor}\n\nYou activate **${BLOODLINE_NAMES[playerBloodline]}**!\nByakugan drains ${drained} chakra from the enemy!`)
-                                                .setImage(BLOODLINE_GIFS[playerBloodline])
-                                                .setColor(0x8B4513);
-                                            bloodlineUsed = true;
-                                        }
-                                        break;
-                                    case "Uchiha":
-                                        mainPlayer.accuracy = 100;
-                                        bloodlineActive = true;
-                                        bloodlineRoundsLeft = 2;
-                                        npc.activeEffects.push({
-                                            type: 'status',
-                                            status: 'stun',
-                                            duration: 2
-                                        });
-                                        bloodlineEmbed = new EmbedBuilder()
-                                            .setTitle(BLOODLINE_NAMES[playerBloodline])
-                                            .setDescription(`${flavor}\n\nYou activate **${BLOODLINE_NAMES[playerBloodline]}**!\nSharingan grants 100% accuracy and stuns the enemy for 2 rounds!`)
-                                            .setImage(BLOODLINE_GIFS[playerBloodline])
-                                            .setColor(0x8B4513);
-                                        bloodlineUsed = true;
-                                        break;
-                                }
-                                if (bloodlineEmbed) {
-                                    await interaction.followUp({ embeds: [bloodlineEmbed] });
-                                }
-                            }
-                        }
-
-                        // Update effect durations
-                        [...players, npc].forEach(entity => {
-                            if (!entity.activeEffects) entity.activeEffects = [];
-                            entity.activeEffects.forEach(effect => {
-                                if (effect.duration > 0) effect.duration--;
-                            });
-                            entity.activeEffects = entity.activeEffects.filter(e => e.duration > 0);
-                        });
-
-                        // Process status effects
-                        [...players, npc].forEach(entity => {
-                            entity.activeEffects.forEach(effect => {
-                                if (effect.type === 'status') {
-                                    switch(effect.status) {
-                                        case 'bleed':
-                                            const bleedDamage = Math.floor(entity.health * 0.1);
-                                            if (players.includes(entity)) {
-                                                entity.health -= bleedDamage;
-                                            } else {
-                                                npc.currentHealth -= bleedDamage;
-                                            }
-                                            break;
-                                        case 'drowning':
-                                            const drowningDamage = Math.floor(entity.health * 0.1);
-                                            if (players.includes(entity)) {
-                                                entity.health -= drowningDamage;
-                                            } else {
-                                                npc.currentHealth -= drowningDamage;
-                                            }
-                                            const jutsu = jutsuList['Water Prison'];
-                                            const chakraDrain = jutsu.effects[0].chakraDrain || 3;
-                                            entity.chakra = Math.max(0, entity.chakra - chakraDrain);
-                                            break;
-                                    }
-                                }
-                            });
-                        });
-
-                        // Player turns
-                        const playerActions = [];
-                        for (let i = 0; i < players.length; i++) {
-                            const currentPlayer = players[i];
-                            const effectivePlayer = getEffectiveStats(currentPlayer);
-                            const effectiveNpc = getEffectiveStats(npc);
-
-                            // Skip if player is dead
-                            if (currentPlayer.health <= 0) {
-                                playerActions.push({
-                                    damage: 0,
-                                    heal: 0,
-                                    description: `${currentPlayer.username} is unable to fight!`,
-                                    specialEffects: [],
-                                    hit: false
-                                });
-                                continue;
-                            }
-
-                            // --- Moves embed ---
-                            const { embed, components } = (() => {
-                                const base = createMovesEmbed(i);
-                                // Remove bloodline button logic
-                                return base;
-                            })();
-
-                            const moveMessage = await interaction.followUp({
-                                content: `${currentPlayer.username}, it's your turn!`,
-                                embeds: [embed],
-                                components: components,
-                                fetchReply: true
-                            });
-
-                            // Then send fresh battle image
-                            const battleImage = new AttachmentBuilder(await generateBattleImage());
-                            await interaction.followUp({ files: [battleImage] });
-
-                            const playerAction = await new Promise(resolve => {
-                                const collector = moveMessage.createMessageComponentCollector({
-                                    filter: ii => ii.user.id === currentPlayer.id && ii.customId.endsWith(`-${currentPlayer.id}-${roundNum}`),
+                            const storyChoice = await new Promise(resolve => {
+                                const storyCollector = asumaMsg.createMessageComponentCollector({
+                                    filter: btn => btn.user.id === userId && (btn.customId === 'haku_story_continue' || btn.customId === 'haku_story_skip'),
                                     time: 60000
                                 });
-
-                                collector.on('collect', async ii => {
-                                    await ii.deferUpdate();
-                                    // --- Normal jutsu/rest/flee ---
-                                    resolve(await processPlayerMove(ii.customId, currentPlayer, npc, effectivePlayer, effectiveNpc));
-                                    collector.stop();
+                                storyCollector.on('collect', btn => {
+                                    btn.deferUpdate();
+                                    resolve(btn.customId);
+                                    storyCollector.stop();
                                 });
-
-                                collector.on('end', (collected, reason) => {
-                                    if (reason === 'time') {
-                                        resolve({ fled: true });
-                                    }
-                                    moveMessage.edit({ 
-                                        components: components.map(row => {
-                                            const disabledRow = ActionRowBuilder.from(row);
-                                            disabledRow.components.forEach(c => c.setDisabled(true));
-                                            return disabledRow;
-                                        })
-                                    }).catch(console.error);
+                                storyCollector.on('end', (_, reason) => {
+                                    if (reason === 'time') resolve('haku_story_skip');
                                 });
                             });
-
-                            if (playerAction.fled) {
-                                battleActive = false;
-                                await interaction.followUp(`${currentPlayer.username} fled from the battle!`);
-                                break;
-                            }
-
-                            // Apply player action
-                            npc.currentHealth -= playerAction.damage || 0;
-                            if (playerAction.heal) {
-                                currentPlayer.health = Math.min(currentPlayer.health + playerAction.heal, currentPlayer.maxHealth);
-                                currentPlayerHealth = players.reduce((sum, p) => sum + p.health, 0); // Update total health
-                            }
-
-                            playerActions.push(playerAction);
+                            skipStory = (storyChoice === 'haku_story_skip');
                         }
 
-                        if (!battleActive) break;
-
-                        // NPC turn if still alive
-                        let npcAction = { damage: 0, heal: 0, description: `${npc.name} is defeated`, specialEffects: [], hit: false };
-                        if (npc.currentHealth > 0 && players.some(p => p.health > 0)) {
-                            const effectiveNpc = getEffectiveStats(npc);
-                            const effectivePlayer = getEffectiveStats(players[0]); // Just use first player for NPC targeting
-                            npcAction = npcChooseMove(npc, players[0], effectiveNpc, effectivePlayer);
-                            players.forEach(p => p.health -= npcAction.damage || 0);
-                            currentPlayerHealth = players.reduce((sum, p) => sum + p.health, 0); // Update total health after NPC damage
-                            if (npcAction.heal) {
-                                npc.currentHealth = Math.min(npc.currentHealth + npcAction.heal, npc.health);
+                        if (skipStory) {
+                            await asumaWebhook.send({ content: "You skip the story and head straight into battle with Haku." });
+                            const fightRow = new ActionRowBuilder().addComponents(
+                                new ButtonBuilder().setCustomId('haku_story_fight1').setLabel('Fight').setStyle(ButtonStyle.Danger)
+                            );
+                            const fightMsg = await asumaWebhook.send({ content: "Look. That's Haku, ready?", components: [fightRow] });
+                            await new Promise(resolve => {
+                                const c = fightMsg.createMessageComponentCollector({
+                                    filter: btn => btn.user.id === userId && btn.customId === 'haku_story_fight1',
+                                    time: 60000
+                                });
+                                c.on('collect', btn => { btn.deferUpdate(); resolve(); c.stop(); });
+                                c.on('end', (_, reason) => { if (reason === 'time') resolve(); });
+                            });
+                        } else if (bossId === "haku") {
+                            // Story sequence, all buttons on webhooks, more divisions
+                            // 1. Asuma tells Haku's story
+                            for (const loreLine of bossConfig.lore) {
+                                await asumaWebhook.send({ content: loreLine });
+                                await new Promise(res => setTimeout(res, 2500)); // Increased delay
+                            }
+                            // 2. Ready prompt
+                            const fightRow = new ActionRowBuilder().addComponents(
+                                new ButtonBuilder().setCustomId('haku_story_ready').setLabel('Ready').setStyle(ButtonStyle.Primary)
+                            );
+                            const readyMsg = await asumaWebhook.send({ content: "Look. That's Haku, ready?", components: [fightRow] });
+                            await new Promise(resolve => {
+                                const c = readyMsg.createMessageComponentCollector({
+                                    filter: btn => btn.user.id === userId && btn.customId === 'haku_story_ready',
+                                    time: 60000
+                                });
+                                c.on('collect', btn => { btn.deferUpdate(); resolve(); c.stop(); });
+                                c.on('end', (_, reason) => { if (reason === 'time') resolve(); });
+                            });
+                            // 3. Haku dialogue
+                            await hakuWebhook.send({ content: "Nobody hurts Zabuza!" });
+                            await new Promise(res => setTimeout(res, 2500));
+                            await hakuWebhook.send({ content: "Another Shinobi attempting to kill Zabuza? I will kill you instead!" });
+                            await new Promise(res => setTimeout(res, 2500));
+                            // 4. Fight button on Haku webhook
+                            const fightRow2 = new ActionRowBuilder().addComponents(
+                                new ButtonBuilder().setCustomId('haku_story_fight').setLabel('Fight').setStyle(ButtonStyle.Danger)
+                            );
+                            const fightMsg = await hakuWebhook.send({ content: "Prepare yourself!", components: [fightRow2] });
+                            await new Promise(resolve => {
+                                const c = fightMsg.createMessageComponentCollector({
+                                    filter: btn => btn.user.id === userId && btn.customId === 'haku_story_fight',
+                                    time: 60000
+                                });
+                                c.on('collect', btn => { btn.deferUpdate(); resolve(); c.stop(); });
+                                c.on('end', (_, reason) => { if (reason === 'time') resolve(); });
+                            });
+                        }
+                        // --- PHASE 1 BATTLE ---
+                        let phase1Result = await runSrankBattle(
+                            interaction, users, userId, players, jutsuList, bossConfig, HAKU_BG, HAKU_AVATAR, bossConfig.name
+                        );
+                        if (bossId === "haku" && phase1Result === "win") {
+                            // 5. Death & corruption sequence
+                            await hakuWebhook.send({ content: "*coughs up blood* I...*cough*" });
+                            await new Promise(res => setTimeout(res, 2500));
+                            await asumaWebhook.send({ content: `<@${userId}> I feel a very strange power heading towards us, we should leave immediately.` });
+                            await new Promise(res => setTimeout(res, 2500));
+                            // Corrupt BG
+                            await interaction.channel.send({ content: "Suddenly, the area turns into a hellish place...", files: [], embeds: [], components: [], allowedMentions: { parse: [] }, ephemeral: false });
+                            // 6. Kagami appears, more mockery
+                            await kagamiWebhook.send({ content: "Oh? Look at this weakling being defeated by a mere Shinobi." });
+                            await new Promise(res => setTimeout(res, 2500));
+                            await kagamiWebhook.send({ content: "You think you can change fate? How amusing. My puppets will always rise again." });
+                            await new Promise(res => setTimeout(res, 2500));
+                            await kagamiWebhook.send({ content: "*extends a hand towards Haku, purplish energy swirls*" });
+                            await new Promise(res => setTimeout(res, 2500));
+                            await hakuCorruptWebhook.send({ content: "Master...Revenge." });
+                            await new Promise(res => setTimeout(res, 2500));
+                            // Fight button on Corrupted Haku webhook
+                            const fightRow = new ActionRowBuilder().addComponents(
+                                new ButtonBuilder().setCustomId('haku_story_fight2').setLabel('Fight').setStyle(ButtonStyle.Danger)
+                            );
+                            const fightMsg = await hakuCorruptWebhook.send({ content: "You will not leave alive.", components: [fightRow] });
+                            await new Promise(resolve => {
+                                const c = fightMsg.createMessageComponentCollector({
+                                    filter: btn => btn.user.id === userId && btn.customId === 'haku_story_fight2',
+                                    time: 60000
+                                });
+                                c.on('collect', btn => { btn.deferUpdate(); resolve(); c.stop(); });
+                                c.on('end', (_, reason) => { if (reason === 'time') resolve(); });
+                            });
+                            // --- PHASE 2 BATTLE ---
+                            let phase2Result = await runSrankBattle(
+                                interaction, users, userId, players, jutsuList,
+                                phase2Config || {
+                                    ...bossConfig,
+                                    name: "Corrupted Haku",
+                                    image: HAKU_CORRUPT_AVATAR,
+                                    jutsu: ["Corrupted Needle Assault"],
+                                    health: 350,
+                                    power: 130,
+                                    defense: 70,
+                                    exp: 3.5,
+                                    money: 15000
+                                },
+                                HAKU_CORRUPT_BG, HAKU_CORRUPT_AVATAR, "Corrupted Haku"
+                            );
+                            if (phase2Result === "win") {
+                                await kagamiWebhook.send({ content: "Hmm..Not half bad. Let me go prepare my other puppet...Zabuza. Until next time then, Shinobi." });
                             }
                         }
-
-                        // Check combo completion
-                        let comboCompletedThisRound = false;
-                        if (
-                            comboState &&
-                            comboState.combo.requiredJutsus.every(jutsu => comboState.usedJutsus.has(jutsu))
-                        ) {
-                            npc.currentHealth -= comboState.combo.resultMove.damage;
-                            comboCompletedThisRound = true;
-                            comboState.usedJutsus.clear();
-                        }
-
-                       
-
-                        // Move chakra regen to BEFORE battle summary
-                        players.forEach(p => {
-                            const rank = users[p.id].rank || 'Academy Student';
-                            p.chakra += CHAKRA_REGEN[rank] || 1;
-                        });
-                        npc.chakra += 2; // Boss chakra regen
-
-                        // Generate fresh battle image
-                        const newBattleImage = new AttachmentBuilder(await generateBattleImage());
-
-                        // Show results
-                        let summaryEmbed = createBattleSummary(playerActions, npcAction);
-                        if (comboCompletedThisRound) {
-                            summaryEmbed.setDescription(
-                                summaryEmbed.data.description +
-                                `\n${players[0].username} deals ${comboState.combo.resultMove.damage} additional true damage by landing a ${comboState.combo.resultMove.name}!`
+                        // --- Future-proof: Zabuza/Orochimaru story structure ---
+                        if (bossId === "zabuza") {
+                            for (const loreLine of bossConfig.lore) {
+                                await zabuzaWebhook.send({ content: loreLine });
+                                await new Promise(res => setTimeout(res, 2500));
+                            }
+                            const fightRow = new ActionRowBuilder().addComponents(
+                                new ButtonBuilder().setCustomId('zabuza_story_fight').setLabel('Fight').setStyle(ButtonStyle.Danger)
+                            );
+                            const fightMsg = await zabuzaWebhook.send({ content: "Ready to face the Demon of the Mist?", components: [fightRow] });
+                            await new Promise(resolve => {
+                                const c = fightMsg.createMessageComponentCollector({
+                                    filter: btn => btn.user.id === userId && btn.customId === 'zabuza_story_fight',
+                                    time: 60000
+                                });
+                                c.on('collect', btn => { btn.deferUpdate(); resolve(); c.stop(); });
+                                c.on('end', (_, reason) => { if (reason === 'time') resolve(); });
+                            });
+                            await runSrankBattle(
+                                interaction, users, userId, players, jutsuList, bossConfig, bossConfig.image, bossConfig.image, bossConfig.name
                             );
                         }
-
-                        // Fix chakra display in summary embed
-                        summaryEmbed.data.fields[0].value = players.map(p => `${p.username} | ${Math.round(p.health)} HP (${p.chakra} Chakra)`).join('\n') +
-                            `\n${npc.name} | ${Math.round(npc.currentHealth)} HP (${npc.chakra} Chakra)`;
-
-                        await interaction.followUp({
-                            embeds: [summaryEmbed],
-                            files: [newBattleImage]
-                        });
-
-                        // Check battle outcome
-                        if (npc.currentHealth <= 0) {
-                            // Victory - calculate rewards
-                            const expReward = 0.7;
-                            const moneyReward = 1000 + Math.floor(players[0].level * 30);
-
-                            players.forEach(player => {
-                                users[player.id].exp += expReward;
-                                users[player.id].money += moneyReward;
-                                users[player.id].wins += 1;
-                                users[player.id].health = player.health;
-
-                                // Reward chance check
-                                const roll = Math.random();
-                                if (roll < boss.rewardChance) {
-                                    if (!jutsuData[player.id]) {
-                                        jutsuData[player.id] = { 
-                                            usersjutsu: [],
-                                            scrolls: []
-                                        };
-                                    }
-                                    // Ensure scrolls array exists
-                                    if (!Array.isArray(jutsuData[player.id].scrolls)) {
-                                        jutsuData[player.id].scrolls = [];
-                                    }
-                                    // Check if player already has the jutsu or scroll
-                                    const hasJutsu = Array.isArray(jutsuData[player.id].usersjutsu) && jutsuData[player.id].usersjutsu.includes(boss.reward);
-                                    const hasScroll = jutsuData[player.id].scrolls.includes(boss.rewardScroll);
-
-                                    if (!hasJutsu && !hasScroll) {
-                                        jutsuData[player.id].scrolls.push(boss.rewardScroll);
-                                        interaction.followUp(`\`${player.username} found a ${boss.rewardScroll}!\``);
-                                    }
-                                } else {
-                                    interaction.followUp(`\`${player.username} did not find ${boss.rewardScroll}. You have a ${Math.floor(boss.rewardChance * 100)}% chance of finding it.\``);
-                                }
+                        if (bossId === "orochimaru") {
+                            for (const loreLine of bossConfig.lore) {
+                                await orochimaruWebhook.send({ content: loreLine });
+                                await new Promise(res => setTimeout(res, 2500));
+                            }
+                            const fightRow = new ActionRowBuilder().addComponents(
+                                new ButtonBuilder().setCustomId('orochimaru_story_fight').setLabel('Fight').setStyle(ButtonStyle.Danger)
+                            );
+                            const fightMsg = await orochimaruWebhook.send({ content: "Step forward if you dare.", components: [fightRow] });
+                            await new Promise(resolve => {
+                                const c = fightMsg.createMessageComponentCollector({
+                                    filter: btn => btn.user.id === userId && btn.customId === 'orochimaru_story_fight',
+                                    time: 60000
+                                });
+                                c.on('collect', btn => { btn.deferUpdate(); resolve(); c.stop(); });
+                                c.on('end', (_, reason) => { if (reason === 'time') resolve(); });
                             });
-
-                            fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
-                            fs.writeFileSync(jutsuPath, JSON.stringify(jutsuData, null, 2));
-
-                            const victoryEmbed = new EmbedBuilder()
-                                .setTitle('Battle End!')
-                                .setColor('#00FF00')
-                                .setDescription(players.map(p => 
-                                    `<@${p.id}> has earned ${expReward} exp!\n` +
-                                    `<@${p.id}> has earned ${moneyReward} Ryo!`
-                                ).join('\n'));
-
-                            await interaction.followUp({ embeds: [victoryEmbed] });
-
-                            await updateRequirements(interaction.user.id, 's_mission');
-
-                            // --- MATERIAL DROP SYSTEM ---
-                            // Only drop materials if this is a solo mission (players.length === 1)
-                            let role = users[userId].role || "";
-                            if (interaction.member.roles.cache.has('1349278752944947240')) role = "Hokage";
-                            const amount = getMaterialDrop(role);
-                            const mat = getRandomMaterial();
-
-                            // Village drop
-                            let villageDropMsg = "";
-                            if (amount > 0) {
-                                const villagePath = path.resolve(__dirname, '../../menma/data/village.json');
-                                let village = { iron: 0, wood: 0, rope: 0, defense: 0 };
-                                if (fs.existsSync(villagePath)) {
-                                    village = JSON.parse(fs.readFileSync(villagePath, 'utf8'));
-                                }
-                                village[mat.key] = (village[mat.key] || 0) + amount;
-                                fs.writeFileSync(villagePath, JSON.stringify(village, null, 2));
-                                villageDropMsg = `You found ${amount} ${mat.name} ${mat.emoji} during the mission\n`;
-                            }
-
-                            // Akatsuki drop
-                            let akatsukiDropMsg = "";
-                            if (users[userId].occupation === "Akatsuki") {
-                                // Akatsuki drop logic (copy from arank/brank)
-                                function getAkatsukiMaterialDrop(role) {
-                                    if (role === "Akatsuki Leader") return Math.floor(Math.random() * 3) + 12;
-                                    if (role === "Co-Leader") return Math.floor(Math.random() * 3) + 10;
-                                    if (role === "Bruiser") return Math.floor(Math.random() * 3) + 8;
-                                    if (role === "Scientist") return Math.floor(Math.random() * 3) + 2;
-                                    return 0;
-                                }
-                                function getRandomAkatsukiMaterial() {
-                                    const mats = [
-                                        { name: "Metal", emoji: "🪙", key: "metal" },
-                                        { name: "Gunpowder", emoji: "💥", key: "gunpowder" },
-                                        { name: "Copper", emoji: "🔌", key: "copper" }
-                                    ];
-                                    return mats[Math.floor(Math.random() * mats.length)];
-                                }
-                                let akatsukiRole = users[userId].role || "";
-                                let akatsukiAmount = getAkatsukiMaterialDrop(akatsukiRole);
-                                if (akatsukiAmount > 0) {
-                                    const akatsukiMat = getRandomAkatsukiMaterial();
-                                    const akatsukiPath = path.resolve(__dirname, '../../menma/data/akatsuki.json');
-                                    let akatsuki = { metal: 0, gunpowder: 0, copper: 0, bombs: {} };
-                                    if (fs.existsSync(akatsukiPath)) {
-                                        akatsuki = JSON.parse(fs.readFileSync(akatsukiPath, 'utf8'));
-                                    }
-                                    akatsuki[akatsukiMat.key] = (akatsuki[akatsukiMat.key] || 0) + akatsukiAmount;
-                                    fs.writeFileSync(akatsukiPath, JSON.stringify(akatsuki, null, 2));
-                                    akatsukiDropMsg = `You found ${akatsukiAmount} ${akatsukiMat.name} ${akatsukiMat.emoji} during the mission\n`;
-                                }
-                            }
-
-                            // Send material drop message (block message)
-                            let dropMsg = "```";
-                            if (users[userId].occupation === "Akatsuki" && akatsukiDropMsg) {
-                                dropMsg += `\n${akatsukiDropMsg}`;
-                            } else if (villageDropMsg) {
-                                dropMsg += `\n${villageDropMsg}`;
-                            }
-                            dropMsg += "```";
-                            await interaction.followUp({ content: dropMsg });
-
-                            battleActive = false;
-
-                            // Mark S-rank as win for tutorial
-                            users[userId].srankResult = "win";
-                            fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
-                        } else if (players.every(p => p.health <= 0)) {
-                            // Defeat
-                            const defeatEmbed = new EmbedBuilder()
-                                .setTitle('Mission Failed')
-                                .setColor('#FF0000')
-                                .setDescription(`You were defeated by ${npc.name}...`);
-                            await interaction.followUp({ embeds: [defeatEmbed] });
-                            battleActive = false;
-
-                            // Mark S-rank as loss for tutorial
-                            users[userId].srankResult = "lose";
-                            fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
+                            await runSrankBattle(
+                                interaction, users, userId, players, jutsuList, bossConfig, bossConfig.image, bossConfig.image, bossConfig.name
+                            );
                         }
-
-                        roundNum++;
                     }
 
-                    // Add mentor experience after mission completion
-                    users[userId].mentorExp = (users[userId].mentorExp || 0) + 1;
-                    fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
+                    // --- BOSS SELECTION HANDLER ---
+                    if (bossId === "haku") {
+                        await runStoryAndBattle("haku", boss, null);
+                        return;
+                    } else {
+                        await interaction.followUp({ content: `Prepare to fight ${boss.name}!` });
+                        const fightRow = new ActionRowBuilder().addComponents(
+                            new ButtonBuilder().setCustomId('srank_fight').setLabel('Fight').setStyle(ButtonStyle.Danger)
+                        );
+                        const fightMsg = await interaction.followUp({ content: "Ready?", components: [fightRow], fetchReply: true });
+                        await new Promise(resolve => {
+                            const c = fightMsg.createMessageComponentCollector({
+                                filter: btn => btn.user.id === userId && btn.customId === 'srank_fight',
+                                time: 60000
+                            });
+                            c.on('collect', btn => { btn.deferUpdate(); resolve(); c.stop(); });
+                            c.on('end', (_, reason) => { if (reason === 'time') resolve(); });
+                        });
+                        await runSrankBattle(
+                            interaction, users, userId, players, jutsuList, boss, boss.image, boss.image, boss.name
+                        );
+                        return;
+                    }
                 } catch (error) {
                     console.error("Battle error:", error);
                     await interaction.followUp("An error occurred during the battle!");
@@ -1410,3 +1175,712 @@ module.exports = {
         }
     }
 };
+
+// --- S-RANK BATTLE LOOP (REPLACES runHakuBattle) ---
+async function runSrankBattle(interaction, users, userId, players, jutsuList, bossConfig, bgUrl, npcImgUrl, bossName) {
+    // Setup boss
+    let npc = {
+        ...bossConfig,
+        activeEffects: [],
+        jutsu: Array.isArray(bossConfig.jutsu) ? bossConfig.jutsu.map(j => jutsuList[j] ? j : 'Attack') : ['Attack'],
+        currentHealth: bossConfig.health,
+        power: bossConfig.power,
+        chakra: 10,
+        accuracy: bossConfig.accuracy || 85,
+        dodge: bossConfig.dodge || 15
+    };
+    let player = players.find(p => p.id === userId);
+    player.maxHealth = player.maxHealth || player.health;
+    player.chakra = player.chakra || 10;
+    player.activeEffects = player.activeEffects || [];
+    let roundNum = 1;
+    let comboState = null;
+    if (users[userId].Combo && COMBOS[users[userId].Combo]) {
+        comboState = {
+            combo: COMBOS[users[userId].Combo],
+            usedJutsus: new Set()
+        };
+    }
+
+    // --- ROUND-BASED JUTSU STATE ---
+    let playerActiveJutsus = {};
+    let npcActiveJutsus = {};
+    let playerRoundBasedSummaries = [];
+    let npcRoundBasedSummaries = [];
+
+    // Add defeat counters for Haku/Corrupted Haku
+    if (!users[userId].hakuDefeats) users[userId].hakuDefeats = 0;
+    if (!users[userId].corruptHakuDefeats) users[userId].corruptHakuDefeats = 0;
+
+    // --- BLOODLINE STATE ---
+    const playerBloodline = player.bloodline;
+    let bloodlineActive = false;
+    let bloodlineRoundsLeft = 0;
+    let bloodlineUsed = false;
+
+    while (player.health > 0 && npc.currentHealth > 0) {
+        // --- BLOODLINE AUTO-ACTIVATION ---
+        let bloodlineEmbed = null;
+        if (playerBloodline === "Nara") {
+            player.chakra += 3;
+            bloodlineEmbed = new EmbedBuilder()
+                .setTitle("Battle IQ")
+                .setDescription(`${BLOODLINE_DEPARTMENTS[playerBloodline]}\n\n<@${player.id}> activates **${BLOODLINE_NAMES[playerBloodline]}**!\nBattle IQ grants +3 chakra this round!`)
+                .setImage(BLOODLINE_GIFS[playerBloodline])
+                .setColor(0x8B4513);
+            await interaction.followUp({ embeds: [bloodlineEmbed] });
+        }
+        if (playerBloodline === "Uchiha" && bloodlineActive) {
+            bloodlineRoundsLeft--;
+            if (bloodlineRoundsLeft <= 0) {
+                bloodlineActive = false;
+                player.accuracy = 100;
+            }
+        }
+        if (!bloodlineUsed && playerBloodline && playerBloodline !== "Nara") {
+            let shouldActivate = false;
+            const hp = typeof player.health === "number" ? player.health : 0;
+            const maxHp = typeof player.maxHealth === "number" ? player.maxHealth : 100;
+            const chakra = typeof player.chakra === "number" ? player.chakra : 0;
+            switch (playerBloodline) {
+                case "Senju":
+                    shouldActivate = hp <= maxHp * 0.5;
+                    break;
+                case "Uzumaki":
+                    shouldActivate = hp <= maxHp * 0.5 && chakra < 15;
+                    break;
+                case "Hyuga":
+                    shouldActivate = chakra >= 15 && npc.chakra > 0;
+                    break;
+                case "Uchiha":
+                    shouldActivate = !bloodlineActive && hp <= maxHp * 0.5;
+                    break;
+            }
+            if (shouldActivate) {
+                const flavor = BLOODLINE_DEPARTMENTS[playerBloodline] || "You feel a surge of power!";
+                switch (playerBloodline) {
+                    case "Senju":
+                        player.health = Math.min(hp + Math.floor(maxHp * 0.5), maxHp);
+                        bloodlineEmbed = new EmbedBuilder()
+                            .setTitle(BLOODLINE_NAMES[playerBloodline])
+                            .setDescription(`${flavor}\n\nYou activate **${BLOODLINE_NAMES[playerBloodline]}**!\nHyper Regeneration restores 50% HP!`)
+                            .setImage(BLOODLINE_GIFS[playerBloodline])
+                            .setColor(0x8B4513);
+                        bloodlineUsed = true;
+                        break;
+                    case "Uzumaki":
+                        player.chakra = 15;
+                        bloodlineEmbed = new EmbedBuilder()
+                            .setTitle(BLOODLINE_NAMES[playerBloodline])
+                            .setDescription(`${flavor}\n\nYou activate **${BLOODLINE_NAMES[playerBloodline]}**!\nUzumaki Will surges, chakra set to 15!`)
+                            .setImage(BLOODLINE_GIFS[playerBloodline])
+                            .setColor(0x8B4513);
+                        bloodlineUsed = true;
+                        break;
+                    case "Hyuga":
+                        {
+                            const drained = Math.min(npc.chakra, 5);
+                            npc.chakra -= drained;
+                            player.chakra = Math.min(player.chakra + drained, 15);
+                            bloodlineEmbed = new EmbedBuilder()
+                                .setTitle(BLOODLINE_NAMES[playerBloodline])
+                                .setDescription(`${flavor}\n\nYou activate **${BLOODLINE_NAMES[playerBloodline]}**!\nByakugan drains ${drained} chakra from the enemy!`)
+                                .setImage(BLOODLINE_GIFS[playerBloodline])
+                                .setColor(0x8B4513);
+                            bloodlineUsed = true;
+                        }
+                        break;
+                    case "Uchiha":
+                        player.accuracy = 100;
+                        bloodlineActive = true;
+                        bloodlineRoundsLeft = 2;
+                        npc.activeEffects.push({
+                            type: 'status',
+                            status: 'stun',
+                            duration: 2
+                        });
+                        bloodlineEmbed = new EmbedBuilder()
+                            .setTitle(BLOODLINE_NAMES[playerBloodline])
+                            .setDescription(`${flavor}\n\nYou activate **${BLOODLINE_NAMES[playerBloodline]}**!\nSharingan grants 100% accuracy and stuns the enemy for 2 rounds!`)
+                            .setImage(BLOODLINE_GIFS[playerBloodline])
+                            .setColor(0x8B4513);
+                        bloodlineUsed = true;
+                        break;
+                }
+                if (bloodlineEmbed) {
+                    await interaction.followUp({ embeds: [bloodlineEmbed] });
+                }
+            }
+        }
+
+        // --- UPDATE EFFECT DURATIONS ---
+        [player, npc].forEach(entity => {
+            entity.activeEffects.forEach(effect => {
+                if (effect.duration > 0) effect.duration--;
+            });
+            entity.activeEffects = entity.activeEffects.filter(e => e.duration > 0);
+        });
+
+        // --- EFFECTIVE STATS ---
+        const getEffectiveStats = (entity) => {
+            const stats = { ...entity };
+            delete stats.activeEffects;
+            const effectiveStats = {
+                power: stats.power || 10,
+                defense: stats.defense || 10,
+                chakra: stats.chakra || 10,
+                health: stats.health || 100,
+                accuracy: stats.accuracy || 100,
+                dodge: stats.dodge || 0
+            };
+            entity.activeEffects.forEach(effect => {
+                if (effect.type === 'buff' || effect.type === 'debuff') {
+                    Object.entries(effect.stats).forEach(([stat, value]) => {
+                        effectiveStats[stat] = (effectiveStats[stat] || 0) + value;
+                    });
+                }
+            });
+            return effectiveStats;
+        };
+
+        // --- MOVES EMBED ---
+        const { embed, components } = createMovesEmbed(player, roundNum, userId, jutsuList);
+        // --- CUSTOM BACKGROUND PATCH ---
+        let activeJutsu = null;
+        Object.keys(playerActiveJutsus).forEach(jName => {
+            const jutsu = jutsuList[jName];
+            if (jutsu?.custombackground && playerActiveJutsus[jName].round >= jutsu.custombackground.round) {
+                activeJutsu = jutsu;
+            }
+        });
+        Object.keys(npcActiveJutsus).forEach(jName => {
+            const jutsu = jutsuList[jName];
+            if (jutsu?.custombackground && npcActiveJutsus[jName].round >= jutsu.custombackground.round) {
+                activeJutsu = jutsu;
+            }
+        });
+        let customBgUrl = bgUrl;
+        if (activeJutsu && activeJutsu.custombackground && roundNum >= activeJutsu.custombackground.round) {
+            customBgUrl = activeJutsu.custombackground.url;
+        }
+
+        const moveMsg = await interaction.followUp({
+            content: `${player.username}, it's your turn!`,
+            embeds: [embed],
+            components: components,
+            fetchReply: true
+        });
+        // --- BATTLE IMAGE ---
+        const battleImage = new AttachmentBuilder(await generateBattleImage(interaction, player, player.health, npc, customBgUrl, npcImgUrl));
+        await interaction.followUp({ files: [battleImage] });
+
+        // --- PLAYER MOVE ---
+        const playerAction = await new Promise(resolve => {
+            const collector = moveMsg.createMessageComponentCollector({
+                filter: ii => ii.user.id === userId,
+                time: 60000
+            });
+            collector.on('collect', async ii => {
+                await ii.deferUpdate();
+                const action = ii.customId.split('-')[0];
+                if (action === 'rest') {
+                    player.chakra += 1;
+                    resolve({
+                        damage: 0,
+                        heal: 0,
+                        description: `${player.username} gathered chakra and rested`,
+                        specialEffects: ["+1 Chakra"],
+                        hit: true,
+                        isRest: true
+                    });
+                } else if (action === 'flee') {
+                    resolve({ fled: true });
+                } else if (action.startsWith('move')) {
+                    // Button index
+                    const idx = parseInt(ii.customId.split('-')[0].replace('move', '')) - 1;
+                    const jutsuNames = Object.entries(player.jutsu)
+                        .filter(([_, jutsu]) => jutsu !== 'None')
+                        .map(([_, jutsuName]) => jutsuName);
+                    const jutsuName = jutsuNames[idx];
+                    const jutsu = jutsuList[jutsuName];
+                    // --- ROUND-BASED JUTSU ACTIVATION PATCH ---
+                    if (jutsu?.roundBased) {
+                        if (!playerActiveJutsus[jutsuName]) {
+                            if ((player.chakra || 0) < (jutsu.chakraCost || 0)) {
+                                resolve({
+                                    damage: 0,
+                                    heal: 0,
+                                    description: `${player.username} failed to perform ${jutsu.name} (not enough chakra)`,
+                                    specialEffects: ["Not enough chakra!"],
+                                    hit: false,
+                                    jutsuUsed: jutsuName
+                                });
+                                collector.stop();
+                                return;
+                            }
+                            player.chakra -= jutsu.chakraCost || 0;
+                            playerActiveJutsus[jutsuName] = { round: 1 };
+                            // Show round-based summary for display
+                            const roundEffect = BattleUtils.getRoundEffect(jutsu.roundEffects, 1);
+                            let desc = roundEffect?.description || "";
+                            desc = desc
+                                .replace(/\buser\b/gi, `<@${player.id}>`)
+                                .replace(/\btarget\b/gi, npc.name)
+                                .replace(/\[Player\]/g, player.username)
+                                .replace(/\[Enemy\]/g, npc.name);
+                            playerRoundBasedSummaries.push({
+                                desc: desc,
+                                effects: []
+                            });
+                            resolve({
+                                damage: 0,
+                                heal: 0,
+                                description: desc,
+                                specialEffects: [],
+                                hit: true,
+                                jutsuUsed: jutsuName,
+                                isRoundBased: true,
+                                roundBasedDesc: desc,
+                                roundBasedEffects: []
+                            });
+                            collector.stop();
+                            return;
+                        }
+                    }
+                    // Track combo progress
+                    if (comboState && comboState.combo.requiredJutsus.includes(jutsuName)) {
+                        comboState.usedJutsus.add(jutsuName);
+                    }
+                    if (!jutsu) {
+                        resolve({
+                            damage: 0,
+                            heal: 0,
+                            description: `${player.username} attempted unknown jutsu: ${jutsuName}`,
+                            specialEffects: ["Jutsu failed!"],
+                            hit: false,
+                            jutsuUsed: jutsuName
+                        });
+                    } else if ((player.chakra || 0) < (jutsu.chakraCost || 0)) {
+                        resolve({
+                            damage: 0,
+                            heal: 0,
+                            description: `${player.username} failed to perform ${jutsu.name} (not enough chakra)`,
+                            specialEffects: ["Not enough chakra!"],
+                            hit: false,
+                            jutsuUsed: jutsuName
+                        });
+                    } else {
+                        player.chakra -= jutsu.chakraCost || 0;
+                        let result = { damage: 0, heal: 0, description: jutsu.description || `${player.username} used ${jutsu.name}`, specialEffects: [], hit: true, jutsuUsed: jutsuName };
+                        for (const effect of (jutsu.effects || [])) {
+                            if (effect.type === 'damage') {
+                                const { damage, hit } = effectHandlers.damage(player, npc, effect.formula);
+                                result.damage += damage;
+                                result.hit = hit;
+                                if (hit && damage > 0) result.specialEffects.push(`Dealt ${Math.round(damage)} damage`);
+                                else if (!hit) {
+                                    result.description = `${player.username} missed with ${jutsu.name}!`;
+                                    result.specialEffects.push("Attack missed!");
+                                }
+                            }
+                            if (effect.type === 'heal') {
+                                const healAmount = effectHandlers.heal(player, effect.formula);
+                                result.heal += healAmount;
+                                if (healAmount > 0) result.specialEffects.push(`Healed ${Math.round(healAmount)} HP`);
+                            }
+                            // Add more effect types as needed
+                        }
+                        resolve(result);
+                    }
+                }
+                collector.stop();
+            });
+            collector.on('end', (collected, reason) => {
+                if (reason === 'time') resolve({ fled: true });
+            });
+        });
+
+        if (playerAction.fled) {
+            await interaction.followUp(`${player.username} fled from the battle!`);
+            return "loss";
+        }
+
+        // --- COMBO COMPLETION ---
+        let comboCompletedThisRound = false;
+        let comboDamageText = "";
+        if (
+            comboState &&
+            comboState.combo.requiredJutsus.every(jutsu => comboState.usedJutsus.has(jutsu))
+        ) {
+            npc.currentHealth -= comboState.combo.damage;
+            comboCompletedThisRound = true;
+            comboDamageText = `\n${player.username} lands a ${comboState.combo.name}! Dealt ${comboState.combo.damage} true damage!`;
+            comboState.usedJutsus.clear();
+        }
+
+        npc.currentHealth -= playerAction.damage || 0;
+        player.health = Math.min(player.health + (playerAction.heal || 0), player.maxHealth);
+
+        // --- NPC MOVE ---
+        const stunned = npc.activeEffects.some(e => e.type === 'status' && e.status === 'stun');
+        let npcAction = { damage: 0, heal: 0, description: `${npc.name} is stunned and can't move!`, hit: false, specialEffects: ["Stun active"] };
+        if (!stunned) {
+            // --- ROUND-BASED JUTSU ACTIVATION PATCH FOR NPC ---
+            // NPC will activate round-based jutsu if available and not already active
+            let npcJutsuName = null;
+            if (npc.name === "Haku" && jutsuList["Needle Assault"]) {
+                npcJutsuName = "Needle Assault";
+            } else if (npc.name === "Corrupted Haku" && jutsuList["Corrupted Needle Assault"]) {
+                npcJutsuName = "Corrupted Needle Assault";
+            } else if (Array.isArray(npc.jutsu) && npc.jutsu.length > 0) {
+                npcJutsuName = npc.jutsu[0];
+            } else {
+                npcJutsuName = 'Attack';
+            }
+            const jutsu = jutsuList[npcJutsuName];
+            if (jutsu?.roundBased) {
+                if (!npcActiveJutsus[npcJutsuName]) {
+                    if ((npc.chakra || 0) < (jutsu.chakraCost || 0)) {
+                        npcAction = {
+                            damage: 0,
+                            heal: 0,
+                            description: `${npc.name} failed to perform ${jutsu.name} (not enough chakra)`,
+                            specialEffects: ["Not enough chakra!"],
+                            hit: false,
+                            jutsuUsed: npcJutsuName
+                        };
+                    } else {
+                        npc.chakra -= jutsu.chakraCost || 0;
+                        npcActiveJutsus[npcJutsuName] = { round: 1 };
+                        const roundEffect = BattleUtils.getRoundEffect(jutsu.roundEffects, 1);
+                        let desc = roundEffect?.description || "";
+                        desc = desc
+                            .replace(/\buser\b/gi, npc.name)
+                            .replace(/\btarget\b/gi, `<@${player.id}>`)
+                            .replace(/\[Player\]/g, npc.name)
+                            .replace(/\[Enemy\]/g, player.username);
+                        npcRoundBasedSummaries.push({
+                            desc: desc,
+                            effects: []
+                        });
+                        npcAction = {
+                            damage: 0,
+                            heal: 0,
+                            description: desc,
+                            specialEffects: [],
+                            hit: true,
+                            jutsuUsed: npcJutsuName,
+                            isRoundBased: true,
+                            roundBasedDesc: desc,
+                            roundBasedEffects: []
+                        };
+                    }
+                }
+            } else {
+                const npcJutsu = jutsu || { name: "Attack", damage: "target.power", chakraCost: 0, type: "damage" };
+                npcAction = { damage: 0, heal: 0, description: `${npc.name} attacks!`, hit: true };
+                if ((npc.chakra || 0) >= (npcJutsu.chakraCost || 0)) {
+                    npc.chakra -= npcJutsu.chakraCost;
+                    if (npcJutsu.type === 'damage' || (npcJutsu.effects && npcJutsu.effects.some(e => e.type === 'damage'))) {
+                        const { damage, hit } = effectHandlers.damage(npc, player, npcJutsu.damage || (npcJutsu.effects && npcJutsu.effects[0].formula) || "npc.power");
+                        npcAction.damage = damage;
+                        npcAction.hit = hit;
+                        npcAction.description = `${npc.name} used ${npcJutsu.name}${hit ? ` ` : " but missed!"}`;
+                    }
+                    // Add more effect types as needed
+                }
+            }
+        }
+        player.health -= npcAction.damage || 0;
+
+        // --- ROUND SUMMARY PATCH ---
+        // Add round-based summaries to the embed
+        const roundBasedText = (summaries) => {
+            if (!summaries || !summaries.length) return "";
+            return summaries.map(s => {
+                let txt = `\n${s.desc}`;
+                if (s.effects && s.effects.length) {
+                    txt += `\nEffects: ${s.effects.join(', ')}`;
+                }
+                return txt;
+            }).join('\n');
+        };
+
+        const summaryEmbed = new EmbedBuilder()
+            .setTitle(`Round: ${roundNum}!`)
+            .setColor('#006400')
+            .setDescription(
+                `${player.username} ${playerAction.description}` +
+                `${playerAction.damage ? ` for ${Math.round(playerAction.damage)}!` : playerAction.heal ? ` for ${Math.round(playerAction.heal)} HP!` : '!'}` +
+                (comboCompletedThisRound ? comboDamageText : "") +
+                roundBasedText(playerRoundBasedSummaries) +
+                `\n\n${npc.name} ${npcAction.description}` +
+                `${npcAction.damage ? ` for ${Math.round(npcAction.damage)}!` : npcAction.heal ? ` for ${Math.round(npcAction.heal)} HP!` : '!'}` +
+                roundBasedText(npcRoundBasedSummaries)
+            )
+            .addFields({
+                name: 'Battle Status',
+                value: `${player.username} | ${Math.round(player.health)} HP | ${player.chakra} Chakra\n${npc.name} | ${Math.round(npc.currentHealth ?? npc.health)} HP | ${npc.chakra} Chakra`
+            });
+
+        await interaction.followUp({ embeds: [summaryEmbed] });
+
+        // Clear round-based summaries after displaying
+        playerRoundBasedSummaries = [];
+        npcRoundBasedSummaries = [];
+
+        // Passive chakra regen
+        player.chakra += CHAKRA_REGEN[player.rank] || 1;
+        npc.chakra += 2;
+
+        // --- CHECK FOR END ---
+        if (player.health <= 0) {
+            await interaction.followUp(`**You have been defeated by ${bossName}! Game Over.**`);
+            return "loss";
+        }
+        if (npc.currentHealth <= 0) {
+            await interaction.followUp(`**${bossName} has been defeated! You win!**`);
+            // --- REWARD EMBED (brank.js style) ---
+            const expReward = bossConfig.exp;
+            const moneyReward = bossConfig.money;
+            // --- Actually add exp/money to user and save ---
+            users[userId].exp = (users[userId].exp || 0) + expReward;
+            users[userId].money = (users[userId].money || 0) + moneyReward;
+
+            // --- Haku/Corrupted Haku scroll drop logic ---
+            const jutsuPath = path.resolve(__dirname, '../../menma/data/jutsu.json');
+            let jutsuData = {};
+            if (fs.existsSync(jutsuPath)) jutsuData = JSON.parse(fs.readFileSync(jutsuPath, 'utf8'));
+            if (!jutsuData[userId]) jutsuData[userId] = {};
+            if (!jutsuData[userId].scrolls) jutsuData[userId].scrolls = [];
+
+            if (bossName === "Haku") {
+                users[userId].hakuDefeats = (users[userId].hakuDefeats || 0) + 1;
+                // On 5th win, give Needle Assault Scroll
+                if (users[userId].hakuDefeats === 5 && !jutsuData[userId].scrolls.includes("Needle Assault Scroll")) {
+                    jutsuData[userId].scrolls.push("Needle Assault Scroll");
+                }
+            }
+            if (bossName === "Corrupted Haku") {
+                users[userId].corruptHakuDefeats = (users[userId].corruptHakuDefeats || 0) + 1;
+                // On 10th corrupt win, give Corrupted Needle Assault Scroll
+                if (users[userId].corruptHakuDefeats === 10 && !jutsuData[userId].scrolls.includes("Corrupted Needle Assault Scroll")) {
+                    jutsuData[userId].scrolls.push("Corrupted Needle Assault Scroll");
+                }
+            }
+            // Save users and jutsu
+            fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
+            fs.writeFileSync(jutsuPath, JSON.stringify(jutsuData, null, 2));
+
+            const rewardEmbed = new EmbedBuilder()
+                .setTitle(`Battle End! ${player.username} has won!`)
+                .setDescription(
+                    `<@${userId}> has earned ${expReward} exp!\n<@${userId}> has earned $${moneyReward.toLocaleString()}!`
+                )
+                .setColor('#006400');
+            await interaction.followUp({ embeds: [rewardEmbed] });
+            return "win";
+        }
+
+        roundNum++;
+    }
+    return "unknown";
+}
+
+// --- STORY HANDLER (future-proof, all buttons on webhook) ---
+async function runStoryAndBattle(bossId, bossConfig, phase2Config = null) {
+    let asumaWebhook, hakuWebhook, kagamiWebhook, hakuCorruptWebhook, zabuzaWebhook, orochimaruWebhook;
+    if (bossId === "haku") {
+        asumaWebhook = await getCharacterWebhook(interaction.channel, "Asuma", ASUMA_AVATAR);
+        hakuWebhook = await getCharacterWebhook(interaction.channel, "Haku", HAKU_AVATAR);
+        kagamiWebhook = await getCharacterWebhook(interaction.channel, "Kagami", KAGAMI_AVATAR);
+        hakuCorruptWebhook = await getCharacterWebhook(interaction.channel, "Corrupted Haku", HAKU_CORRUPT_AVATAR);
+    }
+    // Future-proof: add for Zabuza/Orochimaru
+    if (bossId === "zabuza") {
+        zabuzaWebhook = await getCharacterWebhook(interaction.channel, "Zabuza", srankBosses.zabuza.image);
+    }
+    if (bossId === "orochimaru") {
+        orochimaruWebhook = await getCharacterWebhook(interaction.channel, "Orochimaru", srankBosses.orochimaru.image);
+    }
+
+    let skipStory = false;
+    if (bossId === "haku") {
+        // Asuma intro + story
+        const storyRow = new ActionRowBuilder()
+            .addComponents(
+                new ButtonBuilder().setCustomId('haku_story_continue').setLabel('Continue').setStyle(ButtonStyle.Primary),
+                new ButtonBuilder().setCustomId('haku_story_skip').setLabel('Skip').setStyle(ButtonStyle.Secondary)
+            );
+        const asumaMsg = await asumaWebhook.send({
+            content: "Venturing on your first S-rank? I'll tag along. Just to be safe. Let me tell you about Haku...",
+            components: [storyRow]
+        });
+        const storyChoice = await new Promise(resolve => {
+            const storyCollector = asumaMsg.createMessageComponentCollector({
+                filter: btn => btn.user.id === userId && (btn.customId === 'haku_story_continue' || btn.customId === 'haku_story_skip'),
+                time: 60000
+            });
+            storyCollector.on('collect', btn => {
+                btn.deferUpdate();
+                resolve(btn.customId);
+                storyCollector.stop();
+            });
+            storyCollector.on('end', (_, reason) => {
+                if (reason === 'time') resolve('haku_story_skip');
+            });
+        });
+        skipStory = (storyChoice === 'haku_story_skip');
+    }
+
+    if (skipStory) {
+        await asumaWebhook.send({ content: "You skip the story and head straight into battle with Haku." });
+        const fightRow = new ActionRowBuilder().addComponents(
+            new ButtonBuilder().setCustomId('haku_story_fight1').setLabel('Fight').setStyle(ButtonStyle.Danger)
+        );
+        const fightMsg = await asumaWebhook.send({ content: "Look. That's Haku, ready?", components: [fightRow] });
+        await new Promise(resolve => {
+            const c = fightMsg.createMessageComponentCollector({
+                filter: btn => btn.user.id === userId && btn.customId === 'haku_story_fight1',
+                time: 60000
+            });
+            c.on('collect', btn => { btn.deferUpdate(); resolve(); c.stop(); });
+            c.on('end', (_, reason) => { if (reason === 'time') resolve(); });
+        });
+    } else if (bossId === "haku") {
+        // Story sequence, all buttons on webhooks, more divisions
+        // 1. Asuma tells Haku's story
+        for (const loreLine of bossConfig.lore) {
+            await asumaWebhook.send({ content: loreLine });
+            await new Promise(res => setTimeout(res, 2500)); // Increased delay
+        }
+        // 2. Ready prompt
+        const fightRow = new ActionRowBuilder().addComponents(
+            new ButtonBuilder().setCustomId('haku_story_ready').setLabel('Ready').setStyle(ButtonStyle.Primary)
+        );
+        const readyMsg = await asumaWebhook.send({ content: "Look. That's Haku, ready?", components: [fightRow] });
+        await new Promise(resolve => {
+            const c = readyMsg.createMessageComponentCollector({
+                filter: btn => btn.user.id === userId && btn.customId === 'haku_story_ready',
+                time: 60000
+            });
+            c.on('collect', btn => { btn.deferUpdate(); resolve(); c.stop(); });
+            c.on('end', (_, reason) => { if (reason === 'time') resolve(); });
+        });
+        // 3. Haku dialogue
+        await hakuWebhook.send({ content: "Nobody hurts Zabuza!" });
+        await new Promise(res => setTimeout(res, 2500));
+        await hakuWebhook.send({ content: "Another Shinobi attempting to kill Zabuza? I will kill you instead!" });
+        await new Promise(res => setTimeout(res, 2500));
+        // 4. Fight button on Haku webhook
+        const fightRow2 = new ActionRowBuilder().addComponents(
+            new ButtonBuilder().setCustomId('haku_story_fight').setLabel('Fight').setStyle(ButtonStyle.Danger)
+        );
+        const fightMsg = await hakuWebhook.send({ content: "Prepare yourself!", components: [fightRow2] });
+        await new Promise(resolve => {
+            const c = fightMsg.createMessageComponentCollector({
+                filter: btn => btn.user.id === userId && btn.customId === 'haku_story_fight',
+                time: 60000
+            });
+            c.on('collect', btn => { btn.deferUpdate(); resolve(); c.stop(); });
+            c.on('end', (_, reason) => { if (reason === 'time') resolve(); });
+        });
+    }
+    // --- PHASE 1 BATTLE ---
+    let phase1Result = await runSrankBattle(
+        interaction, users, userId, players, jutsuList, bossConfig, HAKU_BG, HAKU_AVATAR, bossConfig.name
+    );
+    if (bossId === "haku" && phase1Result === "win") {
+        // 5. Death & corruption sequence
+        await hakuWebhook.send({ content: "*coughs up blood* I...*cough*" });
+        await new Promise(res => setTimeout(res, 2500));
+        await asumaWebhook.send({ content: `<@${userId}> I feel a very strange power heading towards us, we should leave immediately.` });
+        await new Promise(res => setTimeout(res, 2500));
+        // Corrupt BG
+        await interaction.channel.send({ content: "Suddenly, the area turns into a hellish place...", files: [], embeds: [], components: [], allowedMentions: { parse: [] }, ephemeral: false });
+        // 6. Kagami appears, more mockery
+        await kagamiWebhook.send({ content: "Oh? Look at this weakling being defeated by a mere Shinobi." });
+        await new Promise(res => setTimeout(res, 2500));
+        await kagamiWebhook.send({ content: "You think you can change fate? How amusing. My puppets will always rise again." });
+        await new Promise(res => setTimeout(res, 2500));
+        await kagamiWebhook.send({ content: "*extends a hand towards Haku, purplish energy swirls*" });
+        await new Promise(res => setTimeout(res, 2500));
+        await hakuCorruptWebhook.send({ content: "Master...Revenge." });
+        await new Promise(res => setTimeout(res, 2500));
+        // Fight button on Corrupted Haku webhook
+        const fightRow = new ActionRowBuilder().addComponents(
+            new ButtonBuilder().setCustomId('haku_story_fight2').setLabel('Fight').setStyle(ButtonStyle.Danger)
+        );
+        const fightMsg = await hakuCorruptWebhook.send({ content: "You will not leave alive.", components: [fightRow] });
+        await new Promise(resolve => {
+            const c = fightMsg.createMessageComponentCollector({
+                filter: btn => btn.user.id === userId && btn.customId === 'haku_story_fight2',
+                time: 60000
+            });
+            c.on('collect', btn => { btn.deferUpdate(); resolve(); c.stop(); });
+            c.on('end', (_, reason) => { if (reason === 'time') resolve(); });
+        });
+        // --- PHASE 2 BATTLE ---
+        let phase2Result = await runSrankBattle(
+            interaction, users, userId, players, jutsuList,
+            phase2Config || {
+                ...bossConfig,
+                name: "Corrupted Haku",
+                image: HAKU_CORRUPT_AVATAR,
+                jutsu: ["Corrupted Needle Assault"],
+                health: 3500,
+                power: 1300,
+                defense: 700,
+                exp: 3.5,
+                money: 15000
+            },
+            HAKU_CORRUPT_BG, HAKU_CORRUPT_AVATAR, "Corrupted Haku"
+        );
+        if (phase2Result === "win") {
+            await kagamiWebhook.send({ content: "Hmm..Not half bad. Let me go prepare my other puppet...Zabuza. Until next time then, Shinobi." });
+        }
+    }
+    // --- Future-proof: Zabuza/Orochimaru story structure ---
+    if (bossId === "zabuza") {
+        for (const loreLine of bossConfig.lore) {
+            await zabuzaWebhook.send({ content: loreLine });
+            await new Promise(res => setTimeout(res, 2500));
+        }
+        const fightRow = new ActionRowBuilder().addComponents(
+            new ButtonBuilder().setCustomId('zabuza_story_fight').setLabel('Fight').setStyle(ButtonStyle.Danger)
+        );
+        const fightMsg = await zabuzaWebhook.send({ content: "Ready to face the Demon of the Mist?", components: [fightRow] });
+        await new Promise(resolve => {
+            const c = fightMsg.createMessageComponentCollector({
+                filter: btn => btn.user.id === userId && btn.customId === 'zabuza_story_fight',
+                time: 60000
+            });
+            c.on('collect', btn => { btn.deferUpdate(); resolve(); c.stop(); });
+            c.on('end', (_, reason) => { if (reason === 'time') resolve(); });
+        });
+        await runSrankBattle(
+            interaction, users, userId, players, jutsuList, bossConfig, bossConfig.image, bossConfig.image, bossConfig.name
+        );
+    }
+    if (bossId === "orochimaru") {
+        for (const loreLine of bossConfig.lore) {
+            await orochimaruWebhook.send({ content: loreLine });
+            await new Promise(res => setTimeout(res, 2500));
+        }
+        const fightRow = new ActionRowBuilder().addComponents(
+            new ButtonBuilder().setCustomId('orochimaru_story_fight').setLabel('Fight').setStyle(ButtonStyle.Danger)
+        );
+        const fightMsg = await orochimaruWebhook.send({ content: "Step forward if you dare.", components: [fightRow] });
+        await new Promise(resolve => {
+            const c = fightMsg.createMessageComponentCollector({
+                filter: btn => btn.user.id === userId && btn.customId === 'orochimaru_story_fight',
+                time: 60000
+            });
+            c.on('collect', btn => { btn.deferUpdate(); resolve(); c.stop(); });
+            c.on('end', (_, reason) => { if (reason === 'time') resolve(); });
+        });
+        await runSrankBattle(
+            interaction, users, userId, players, jutsuList, bossConfig, bossConfig.image, bossConfig.image, bossConfig.name
+        );
+    }
+}

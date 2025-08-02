@@ -34,7 +34,11 @@
       "Fireball Jutsu",
       "Great Forest Crumbling",
       "Creation Rebirth",
-      "Cherry Blossom Impact"
+      "Cherry Blossom Impact",
+      "One Thousand Years of Death",
+      "Burning Ash",
+      "Lord of Bloodsea",
+      "The Grand Rebellion"
     ],
     "combos": [
       "Basic Combo",
@@ -179,7 +183,8 @@
     "combos": [
       "Basic Combo"
     ],
-    "rankeditems": []
+    "rankeditems": [],
+    "scrolls": []
   },
   "1132693590066331828": {
     "usersjutsu": [
@@ -238,6 +243,16 @@
     "rankeditems": []
   },
   "874591871412879361": {
+    "usersjutsu": [
+      "Transformation Jutsu"
+    ]
+  },
+  "1210567723097001996": {
+    "usersjutsu": [
+      "Transformation Jutsu"
+    ]
+  },
+  "254833691438743552": {
     "usersjutsu": [
       "Transformation Jutsu"
     ]

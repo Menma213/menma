@@ -226,14 +226,16 @@ const effectHandlers = {
             }
         };
 
-        for (const [stat, formulaOrValue] of Object.entries(statsDefinition)) {
-            try {
-                changes[stat] = typeof formulaOrValue === 'number' 
-                    ? formulaOrValue 
-                    : Math.floor(math.evaluate(formulaOrValue, context));
-            } catch (err) {
-                console.error(`Buff formula error for ${stat}: ${formulaOrValue}`, err);
-                changes[stat] = 0;
+        if (statsDefinition && typeof statsDefinition === 'object') {
+            for (const [stat, formulaOrValue] of Object.entries(statsDefinition)) {
+                try {
+                    changes[stat] = typeof formulaOrValue === 'number' 
+                        ? formulaOrValue 
+                        : Math.floor(math.evaluate(formulaOrValue, context));
+                } catch (err) {
+                    console.error(`Buff formula error for ${stat}: ${formulaOrValue}`, err);
+                    changes[stat] = 0;
+                }
             }
         }
         return changes;
@@ -371,6 +373,36 @@ const HOKAGE_TRIALS = [
     }
 ];
 
+// Bloodline emoji/gif/name/department definitions (copied from srank.js/brank.js)
+const BLOODLINE_EMOJIS = {
+    Uchiha: "🩸",
+    Hyuga: "👁️",
+    Uzumaki: "🌀",
+    Senju: "🌳",
+    Nara: "🪙"
+};
+const BLOODLINE_GIFS = {
+    Uchiha: "https://media.tenor.com/0QwQvQkQwQwAAAAd/sharingan.gif",
+    Hyuga: "https://media.tenor.com/Hyuga.gif",
+    Uzumaki: "https://media.tenor.com/Uzumaki.gif",
+    Senju: "https://media.tenor.com/Senju.gif",
+    Nara: "https://media.tenor.com/Nara.gif"
+};
+const BLOODLINE_NAMES = {
+    Uchiha: "Sharingan",
+    Hyuga: "Byakugan",
+    Uzumaki: "Uzumaki Will",
+    Senju: "Hyper Regeneration",
+    Nara: "Battle IQ"
+};
+const BLOODLINE_DEPARTMENTS = {
+    Uchiha: "A crimson aura flickers in your eyes.",
+    Hyuga: "Your veins bulge as your vision sharpens.",
+    Uzumaki: "A spiral of energy wells up from deep within.",
+    Senju: "Your body pulses with ancient vitality.",
+    Nara: "Your mind sharpens, calculating every move."
+};
+
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('trials')
@@ -426,9 +458,21 @@ module.exports = {
             dodge: 0
         };
 
+        // Add this line to get bloodline and check validity
+        const playerBloodline = player.bloodline;
+        const knownBloodlines = Object.keys(BLOODLINE_NAMES);
+
         let currentTrialIndex = 0;
         let battleActive = true;
         let userLost = false;
+        // Fix: Declare bloodlineActive and bloodlineRoundsLeft before use
+        let bloodlineActive = false;
+        let bloodlineRoundsLeft = 0;
+        let bloodlineUsed = false;
+
+        // --- Add round-based jutsu tracking ---
+        let playerActiveJutsus = {};
+        let playerRoundBasedSummaries = [];
 
         // --- Battle loop, no try/catch wrapper ---
         let firstBattle = true;
@@ -495,19 +539,79 @@ module.exports = {
             }
 
             // Canvas-based battle image generator (brank.js style)
-            const generateBattleImage = async (player, npc, playerHealth, npcHealth, interaction) => {
+            // PATCH: Use brank.js-style custom background and robust image loading
+            const generateBattleImage = async (player, npc, playerHealth, npcHealth, interaction, roundNum = 1) => {
                 const width = 800, height = 400;
                 const canvas = createCanvas(width, height);
                 const ctx = canvas.getContext('2d');
 
-                // Load images
-                const bgUrl = 'https://i.pinimg.com/originals/5d/e5/62/5de5622ecdd4e24685f141f10e4573e3.jpg';
-                const enemyImgUrl = npc.image || 'https://i.pinimg.com/736x/10/92/b0/1092b0aea71f620c1ed7fffe7a8704c1.jpg';
-                const avatarUrl = getUserAvatarUrl(interaction.user);
+                // --- Custom background handling like brank.js ---
+                let bgUrl = 'https://i.pinimg.com/originals/5d/e5/62/5de5622ecdd4e24685f141f10e4573e3.jpg';
+                let customBg = null;
 
-                const bg = await loadImage(bgUrl);
-                const enemyImg = await loadImage(enemyImgUrl);
-                const playerImg = await loadImage(avatarUrl);
+                // PATCH: Check active jutsus for custombackground for this round
+                // 1. Check round-based jutsu (playerActiveJutsus)
+                for (const jName of Object.keys(playerActiveJutsus)) {
+                    const jutsu = jutsuList[jName];
+                    if (jutsu && jutsu.custombackground && playerActiveJutsus[jName].round >= jutsu.custombackground.round) {
+                        customBg = jutsu.custombackground.url;
+                        break;
+                    }
+                }
+                // 2. Check if any jutsu used this round (single-use, not round-based) has a custombackground for this round
+                if (!customBg && typeof player.lastUsedJutsu === 'string') {
+                    const jutsu = jutsuList[player.lastUsedJutsu];
+                    if (jutsu && jutsu.custombackground && roundNum >= jutsu.custombackground.round) {
+                        customBg = jutsu.custombackground.url;
+                    }
+                }
+                if (customBg) bgUrl = customBg;
+
+                // --- AVATAR PATCH (from brank.js) ---
+                let playerImgUrl;
+                if (interaction.user.avatar) {
+                    playerImgUrl = `https://cdn.discordapp.com/avatars/${interaction.user.id}/${interaction.user.avatar}.png?size=256`;
+                } else {
+                    const defaultAvatarNumber = parseInt(interaction.user.discriminator) % 5;
+                    playerImgUrl = `https://cdn.discordapp.com/embed/avatars/${defaultAvatarNumber}.png`;
+                }
+                let npcImgUrl = npc.image || 'https://i.pinimg.com/736x/10/92/b0/1092b0aea71f620c1ed7fffe7a8704c1.jpg';
+
+                // Robust image loading (like brank.js)
+                async function robustLoadImage(url) {
+                    try {
+                        return await loadImage(url);
+                    } catch {
+                        // fallback: try to download and load from disk if needed
+                        const https = require('https');
+                        const tmpDir = path.resolve(__dirname, '../images/tmp');
+                        if (!fs.existsSync(tmpDir)) fs.mkdirSync(tmpDir, { recursive: true });
+                        const tmpFile = path.join(tmpDir, `img_${Date.now()}_${Math.floor(Math.random()*10000)}.png`);
+                        await new Promise((resolve, reject) => {
+                            const file = fs.createWriteStream(tmpFile);
+                            https.get(url, res => {
+                                if (res.statusCode !== 200) {
+                                    file.close(() => {});
+                                    try { fs.unlinkSync(tmpFile); } catch {}
+                                    return reject(new Error(`Failed to download image: ${url}`));
+                                }
+                                res.pipe(file);
+                                file.on('finish', () => file.close(resolve));
+                            }).on('error', err => {
+                                file.close(() => {});
+                                try { fs.unlinkSync(tmpFile); } catch {}
+                                reject(err);
+                            });
+                        });
+                        const img = await loadImage(tmpFile);
+                        try { fs.unlinkSync(tmpFile); } catch {}
+                        return img;
+                    }
+                }
+
+                const bgImg = await robustLoadImage(bgUrl);
+                const enemyImg = await robustLoadImage(npcImgUrl);
+                const playerImg = await robustLoadImage(playerImgUrl);
 
                 // Positions and sizes
                 const charW = 150, charH = 150;
@@ -517,7 +621,7 @@ module.exports = {
                 const nameH = 28, barH = 22;
 
                 // Draw background
-                ctx.drawImage(bg, 0, 0, width, height);
+                ctx.drawImage(bgImg, 0, 0, width, height);
 
                 // Draw NPC character (rounded rect)
                 ctx.save();
@@ -705,9 +809,21 @@ module.exports = {
                 return jutsuNames[idx];
             };
 
-            // ...executeJutsu, processPlayerMove, npcChooseMove, getEffectiveStats: same as brank.js...
+            // --- PATCH: Add round-based jutsu support for player ---
+            // Helper to get round effect for a round-based jutsu
+            function getRoundEffect(roundEffects, currentRound) {
+                for (const [roundRange, effectData] of Object.entries(roundEffects)) {
+                    const [start, end] = roundRange.split('-').map(Number);
+                    if ((end && currentRound >= start && currentRound <= end) ||
+                        (!end && currentRound === start)) {
+                        return effectData;
+                    }
+                }
+                return null;
+            }
 
-            const executeJutsu = (baseUser, baseTarget, effectiveUser, effectiveTarget, jutsuName) => {
+            // PATCH: Update executeJutsu to support round-based jutsu activation for player and collect round-based summaries
+            const executeJutsu = (baseUser, baseTarget, effectiveUser, effectiveTarget, jutsuName, currentRound = 1, isRoundBasedActivation = false) => {
                 const jutsu = jutsuList[jutsuName];
                 if (!jutsu) {
                     return {
@@ -717,6 +833,126 @@ module.exports = {
                         specialEffects: ["Jutsu failed!"],
                         hit: false,
                         jutsuUsed: jutsuName
+                    };
+                }
+
+                // --- PATCH: Handle round-based jutsu activation for player only ---
+                if (jutsu.roundBased && baseUser === player) {
+                    // Only deduct chakra on first activation
+                    if (isRoundBasedActivation) {
+                        if ((baseUser.chakra || 0) < (jutsu.chakraCost || 0)) {
+                            return {
+                                damage: 0,
+                                heal: 0,
+                                description: `${baseUser.name} failed to perform ${jutsu.name} (not enough chakra)`,
+                                specialEffects: ["Chakra exhausted!"],
+                                hit: false,
+                                jutsuUsed: jutsuName
+                            };
+                        }
+                        baseUser.chakra -= jutsu.chakraCost || 0;
+                    }
+
+                    // Determine round number for this jutsu
+                    const roundNum = isRoundBasedActivation ? 1 : (playerActiveJutsus[jutsuName]?.round || 1);
+
+                    const roundEffect = getRoundEffect(jutsu.roundEffects, roundNum);
+                    let desc = "";
+                    let effectsSummary = [];
+                    let damage = 0, heal = 0, hit = true;
+
+                    if (roundEffect) {
+                        // Replace placeholders in description
+                        desc = roundEffect.description
+                            .replace(/\buser\b/gi, `<@${baseUser.id || userId}>`)
+                            .replace(/\btarget\b/gi, baseTarget.name)
+                            .replace(/\[Player\]/g, baseUser.name)
+                            .replace(/\[Enemy\]/g, baseTarget.name);
+
+                        // Apply effects if present
+                        if (roundEffect.effects) {
+                            roundEffect.effects.forEach(effect => {
+                                let tempResult = { damage: 0, heal: 0, specialEffects: [], hit: true };
+                                switch (effect.type) {
+                                    case 'damage':
+                                        const damageResult = effectHandlers.damage(effectiveUser, effectiveTarget, effect.formula, effect);
+                                        tempResult.damage += damageResult.damage;
+                                        tempResult.hit = damageResult.hit;
+                                        if (damageResult.hit && damageResult.damage > 0) {
+                                            tempResult.specialEffects.push(`Dealt ${Math.round(damageResult.damage)} damage`);
+                                        } else if (!damageResult.hit) {
+                                            tempResult.specialEffects.push("Attack missed!");
+                                        }
+                                        break;
+                                    case 'buff':
+                                        const buffChanges = effectHandlers.buff(baseUser, effect.stats);
+                                        if (!baseUser.activeEffects) baseUser.activeEffects = [];
+                                        baseUser.activeEffects.push({
+                                            type: 'buff',
+                                            stats: buffChanges,
+                                            duration: effect.duration || 1
+                                        });
+                                        tempResult.specialEffects.push(`Gained buffs: ${Object.entries(buffChanges)
+                                            .map(([k, v]) => `${k}: +${v}`)
+                                            .join(', ')} for ${effect.duration || 1} turns`);
+                                        break;
+                                    case 'debuff':
+                                        const debuffChanges = effectHandlers.debuff(baseTarget, effect.stats);
+                                        if (!baseTarget.activeEffects) baseTarget.activeEffects = [];
+                                        baseTarget.activeEffects.push({
+                                            type: 'debuff',
+                                            stats: debuffChanges,
+                                            duration: effect.duration || 1
+                                        });
+                                        tempResult.specialEffects.push(`Applied debuffs: ${Object.entries(debuffChanges)
+                                            .map(([k, v]) => `${k}: ${v}`)
+                                            .join(', ')} for ${effect.duration || 1} turns`);
+                                        break;
+                                    case 'heal':
+                                        const healAmount = effectHandlers.heal(effectiveUser, effect.formula);
+                                        tempResult.heal += healAmount;
+                                        if (healAmount > 0) {
+                                            tempResult.specialEffects.push(`Healed ${Math.round(healAmount)} HP`);
+                                        }
+                                        break;
+                                    case 'status':
+                                        if (!baseTarget.activeEffects) baseTarget.activeEffects = [];
+                                        baseTarget.activeEffects.push({
+                                            type: 'status',
+                                            status: effect.status,
+                                            duration: effect.duration || 1,
+                                            damagePerTurn: effect.damagePerTurn
+                                        });
+                                        tempResult.specialEffects.push(`Applied ${effect.status} for ${effect.duration || 1} turns`);
+                                        break;
+                                }
+                                damage += tempResult.damage || 0;
+                                heal += tempResult.heal || 0;
+                                if (tempResult.specialEffects.length) effectsSummary.push(...tempResult.specialEffects);
+                                if (tempResult.hit === false) hit = false;
+                            });
+                        }
+                    } else {
+                        desc = `${baseUser.name}'s ${jutsu.name} is inactive this round.`;
+                        hit = false;
+                    }
+
+                    // PATCH: Push round-based summary for display in embed
+                    playerRoundBasedSummaries.push({
+                        desc: desc,
+                        effects: effectsSummary
+                    });
+
+                    return {
+                        damage,
+                        heal,
+                        description: desc,
+                        specialEffects: effectsSummary,
+                        hit,
+                        jutsuUsed: jutsuName,
+                        isRoundBased: true,
+                        roundBasedDesc: desc,
+                        roundBasedEffects: effectsSummary
                     };
                 }
 
@@ -876,6 +1112,19 @@ module.exports = {
                         specialEffects: [],
                         hit: false
                     };
+                }
+                // PATCH: Activate round-based jutsu if not already active
+                if (jutsu?.roundBased && !playerActiveJutsus[jutsuName]) {
+                    const result = executeJutsu(basePlayer, baseNpc, effectivePlayer, effectiveNpc, jutsuName, 1, true);
+                    if (result.hit) {
+                        playerActiveJutsus[jutsuName] = { round: 1 };
+                        playerRoundBasedSummaries.push({
+                            desc: result.roundBasedDesc,
+                            effects: result.roundBasedEffects
+                        });
+                    }
+                    result.jutsuUsed = jutsuName;
+                    return result;
                 }
                 return executeJutsu(basePlayer, baseNpc, effectivePlayer, effectiveNpc, jutsuName);
             };
@@ -1091,16 +1340,30 @@ module.exports = {
                     }
                 }
 
+                // PATCH: Add round-based jutsu summaries to round summary embed
+                const roundBasedText = (summaries) => {
+                    if (!summaries || !summaries.length) return "";
+                    return summaries.map(s => {
+                        let txt = `\n${s.desc}`;
+                        if (s.effects && s.effects.length) {
+                            txt += `\nEffects: ${s.effects.join(', ')}`;
+                        }
+                        return txt;
+                    }).join('\n');
+                };
+
+                // PATCH: Update createBattleSummary to include round-based summaries
                 const embed = new EmbedBuilder()
                     .setTitle(`Round: ${roundNum}!`)
                     .setColor('#006400')
                     .setDescription(
                         `${playerEffectEmojis}@${player.name} ${playerDesc}` +
                         `${playerAction.damage ? ` for ${Math.round(playerAction.damage)}!` : playerAction.heal ? ` for ${Math.round(playerAction.heal)} HP!` : '!'}` +
+                        roundBasedText(playerRoundBasedSummaries) +
                         `\n\n${npcEffectEmojis}${npcDesc}` +
-                        `${npcAction.damage ? ` for ${Math.round(npcAction.damage)}!` : npcAction.heal ? ` for ${Math.round(npcAction.heal)} HP!` : '!'}`
-                        + (statusEffects.length ? `\n\n${statusEffects.join('\n')}` : '')
-                        + comboProgressText
+                        `${npcAction.damage ? ` for ${Math.round(npcAction.damage)}!` : npcAction.heal ? ` for ${Math.round(npcAction.heal)} HP!` : '!'}` +
+                        (statusEffects.length ? `\n\n${statusEffects.join('\n')}` : '') +
+                        comboProgressText
                     )
                     .addFields({
                         name: 'Battle Status',
@@ -1134,6 +1397,122 @@ module.exports = {
                     entity.activeEffects = entity.activeEffects.filter(e => !e.duration || e.duration > 0);
                 });
 
+                // --- Bloodline ability auto-activation (main player only, passive for Nara) ---
+                let bloodlineEmbed = null;
+
+                // Only run bloodline logic if playerBloodline is valid
+                if (playerBloodline && knownBloodlines.includes(playerBloodline)) {
+                    // Nara is always passive
+                    if (playerBloodline === "Nara") {
+                        player.chakra += 3;
+                        bloodlineEmbed = new EmbedBuilder()
+                            .setTitle("Battle IQ")
+                            .setDescription(`${BLOODLINE_DEPARTMENTS[playerBloodline]}\n\n<@${player.id || userId}> activates **${BLOODLINE_NAMES[playerBloodline]}**!\nBattle IQ grants +3 chakra this round!`)
+                            .setImage(BLOODLINE_GIFS[playerBloodline])
+                            .setColor(0x8B4513);
+                        await interaction.followUp({ embeds: [bloodlineEmbed] });
+                    }
+
+                    // Uchiha bloodline rounds decrement
+                    if (playerBloodline === "Uchiha" && bloodlineActive) {
+                        bloodlineRoundsLeft--;
+                        if (bloodlineRoundsLeft <= 0) {
+                            bloodlineActive = false;
+                            player.accuracy = 100;
+                        }
+                    }
+
+                    // --- Auto-activate bloodline if threshold is met and not used ---
+                    if (!bloodlineUsed && playerBloodline && playerBloodline !== "Nara") {
+                        let shouldActivate = false;
+                        // Always use player.maxHealth for threshold checks
+                        const hp = typeof playerHealth === "number" ? playerHealth : 0;
+                        const maxHp = typeof player.maxHealth === "number" ? player.maxHealth : 100;
+                        const chakra = typeof player.chakra === "number" ? player.chakra : 0;
+                        switch (playerBloodline) {
+                            case "Senju":
+                                shouldActivate = hp <= maxHp * 0.5;
+                                break;
+                            case "Uzumaki":
+                                shouldActivate = hp <= maxHp * 0.5 && chakra < 15;
+                                break;
+                            case "Hyuga":
+                                shouldActivate = chakra >= 15 && npc.chakra > 0;
+                                break;
+                            case "Uchiha":
+                                shouldActivate = !bloodlineActive && hp <= maxHp * 0.5;
+                                break;
+                        }
+                        if (shouldActivate) {
+                            const flavor = BLOODLINE_DEPARTMENTS[playerBloodline] || "You feel a surge of power!";
+                            switch (playerBloodline) {
+                                case "Senju":
+                                    playerHealth = Math.min(hp + Math.floor(maxHp * 0.5), maxHp);
+                                    bloodlineEmbed = new EmbedBuilder()
+                                        .setTitle(BLOODLINE_NAMES[playerBloodline])
+                                        .setDescription(`${flavor}\n\nYou activate **${BLOODLINE_NAMES[playerBloodline]}**!\nHyper Regeneration restores 50% HP!`)
+                                        .setImage(BLOODLINE_GIFS[playerBloodline])
+                                        .setColor(0x8B4513);
+                                    bloodlineUsed = true;
+                                    break;
+                                case "Uzumaki":
+                                    player.chakra = 15;
+                                    bloodlineEmbed = new EmbedBuilder()
+                                        .setTitle(BLOODLINE_NAMES[playerBloodline])
+                                        .setDescription(`${flavor}\n\nYou activate **${BLOODLINE_NAMES[playerBloodline]}**!\nUzumaki Will surges, chakra set to 15!`)
+                                        .setImage(BLOODLINE_GIFS[playerBloodline])
+                                        .setColor(0x8B4513);
+                                    bloodlineUsed = true;
+                                    break;
+                                case "Hyuga":
+                                    {
+                                        const drained = Math.min(npc.chakra, 5);
+                                        npc.chakra -= drained;
+                                        player.chakra = Math.min(player.chakra + drained, 15);
+                                        bloodlineEmbed = new EmbedBuilder()
+                                            .setTitle(BLOODLINE_NAMES[playerBloodline])
+                                            .setDescription(`${flavor}\n\nYou activate **${BLOODLINE_NAMES[playerBloodline]}**!\nByakugan drains ${drained} chakra from the enemy!`)
+                                            .setImage(BLOODLINE_GIFS[playerBloodline])
+                                            .setColor(0x8B4513);
+                                    }
+                                    break;
+                                case "Uchiha":
+                                    player.accuracy = 100;
+                                    bloodlineActive = true;
+                                    bloodlineRoundsLeft = 2;
+                                    if (!npc.activeEffects) npc.activeEffects = [];
+                                    npc.activeEffects.push({
+                                        type: 'status',
+                                        status: 'stun',
+                                        duration: 2
+                                    });
+                                    bloodlineEmbed = new EmbedBuilder()
+                                        .setTitle(BLOODLINE_NAMES[playerBloodline])
+                                        .setDescription(`${flavor}\n\nYou activate **${BLOODLINE_NAMES[playerBloodline]}**!\nSharingan grants 100% accuracy and stuns the enemy for 2 rounds!`)
+                                        .setImage(BLOODLINE_GIFS[playerBloodline])
+                                        .setColor(0x8B4513);
+                                    bloodlineUsed = true;
+                                    break;
+                            }
+                            if (bloodlineEmbed) {
+                                await interaction.followUp({ embeds: [bloodlineEmbed] });
+                            }
+                        }
+                    }
+                } // End bloodline logic block
+
+                // PATCH: Add round-based jutsu summaries to round summary embed
+                const roundBasedText = (summaries) => {
+                    if (!summaries || !summaries.length) return "";
+                    return summaries.map(s => {
+                        let txt = `\n${s.desc}`;
+                        if (s.effects && s.effects.length) {
+                            txt += `\nEffects: ${s.effects.join(', ')}`;
+                        }
+                        return txt;
+                    }).join('\n');
+                };
+
                 const { embed, components } = createMovesEmbed();
                 const moveMessage = await interaction.followUp({
                     embeds: [embed],
@@ -1141,8 +1520,9 @@ module.exports = {
                     fetchReply: true
                 });
 
+                // PATCH: Pass roundNum to generateBattleImage, no customBgUrl param
                 const battleImage = new AttachmentBuilder(
-                    await generateBattleImage(player, npc, playerHealth, npcHealth, interaction)
+                    await generateBattleImage(player, npc, playerHealth, npcHealth, interaction, roundNum)
                 );
                 await interaction.followUp({ files: [battleImage] });
 
@@ -1157,6 +1537,7 @@ module.exports = {
                         await i.deferUpdate();
                         if (i.customId.startsWith('move')) {
                             const jutsuName = getJutsuByButton(i.customId);
+                            player.lastUsedJutsu = jutsuName; // PATCH: Track last used jutsu
                             const result = executeJutsu(player, npc, getEffectiveStats(player), getEffectiveStats(npc), jutsuName);
                             if (comboState?.combo.requiredJutsus.includes(jutsuName)) {
                                 comboState.usedJutsus.add(jutsuName);
@@ -1308,6 +1689,9 @@ module.exports = {
                     }
                     fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
                 }
+
+                // PATCH: After round, clear round-based summaries for next round
+                playerRoundBasedSummaries = [];
 
                 // Passive chakra regen
                 player.chakra += 2;

@@ -539,6 +539,275 @@
             "formula": "user.health * 0.7"
           }
         ]
-      }
-
+      },
+      "Corrupted Needle Assault": {
+        "name": "Corrupted Needle Assault",
+        "description": "Launches a barrage of cursed senbon needles that causes heavy bleeding",
+        "info": "Corrupted Haku launches cursed senbon needles at the opponent inflicting heavy bleed and dealing more damage.",
+        "chakraCost": 6,
+        "category": "S-Rank",
+        "effects": [
+            {
+                "type": "damage",
+                "formula": "3 * user.power / target.defense"
+            },
+            {
+                "type": "status",
+                "target": "target",
+                "status": "bleed",
+                "duration": 3,
+                "chance": 1.0,
+                "damagePerTurn": "target.health * 0.15"
+            }
+        ]
+    },
+    "Corrupted Ice Prison": {
+        "name": "Corrupted Ice Prison",
+        "description": "Traps the enemy in a cursed ice prison, stunning and draining chakra",
+        "info": "Corrupted Haku traps the opponent in a cursed ice prison, stunning them and draining chakra.",
+        "chakraCost": 8,
+        "category": "S-Rank",
+        "effects": [
+            {
+                "type": "status",
+                "target": "target",
+                "status": "stun",
+                "duration": 2,
+                "chance": 1.0
+            },
+            {
+                "type": "debuff",
+                "stats": {
+                    "chakra": 3
+                },
+                "duration": 1
+            }
+        ]
+    },
+    "Lord of Bloodsea": {
+  "name": "Lord of Bloodsea",
+  "description": "A multi-phase blood manipulation technique",
+  "chakraCost": 0,
+  "category": "Custom",
+  "image_url": "https://i.imgur.com/n7rnp0C.png",
+   "custombackground": {
+    "round": 2,
+    "url": "https://w0.peakpx.com/wallpaper/891/531/HD-wallpaper-akatsuki-scenery-red-anime-blood-moon-blood-moon-red-moon.jpg"
+  },
+  "roundBased": true,
+  "roundEffects": {
+    "1": {
+      "description": "A dense fog swirls, shapes shifting within, slowly revealing user's silhouette."
+    },
+    "2": {
+      "description": "The silhouette sharpens, crimson tendrils faintly visible as the figure solidifies."
+    },
+    "3": {
+      "description": "user slowly turns their head toward target with an empty gaze."
+    },
+    "4": {
+      "description": "user's pupils glow faintly red, a subtle but ominous sign."
+    },
+    "5": {
+      "description": "user lets out a quiet, unsettling giggle."
+    },
+    "6": {
+      "description": "Suddenly, user sprints toward target, closing the distance rapidly."
+    },
+    "7": {
+      "description": "user strikes target with a blood-infused sword slash, creating a small blood puddle at their feet.",
+      "effects": [
+        {
+          "type": "damage",
+          "formula": "user.power * 0.5"
+        }
+      ]
+    },
+    "8-16": {
+      "description": "user continues precise blood sword slashes, the blood puddle thickening into a swirling bloodpool.",
+      "effects": [
+        {
+          "type": "damage",
+          "formula": "user.power * 0.7"
+        },
+        {
+          "type": "status",
+          "status": "bleed",
+          "duration": 2,
+          "damagePerTurn": "target.health * 0.05"
+        }
+      ]
+    },
+    "17-25": {
+      "description": "Bloodpool grows, siphoning lifeforce as user's slashes grow relentless.",
+      "effects": [
+        {
+          "type": "damage",
+          "formula": "user.power * 0.9"
+        },
+        {
+          "type": "status",
+          "status": "bleed",
+          "duration": 2,
+          "damagePerTurn": "target.health * 0.07"
+        }
+      ]
+    },
+    "26-30": {
+      "description": "Blood tendrils crawl along user's back, initiating blood armor formation.",
+      "effects": [
+        {
+          "type": "buff",
+          "stats": {
+            "defense": "user.defense * 1.2"
+          },
+          "duration": 5
+        }
+      ]
+    },
+    "31-35": {
+      "description": "Blood armor solidifies, blood sword pulses with growing power.",
+      "effects": [
+        {
+          "type": "buff",
+          "stats": {
+            "defense": "user.defense * 1.3",
+            "power": "user.power * 1.1"
+          },
+          "duration": 5
+        },
+        {
+          "type": "status",
+          "status": "bleed",
+          "duration": 2,
+          "damagePerTurn": "target.health * 0.08"
+        }
+      ]
+    },
+    "36-40": {
+      "description": "Blood wings sprout from user's back, granting flight and dodge.",
+      "effects": [
+        {
+          "type": "buff",
+          "stats": {
+            "dodge": 15
+          },
+          "duration": 5
+        },
+        {
+          "type": "damage",
+          "formula": "user.health * -0.02 + user.chakra * -0.02"
+        }
+      ]
+    },
+    "41-45": {
+      "description": "Full Bloodsea armaments active on the user.",
+      "effects": [
+        {
+          "type": "buff",
+          "stats": {
+            "power": "user.power * 1.3"
+          },
+          "duration": 5
+        }
+      ]
+    },
+    "46-50": {
+      "description": "Bloodsphere forms around the target, imprisoning and stunning them.",
+      "effects": [
+        {
+          "type": "damage",
+          "formula": "user.power * 1.5"
+        },
+        {
+          "type": "status",
+          "status": "stun",
+          "duration": 5
+        },
+        {
+          "type": "status",
+          "status": "bleed",
+          "duration": 3,
+          "damagePerTurn": "target.health * 0.1"
+        }
+      ]
+    },
+    "51-55": {
+      "description": "Bloodsphere pulses, draining chakra and health from the target.",
+      "effects": [
+        {
+          "type": "damage",
+          "formula": "user.power * 0.8"
+        },
+        {
+          "type": "damage",
+          "formula": "user.health * -0.03 + user.chakra * -0.03"
+        }
+      ]
+    },
+    "56": {
+      "description": "Bloodsphere implodes, compressing inward."
+    },
+    "57": {
+      "description": "Imploding sphere shatters inward, launching blood spears piercing the target.",
+      "effects": [
+        {
+          "type": "damage",
+          "formula": "user.power * 2"
+        }
+      ]
+    },
+    "58": {
+      "description": "Bloodleeches split from the imbedded spears, wrapping the target in leeches.",
+      "effects": [
+        {
+          "type": "status",
+          "status": "stun",
+          "duration": 2
+        }
+      ]
+    },
+    "59-60": {
+      "description": "Leech prison drains then restores the target.",
+      "effects": [
+        {
+          "type": "heal",
+          "formula": "target.health * 0.2"
+        }
+      ]
+    },
+    "61": {
+      "description": "The bloodsea slowly sinks into the ground, leaving behind a scarlet stain that pulses faintly before fading."
+    }
   }
+},
+"The Grand Rebellion": { 
+  "name": "The Grand Rebellion",
+  "description": "Summons the Grand Rebellion",
+  "chakraCost": 10,
+  "category": "Custom",
+  "image_url": "https://qph.cf2.quoracdn.net/main-qimg-de8aecb44312dfedac08e6a625ddffb5-lq",
+  "roundBased": true,
+  "roundEffects": {
+    "1": {
+      "description": "user calls for the rebellion and within moments user's men sorround target.",
+      "effects": [
+        {
+          "type": "buff",
+          "formula": "3 * user.power"
+        }
+      ]
+    },
+    "2": {
+      "description": "user commands the rebellion to destroy target.",
+      "image_url": "https://qph.cf2.quoracdn.net/main-qimg-de8aecb44312dfedac08e6a625ddffb5-lq",
+      "effects": [
+        {
+          "type": "damage",
+          "formula": "5 * user.power"
+        }
+      ]
+    }
+  }
+}
+}
