@@ -30,7 +30,7 @@
         }
       ]
     },
-    "asura": {
+    "Asura's Blade of Execution": {
       "name": "Asura's Blade of Execution",
       "description": "Unleashes god-like power",
       "chakraCost": 0,
@@ -39,7 +39,7 @@
       "effects": [
         {
           "type": "damage",
-          "formula": "500 * (1 + (user.power))"
+          "formula": "50 * (1 + (user.power))"
         },
         {
           "type": "buff",
@@ -48,7 +48,7 @@
             "power": "user.power * 2",
             "defense": "user.defense * 2"
           },
-          "duration": 3
+          "duration": 1
         },
         {
           "type": "debuff",
@@ -57,14 +57,14 @@
             "power": "-target.power * 0.5",
             "defense": "-target.defense * 0.5"
           },
-          "duration": 3
+          "duration": 1
         },
         {
           "type": "status",
           "target": "target",
           "status": "stun",
           "duration": 1,
-          "chance": 1.0
+          "chance": 0.5
         }
       ]
     },
@@ -107,7 +107,7 @@
       "effects": [
         {
           "type": "chakra_gain", 
-          "amount": 5          
+          "formula": "user.chakra + 5"        
         }
       ]
     },
@@ -235,7 +235,7 @@
         "effects": [
             {
                 "type": "damage",
-                "formula": "2 * user.power / target.defense"
+                "formula": "2 * user.power"
             },
             {
                 "type": "status",
@@ -527,6 +527,19 @@
                 "damagePerTurn": "target.health * 0.2"}
         ]
       },
+      "Heaven Slaughter": {
+        "name": "Heaven Slaughter",
+        "description": "Shuts their eyes then casually swings their sword\n **The Air Splits**",
+        "chakraCost": 5,
+        "image_url": "https://i.imgur.com/yyPFEWA.gif",
+        "category": "Custom",
+        "effects": [
+          {
+            "type": "damage",
+            "formula": "8 * user.chakra + user.power * 8"
+          }
+        ]
+      },
       "Mystic Palm Enhanced": {
         "name": "Mystic Palm Enhanced",
         "description": "Enhanced version of the jutsu Mystic Palm",
@@ -787,27 +800,141 @@
   "chakraCost": 10,
   "category": "Custom",
   "image_url": "https://qph.cf2.quoracdn.net/main-qimg-de8aecb44312dfedac08e6a625ddffb5-lq",
+  "custombackground": {
+    "round": 2,
+    "url": "https://i.pinimg.com/736x/25/1f/49/251f49b9061e3ef0b3a862135258f151.jpg"
+  },
   "roundBased": true,
   "roundEffects": {
     "1": {
-      "description": "user calls for the rebellion and within moments user's men sorround target.",
+      "description": "user calls for the rebellion.\n Gojo uses domain expansion on target cornering them with the rebellion.",
       "effects": [
         {
-          "type": "buff",
-          "formula": "3 * user.power"
+          "type": "damage",
+          "formula": "6 * user.power"
         }
       ]
     },
     "2": {
-      "description": "user commands the rebellion to destroy target.",
-      "image_url": "https://qph.cf2.quoracdn.net/main-qimg-de8aecb44312dfedac08e6a625ddffb5-lq",
+      "description": "Sasuke cuts through the target.",
+      "effects": [
+        {
+          "type": "status",
+          "status": "bleed",
+          "duration": 2
+
+        }
+      ]
+    },
+    "3": {
+      "description": "Jinwoo holds the target in place with his shadow soldiers.",
+      "effects": [
+        {
+          "type": "status",
+          "status": "stun",
+          "duration": 1
+        }
+      ]
+    },
+    "4-5": {
+      "description": "Goku Finishes target with a Kamehameha.",
       "effects": [
         {
           "type": "damage",
-          "formula": "5 * user.power"
+          "formula": "user.power * 1"
         }
       ]
     }
   }
+},
+"Last Resort": {
+  "name": "Last Resort",
+  "description": "***OBLIVION***\n decimates target",
+  "chakraCost": 0,
+  "category": "Custom",
+  "image_url": "https://media.tenor.com/uYC6C2nnVNAAAAAM/energy-beam.gif",
+  "effects": [
+    {
+      "type": "damage",
+      "formula": "1000 * user.power"
+    },
+    {
+      "type": "chakra_gain",
+      "formula": "user.chakra + 100"
+    }
+    
+  ]
+},
+"Shuriken Throw": {
+  "name": "Shuriken Throw",
+  "description": "Throws a shuriken at target ",
+  "chakraCost": 0,
+  "category": "No Category",
+  "effects": [
+    {
+      "type": "damage",
+      "formula": "1.8 * user.power"
+    }
+  ]
+},
+"Puppet Master": {
+  "name": "Puppet Master",
+  "description": "Controls a puppet to attacktarget ",
+  "chakraCost": 2,
+  "category": "No Category",
+  "effects": [
+    {
+      "type": "damage",
+      "formula": "1.5 * user.power"
+    }
+  ]
+},
+"Wind Scythe": {
+  "name": "Wind Scythe",
+  "description": "Unleashes a blade of wind at target ",
+  "chakraCost": 2,
+  "category": "No Category",
+  "effects": [
+    {
+      "type": "damage",
+      "formula": "1.2 * user.power"
+    }
+  ]
+},
+"Monster Claw": {
+  "name": "Monster Claw",
+  "description": "Transforms his hand into a claw and unleashes a powerful claw attack ",
+  "chakraCost": 2,
+  "category": "No Category",
+  "effects": [
+    {
+      "type": "damage",
+      "formula": "1.9 * user.power"
+    }
+  ]
+},
+"Samehada Slash": {
+  "name": "Samehada Slash",
+  "description": "Unleashes a powerful slash with the Samehada sword.",
+  "chakraCost": 3,
+  "category": "No Category",
+  "effects": [
+    {
+      "type": "damage",
+      "formula": "2.0 * user.power"
+    }
+  ]
+},
+"One Thousand Slashes": {
+  "name": "One Thousand Slashes",
+  "description": "Unleashes a flurry of slashes at the target.",
+  "chakraCost": 0,
+  "category": "No Category",
+  "effects": [
+    {
+      "type": "damage",
+      "formula": "3.0 * user.power"
+    }
+  ]
 }
 }

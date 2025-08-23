@@ -1,30 +1,42 @@
-const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, PermissionsBitField } = require('discord.js');
 const fs = require('fs');
 const path = require('path');
 
+// Resolve the correct path to your data files
 const usersPath = path.resolve(__dirname, '../../menma/data/users.json');
-const SERVER_BOOSTER_ROLE = '1399150845022572544'; // Replace with your actual Booster role ID
-// Removed: BOOSTER_MAX_ATTEMPTS
-// Removed: BOOSTER_ATTEMPT_WINDOW
-const COOLDOWN = 3000; // 3 seconds
-const CAPTCHA_FAIL_ALERT_CHANNEL = '1381271394901557323'; // Set to your alert channel ID
-const MAIN_SERVER_ID = '1381268582595297321'; // Set to your main server ID
-const ADMIN_ID = '1381268854776529028'; // Set to your admin user ID
 const BAN_FILE = path.resolve(__dirname, '../../menma/data/frank_bans.json');
 
+// Constant IDs for roles, channels, and users
+const SERVER_BOOSTER_ROLE = '1399150845022572544'; 
+const COOLDOWN = 3000; // 3 seconds
+const CAPTCHA_FAIL_ALERT_CHANNEL = '1381271394901557323'; 
+const MAIN_SERVER_ID = '1381268582595297321'; 
+const ADMIN_ID = '1381268854776529028'; 
+
+// Function to load the ban list from the JSON file
 function loadBans() {
-    if (!fs.existsSync(BAN_FILE)) return {};
+    if (!fs.existsSync(BAN_FILE)) {
+        return {};
+    }
     try {
         return JSON.parse(fs.readFileSync(BAN_FILE, 'utf8'));
-    } catch {
+    } catch (error) {
+        console.error('Error reading bans file:', error);
         return {};
     }
 }
+
+// Function to save the ban list to the JSON file
 function saveBans(bans) {
-    fs.writeFileSync(BAN_FILE, JSON.stringify(bans, null, 2));
+    try {
+        fs.writeFileSync(BAN_FILE, JSON.stringify(bans, null, 2));
+    } catch (error) {
+        console.error('Error writing bans file:', error);
+    }
 }
 
 module.exports = {
+    // Defines the slash command structure
     data: new SlashCommandBuilder()
         .setName('frank')
         .setDescription('Do a micro training mission for quick EXP')
@@ -41,17 +53,22 @@ module.exports = {
                 .setDescription('User for the "unlock" action (Admin only)')
                 .setRequired(false)
         ),
+    // The core logic of the command
     async execute(interaction) {
+        // Ensure the command is used in the main server
         if (!interaction.guild || interaction.guild.id !== MAIN_SERVER_ID) {
             return interaction.reply({ content: 'This command can only be used in the main server.', ephemeral: true });
         }
 
         const action = interaction.options.getString('action');
         const targetUser = interaction.options.getUser('user');
-
+        const userId = interaction.user.id;
+        
+        // Handle the 'unlock' action for admins
         if (action === 'unlock') {
-            if (interaction.user.id !== ADMIN_ID) {
-                return interaction.reply({ content: 'Only the admin can use the "unlock" action.', ephemeral: true });
+            // Check if the user has administrator permissions
+            if (!interaction.member.permissions.has(PermissionsBitField.Flags.Administrator)) {
+                return interaction.reply({ content: 'Only users with administrator permissions can use the "unlock" action.', ephemeral: true });
             }
             if (!targetUser) {
                 return interaction.reply({ content: 'You must provide a user to unlock.', ephemeral: true });
@@ -61,15 +78,17 @@ module.exports = {
             if (bans[targetUser.id]) {
                 delete bans[targetUser.id];
                 saveBans(bans);
+                console.log(`User ${targetUser.username} (${targetUser.id}) has been unbanned from frank.`);
                 return interaction.reply({ content: `Unbanned <@${targetUser.id}> from using frank.`, ephemeral: false });
             } else {
                 return interaction.reply({ content: `<@${targetUser.id}> is not banned from frank.`, ephemeral: true });
             }
         }
 
+        // Defer the reply to give time for processing
         await interaction.deferReply({ ephemeral: false });
 
-        const userId = interaction.user.id;
+        // Check if the user is banned
         let bans = loadBans();
         if (bans[userId]) {
             return interaction.editReply({
@@ -78,6 +97,7 @@ module.exports = {
             });
         }
 
+        // Check for the user's data file and existence
         if (!fs.existsSync(usersPath)) {
             return interaction.editReply("Database connection failed. Please try again later.");
         }
@@ -90,6 +110,7 @@ module.exports = {
         }
         const player = users[userId];
 
+        // Cooldown check
         if (!global._frankCooldown) global._frankCooldown = {};
         const now = Date.now();
         if (global._frankCooldown[userId] && now - global._frankCooldown[userId] < COOLDOWN) {
@@ -101,6 +122,7 @@ module.exports = {
         }
         global._frankCooldown[userId] = now;
 
+        // CAPTCHA check
         if (Math.random() < 0.05) {
             const captcha = Array.from({ length: 5 }, () => Math.floor(Math.random() * 10)).join('');
             await interaction.editReply({
@@ -126,7 +148,9 @@ module.exports = {
                     if (alertChannel) {
                         await alertChannel.send(`<@${ADMIN_ID}>, <@${userId}> has failed the captcha in <#${interaction.channel.id}> and has been banned from frank.`);
                     }
-                } catch {}
+                } catch (err) {
+                    console.error('Failed to send captcha fail alert:', err);
+                }
                 return interaction.followUp({
                     content: "❌ Captcha failed or timed out. You have been temporarily banned from using frank. Please approach an admin to get yourself unbanned.",
                     ephemeral: true
@@ -135,26 +159,21 @@ module.exports = {
             if (!passed) return;
         }
 
-        // Booster EXP logic (simplified)
-        let exp = 1; // Default EXP for all users
+        // Calculate and award EXP
+        let exp = 1; 
         let boosterMessage = '';
-
         if (interaction.member && interaction.member.roles.cache.has(SERVER_BOOSTER_ROLE)) {
-            exp = 1.1; // Server Boosters always get 1.1 EXP
+            exp = 1.1; 
             boosterMessage = ' *(Server Booster Bonus!)*';
         }
-
-        // Award EXP
         player.exp = (player.exp || 0) + exp;
         fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
 
-        // Embed
+        // Create and send the embed
         const frankEmbed = new EmbedBuilder()
             .setColor('#FF9800')
             .setTitle(` Micro Training Complete!`)
-            .setDescription(
-                `**${interaction.user.username}** rested and gained **${exp} EXP**${boosterMessage}`
-            )
+            .setDescription(`**${interaction.user.username}** rested and gained **${exp} EXP**${boosterMessage}`)
             .setThumbnail(interaction.user.displayAvatarURL({ dynamic: true, size: 256 }))
             .setImage('https://media.tenor.com/8-kXsED3TwwAAAAM/modo-senin-naruto.gif')
             .setFooter({ text: 'Keep grinding, shinobi!' })

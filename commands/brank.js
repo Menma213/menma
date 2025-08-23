@@ -1,12 +1,4 @@
-const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, AttachmentBuilder } = require('discord.js');
-const { createCanvas, loadImage, registerFont } = require('canvas');
-const https = require('https');
-const { URL } = require('url');
-const fs = require('fs');
-const path = require('path');
-const math = require('mathjs');
-const { updateRequirements } = require('./scroll');
-const { addMentorExp } = require('./mentors.js');
+
 
 // Path configurations
 const usersPath = path.resolve(__dirname, '../../menma/data/users.json');

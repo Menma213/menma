@@ -1,574 +1,1003 @@
-const { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, AttachmentBuilder } = require('discord.js');
+const { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, WebhookClient, AttachmentBuilder } = require('discord.js');
 const fs = require('fs');
 const path = require('path');
-const { createCanvas, loadImage } = require('canvas');
 
 // Constants
 const ADMIN_ID = "961918563382362122";
+const MYSTERIOUS_VOICE_AVATAR = 'https://wallpapers.com/images/hd/yellow-anime-9vqufy3pbpjpvcmy.jpg';
+const ZORO_AVATAR = 'https://i.postimg.cc/PxqbJmXH/image.png';
+const IMAGE_OF_FOUR_HEROES = 'https://i.postimg.cc/132mtsMC/image.png';
 
 // Path setup
 const dataPath = path.resolve(__dirname, '../../menma/data');
 const usersPath = path.join(dataPath, 'users.json');
-const jutsusPath = path.join(dataPath, 'jutsu.json');  // Fixed path
-const requirementsPath = path.join(dataPath, 'requirements.json');
+const jutsusPath = path.join(dataPath, 'jutsu.json');
+const dungeonsPath = path.join(dataPath, 'dungeons.json');
+const cooldownsPath = path.join(dataPath, 'cooldowns.json');
 
 // Helper functions
-const loadData = (path) => {
+const loadData = (filePath) => {
     try {
-        return fs.existsSync(path) ? JSON.parse(fs.readFileSync(path, 'utf8')) : {};
+        return fs.existsSync(filePath) ? JSON.parse(fs.readFileSync(filePath, 'utf8')) : {};
     } catch (err) {
-        console.error(`Error loading ${path}:`, err);
+        console.error(`Error loading ${filePath}:`, err);
         return {};
     }
 };
 
-const saveData = (path, data) => {
+const saveData = (filePath, data) => {
     try {
-        fs.writeFileSync(path, JSON.stringify(data, null, 2));
+        fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
     } catch (err) {
-        console.error(`Error saving ${path}:`, err);
+        console.error(`Error saving ${filePath}:`, err);
     }
 };
 
-// Constants for requirements
-const REQUIREMENT_TYPES = [
-    { type: 'd_mission', desc: "Complete D-rank mission {value} times", min: 2, max: 6 },
-    { type: 'b_mission', desc: "Complete B-rank mission {value} times", min: 2, max: 4 },
-    { type: 's_mission', desc: "Complete S-rank mission {value} times", min: 2, max: 3 },
-    { type: 'pvp', desc: "Fight another ninja {value} times", min: 1, max: 3 },
-    { type: 'profile_check', desc: "Check profile {value} times", min: 3, max: 7 },
-    { type: 's_mission_with_friends', desc: "Complete an S-rank with friends {value} time", min: 1, max: 2 },
-    { type: 'train', desc: "Train {value} times", min: 2, max: 2},
-    { type: 'equip_jutsu', desc: "Equip a jutsu {value} time", min: 1, max: 1 }
-];
+const delay = ms => new Promise(res => setTimeout(res, ms));
 
-// Complete tutorial pages
-const TUTORIAL_PAGES = [
-    {
-        title: "Welcome to the Sacred Temple",
-        content: "Young one. Welcome to the sacred temple of Konoha. I am Asukky, the well-known Asukky The Sage.",
-        image: "https://i.pinimg.com/736x/ae/ae/80/aeae806eee029af71359a7.jpg8bb38ea7e4"
-    },
-    {
-        title: "The History of Scrolls",
-        content: "I shall tell you everything about The Ninja scrolls. Ninja scrolls are like a personal diary of ninjas, passed down the generations. Hagoromo Otsutsuki, The first Ninja was the first person ever to create a Ninja scroll.",
-        image: "https://i.imgur.com/sage_avatar.png"
-    },
-    {
-        title: "Finding Scrolls",
-        content: "Ninja scrolls have been scattered across the globe in various locations, some have been sealed away while some are very easy to obtain. Bring them to me and I shall guide you.",
-        image: "https://i.imgur.com/sage_avatar.png"
-    },
-    {
-        title: "Learning from Scrolls",
-        content: "Obtaining a ninja scroll does not mean you have learnt the Jutsu! I am going to be teaching you on how to Master Jutsus. To learn a jutsu from its scroll you must complete the requirements from the specified jutsu scroll.",
-        image: "https://i.imgur.com/sage_avatar.png"
-    },
-    {
-        title: "Requirements System",
-        content: "There will be 5 requirements. If you complete one you get a 20% chance of learning the jutsu. Remember though! Number of attempts at learning the jutsu might be infinite, but only the first attempt is going to be free, so make sure you've stacked up those chances of learning!",
-        image: "https://i.imgur.com/sage_avatar.png"
-    }
-];
-
-
-
-async function generateTutorialImage(pageIdx, interaction) {
-    const page = TUTORIAL_PAGES[pageIdx];
-    const width = 600, height = 400;
-    const canvas = createCanvas(width, height);
-    const ctx = canvas.getContext('2d');
-
-    // Background gradient
-    const grad = ctx.createLinearGradient(0, 0, width, height);
-    grad.addColorStop(0, "#0f0c29");
-    grad.addColorStop(0.5, "#302b63");
-    grad.addColorStop(1, "#24243e");
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, width, height);
-
-    // Card border
-    ctx.save();
-    ctx.strokeStyle = "#6e1515";
-    ctx.lineWidth = 5;
-    ctx.strokeRect(0, 0, width, height);
-    ctx.restore();
-
-    // Avatar
-    let avatarImg;
-    try {
-        avatarImg = await loadImage(page.image);
-    } catch {
-        avatarImg = null;
-    }
-    ctx.save();
-    ctx.beginPath();
-    ctx.arc(60, 60, 35, 0, 2 * Math.PI);
-    ctx.closePath();
-    ctx.clip();
-    if (avatarImg) ctx.drawImage(avatarImg, 25, 25, 70, 70);
-    else {
-        ctx.fillStyle = "#333";
-        ctx.fillRect(25, 25, 70, 70);
-    }
-    ctx.restore();
-    ctx.save();
-    ctx.beginPath();
-    ctx.arc(60, 60, 35, 0, 2 * Math.PI);
-    ctx.closePath();
-    ctx.lineWidth = 4;
-    ctx.strokeStyle = "#6e1515";
-    ctx.stroke();
-    ctx.restore();
-
-    // Sage name
-    ctx.font = "bold 22px Arial";
-    ctx.fillStyle = "#f8d56b";
-    ctx.textAlign = "left";
-    ctx.fillText("Asukky The Sage", 110, 60);
-
-    // Title
-    ctx.font = "bold 24px Arial";
-    ctx.fillStyle = "#f8d56b";
-    ctx.textAlign = "center";
-    ctx.fillText(page.title, width / 2, 120);
-
-    // Content box
-    ctx.save();
-    ctx.fillStyle = "rgba(0,0,0,0.3)";
-    ctx.beginPath();
-    ctx.roundRect(40, 140, 520, 220, 18);
-    ctx.fill();
-    ctx.restore();
-
-    // Content text
-    ctx.font = "16px Arial";
-    ctx.fillStyle = "#fff";
-    ctx.textAlign = "left";
-    // Wrap text
-    const content = page.content;
-    let y = 170;
-    const lineHeight = 26;
-    const maxWidth = 500;
-    function wrapText(text) {
-        const words = text.split(' ');
-        let line = '';
-        for (let n = 0; n < words.length; n++) {
-            const testLine = line + words[n] + ' ';
-            const metrics = ctx.measureText(testLine);
-            if (metrics.width > maxWidth && n > 0) {
-                ctx.fillText(line, 60, y);
-                line = words[n] + ' ';
-                y += lineHeight;
-            } else {
-                line = testLine;
-            }
-        }
-        ctx.fillText(line, 60, y);
-    }
-    wrapText(content);
-
-    return canvas.toBuffer('image/png');
+// Check and create cooldowns.json if it doesn't exist
+if (!fs.existsSync(cooldownsPath)) {
+    saveData(cooldownsPath, {});
 }
 
-// --- Canvas-based info image generation ---
-async function generateInfoImage(title, content, commands = false) {
-    const width = 600, height = commands ? 600 : 400;
-    const canvas = createCanvas(width, height);
-    const ctx = canvas.getContext('2d');
-
-    // Background gradient
-    const grad = ctx.createLinearGradient(0, 0, width, height);
-    grad.addColorStop(0, "#0f0c29");
-    grad.addColorStop(0.5, "#302b63");
-    grad.addColorStop(1, "#24243e");
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, width, height);
-
-    // Card border
-    ctx.save();
-    ctx.strokeStyle = "#6e1515";
-    ctx.lineWidth = 5;
-    ctx.strokeRect(0, 0, width, height);
-    ctx.restore();
-
-    // Avatar
-    let avatarImg;
+/**
+ * Deletes all webhooks in the channel managed by the bot.
+ * This is crucial to prevent the Discord API's webhook limit (15) from being reached.
+ * @param {object} interaction The Discord interaction object.
+ */
+async function cleanupWebhooks(interaction) {
     try {
-        avatarImg = await loadImage("https://i.imgur.com/sage_avatar.png");
-    } catch {
-        avatarImg = null;
-    }
-    ctx.save();
-    ctx.beginPath();
-    ctx.arc(60, 60, 35, 0, 2 * Math.PI);
-    ctx.closePath();
-    ctx.clip();
-    if (avatarImg) ctx.drawImage(avatarImg, 25, 25, 70, 70);
-    else {
-        ctx.fillStyle = "#333";
-        ctx.fillRect(25, 25, 70, 70);
-    }
-    ctx.restore();
-    ctx.save();
-    ctx.beginPath();
-    ctx.arc(60, 60, 35, 0, 2 * Math.PI);
-    ctx.closePath();
-    ctx.lineWidth = 4;
-    ctx.strokeStyle = "#6e1515";
-    ctx.stroke();
-    ctx.restore();
-
-    // Sage name
-    ctx.font = "bold 22px Arial";
-    ctx.fillStyle = "#f8d56b";
-    ctx.textAlign = "left";
-    ctx.fillText("Asukky The Sage", 110, 60);
-
-    // Title
-    ctx.font = "bold 24px Arial";
-    ctx.fillStyle = "#f8d56b";
-    ctx.textAlign = "center";
-    ctx.fillText(title, width / 2, 120);
-
-    // Content box
-    ctx.save();
-    ctx.fillStyle = "rgba(0,0,0,0.3)";
-    ctx.beginPath();
-    ctx.roundRect(40, 140, 520, commands ? 320 : 220, 18);
-    ctx.fill();
-    ctx.restore();
-
-    // Content text
-    ctx.font = "16px Arial";
-    ctx.fillStyle = "#fff";
-    ctx.textAlign = "left";
-    // Wrap text
-    let y = 170;
-    const lineHeight = 26;
-    const maxWidth = 500;
-    function wrapText(text) {
-        const words = text.split(' ');
-        let line = '';
-        for (let n = 0; n < words.length; n++) {
-            const testLine = line + words[n] + ' ';
-            const metrics = ctx.measureText(testLine);
-            if (metrics.width > maxWidth && n > 0) {
-                ctx.fillText(line, 60, y);
-                line = words[n] + ' ';
-                y += lineHeight;
-            } else {
-                line = testLine;
+        const webhooks = await interaction.channel.fetchWebhooks();
+        for (const webhook of webhooks.values()) {
+            if (webhook.owner && webhook.owner.id === interaction.client.user.id) {
+                await webhook.delete();
             }
         }
-        ctx.fillText(line, 60, y);
-        return y;
+        console.log("Cleaned up webhooks successfully.");
+    } catch (error) {
+        console.error("Failed to clean up webhooks:", error);
     }
-    y = wrapText(content);
+}
 
-    // Commands section
-    if (commands) {
-        ctx.font = "bold 18px Arial";
-        ctx.fillStyle = "#f8d56b";
-        ctx.fillText("Available Commands", 60, y + 40);
+/**
+ * Gets or creates a new webhook for an NPC or user.
+ * @param {object} interaction The Discord interaction object.
+ * @param {string} name The name of the webhook.
+ * @param {string} avatar The avatar URL for the webhook.
+ * @returns {Promise<Webhook>} The webhook object.
+ */
+async function getWebhook(interaction, name, avatar) {
+    try {
+        let webhooks = await interaction.channel.fetchWebhooks();
+        let npcWebhook = webhooks.find(w => w.name === name);
+        if (npcWebhook) {
+            return npcWebhook;
+        } else {
+            return await interaction.channel.createWebhook({
+                name: name,
+                avatar: avatar,
+                reason: 'For dynamic NPC dialogue in dungeons'
+            });
+        }
+    } catch (error) {
+        console.error("Failed to get or create webhook:", error);
+        return null;
+    }
+}
 
-        ctx.font = "16px Arial";
-        ctx.fillStyle = "#fff";
-        const cmds = [
-            "/scroll info - View your current scroll progress",
-            "/scroll set <scrollname> - Set a scroll to work on",
-            "/learnjutsu - Attempt to learn from your current scroll"
-        ];
-        let cy = y + 70;
-        for (const cmd of cmds) {
-            ctx.save();
-            ctx.fillStyle = "rgba(110,21,21,0.3)";
-            ctx.beginPath();
-            ctx.roundRect(60, cy - 18, 480, 32, 8);
-            ctx.fill();
-            ctx.restore();
-            ctx.fillStyle = "#fff";
-            ctx.fillText(cmd, 75, cy);
-            cy += 40;
+// --- Tutorial Logic ---
+async function handleTutorial(interaction, users, userId) {
+    const user = users[userId];
+    user.firstusescroll = false;
+    saveData(usersPath, users);
+
+    const mysteriousVoiceWebhook = await getWebhook(interaction, 'Strange Voice', MYSTERIOUS_VOICE_AVATAR);
+    const userWebhook = await getWebhook(interaction, interaction.user.username, interaction.user.displayAvatarURL());
+
+    await delay(2500);
+    await mysteriousVoiceWebhook.send({ content: "Another Young Shinobi entering the scroll shrine...", username: 'Strange Voice', avatarURL: MYSTERIOUS_VOICE_AVATAR });
+
+    const row1 = new ActionRowBuilder()
+        .addComponents(
+            new ButtonBuilder().setCustomId('tut_who_are_you').setLabel('Who are you?').setStyle(ButtonStyle.Primary),
+            new ButtonBuilder().setCustomId('tut_what_is_place').setLabel('What is this place?').setStyle(ButtonStyle.Primary)
+        );
+
+    const msg1 = await interaction.channel.send({
+        content: `What will you do, ${interaction.user.username}?`,
+        components: [row1]
+    });
+
+    const filter = i => i.customId.startsWith('tut_') && i.user.id === userId;
+    let res;
+    try {
+        res = await msg1.awaitMessageComponent({ filter, time: 60000 });
+        await res.deferUpdate();
+    } catch (e) {
+        await msg1.edit({ content: "Tutorial timed out.", components: [] });
+        return;
+    }
+
+    if (res.customId === 'tut_who_are_you') {
+        await delay(2500);
+        await userWebhook.send({ content: "Who are you?", username: interaction.user.username, avatarURL: interaction.user.displayAvatarURL() });
+        await delay(2500);
+        await mysteriousVoiceWebhook.send({ content: "I'm the voice of a legendary Shinobi that fell in a gruesome war...", username: 'Strange Voice', avatarURL: MYSTERIOUS_VOICE_AVATAR });
+    } else if (res.customId === 'tut_what_is_place') {
+        await delay(2500);
+        await userWebhook.send({ content: "What is this place?", username: interaction.user.username, avatarURL: interaction.user.displayAvatarURL() });
+        await delay(2500);
+        await mysteriousVoiceWebhook.send({ content: "This is the Scrolls Shrine, a very sacred place known to hold many Forbidden Jutsu.", username: 'Strange Voice', avatarURL: MYSTERIOUS_VOICE_AVATAR });
+    }
+
+    await delay(2500);
+    const row2 = new ActionRowBuilder()
+        .addComponents(
+            new ButtonBuilder().setCustomId('tut_what_do_i_do').setLabel('What do I do now..?').setStyle(ButtonStyle.Primary)
+        );
+    const msg2 = await interaction.channel.send({ content: "...", components: [row2] });
+
+    try {
+        const res2 = await msg2.awaitMessageComponent({ filter, time: 60000 });
+        await res2.deferUpdate();
+    } catch (e) {
+        await msg2.edit({ content: "Tutorial timed out.", components: [] });
+        return;
+    }
+
+    await delay(2500);
+    await mysteriousVoiceWebhook.send({ content: "Let me tell you about scrolls and why this place is no longer safe.", username: 'Strange Voice', avatarURL: MYSTERIOUS_VOICE_AVATAR });
+    await delay(2500);
+    await mysteriousVoiceWebhook.send({ content: "Scrolls are the books of information about a specific jutsu passed down the generations by legendary Shinobi.", username: 'Strange Voice', avatarURL: MYSTERIOUS_VOICE_AVATAR });
+
+    await delay(2500);
+    const row3 = new ActionRowBuilder()
+        .addComponents(
+            new ButtonBuilder().setCustomId('tut_info_jutsu').setLabel('Information about jutsu? what exactly?').setStyle(ButtonStyle.Primary)
+        );
+    const msg3 = await interaction.channel.send({ content: "...", components: [row3] });
+
+    try {
+        const res3 = await msg3.awaitMessageComponent({ filter, time: 60000 });
+        await res3.deferUpdate();
+    } catch (e) {
+        await msg3.edit({ content: "Tutorial timed out.", components: [] });
+        return;
+    }
+
+    await delay(2500);
+    await mysteriousVoiceWebhook.send({ content: "You'll have to see for yourself. To obtain a scroll, you must defeat the NPC protecting the scroll.", username: 'Strange Voice', avatarURL: MYSTERIOUS_VOICE_AVATAR });
+    await delay(2500);
+    await mysteriousVoiceWebhook.send({ content: "There's MANY scrolls that have been scattered and stolen in this world. which brings us to the topic...why this place is so dangerous.", username: 'Strange Voice', avatarURL: MYSTERIOUS_VOICE_AVATAR });
+    await delay(2500);
+    await mysteriousVoiceWebhook.send({ content: "One day a huge group of bandits cowardly attacked the shrine guards during the night and leaked everything to the outside world. But we never thought it would do something like this...look up..that portal..is a dungeon. A portal that connects other worlds.", username: 'Strange Voice', avatarURL: MYSTERIOUS_VOICE_AVATAR });
+    await delay(2500);
+    await mysteriousVoiceWebhook.send({ content: "I do not wish to see a young shinobi like yourself going in there...But this world needs a savior, and that could be you..", username: 'Strange Voice', avatarURL: MYSTERIOUS_VOICE_AVATAR });
+    await delay(2500);
+    await mysteriousVoiceWebhook.send({ content: "But first! you must prove your strength! Clear 10 dungeons and run the `/scroll mission` command and ill meet you there.", username: 'Strange Voice', avatarURL: MYSTERIOUS_VOICE_AVATAR });
+    await delay(2500);
+    await mysteriousVoiceWebhook.send({ content: "Oh, and also you'll receive a Crystalline Shard everytime you clear a dungeon which you can trade here for learning a jutsu from it's scroll using the /learnjutsu command. Goodluck, Young Shinobi.", username: 'Strange Voice', avatarURL: MYSTERIOUS_VOICE_AVATAR });
+
+    const finalRow = new ActionRowBuilder().addComponents(
+        new ButtonBuilder().setCustomId('tut_complete').setLabel('Complete Tutorial').setStyle(ButtonStyle.Success)
+    );
+    const finalMsg = await interaction.channel.send({ content: "Click the button below to complete the tutorial.", components: [finalRow] });
+
+    try {
+        const res4 = await finalMsg.awaitMessageComponent({ filter: i => i.customId === 'tut_complete' && i.user.id === userId, time: 60000 });
+        await res4.update({ content: "Tutorial complete! You can now use the `/scroll dungeon` command to begin your journey!", components: [] });
+        user.firstusescroll = true;
+        saveData(usersPath, users);
+    } catch (e) {
+        await finalMsg.edit({ content: "Tutorial timed out.", components: [] });
+    }
+}
+
+// --- Mission Logic ---
+async function handleMissionCommand(interaction, users, userId) {
+    const user = users[userId];
+    const dungeonsCompleted = user.dungeonscompleted || 0;
+
+    if (dungeonsCompleted < 10) {
+        return interaction.reply({ content: `You must clear 10 dungeons first! You have cleared ${dungeonsCompleted} so far.`, ephemeral: true });
+    }
+
+    if (user.mission_complete) {
+        return interaction.reply({ content: `You have already completed this mission.`, ephemeral: true });
+    }
+
+    await interaction.deferReply({ ephemeral: true });
+
+    // This block handles both the initial mission start and re-opening the dialogue
+    // The intro dialogue only plays once.
+    if (!user.firstimemission) {
+        const mysteriousVoiceWebhook = await getWebhook(interaction, 'Strange Voice', MYSTERIOUS_VOICE_AVATAR);
+        await mysteriousVoiceWebhook.send({ content: "I knew i could trust you..Congratulations on beating 10 dungeons. Come along with me..there's a few people i need you to meet to save the world from dungeons.", username: 'Strange Voice', avatarURL: MYSTERIOUS_VOICE_AVATAR });
+        user.firstimemission = true;
+        saveData(usersPath, users);
+    }
+
+    const embed = new EmbedBuilder()
+        .setTitle("The Four Men")
+        .setDescription("Try talking to them:")
+        .setImage(IMAGE_OF_FOUR_HEROES);
+
+    const row = new ActionRowBuilder()
+        .addComponents(
+            new ButtonBuilder().setCustomId('talk_zoro').setLabel('Zoro').setStyle(ButtonStyle.Primary),
+            new ButtonBuilder().setCustomId('talk_naruto').setLabel('Naruto').setStyle(ButtonStyle.Primary),
+            new ButtonBuilder().setCustomId('talk_yuta').setLabel('Yuta').setStyle(ButtonStyle.Secondary),
+            new ButtonBuilder().setCustomId('talk_jinwoo').setLabel('Jinwoo').setStyle(ButtonStyle.Secondary)
+        );
+
+    // FIX START: Check for Zoro's mission completion and update buttons
+    if (user.zoromission) {
+        row.components.forEach(button => {
+            button.setStyle(ButtonStyle.Primary); // Set all to Primary (blue)
+            if (button.data.custom_id === 'talk_zoro') {
+                button.setDisabled(true); // Disable Zoro's button
+            }
+        });
+    }
+    // FIX END
+
+    const msg = await interaction.channel.send({ embeds: [embed], components: [row] });
+
+    // The collector handles all subsequent button interactions within this mission
+    const filter = i => i.customId.startsWith('talk_') && i.user.id === userId;
+    const collector = msg.createMessageComponentCollector({ filter, time: 300000 }); // 5 minutes
+
+    collector.on('collect', async i => {
+        // Deferring the update immediately to prevent "Interaction Failed"
+        await i.deferUpdate();
+        const characterName = i.customId.split('_')[1];
+        await handleCharacterInteraction(i, users, userId, characterName);
+    });
+
+    collector.on('end', collected => {
+        if (collected.size === 0) {
+            console.log('Mission dialogue timed out.');
+            msg.edit({ components: [] });
+        }
+    });
+
+    await interaction.editReply({ content: "Mission initiated! Check the channel for updates.", ephemeral: true });
+}
+
+// Handler for all character interactions
+async function handleCharacterInteraction(interaction, users, userId, characterName) {
+    const user = users[userId];
+    const userScrolls = loadData(jutsusPath)[userId]?.scrolls || [];
+
+    // Webhooks
+    const zoroWebhook = await getWebhook(interaction, 'Zoro', ZORO_AVATAR);
+    const userWebhook = await getWebhook(interaction, interaction.user.username, interaction.user.displayAvatarURL());
+    const narutoWebhook = await getWebhook(interaction, 'Naruto', 'https://cdn.mos.cms.futurecdn.net/Hpq4NZjKWjHRRyH9bt3Z2e.jpg');
+    const yutaWebhook = await getWebhook(interaction, 'Yuta', 'https://static.wikia.nocookie.net/jujutsu-kaisen/images/7/77/Yuta_Okkotsu_%28Anime%29.png');
+    const jinwooWebhook = await getWebhook(interaction, 'Jinwoo', 'https://static.wikia.nocookie.net/solo-leveling/images/a/ac/Sung_Jin-Woo_anime_design.png');
+
+    // Dialogue and quest state
+    if (user.current_mission === 'zoro_locket' && characterName !== 'zoro' && userScrolls.includes("Zoro's Locket") === false) {
+        // Block other quests until Zoro's is done
+        await userWebhook.send({ content: `You try to talk to ${characterName}...` });
+        await delay(1000);
+        await narutoWebhook.send({ content: `"Help the Green man, he's lost!"` });
+        return;
+    }
+
+    if (userScrolls.includes("Asura's Blade of Execution") === false && (characterName === 'yuta' || characterName === 'jinwoo')) {
+        await userWebhook.send({ content: `You try to talk to ${characterName}...` });
+        await delay(1000);
+        await interaction.channel.send({ content: `You must have the Asura's Blade of Execution unlocked for my quest.` });
+        return;
+    }
+
+    if (characterName === 'zoro') {
+        const jutsuData = loadData(jutsusPath);
+        const userItems = jutsuData[userId]?.items || {};
+        const hasLocket = userItems["Zoro's Locket"] && userItems["Zoro's Locket"] > 0;
+
+        if (hasLocket) {
+            // Quest complete
+            await userWebhook.send({ content: "Zoro, I found your locket!" });
+            await delay(1000);
+            const msg = await zoroWebhook.send({ content: "Thank you, young shinobi! With this, I can return to my crew. My debt is now paid.",
+                components:
+                [
+                    new ActionRowBuilder().addComponents(
+                        new ButtonBuilder().setCustomId('zoro_mission_finish').setLabel('Finish Quest').setStyle(ButtonStyle.Success)
+                    )
+                ]
+            });
+
+            // Wait for the user to click the "Finish Quest" button
+            const filter = i => i.customId === 'zoro_mission_finish' && i.user.id === userId;
+            try {
+                const res = await msg.awaitMessageComponent({ filter, time: 60000 });
+                await res.deferUpdate();
+
+                // Set the tracker and save data
+                user.zoromission = true;
+                user.current_mission = null;
+                saveData(usersPath, users);
+
+                // Edit the message to remove the button and confirm completion
+                await zoroWebhook.editMessage(msg.id, { content: "Zoro's quest is complete!", components: [] });
+
+            } catch (e) {
+                console.error("Finish button timed out:", e);
+                // The bot can't edit the webhook message, so we send a new one
+                try {
+                    await zoroWebhook.send({ content: "Quest finish action timed out." });
+                } catch (editError) {
+                    console.error("Failed to send new message on timeout:", editError);
+                }
+            }
+
+            return;
+        }
+
+        if (user.current_mission === 'zoro_locket') {
+            await zoroWebhook.send({ content: "Have you found it yet?" });
+            await delay(1000);
+            await zoroWebhook.send({ content: "GO FIND MY LOCKET! GRR!" });
+            return;
+        }
+
+        await zoroWebhook.send({ content: "Argh! What do you want?", username: 'Zoro', avatarURL: ZORO_AVATAR });
+
+        const row = new ActionRowBuilder().addComponents(
+            new ButtonBuilder().setCustomId('zoro_lost').setLabel('Are you lost?').setStyle(ButtonStyle.Primary),
+            new ButtonBuilder().setCustomId('zoro_dungeons').setLabel('How do we stop dungeons?').setStyle(ButtonStyle.Primary),
+            new ButtonBuilder().setCustomId('zoro_jutsus').setLabel('Will you teach me jutsus?').setStyle(ButtonStyle.Primary)
+        );
+        // Using a new message to prevent button spamming
+        const msg = await interaction.channel.send({ content: "Choose your question:", components: [row] });
+
+        const filter = i => i.customId.startsWith('zoro_') && i.user.id === userId;
+        try {
+            const res = await msg.awaitMessageComponent({ filter, time: 60000 });
+            await res.deferUpdate();
+
+            if (res.customId === 'zoro_lost') {
+                await userWebhook.send({ content: "Are you lost?", username: interaction.user.username, avatarURL: interaction.user.displayAvatarURL() });
+                await delay(1000);
+                await zoroWebhook.send({ content: "WHAT? No. I AM DEFINITELY NOT LOST....yes. I am, lost. I walked into a portal after separating from my crew.", username: 'Zoro', avatarURL: ZORO_AVATAR });
+                await delay(1000);
+
+                const helpRow = new ActionRowBuilder().addComponents(
+                    new ButtonBuilder().setCustomId('zoro_help').setLabel('How can I help you?').setStyle(ButtonStyle.Success)
+                );
+                const helpMsg = await interaction.channel.send({ content: "...", components: [helpRow] });
+
+                const res2 = await helpMsg.awaitMessageComponent({ filter: i => i.customId === 'zoro_help' && i.user.id === userId, time: 60000 });
+                await res2.deferUpdate();
+                await userWebhook.send({ content: "How can I help you?", username: interaction.user.username, avatarURL: interaction.user.displayAvatarURL() });
+                await delay(1000);
+
+                await zoroWebhook.send({ content: "The old man over there said 'There is a way to send you back but the locket that summons your portal has been stolen by a Blue Saibaman like creature...I am not very good with navigation so i figured im stuck here forever." });
+                await delay(1000);
+
+                const locketRow = new ActionRowBuilder().addComponents(
+                    new ButtonBuilder().setCustomId('zoro_locket_info').setLabel('I can find the locket..how does it look?').setStyle(ButtonStyle.Primary)
+                );
+                const locketMsg = await interaction.channel.send({ content: "...", components: [locketRow] });
+                const res3 = await locketMsg.awaitMessageComponent({ filter: i => i.customId === 'zoro_locket_info' && i.user.id === userId, time: 60000 });
+                await res3.deferUpdate();
+                await userWebhook.send({ content: "I can find the locket..how does it look?", username: interaction.user.username, avatarURL: interaction.user.displayAvatarURL() });
+                await delay(1000);
+
+                await zoroWebhook.send({ content: "The locket is a simple silver locket with a green gem inside it. Just find the Blue thing and you'll retrieve it..the blue thing is hiding in one of the dungeons." });
+                await delay(1000);
+
+                const beginQuestRow = new ActionRowBuilder().addComponents(
+                    new ButtonBuilder().setCustomId('zoro_quest_begin').setLabel('Begin Quest').setStyle(ButtonStyle.Success)
+                );
+                const beginQuestMsg = await interaction.channel.send({ content: "...", components: [beginQuestRow] });
+                const res4 = await beginQuestMsg.awaitMessageComponent({ filter: i => i.customId === 'zoro_quest_begin' && i.user.id === userId, time: 60000 });
+                await res4.deferUpdate();
+
+                user.current_mission = "zoro_locket";
+                saveData(usersPath, users);
+                await interaction.channel.send({ content: "Zoro's quest has begun! You must find and defeat the Blue Saibaman to retrieve the locket." });
+
+            } else if (res.customId === 'zoro_dungeons') {
+                await userWebhook.send({ content: "How do we stop the dungeons from appearing?", username: interaction.user.username, avatarURL: interaction.user.displayAvatarURL() });
+                await delay(1000);
+                await zoroWebhook.send({ content: "dungeons? what are those? I don't know just get me out of here.", username: 'Zoro', avatarURL: ZORO_AVATAR });
+            } else if (res.customId === 'zoro_jutsus') {
+                await userWebhook.send({ content: "Will you teach me jutsus?", username: interaction.user.username, avatarURL: interaction.user.displayAvatarURL() });
+                await delay(1000);
+                await zoroWebhook.send({ content: "Jutsus? is that a famous dish 'round here?. haha, funny.", username: 'Zoro', avatarURL: ZORO_AVATAR });
+            }
+        } catch (e) {
+            console.error(e);
+            await interaction.channel.send({ content: "Dialogue timed out. Please use `/scroll mission` to continue.", ephemeral: true });
+        } finally {
+            // Remove buttons to prevent further interaction
+            try {
+                await msg.edit({ components: [] });
+            } catch (err) {
+                console.error("Failed to edit message:", err);
+            }
+        }
+    } else if (characterName === 'naruto') {
+        const jutsuData = loadData(jutsusPath);
+        if (!user.zoromission) {
+            await userWebhook.send({ content: "What's up, Naruto?" });
+            await delay(1000);
+            await narutoWebhook.send({ content: `"Help the Green man, he's lost!"` });
+            return;
+        }
+
+        if ((user.wins || 0) >= 1000) {
+            // Quest complete logic
+            await userWebhook.send({ content: "Naruto, I have 1,000 wins!" });
+            await delay(1000);
+            const msg = await narutoWebhook.send({ content: "You've done it! You have 1,000 wins! Take this, the scroll of the legendary Asura's Blade of Execution.",
+                components:
+                [
+                    new ActionRowBuilder().addComponents(
+                        new ButtonBuilder().setCustomId('naruto_mission_finish').setLabel('Finish Quest').setStyle(ButtonStyle.Success)
+                    )
+                ]
+            });
+            // Add scroll to user's inventory
+            if (!jutsuData[userId].scrolls) jutsuData[userId].scrolls = [];
+            if (!jutsuData[userId].scrolls.includes("Asura's Blade of Execution")) {
+                jutsuData[userId].scrolls.push("Asura's Blade of Execution");
+                saveData(jutsusPath, jutsuData);
+            }
+
+            // Wait for the user to click the "Finish Quest" button
+            const filter = i => i.customId === 'naruto_mission_finish' && i.user.id === userId;
+            try {
+                const res = await msg.awaitMessageComponent({ filter, time: 60000 });
+                await res.deferUpdate();
+
+                // Set the tracker and save data
+                user.narutomission = true;
+                user.current_mission = null;
+                saveData(usersPath, users);
+
+                // Edit the message to remove the button and confirm completion
+                await narutoWebhook.editMessage(msg.id, { content: "Naruto's quest is complete!", components: [] });
+
+            } catch (e) {
+                console.error("Naruto finish button timed out:", e);
+                // The bot can't edit the webhook message, so we send a new one
+                try {
+                    await narutoWebhook.send({ content: "Quest finish action timed out." });
+                } catch (editError) {
+                    console.error("Failed to send new message on timeout:", editError);
+                }
+            }
+            return;
+        } else {
+             await narutoWebhook.send({ content: "Hey again! Thank you for saving the lost green dude. I wanna treat you with bowls of ramen..but i have a much better offer...Asura.", username: 'Naruto', avatarURL: 'https://cdn.mos.cms.futurecdn.net/Hpq4NZjKWjHRRyH9bt3Z2e.jpg' });
+             await delay(1000);
+             const row = new ActionRowBuilder().addComponents(new ButtonBuilder().setCustomId('naruto_asura').setLabel('Asura?').setStyle(ButtonStyle.Primary));
+             const msg = await interaction.channel.send({ content: "...", components: [row] });
+             const filter = i => i.customId === 'naruto_asura' && i.user.id === userId;
+             try {
+                const res = await msg.awaitMessageComponent({ filter, time: 60000 });
+                await res.deferUpdate();
+                await userWebhook.send({ content: "Asura?", username: interaction.user.username, avatarURL: interaction.user.displayAvatarURL() });
+                await delay(1000);
+                const startQuestRow = new ActionRowBuilder().addComponents(
+                    new ButtonBuilder().setCustomId('naruto_quest_begin').setLabel('Start Quest').setStyle(ButtonStyle.Success)
+                );
+                const startQuestMsg = await narutoWebhook.send({ content: "Yup. THe legendary Shinobi Asura Otsutsuki. I have a plan for you and if you succeed you might learn the legendary Asura's Blade of Execution, inarguably the strongest Jutsu known to mankind. The catch is...you must win, 1000 battles! When you get A THOUSAND wins, come to me. I will then give you the scroll of the Legendary Jutsu.", components: [startQuestRow]});
+                 const startQuestFilter = i => i.customId === 'naruto_quest_begin' && i.user.id === userId;
+                 const startQuestRes = await startQuestMsg.awaitMessageComponent({ startQuestFilter, time: 60000});
+                 await startQuestRes.deferUpdate();
+
+                 user.current_mission = "naruto_wins";
+                 saveData(usersPath, users);
+                 await interaction.channel.send({ content: "Naruto's quest has begun! Win 1000 battles to complete it." });
+
+             } catch (e) {
+                await msg.edit({ content: "Dialogue timed out. Please use `/scroll mission` to continue.", components: [] });
+             } finally {
+                try {
+                    await msg.edit({ components: [] });
+                } catch (err) {
+                    console.error("Failed to edit message:", err);
+                }
+             }
+        }
+
+    } else if (characterName === 'yuta') {
+        await yutaWebhook.send({ content: "You must have the Asura's Blade of Execution unlocked for my quest.", username: 'Yuta', avatarURL: 'https://static.wikia.nocookie.net/jujutsu-kaisen/images/7/77/Yuta_Okkotsu_%28Anime%29.png' });
+    } else if (characterName === 'jinwoo') {
+        await jinwooWebhook.send({ content: "You must have the Asura's Blade of Execution unlocked for my quest.", username: 'Jinwoo', avatarURL: 'https://static.wikia.nocookie.net/solo-leveling/images/a/ac/Sung_Jin-Woo_anime_design.png' });
+    }
+}
+
+// --- Dungeon Game Logic ---
+async function handleDungeonGame(interaction, users, userId) {
+    const dungeonsData = loadData(dungeonsPath);
+    const user = users[userId];
+
+    // Check for tutorial completion first
+    if (user.firstusescroll === undefined || user.firstusescroll === null) {
+        await interaction.deferReply({ ephemeral: true });
+        await handleTutorial(interaction, users, userId);
+        return interaction.editReply({ content: "Tutorial started in the channel!", ephemeral: true });
+    }
+
+    // Reset dungeon state when a new one is started
+    if (user.current_dungeon) {
+        user.current_dungeon = null;
+        saveData(usersPath, users);
+    }
+
+    // --- Dungeon Selection using chance ---
+    // Build weighted list of dungeons based on chance
+    function pickDungeon(dungeons) {
+        const weighted = [];
+        for (const dungeon of dungeons) {
+            const weight = Math.max(0, dungeon.chance || 0);
+            for (let i = 0; i < Math.floor(weight * 100); i++) {
+                weighted.push(dungeon);
+            }
+        }
+        // fallback: if weighted is empty, pick random
+        if (weighted.length === 0) return dungeons[Math.floor(Math.random() * dungeons.length)];
+        return weighted[Math.floor(Math.random() * weighted.length)];
+    }
+    const dungeon = pickDungeon(dungeonsData.dungeons);
+    const dungeonName = dungeon.name;
+    const npcs = Object.keys(dungeon.npcs);
+    const mysteriousVoiceAvatar = 'https://wallpapers.com/images/hd/yellow-anime-9vqufy3pbpjpvcmy.jpg';
+
+    // --- Always use 1 hour cooldown ---
+    const now = Date.now();
+    if (!user.lastDungeon) user.lastDungeon = 0;
+    const lastRun = user.lastDungeon;
+    const cooldownAmount = 3600 * 1000; // 1 hour in ms
+    if (lastRun && now < lastRun + cooldownAmount) {
+        const timeLeft = (lastRun + cooldownAmount - now) / 1000;
+        const minutes = Math.floor(timeLeft / 60);
+        const seconds = Math.floor(timeLeft % 60);
+        return interaction.reply({
+            content: `You are on cooldown. You can enter a dungeon again in ${minutes}m ${seconds}s.`,
+            ephemeral: true
+        });
+    }
+
+    await interaction.reply({ content: `Entering the dungeon: **${dungeonName}** ...`, ephemeral: false });
+
+    // Clean up old webhooks before starting a new run
+    await cleanupWebhooks(interaction);
+
+    // Save initial dungeon state
+    user.current_dungeon = { name: dungeonName, progress: { npcIndex: 0 } };
+    saveData(usersPath, users);
+
+    // Initial dungeon lore messages
+    await interaction.channel.send({ content: dungeon.pre.intro });
+    await delay(2500);
+    const voiceWebhook = await getWebhook(interaction, 'Mysterious Voice', mysteriousVoiceAvatar);
+    if (voiceWebhook) {
+        await voiceWebhook.send({ content: dungeon.pre.lore, username: 'Mysterious Voice', avatarURL: mysteriousVoiceAvatar });
+    }
+    await delay(2500);
+
+    async function sendNPCMessage(npc, content, options = {}) {
+        const npcWebhook = await getWebhook(interaction, npc.name, npc.avatar);
+        if (npcWebhook) {
+            await delay(2500);
+            return npcWebhook.send({ content: content, username: npc.name, avatarURL: npc.avatar, ...options });
         }
     }
 
-    return canvas.toBuffer('image/png');
-}
+    async function dungeonSuccess() {
+        const jutsuData = loadData(jutsusPath);
 
-// Add scroll-jutsu mapping
-const SCROLL_JUTSU = {
-    "Needle Assault Scroll": "Needle Assault",
-    "Silent Assassination Scroll": "Silent Assassination",
-    "Serpents Wrath Scroll": "Serpents Wrath",
-    "Infused Chakra Blade Scroll": "Infused Chakra Blade",
-};
+        // Add crystalline shard
+        if (!jutsuData[userId].items) jutsuData[userId].items = {};
+        const shardReward = dungeon.rewards?.success?.items?.find(i => i.name === 'Crystalline Shard');
+        if (shardReward) {
+            jutsuData[userId].items['Crystalline Shard'] = (jutsuData[userId].items['Crystalline Shard'] || 0) + shardReward.amount;
+        }
 
-// Add new method to track requirements
-async function updateRequirements(userId, type, value = 1) {
-    const requirements = loadData(requirementsPath);
-    const userReqs = requirements[userId];
-    
-    if (!userReqs) return;
+        // Handle scroll rewards (array of scrolls)
+        if (dungeon.rewards?.success?.scrolls) {
+            if (!jutsuData[userId].scrolls) jutsuData[userId].scrolls = [];
+            for (const scroll of dungeon.rewards.success.scrolls) {
+                if (!jutsuData[userId].scrolls.includes(scroll.name)) {
+                    jutsuData[userId].scrolls.push(scroll.name);
+                }
+            }
+        }
 
-    const requirementToUpdate = userReqs.requirements.find(r => r.type === type);
-    if (requirementToUpdate && requirementToUpdate.completed < requirementToUpdate.needed) {
-        requirementToUpdate.completed += value;
-        saveData(requirementsPath, requirements);
+        // Handle item rewards (array of items)
+        if (dungeon.rewards?.success?.items) {
+            if (!jutsuData[userId].items) jutsuData[userId].items = {};
+            for (const item of dungeon.rewards.success.items) {
+                jutsuData[userId].items[item.name] = (jutsuData[userId].items[item.name] || 0) + item.amount;
+            }
+        }
+
+        // Handle exp rewards
+        if (dungeon.rewards?.success?.exp) {
+            user.exp = (user.exp || 0) + dungeon.rewards.success.exp;
+        }
+
+        // Handle money rewards
+        if (dungeon.rewards?.success?.money) {
+            user.money = (user.money || 0) + dungeon.rewards.success.money;
+        }
+
+        // Handle ramen rewards
+        if (dungeon.rewards?.success?.ramen) {
+            user.ramen = (user.ramen || 0) + dungeon.rewards.success.ramen;
+        }
+
+        // Handle combo rewards (array of combos)
+        if (dungeon.rewards?.success?.combos) {
+            if (!user.combos) user.combos = [];
+            for (const combo of dungeon.rewards.success.combos) {
+                if (!user.combos.includes(combo)) {
+                    user.combos.push(combo);
+                }
+            }
+        }
+
+        saveData(jutsusPath, jutsuData);
+        users[userId].current_dungeon = null;
+        users[userId].lastDungeon = Date.now();
+        // New logic to handle dungeonscompleted variable
+        if (users[userId].dungeonscompleted === undefined || users[userId].dungeonscompleted === null) {
+            users[userId].dungeonscompleted = 1;
+        } else {
+            users[userId].dungeonscompleted += 1;
+        }
+        saveData(usersPath, users);
+
+        // Dynamically build rewards message
+        const rewardsText = [];
+        if (dungeon.rewards?.success?.money) rewardsText.push(`- **${dungeon.rewards.success.money}** Ryo`);
+        if (dungeon.rewards?.success?.exp) rewardsText.push(`- **${dungeon.rewards.success.exp}** Exp`);
+        if (dungeon.rewards?.success?.ramen) rewardsText.push(`- **${dungeon.rewards.success.ramen}** Ramen`);
+        if (dungeon.rewards?.success?.items) {
+            for (const item of dungeon.rewards.success.items) {
+                rewardsText.push(`- **${item.amount}** ${item.name}`);
+            }
+        }
+        if (dungeon.rewards?.success?.scrolls) {
+            for (const scroll of dungeon.rewards.success.scrolls) {
+                rewardsText.push(`- The legendary **${scroll.name}** scroll!`);
+            }
+        }
+        if (dungeon.rewards?.success?.combos) {
+            for (const combo of dungeon.rewards.success.combos) {
+                rewardsText.push(`- **${combo}** combo`);
+            }
+        }
+
+        await interaction.channel.send({
+            content: `**Congratulations!** You cleared the dungeon!
+            **Rewards:**
+            ${rewardsText.length > 0 ? rewardsText.join('\n') : 'No rewards.'}`
+        });
     }
+
+    async function dungeonFailure(reason) {
+        users[userId].current_dungeon = null;
+        users[userId].lastDungeon = Date.now();
+        saveData(usersPath, users);
+        await interaction.channel.send({ content: `Dungeon failed: ${reason || 'Better luck next time!'}` });
+    }
+
+    async function handleNextStep() {
+        if (!users[userId].current_dungeon) return; // Dungeon failed, stop.
+
+        const npcIndex = users[userId].current_dungeon.progress.npcIndex;
+        const currentNpcKey = npcs[npcIndex];
+        const currentNpc = dungeon.npcs[currentNpcKey];
+
+        // --- Minigame: Choice ---
+        if (currentNpc.type === 'choice') {
+            const choices = currentNpc.choices.map((choice, i) => new ButtonBuilder()
+                .setCustomId(`dungeon_choice_${i}`)
+                .setLabel(choice.text)
+                .setStyle(ButtonStyle.Primary));
+
+            const row = new ActionRowBuilder().addComponents(choices);
+
+            const msg = await sendNPCMessage(currentNpc, currentNpc.dialogue, { components: [row] });
+            const filter = i => i.customId.startsWith('dungeon_choice_') && i.user.id === userId;
+
+            try {
+                const res = await interaction.channel.awaitMessageComponent({ filter, time: 60000 });
+                const choiceIndex = parseInt(res.customId.split('_')[2]);
+                const outcome = currentNpc.choices[choiceIndex].outcome;
+                const userChoiceText = currentNpc.choices[choiceIndex].text;
+
+                if (outcome === 'success') {
+                    await res.update({ content: `${interaction.user.username} chose to ${userChoiceText}. The enemy is defeated!`, components: [] });
+                    await sendNPCMessage(currentNpc, currentNpc.success_dialogue);
+                    users[userId].current_dungeon.progress.npcIndex++;
+                    saveData(usersPath, users);
+                    handleNextStep();
+                } else {
+                    await res.update({ content: `${interaction.user.username} chose to ${userChoiceText}. It was a mistake...`, components: [] });
+                    await sendNPCMessage(currentNpc, currentNpc.failure_dialogue);
+                    dungeonFailure('Wrong choice.');
+                }
+            } catch (e) {
+                console.error(e);
+                dungeonFailure('Timed out.');
+            } finally {
+                // Ensure buttons are removed on timeout or completion
+                if (msg) {
+                    try {
+                        await msg.edit({ components: [] });
+                    } catch (err) {
+                        console.error("Failed to edit message:", err);
+                    }
+                }
+            }
+        } else if (currentNpc.type === 'riddle') {
+            const choices = currentNpc.choices.map((choice, i) => new ButtonBuilder()
+                .setCustomId(`dungeon_riddle_${i}`)
+                .setLabel(choice.text)
+                .setStyle(ButtonStyle.Primary));
+
+            const row = new ActionRowBuilder().addComponents(choices);
+            await sendNPCMessage(currentNpc, currentNpc.dialogue);
+
+            const voiceWebhook = await getWebhook(interaction, 'Strange Voice', mysteriousVoiceAvatar);
+            const msg = await voiceWebhook.send({ content: currentNpc.riddle_dialogue, username: 'Strange Voice', avatarURL: mysteriousVoiceAvatar, components: [row] });
+            const filter = i => i.customId.startsWith('dungeon_riddle_') && i.user.id === userId;
+
+            try {
+                const res = await interaction.channel.awaitMessageComponent({ filter, time: 60000 });
+                const choiceIndex = parseInt(res.customId.split('_')[2]);
+                const outcome = currentNpc.choices[choiceIndex].outcome;
+
+                if (outcome === 'success') {
+                    await res.update({ content: `${interaction.user.username} stood their ground! Raditz is enraged! Prepare for the final battle!`, components: [] });
+                    users[userId].current_dungeon.progress.npcIndex++;
+                    saveData(usersPath, users);
+                    handleNextStep();
+                } else {
+                    await res.update({ content: `${interaction.user.username} made the wrong choice.`, components: [] });
+                    dungeonFailure('Wrong choice.');
+                }
+            } catch (e) {
+                console.error(e);
+                dungeonFailure('Timed out.');
+            } finally {
+                if (msg) {
+                    try {
+                        await msg.edit({ components: [] });
+                    } catch (err) {
+                        console.error("Failed to edit message:", err);
+                    }
+                }
+            }
+        } else if (currentNpc.type === 'boss') {
+            const bossWebhook = await getWebhook(interaction, currentNpc.name, currentNpc.avatar);
+
+            const totalBoxes = 10;
+            const perfectParryIndex = Math.floor(Math.random() * totalBoxes);
+            const boxes = '⬜'.repeat(totalBoxes).split('');
+            const button = new ActionRowBuilder().addComponents(
+                new ButtonBuilder()
+                    .setCustomId('parry_button')
+                    .setLabel('Perform Parry!')
+                    .setStyle(ButtonStyle.Success)
+            );
+
+            await sendNPCMessage(currentNpc, currentNpc.dialogue);
+
+            const embed = new EmbedBuilder()
+                .setColor('#FFFFFF')
+                .setTitle('Perform a perfect parry!')
+                .setDescription(boxes.join(''));
+
+            const embedMessage = await bossWebhook.send({ embeds: [embed], components: [button] });
+
+            let isPerfect = false;
+            let timer = 0;
+            const interval = setInterval(async () => {
+                if (timer >= totalBoxes) {
+                    clearInterval(interval);
+                    await bossWebhook.editMessage(embedMessage.id, { embeds: [embed.setColor('#FF0000').setDescription('Dungeon Failed: You were too slow!')], components: [] });
+                    dungeonFailure('Missed parry timing.');
+                    return;
+                }
+
+                boxes[timer] = timer === perfectParryIndex ? '🟩' : '🟥';
+                const updatedEmbed = new EmbedBuilder()
+                    .setColor(timer === perfectParryIndex ? '#00FF00' : '#FF0000')
+                    .setTitle('Perform a perfect parry!')
+                    .setDescription(boxes.join(''));
+                await bossWebhook.editMessage(embedMessage.id, { embeds: [updatedEmbed], components: [button] });
+
+                if (timer === perfectParryIndex) {
+                    const filter = i => i.customId === 'parry_button' && i.user.id === userId;
+                    try {
+                        const res = await interaction.channel.awaitMessageComponent({ filter, time: 1000 });
+                        isPerfect = true;
+                        clearInterval(interval);
+                        await res.update({ embeds: [updatedEmbed.setColor('#00FF00').setDescription('Perfect Parry! You won!')], components: [] });
+                        dungeonSuccess();
+                    } catch (e) {
+                        if (!isPerfect) {
+                            clearInterval(interval);
+                            await bossWebhook.editMessage(embedMessage.id, { embeds: [updatedEmbed.setColor('#FF0000').setDescription('Dungeon Failed: You missed the timing!')], components: [] });
+                            dungeonFailure('Missed parry timing.');
+                        }
+                    }
+                }
+                timer++;
+            }, 1000);
+        }
+        // --- Minigame: Puzzle ---
+        else if (currentNpc.type === 'puzzle') {
+            // New puzzle minigame support
+            await sendNPCMessage(currentNpc, currentNpc.dialogue);
+            await delay(1500);
+            const puzzleWebhook = await getWebhook(interaction, currentNpc.name, currentNpc.avatar);
+            const choices = currentNpc.choices.map((choice, i) =>
+                new ButtonBuilder()
+                    .setCustomId(`dungeon_puzzle_${i}`)
+                    .setLabel(choice)
+                    .setStyle(ButtonStyle.Primary)
+            );
+            const row = new ActionRowBuilder().addComponents(choices);
+            const msg = await puzzleWebhook.send({
+                content: currentNpc.puzzle_dialogue || currentNpc.question || "Choose an answer:",
+                components: [row]
+            });
+            const filter = i => i.customId.startsWith('dungeon_puzzle_') && i.user.id === userId;
+            try {
+                const res = await interaction.channel.awaitMessageComponent({ filter, time: 60000 });
+                const choiceIndex = parseInt(res.customId.split('_')[2]);
+                const selected = currentNpc.choices[choiceIndex];
+                if (selected === currentNpc.correct_answer) {
+                    await res.update({ content: currentNpc.success_dialogue || "Correct!", components: [] });
+                    users[userId].current_dungeon.progress.npcIndex++;
+                    saveData(usersPath, users);
+                    handleNextStep();
+                } else {
+                    await res.update({ content: currentNpc.failure_dialogue || "Wrong answer.", components: [] });
+                    dungeonFailure('Wrong answer.');
+                }
+            } catch (e) {
+                dungeonFailure('Timed out.');
+            } finally {
+                if (msg) {
+                    try { await msg.edit({ components: [] }); } catch {}
+                }
+            }
+        }
+        // --- Minigame: Dialogue ---
+        else if (currentNpc.type === 'dialogue') {
+            // New dialogue minigame support
+            await sendNPCMessage(currentNpc, currentNpc.dialogue);
+            await delay(1500);
+            const dialogueWebhook = await getWebhook(interaction, currentNpc.name, currentNpc.avatar);
+            const choices = currentNpc.choices.map((choice, i) =>
+                new ButtonBuilder()
+                    .setCustomId(`dungeon_dialogue_${i}`)
+                    .setLabel(choice.text)
+                    .setStyle(ButtonStyle.Primary)
+            );
+            const row = new ActionRowBuilder().addComponents(choices);
+            const msg = await dialogueWebhook.send({
+                content: currentNpc.dialogue_text || currentNpc.question || "Choose what to say:",
+                components: [row]
+            });
+            const filter = i => i.customId.startsWith('dungeon_dialogue_') && i.user.id === userId;
+            try {
+                const res = await interaction.channel.awaitMessageComponent({ filter, time: 60000 });
+                const choiceIndex = parseInt(res.customId.split('_')[2]);
+                const outcome = currentNpc.choices[choiceIndex].outcome;
+                if (outcome === 'success') {
+                    await res.update({ content: currentNpc.choices[choiceIndex].success_dialogue || "Success!", components: [] });
+                    users[userId].current_dungeon.progress.npcIndex++;
+                    saveData(usersPath, users);
+                    handleNextStep();
+                } else {
+                    await res.update({ content: currentNpc.choices[choiceIndex].failure_dialogue || "Failed.", components: [] });
+                    dungeonFailure('Wrong choice.');
+                }
+            } catch (e) {
+                dungeonFailure('Timed out.');
+            } finally {
+                if (msg) {
+                    try { await msg.edit({ components: [] }); } catch {}
+                }
+            }
+        }
+    }
+
+    handleNextStep();
 }
 
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('scroll')
         .setDescription('Manage your ninja scrolls')
-        .addSubcommand(subcommand =>
-            subcommand
-                .setName('info')
-                .setDescription('View your scroll information'))
-        .addSubcommand(subcommand =>
-            subcommand
-                .setName('set')
-                .setDescription('Set active scroll')
-                .addStringOption(option =>
-                    option.setName('scrollname')
-                        .setDescription('Name of the scroll')
-                        .setRequired(true))),
-
+        .addSubcommand(subcommand => subcommand
+            .setName('dungeon')
+            .setDescription('Attempt to clear a dungeon to earn rewards and shards.'))
+        .addSubcommand(subcommand => subcommand
+            .setName('mission')
+            .setDescription('Begin a new quest after clearing 10 dungeons.'))
+        .addSubcommand(subcommand => subcommand
+            .setName('info')
+            .setDescription('View your current scroll and crystalline shards'))
+        .addSubcommand(subcommand => subcommand
+            .setName('set')
+            .setDescription('Set active scroll')
+            .addStringOption(option => option.setName('scrollname')
+                .setDescription('Name of the scroll')
+                .setRequired(true))),
     async execute(interaction) {
         const users = loadData(usersPath);
         const jutsuData = loadData(jutsusPath);
-        const requirements = loadData(requirementsPath);
-
         const userId = interaction.user.id;
+
         if (!users[userId]) {
             return interaction.reply({ content: "You need to be a ninja first!", ephemeral: true });
         }
 
-        // Check for first time tutorial
-        if (!users[userId].firstusescroll) {
-            await this.showTutorial(interaction, users, userId);
-            return;
-        }
-
-        // Handle regular command
         const subcommand = interaction.options.getSubcommand();
-        if (subcommand === 'info') {
-            await this.handleInfo(interaction, users, jutsuData, requirements, userId);
+
+        if (subcommand === 'dungeon') {
+            await handleDungeonGame(interaction, users, userId);
+        } else if (subcommand === 'mission') {
+            await handleMissionCommand(interaction, users, userId);
+        } else if (subcommand === 'info') {
+            const scrollName = users[userId].current_scroll;
+            const shards = jutsuData[userId]?.items?.['Crystalline Shard'] || 0;
+
+            const embed = new EmbedBuilder()
+                .setColor('#FF5733')
+                .setTitle('ЁЯУЬ Scroll Info')
+                .setThumbnail(interaction.user.displayAvatarURL());
+
+            if (scrollName) {
+                const jutsuName = jutsuData.scrolls?.[scrollName]?.jutsu || 'None';
+                embed.setDescription(`You are currently working on **${scrollName}**.
+                It teaches the **${jutsuName}** jutsu.
+
+                To learn this jutsu, you must find its shards! Use the \`/learnjutsu\` command to learn it when you have enough shards.`);
+            } else {
+                embed.setDescription("You don't have an active scroll. Use `/scroll set <scrollname>` to begin! You can use `/learnjutsu` to learn a jutsu if you have enough shards.");
+            }
+
+            embed.addFields({ name: 'Your Crystalline Shards', value: `${shards}`, inline: true });
+
+            await interaction.reply({ embeds: [embed], ephemeral: true });
+
         } else if (subcommand === 'set') {
-            await this.handleSet(interaction, users, jutsuData, requirements, userId);
-        }
-    },
+            const scrollName = interaction.options.getString('scrollname');
+            const userScrolls = jutsuData[userId]?.scrolls || [];
 
-    async showTutorial(interaction, users, userId) {
-        let currentPage = 0;
-
-        // Defer reply to keep the interaction alive
-        await interaction.deferReply();
-
-        const row = new ActionRowBuilder()
-            .addComponents(
-                new ButtonBuilder()
-                    .setCustomId('prev_page')
-                    .setLabel('Previous')
-                    .setStyle(ButtonStyle.Primary)
-                    .setDisabled(true),
-                new ButtonBuilder()
-                    .setCustomId('next_page')
-                    .setLabel('Next')
-                    .setStyle(ButtonStyle.Primary),
-                new ButtonBuilder()
-                    .setCustomId('finish_tutorial')
-                    .setLabel('Finish')
-                    .setStyle(ButtonStyle.Success)
-                    .setDisabled(true)
-            );
-
-        const tutorialImage = new AttachmentBuilder(
-            await generateTutorialImage(currentPage, interaction),
-            { name: 'tutorial.png' }
-        );
-
-        // Use editReply since we deferred above
-        const message = await interaction.editReply({
-            files: [tutorialImage],
-            components: [row]
-        });
-
-        const collector = message.createMessageComponentCollector({ time: 300000 });
-
-        collector.on('collect', async i => {
-            if (i.user.id !== interaction.user.id) {
-                return i.reply({ content: 'This tutorial is not for you!', ephemeral: true });
-            }
-
-            if (i.customId === 'prev_page') {
-                currentPage--;
-            } else if (i.customId === 'next_page') {
-                currentPage++;
-            } else if (i.customId === 'finish_tutorial') {
-                users[userId].firstusescroll = true;
-                saveData(usersPath, users);
-
-                const finalEmbed = new EmbedBuilder()
-                    .setColor('#4BB543')
-                    .setTitle('Tutorial Completed!')
-                    .setDescription('You can now use `/scroll info` to check your scrolls and requirements!')
-                    .setThumbnail(TUTORIAL_PAGES[0].image);
-
-                // Use editReply instead of update to avoid "Unknown interaction" error
-                await interaction.editReply({
-                    embeds: [finalEmbed],
-                    components: [],
-                    files: []
-                });
-                return;
-            }
-
-            const buttons = row.components;
-            buttons[0].setDisabled(currentPage === 0);
-            buttons[1].setDisabled(currentPage === TUTORIAL_PAGES.length - 1);
-            buttons[2].setDisabled(currentPage !== TUTORIAL_PAGES.length - 1);
-
-            const newTutorialImage = new AttachmentBuilder(
-                await generateTutorialImage(currentPage, interaction),
-                { name: 'tutorial.png' }
-            );
-
-            // Use editReply instead of update to avoid "Unknown interaction" error
-            await interaction.editReply({
-                files: [newTutorialImage],
-                components: [row],
-                embeds: []
-            });
-        });
-    },
-
-    async handleInfo(interaction, users, jutsuData, requirements, userId) {
-        await interaction.deferReply();
-        
-        const userScrolls = jutsuData[userId]?.scrolls || [];
-        const currentScroll = users[userId]?.current_scroll;
-        const userReqs = requirements[userId];
-
-        // Create main embed
-        const embed = new EmbedBuilder()
-            .setColor('#302b63')
-            .setAuthor({ 
-                name: 'Asukky The Sage', 
-                iconURL: 'https://i.pinimg.com/736x/ae/ae/80/aeae806eee029af71359a78bb38ea7e4.jpg' 
-            })
-            .setTitle('📜 The Sacred Scrolls')
-            .setThumbnail(interaction.user.displayAvatarURL());
-
-        if (currentScroll) {
-            const progress = userReqs ? (userReqs.requirements.filter(r => r.completed >= r.needed).length * 20) : 0;
-            embed.setDescription(
-                "Welcome back to the Temple of Scrolls. Complete requirements to master new jutsu.\n\n" +
-                `**Current Scroll:** ${currentScroll}\n` +
-                `**Progress:** ${progress}%`
-            );
-            
-            if (userReqs) {
-                userReqs.requirements.forEach((req, i) => {
-                    const status = req.completed >= req.needed ? '✅' : `[${req.completed}/${req.needed}]`;
-                    embed.addFields({ 
-                        name: `Requirement ${i + 1}`, 
-                        value: `${req.description} ${status}`, 
-                        inline: true 
-                    });
+            if (!userScrolls.includes(scrollName)) {
+                return interaction.reply({
+                    content: `You don't have the "${scrollName}" scroll!`,
+                    ephemeral: true
                 });
             }
 
-            // Add command help as footer
-            embed.setFooter({ 
-                text: 'Use /learnjutsu to attempt learning when requirements are met' 
-            });
-        } else {
-            embed.setDescription(
-                "Welcome back to the Temple of Scrolls. Complete requirements to master new jutsu.\n\n" +
-                `You have ${userScrolls.length} scroll(s)\nUse \`/scroll set\` to start working on one!`
-            );
-            if (userScrolls.length > 0) {
-                embed.addFields({ 
-                    name: 'Your Scrolls', 
-                    value: userScrolls.join('\n').substring(0, 1024) 
-                });
-            }
-            // Add available commands
-            embed.addFields({
-                name: 'Available Commands',
-                value: [
-                    '`/scroll info` - View your current scroll progress',
-                    '`/scroll set <scrollname>` - Set a scroll to work on',
-                    '`/learnjutsu` - Attempt to learn from your current scroll'
-                ].join('\n')
-            });
+            users[userId].current_scroll = scrollName;
+            saveData(usersPath, users);
+
+            const embed = new EmbedBuilder()
+                .setColor('#4BB543')
+                .setTitle('ЁЯУЬ Scroll Selected')
+                .setDescription(`You are now working on **${scrollName}**!\nUse \`/scroll info\` to check progress!`)
+                .setThumbnail(interaction.user.displayAvatarURL());
+
+            return interaction.reply({ embeds: [embed] });
         }
-
-        await interaction.editReply({ embeds: [embed] });
-    },
-
-    async handleSet(interaction, users, jutsuData, requirements, userId) {
-        const scrollName = interaction.options.getString('scrollname');
-        
-        // Debug log
-        console.log('Setting scroll:', scrollName);
-        console.log('User data:', jutsuData[userId]);
-        
-        // Check if user has scrolls array
-        if (!jutsuData[userId] || !jutsuData[userId].scrolls) {
-            const availableScrolls = jutsuData[userId]?.scrolls?.join(", ") || "None";
-            return interaction.reply({
-                content: `You don't have any scrolls yet!\nYour scrolls: ${availableScrolls}`,
-                ephemeral: true
-            });
-        }
-
-        // --- Case-insensitive scroll lookup ---
-        const userScrolls = jutsuData[userId].scrolls;
-        const matchedScroll = userScrolls.find(s => s.toLowerCase() === scrollName.toLowerCase());
-        if (!matchedScroll) {
-            return interaction.reply({
-                content: `You don't have the "${scrollName}"!\nAvailable scrolls: ${userScrolls.join(", ")}`,
-                ephemeral: true
-            });
-        }
-
-        // Generate random requirements
-        const selectedReqs = [];
-        const shuffled = [...REQUIREMENT_TYPES].sort(() => 0.5 - Math.random());
-        
-        for (let i = 0; i < 5; i++) {
-            const req = shuffled[i];
-            const value = Math.floor(Math.random() * (req.max - req.min + 1)) + req.min;
-            selectedReqs.push({
-                description: req.desc.replace('{value}', value),
-                completed: 0,
-                needed: value,
-                type: req.type
-            });
-        }
-
-        // Update user data
-        users[userId].current_scroll = matchedScroll;
-        requirements[userId] = {
-            scroll: matchedScroll,
-            requirements: selectedReqs
-        };
-
-        saveData(usersPath, users);
-        saveData(requirementsPath, requirements);
-
-        const embed = new EmbedBuilder()
-            .setColor('#4BB543')
-            .setTitle('📜 Scroll Selected')
-            .setDescription(`You are now working on **${matchedScroll}**\nUse \`/scroll info\` to check requirements!`)
-            .setThumbnail(interaction.user.displayAvatarURL());
-
-        await interaction.reply({ embeds: [embed] });
-    },
-
-    updateRequirements
+    }
 };
-

@@ -210,9 +210,6 @@ module.exports = {
                 files: [new AttachmentBuilder(imageBuffer, { name: 'profile.png' })]
             });
 
-            if (isSelfView) {
-                await updateRequirements(commandInvokerId, 'profile_check');
-            }
 
             // --- Timeout clear ---
             if (!interactionFinished) {

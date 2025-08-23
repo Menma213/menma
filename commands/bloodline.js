@@ -12,35 +12,35 @@ const BLOODLINES = {
 		title: 'Sharingan',
 		description: 'Unlocks the Sharinga, Uchiha clans trademark.',
 		cost: 100000,
-		emoji: '<:uchiha:123456789>', // Replace with your emoji ID
+		emoji: '<:uchiha:1396464893183393814>', // Replace with your emoji ID
 		shrine: shrineGif
 	},
 	'Hyuga': {
 		title: 'Byakugan',
 		description: 'Has the ability to attack pressure points and drain chakra.',
 		cost: 100000,
-		emoji: '<:hyuga:123456789>', // Replace with your emoji ID
+		emoji: '<:hyuga:1396465419589517466>', // Replace with your emoji ID
 		shrine: shrineGif
 	},
 	'Uzumaki': {
 		title: 'Uzumaki Will',
 		description: 'Plot armor bloodline.',
 		cost: 100000,
-		emoji: '<:uzumaki:123456789>', // Replace with your emoji ID
+		emoji: '<:uzumaki:1396465034548350997>', // Replace with your emoji ID
 		shrine: shrineGif
 	},
 	'Senju': {
 		title: 'Hyper Regeneration',
 		description: 'Grants incredible healing effects.',
 		cost: 100000,
-		emoji: '<:senju:123456789>', // Replace with your emoji ID
+		emoji: '<:senju:1396465123589099623>', // Replace with your emoji ID
 		shrine: shrineGif
 	},
 	'Nara': {
 		title: 'Battle IQ',
 		description: 'Nobody beats a nara when its about battle iq.',
 		cost: 100000,
-		emoji: '<:nara:123456789>', // Replace with your emoji ID
+		emoji: '<:nara:1396465561189355742>', // Replace with your emoji ID
 		shrine: shrineGif
 	}
 };
@@ -226,6 +226,16 @@ module.exports = {
 					ephemeral: true
 				});
 			}
+			// If bloodline is 'unknown', removal is free
+			if (user.bloodline === 'unknown') {
+				saveUserData(userId, {
+					bloodline: null
+				});
+				return interaction.reply({
+					content: `You've removed your unknown bloodline for free.`,
+					ephemeral: false
+				});
+			}
 			if (user.money < REMOVAL_COST) {
 				return interaction.reply({
 					content: `You need ${REMOVAL_COST.toLocaleString()} Ryo to remove your bloodline!`,
@@ -395,6 +405,16 @@ module.exports = {
 			});
 		}
 
+		// If bloodline is 'unknown', removal is free
+		if (user.bloodline === 'unknown') {
+			saveUserData(userId, {
+				bloodline: null
+			});
+			return interaction.reply({
+				content: `You've removed your unknown bloodline for free.`,
+				ephemeral: false
+			});
+		}
 		if (user.money < REMOVAL_COST) {
 			return interaction.reply({
 				content: `You need ${REMOVAL_COST.toLocaleString()} Ryo to remove your bloodline!`,

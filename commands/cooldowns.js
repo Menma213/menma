@@ -9,7 +9,7 @@ const COOLDOWNS = {
     drank: 9 * 60 * 1000,   
     brank: 12 * 60 * 1000,        
     arank: 20 * 60 * 1000,   
-    srank: 18 * 60 * 1000,    
+    srank: 25 * 60 * 1000,    
     trials: 20 * 60 * 1000   
 };
 

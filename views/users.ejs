@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Bot User Data</title>
+    <style>
+        body { font-family: sans-serif; background-color: #36393F; color: #DCDDDE; }
+        table { width: 80%; margin: 20px auto; border-collapse: collapse; }
+        th, td { border: 1px solid #72767D; padding: 8px; text-align: left; }
+        th { background-color: #2F3136; }
+        h1 { text-align: center; }
+    </style>
+</head>
+<body>
+    <h1>Bot User Data</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>User ID</th>
+                <th>Level</th>
+                <th>Jutsu</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% for (let userId in users) { %>
+                <% const user = users[userId]; %>
+                <% 
+                    let jutsuText = 'None';
+                    // Check if the jutsu property exists
+                    if (user.jutsu) {
+                        // If it's an array, join it
+                        if (Array.isArray(user.jutsu)) {
+                            jutsuText = user.jutsu.join(', ');
+                        // If it's an object, get the values and join them
+                        } else if (typeof user.jutsu === 'object' && user.jutsu !== null) {
+                            jutsuText = Object.values(user.jutsu).filter(jutsu => jutsu !== 'None').join(', ');
+                        }
+                    }
+                %>
+                <tr>
+                    <td><%= userId %></td>
+                    <td><%= user.level %></td>
+                    <td><%= jutsuText %></td>
+                </tr>
+            <% } %>
+        </tbody>
+    </table>
+</body>
+</html>

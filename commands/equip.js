@@ -110,9 +110,7 @@ module.exports = {
 
             const equipSuccess = true;
 
-            if (equipSuccess) {
-                await updateRequirements(interaction.user.id, 'equip_jutsu');
-            }
+        
 
             return interaction.reply({
                 content: `Successfully equipped \"${matchedJutsu}\" in slot ${slotNumber}!`,

@@ -197,8 +197,7 @@ module.exports = {
         dropMsg += "```";
         await interaction.reply({ embeds: [embed], content: dropMsg });
 
-        // Update mission requirements
-        await updateRequirements(interaction.user.id, 'd_mission');
+      
 
         // Add Mentor Experience
         users[userId].mentorExp = (users[userId].mentorExp || 0) + 1;

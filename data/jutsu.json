@@ -35,10 +35,13 @@
       "Great Forest Crumbling",
       "Creation Rebirth",
       "Cherry Blossom Impact",
-      "One Thousand Years of Death",
       "Burning Ash",
       "Lord of Bloodsea",
-      "The Grand Rebellion"
+      "The Grand Rebellion",
+      "Heaven Slaughter",
+      "Thunder's Sigil",
+      "Last Resort",
+      "Kamehameha"
     ],
     "combos": [
       "Basic Combo",
@@ -48,9 +51,14 @@
     "scrolls": [
       "Needle Assault Scroll",
       "Chakra Infused Blade Scroll",
-      "Infused Chakra Blade Scroll"
+      "Infused Chakra Blade Scroll",
+      "Asura's Blade of Execution"
     ],
-    "rankeditems": []
+    "rankeditems": [],
+    "items": {
+      "Crystalline Shard": 8,
+      "Zoro's Locket": 3
+    }
   },
   "843680216022122516": {
     "usersjutsu": [
@@ -174,7 +182,11 @@
     "rankeditems": [],
     "scrolls": [
       "Serpents Wrath Scroll"
-    ]
+    ],
+    "items": {
+      "Crystalline Shard": 4,
+      "Zoro's Locket": 2
+    }
   },
   "818893461881094175": {
     "usersjutsu": [
@@ -184,16 +196,23 @@
       "Basic Combo"
     ],
     "rankeditems": [],
-    "scrolls": []
+    "scrolls": [],
+    "items": {
+      "Crystalline Shard": 1
+    }
   },
   "1132693590066331828": {
     "usersjutsu": [
       "Transformation Jutsu",
-      "asura"
+      "asura",
+      "Infused Chakra Blade"
     ],
     "scrolls": [
       "Needle Assault Scroll"
     ],
+    "items": {
+      "Crystalline Shard": 2
+    },
     "rankeditems": []
   },
   "1239968214130102424": {
@@ -253,6 +272,27 @@
     ]
   },
   "254833691438743552": {
+    "usersjutsu": [
+      "Transformation Jutsu"
+    ]
+  },
+  "1129254239420551188": {
+    "usersjutsu": [
+      "Transformation Jutsu"
+    ]
+  },
+  "1111082162716950568": {
+    "usersjutsu": [
+      "Transformation Jutsu"
+    ],
+    "scrolls": []
+  },
+  "449222713672859656": {
+    "usersjutsu": [
+      "Transformation Jutsu"
+    ]
+  },
+  "963147707512418305": {
     "usersjutsu": [
       "Transformation Jutsu"
     ]
