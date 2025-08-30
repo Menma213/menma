@@ -646,7 +646,7 @@ function getJutsuByButton(buttonId, player) {
 async function processPlayerMove(customId, basePlayer) {
     const action = customId.split('-')[0];
     if (action === 'rest') {
-        basePlayer.chakra = Math.min(basePlayer.chakra + 1, 15); // Max chakra 15
+        basePlayer.chakra = Math.min(basePlayer.chakra + 1, 999); // Max chakra 15
         return {
             damage: 0,
             heal: 0,
@@ -1089,6 +1089,7 @@ function createBattleSummary(
     if (p1StatusMsg && (!player1Action.jutsuUsed || player1Action.isStatusEffect)) {
         p1Description = p1StatusMsg;
     } else if (player1Action.isRest) {
+        p1Chakra = Math.min((p1Chakra || 0) + 1, 999);
         p1Description = player1Action.description;
     } else if (player1Action.fled) {
         p1Description = `${player1.name} fled from battle!`;
@@ -1127,6 +1128,7 @@ function createBattleSummary(
     if (p2StatusMsg && (!player2Action.jutsuUsed || player2Action.isStatusEffect)) {
         p2Description = p2StatusMsg;
     } else if (player2Action.isRest) {
+        p2Chakra = Math.min((p2Chakra || 0) + 1, 999);
         p2Description = player2Action.description;
     } else if (player2Action.fled) {
         p2Description = `${player2.name} fled from battle!`;
@@ -1582,11 +1584,11 @@ const BRANK_NPCS = [
     {
         name: "Bandit",
         image: "https://static.wikia.nocookie.net/naruto/images/9/9c/Mizuki.png/revision/latest?cb=20210529210947&path-prefix=fr",
-        baseHealth: 1.5,
-        basePower: 0.8,
+        baseHealth: 0.2,
+        basePower: 0.3,
         baseDefense: 0.3,
         accuracy: 80,
-        dodge: 10,
+        dodge: 0,
         jutsu: ["Attack", "Serpents Wrath", "Shuriken Throw"]
     }
 ];
@@ -1595,7 +1597,7 @@ const ARANK_NPCS = [
     {
         name: "Jugo",
         image: "https://i.postimg.cc/vmfSx5V1/17-D3-B777-0-FC6-4-EE4-957-D-513-CC60-D8924.png",
-        baseHealth: 4.0,
+        baseHealth: 1.2,
         basePower: 1.2,
         baseDefense: 0.8,
         accuracy: 85,
@@ -1606,7 +1608,7 @@ const ARANK_NPCS = [
     {
         name: "Temari",
         image: "https://i.postimg.cc/1tS7G4Gv/6-CCACDF3-9612-4831-8-D31-046-BEA1586-D9.png",
-        baseHealth: 2.5,
+        baseHealth: 0.2,
         basePower: 1.0,
         baseDefense: 0.5,
         accuracy: 90,
@@ -1617,7 +1619,7 @@ const ARANK_NPCS = [
     {
         name: "Kankuro",
         image: "https://i.postimg.cc/y8wbNLk4/5-F95788-A-754-C-4-BA6-B0-E0-39-BCE2-FDCF04.png",
-        baseHealth: 3.5,
+        baseHealth: 0.2,
         basePower: 1.1,
         baseDefense: 0.7,
         accuracy: 80,
@@ -1628,7 +1630,7 @@ const ARANK_NPCS = [
     {
         name: "Suigetsu",
         image: "https://i.postimg.cc/GmBfrW3x/54-AE56-B1-E2-EE-4179-BD24-EEC282-A8-B3-BF.png",
-        baseHealth: 3.0,
+        baseHealth: 0.9,
         basePower: 1.0,
         baseDefense: 0.6,
         accuracy: 75,
@@ -1639,7 +1641,7 @@ const ARANK_NPCS = [
     {
         name: "Fuguki",
         image: "https://i.postimg.cc/QMJJrm7q/064262-C0-1-BC4-47-B2-A06-A-59-DC193-C0285.png",
-        baseHealth: 4.0,
+        baseHealth: 0.9,
         basePower: 1.2,
         baseDefense: 0.8,
         accuracy: 70,
@@ -1650,7 +1652,7 @@ const ARANK_NPCS = [
     {
         name: "Jinpachi",
         image: "https://i.postimg.cc/SsZLnKD2/809-EBF4-E-70-EF-4-C83-BCE4-3-D6-C228-B1239.png",
-        baseHealth: 3.5,
+        baseHealth: 1.1,
         basePower: 1.1,
         baseDefense: 0.7,
         accuracy: 85,
@@ -1661,7 +1663,7 @@ const ARANK_NPCS = [
     {
         name: "Kushimaru",
         image: "https://i.postimg.cc/3wTF6VkR/53-BE91-D0-8-A53-47-C9-BD48-A06728-AFE79-C.png",
-        baseHealth: 2.8,
+        baseHealth: 0.8,
         basePower: 1.1,
         baseDefense: 0.6,
         accuracy: 95,
@@ -1672,7 +1674,7 @@ const ARANK_NPCS = [
     {
         name: "Baki",
         image: "https://i.postimg.cc/Jn7c7XcC/5997-D785-7-C7-D-4-BC0-93-DB-CCF7-CA3-CDB56.png",
-        baseHealth: 3.0,
+        baseHealth: 1.0,
         basePower: 1.0,
         baseDefense: 0.7,
         accuracy: 85,
@@ -1964,7 +1966,10 @@ async function runBattle(interaction, player1Id, player2Id, battleType, npcTempl
 
 
     let battleResult = null;
+    // Passive chakra regen at the start of each round
     while (battleActive) {
+        player1.chakra = Math.min(player1.chakra + 2, 999);
+        player2.chakra = Math.min(player2.chakra + 2, 999);
         // --- Apply and Update Effects (Buffs, Debuffs, Statuses) ---
         [player1, player2].forEach(entity => {
             // Apply damage/heal from bleed, poison etc.
@@ -1995,7 +2000,7 @@ async function runBattle(interaction, player1Id, player2Id, battleType, npcTempl
 
             // Nara is always passive
             if (playerBloodline === "Nara") {
-                player.chakra = Math.min(player.chakra + 3); // Max chakra 15
+                player.chakra = Math.min(player.chakra + 3, 999); // Max chakra 999
                 bloodlineEmbed = new EmbedBuilder()
                     .setTitle("Battle IQ")
                     .setDescription(`${BLOODLINE_DEPARTMENTS[playerBloodline]}\n\n${player.name} activates **${BLOODLINE_NAMES[playerBloodline]}**!\nBattle IQ grants +3 chakra this round!`)
@@ -2671,6 +2676,7 @@ async function runBattle(interaction, player1Id, player2Id, battleType, npcTempl
         }
 
         // --- Global Round Summary ---
+        roundNum += 1;
         const summaryEmbed = createBattleSummary(
             player1Action, player2Action, player1, player2, roundNum,
             comboCompleted1, comboDamageText1, comboCompleted2, comboDamageText2,
@@ -2818,9 +2824,12 @@ async function runBattle(interaction, player1Id, player2Id, battleType, npcTempl
         }
         }
 
-        // --- Passive Chakra Regen ---
-        player1.chakra = Math.min(player1.chakra + 2);
-        player2.chakra = Math.min(player2.chakra + 2);
+    // --- Passive Chakra Regen ---
+   
+
+    
+    
+
     // Auto-delete channel after a delay for ranked battles
     if (battleType === 'ranked') {
         setTimeout(async () => {
@@ -3131,6 +3140,31 @@ async function brankCommand(interaction) {
         return interaction.reply({ content: "You need to enroll first!", ephemeral: true });
     }
 
+    // --- COOLDOWN SYSTEM (from brank.js) ---
+    const now = Date.now();
+    // Premium cooldown roles
+    const JINCHURIKI_ROLE = "1385641469507010640";
+    const LEGENDARY_ROLE = "1385640798581952714";
+    const DONATOR_ROLE = "1385640728130097182";
+    let cooldownMs = 12 * 60 * 1000; // default 12 min
+
+    // Check premium roles (jinchuriki > legendary > donator)
+    const memberRoles = interaction.member.roles.cache;
+    if (memberRoles.has(JINCHURIKI_ROLE)) {
+        cooldownMs = 5.5 * 60 * 1000; // 5 min 30 sec
+    } else if (memberRoles.has(LEGENDARY_ROLE)) {
+        cooldownMs = Math.round(7 * 60 * 1000); // 7 min
+    } else if (memberRoles.has(DONATOR_ROLE)) {
+        cooldownMs = Math.round(8 * 60 * 1000); // 8 min
+    }
+
+    if (users[userId].lastbrank && now - users[userId].lastbrank < cooldownMs) {
+        const left = cooldownMs - (now - users[userId].lastbrank);
+        return interaction.reply({ content: `You can do this again in ${getCooldownString(left)}.`, ephemeral: false });
+    }
+    users[userId].lastbrank = now;
+    fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
+
     await interaction.deferReply({ ephemeral: false });
 
     const npcId = "NPC_Bandit";
@@ -3145,26 +3179,6 @@ async function brankCommand(interaction) {
 
     // If player won (player health > 0 and NPC health <= 0)
     if (player && player.health > 0) {
-        // --- COOLDOWN SYSTEM (from brank.js) ---
-        const now = Date.now();
-        // Premium cooldown roles
-        const JINCHURIKI_ROLE = "1385641469507010640";
-        const LEGENDARY_ROLE = "1385640798581952714";
-        const DONATOR_ROLE = "1385640728130097182";
-        let cooldownMs = 12 * 60 * 1000; // default 12 min
-
-        // Check premium roles (jinchuriki > legendary > donator)
-        const memberRoles = interaction.member.roles.cache;
-        if (memberRoles.has(JINCHURIKI_ROLE)) {
-            cooldownMs = 5.5 * 60 * 1000; // 5 min 30 sec
-        } else if (memberRoles.has(LEGENDARY_ROLE)) {
-            cooldownMs = Math.round(7 * 60 * 1000); // 7 min
-        } else if (memberRoles.has(DONATOR_ROLE)) {
-            cooldownMs = Math.round(8 * 60 * 1000); // 8 min
-        }
-        player.lastbrank = now;
-        fs.writeFileSync(usersPath, JSON.stringify(usersAfter, null, 2));
-
         const expReward = math.random(5.0, 8.0);
         const moneyReward = 500 + Math.floor((player.level || 1) * 20);
 
@@ -3328,7 +3342,7 @@ async function arankCommand(interaction) {
 
     // Reward calculation (from arank.js)
     function calculateRewards(totalEnemiesDefeated, player) {
-        const baseExp = 0.2;
+        const baseExp = 3.0;
         const baseMoney = 200 + Math.floor((player.level || 1) * 5);
         if ((totalEnemiesDefeated + 1) % 5 === 0) {
             let bonusExp = Math.max(2 * (player.level || 1), baseExp);
@@ -3677,7 +3691,11 @@ async function trialsCommand(interaction) {
         const sec = Math.floor((left % 60000) / 1000);
         return interaction.editReply({ content: `You can do this again in ${min}m ${sec}s.`, ephemeral: false });
     }
-    
+
+    // --- Register cooldown instantly when command is sent ---
+    users[userId].LastTrials = now;
+    fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
+
     // Always start the trials from the beginning
     let currentTrialIndex = 0;
     let userLostTrial = false;
@@ -3693,7 +3711,7 @@ async function trialsCommand(interaction) {
 
         if (battleResult === 'win') {
             // Player won this trial
-            const expReward = 0.2;
+            const expReward = 200;
             const moneyReward = 10000;
             
             users[userId].exp = (users[userId].exp || 0) + expReward;
@@ -3738,7 +3756,6 @@ async function trialsCommand(interaction) {
     }
 
     // Final summary after all trials or early exit
-    users[userId].LastTrials = now; // Update cooldown after the entire trial sequence
     if (!userLostTrial && currentTrialIndex >= HOKAGE_TRIALS.length) {
         await interaction.followUp(`**Congratulations!** You have successfully completed all Hokage Trials!`);
         users[userId].trialsResult = "win"; // For tutorial tracking
@@ -4168,8 +4185,8 @@ async function checkQueue(client, mode = 'standard') {
         // --- Create a more robust dummy interaction object for `runBattle` ---
         const dummyInteraction = {
             client: client,
-            user: await client.users.fetch(userId),
-            guild: await client.guilds.fetch(SERVER_ID),
+            user: await client.users.fetch(userId) || 1234,
+            guild: await client.guilds.fetch(SERVER_ID) || 5678,
             // Mock the reply methods to avoid crashes, returning a mock message object
             deferReply: async () => ({}),
             editReply: async () => ({}),

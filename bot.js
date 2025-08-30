@@ -96,6 +96,15 @@ client.on('interactionCreate', async interaction => {
 // Bot ready event
 client.once('ready', () => {
     console.log(`✅ ${client.user.tag} is online!`);
+    console.log(`🌐 Connected to ${client.guilds.cache.size} server(s).`);
+});
+
+// Listen for messages to trigger Thunderbird NPC
+const tradeCmd = require('./commands/trade');
+client.on('messageCreate', async (message) => {
+    if (typeof tradeCmd.thunderbirdListener === 'function') {
+        await tradeCmd.thunderbirdListener(message);
+    }
 });
 
 // Log in

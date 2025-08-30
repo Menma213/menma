@@ -113,38 +113,38 @@
       "cooldown": 7200,
       "chance": 0.6,
       "pre": {
-        "intro": "The air thickens with a malevolent chakra. You've entered the dreaded Forest of Death.",
-        "lore": "You see a massive, slithering figure in the trees. It’s Orochimaru, and he's not happy about your presence. You'll need to outsmart him to survive."
+        "intro": "You step into the Forest of Death. The air feels heavy and creepy.",
+        "lore": "You spot something moving in the trees. It's Orochimaru, and he doesn't look happy to see you. Better be careful."
       },
       "npcs": {
         "orochimaru": {
           "name": "Orochimaru",
-          "avatar": "https://i.pinimg.com/736x/88/2c/fe/882cfe3329f60f64b19c6f2a74c44243.jpg",
-          "dialogue": "Fascinating... an insect has wandered into my web. Do you have what it takes to escape?",
-          "question": "The forest is a maze of jutsu. Which path will you take to find the scroll?",
+          "avatar": "https://static.wikia.nocookie.net/naruto/images/1/14/Orochimaru_Infobox.png/revision/latest/scale-to-width-down/1200?cb=20150925223113",
+          "dialogue": "Well, well, look who wandered in. Think you can get out of here?",
+          "question": "The forest is full of traps. Which way do you go?",
           "type": "riddle",
           "riddle_dialogue": "A whisper in the trees says, 'The path to true power lies where the shadows meet the sun.'",
           "choices": [
             {
               "text": "Go towards the brightest light",
               "outcome": "failure",
-              "failure_dialogue": "A genjutsu! You've walked into a trap. Orochimaru's curse mark activates, and you feel your life force draining away."
+              "failure_dialogue": "You walk into a trap! Orochimaru's curse mark hurts you."
             },
             {
               "text": "Search for a dark cave",
               "outcome": "failure",
-              "failure_dialogue": "You enter a dark cave only to be met by a swarm of poisonous snakes. You have been defeated."
+              "failure_dialogue": "You find a cave, but it's full of snakes. Ouch!"
             },
             {
-              "text": "Follow the trail of discarded ninja tools",
+              "text": "Follow the trail of ninja tools",
               "outcome": "success",
-              "success_dialogue": "You find a trail of discarded kunai and shuriken, leading you straight to the scroll. But as you grab it, a giant snake emerges..."
+              "success_dialogue": "You follow the tools and find the scroll. Suddenly, a big snake shows up!"
             }
           ]
         },
         "mandarin_snake": {
           "name": "Mandarin Snake",
-          "avatar": "https://static.wikia.nocookie.net/naruto/images/a/a2/Mandarin_Snake.png/revision/latest?cb=20150310231649",
+          "avatar": "https://pm1.aminoapps.com/6403/6e6f05fea63b14cd305b3b2d3c8c6f7fab83eeae_00.jpg",
           "dialogue": "SSSSSSS. I protect this scroll. You shall not pass!",
           "type": "boss"
         }
@@ -153,8 +153,13 @@
         "success": {
           "items": [
             {
-              "name": "Chunin Exams Scroll",
+              "name": "Crystalline Shard",
               "amount": 1
+            }
+          ],
+          "scrolls": [
+            {
+              "name": "Summon Manda"
             }
           ]
         }
@@ -166,14 +171,14 @@
       "cooldown": 14400,
       "chance": 0.4,
       "pre": {
-        "intro": "The sky darkens as massive, metallic pillars fall from the heavens. Pain has arrived.",
-        "lore": "You stand before the leader of the Akatsuki. His Rinnegan eyes stare into your soul. You know this is a fight you can't win with just brute force."
+        "intro": "The sky turns dark. Big metal rods crash down. Pain is here.",
+        "lore": "You stand in front of Pain, leader of the Akatsuki. His eyes are scary. This won't be easy."
       },
       "npcs": {
         "pain": {
           "name": "Pain",
-          "avatar": "https://static.wikia.nocookie.net/naruto/images/4/4c/Nagato_Uchiha_Anime.png/revision/latest?cb=20230209191722",
-          "dialogue": "So you have come to face me. Your futile efforts will only lead to one outcome: Shinra Tensei!",
+          "avatar": "https://miro.medium.com/v2/resize:fit:1400/0*omXNDFPKOGqy1Qaj.png",
+          "dialogue": "So, you came to fight me? Let's see what you've got.",
           "type": "boss"
         }
       },
@@ -181,10 +186,11 @@
         "success": {
           "items": [
             {
-              "name": "Rinnegan Shard",
+              "name": "Crystalline Shard",
               "amount": 1
             }
-          ]
+          ],
+          "exp": 25
         }
       }
     },
@@ -194,32 +200,32 @@
       "cooldown": 10800,
       "chance": 0.35,
       "pre": {
-        "intro": "A desolate battlefield stretches before you, filled with reanimated shinobi. The Fourth Great Ninja War is upon you.",
-        "lore": "You must navigate the chaos and face down two of the most powerful shinobi to ever live: Kabuto and Madara Uchiha."
+        "intro": "You walk onto a battlefield. There are lots of ninja fighting everywhere.",
+        "lore": "Kabuto and Madara are here. You'll need to be smart to win."
       },
       "npcs": {
         "kabuto_yakushi": {
           "name": "Kabuto Yakushi",
-          "avatar": "https://images.hidive.com/dist/img/catalog/series/2443_1_hero_1.jpg",
-          "dialogue": "I've perfected the Edo Tensei. Now, you will face an army of the dead. It's time to see what you're really made of.",
+          "avatar": "https://i.redd.it/027qyn3ai3y71.png",
+          "dialogue": "I've got a whole army waiting for you. Ready to try your luck?",
           "type": "choice",
           "choices": [
             {
-              "text": "Try to defeat the entire army",
+              "text": "Try to fight everyone",
               "outcome": "failure",
-              "failure_dialogue": "You're quickly overwhelmed by the sheer number of reanimated ninja. You are defeated."
+              "failure_dialogue": "There are too many! You get knocked out."
             },
             {
-              "text": "Find and attack Kabuto directly",
+              "text": "Go straight for Kabuto",
               "outcome": "success",
-              "success_dialogue": "You cut through the horde and manage to find Kabuto. As you land a blow, a familiar, terrifying chakra explodes from behind you."
+              "success_dialogue": "You dodge the crowd and hit Kabuto. But now Madara shows up!"
             }
           ]
         },
         "madara_uchiha": {
           "name": "Madara Uchiha",
-          "avatar": "https://static.wikia.nocookie.net/naruto/images/d/df/Madara_Uchiha.png/revision/latest?cb=20240409062323",
-          "dialogue": "My Edo Tensei is nothing compared to my true power. Let's see if you can dance with the true Uchiha.",
+          "avatar": "https://cmsapi-frontend.naruto-official.com/site/api/naruto/Image/get?path=/naruto/import/images/naruto02/501%EF%BD%9E600/542/C004.jpg",
+          "dialogue": "Let's see if you can handle me.",
           "type": "boss"
         }
       },
@@ -227,10 +233,11 @@
         "success": {
           "items": [
             {
-              "name": "Uchiha Fan",
+              "name": "Crystalline Shard",
               "amount": 1
             }
-          ]
+          ],
+          "exp_formula": "25 + 1 * player.level"
         }
       }
     },
@@ -240,32 +247,32 @@
       "cooldown": 5400,
       "chance": 0.55,
       "pre": {
-        "intro": "You arrive at a small island with a large, intimidating fortress. The symbol of a saw-like jaw is painted on the walls. You've found Arlong Park.",
-        "lore": "You must navigate the brutal Arlong Pirates to free the town of Cocoyashi from their tyranny."
+        "intro": "You arrive at Arlong Park. The place looks tough.",
+        "lore": "The Arlong Pirates are making trouble. Time to help the town."
       },
       "npcs": {
         "hatchan": {
           "name": "Hatchan",
-          "avatar": "https://static.wikia.nocookie.net/onepiece/images/5/52/Hatchan_Anime_Pre_Timeskip_Infobox.png/revision/latest?cb=20210705022512",
-          "dialogue": "Hahaha! You've made it this far, but you won't get past me! I'm the mighty Hatchan, master of Six-Sword Style!",
+          "avatar": "https://static.wikia.nocookie.net/onepiece/images/a/a0/Hatchan_Portrait.png/revision/latest?cb=20191225094910",
+          "dialogue": "You think you can beat me? I've got six swords!",
           "type": "choice",
           "choices": [
             {
               "text": "Fight him head-on",
               "outcome": "failure",
-              "failure_dialogue": "Hatchan's six swords are too much for you to handle. You are defeated."
+              "failure_dialogue": "Six swords are too much. You lose."
             },
             {
-              "text": "Bait him into breaking his own swords",
+              "text": "Trick him into breaking his swords",
               "outcome": "success",
-              "success_dialogue": "You trick Hatchan into a clumsy lunge, causing him to break his own swords. He is defeated, and now you face the main force of the Arlong Pirates."
+              "success_dialogue": "He falls for it and breaks his swords. Now Arlong steps up."
             }
           ]
         },
         "arlong": {
           "name": "Arlong",
-          "avatar": "https://static.wikia.nocookie.net/onepiece/images/d/d7/Arlong_Anime_Infobox.png/revision/latest?cb=20240321111624",
-          "dialogue": "Hmph! You defeated Hatchan? It doesn't matter. I'm stronger than any human. You're nothing but trash to a fish-man!",
+          "avatar": "https://comicvine.gamespot.com/a/uploads/original/11114/111146553/4839073-1908580863-33743.png",
+          "dialogue": "You beat Hatchan? I'm way stronger than him!",
           "type": "boss"
         }
       },
@@ -273,55 +280,11 @@
         "success": {
           "items": [
             {
-              "name": "Nami's Map",
+              "name": "Crystalline Shard",
               "amount": 1
             }
-          ]
-        }
-      }
-    },
-    {
-      "name": "My Hero Academia: Shie Hassaikai Raid",
-      "grade": "SSS",
-      "cooldown": 10800,
-      "chance": 0.45,
-      "pre": {
-        "intro": "A quiet, foreboding compound stands before you. You are part of the raid on the Shie Hassaikai.",
-        "lore": "The heroes' mission is to rescue Eri and stop Overhaul. You'll need to work together to defeat the Yakuza and their powerful quirks."
-      },
-      "npcs": {
-        "gentle_criminal": {
-          "name": "Gentle Criminal",
-          "avatar": "https://static.wikia.nocookie.net/bokunoheroacademia/images/6/6f/Gentle_Criminal_Anime_Profile.png/revision/latest?cb=20200321151624",
-          "dialogue": "La Brava, my dear! We'll show these uncultured heroes the art of true villainy!",
-          "type": "puzzle",
-          "puzzle_dialogue": "Gentle Criminal uses his quirk to make the floor bouncy, and you start bouncing uncontrollably. You need to find a way to stabilize yourself.",
-          "question": "Which item will you use to keep your feet on the ground?",
-          "choices": [
-            "A grappling hook",
-            "A heavy lead weight",
-            "A simple rope",
-            "A small rock"
           ],
-          "correct_answer": "A heavy lead weight",
-          "failure_dialogue": "You try to use a rope, but it's no use. You bounce right out of the building. You have been defeated.",
-          "success_dialogue": "You grab a heavy weight from your pack and throw it to the floor. The weight negates the bouncy quirk, allowing you to move forward."
-        },
-        "overhaul_kai_chisaki": {
-          "name": "Overhaul",
-          "avatar": "https://static.wikia.nocookie.net/myheroacademia/images/7/7b/Overhaul_Full_Body_Anime.png/revision/latest?cb=20200115024744",
-          "dialogue": "Don't touch me. You're filthy. I'll disassemble you and show you the 'true' power of my quirk.",
-          "type": "boss"
-        }
-      },
-      "rewards": {
-        "success": {
-          "items": [
-            {
-              "name": "Eri's Horn",
-              "amount": 1
-            }
-          ]
+          "money": 10000
         }
       }
     },
@@ -331,34 +294,34 @@
       "cooldown": 9000,
       "chance": 0.4,
       "pre": {
-        "intro": "The streets of Shibuya are filled with curses and chaos. The most dangerous night in Jujutsu history has begun.",
-        "lore": "You're caught in the middle of a war between sorcerers and cursed spirits. You'll need to be at your best to survive the night."
+        "intro": "Shibuya is full of monsters tonight.",
+        "lore": "Curses and sorcerers are fighting everywhere. Stay sharp."
       },
       "npcs": {
         "hanami": {
           "name": "Hanami",
-          "avatar": "https://static.wikia.nocookie.net/jujutsu-kaisen/images/7/72/Hanami_Anime.png/revision/latest?cb=20210212002102",
-          "dialogue": "We will cleanse this world of humans. You're an obstacle.",
+          "avatar": "https://i.pinimg.com/736x/05/10/15/05101523ec4487e4493744ea87c5f5fe.jpg",
+          "dialogue": "Humans ruin everything. I'm here to stop you.",
           "type": "dialogue",
-          "dialogue_text": "Hanami's power is tied to the fear of nature. You need to find the right words to weaken it.",
-          "question": "What will you say to the cursed spirit?",
+          "dialogue_text": "Hanami hates cities. Maybe you can use that.",
+          "question": "What do you say?",
           "choices": [
             {
-              "text": "Tell it how beautiful the city is",
+              "text": "Say the city is beautiful",
               "outcome": "success",
-              "success_dialogue": "Hanami's rage flares, but your words of praise for the artificial world weaken its resolve. It is defeated, but another foe appears."
+              "success_dialogue": "Hanami gets mad, but you win!"
             },
             {
-              "text": "Threaten it with a powerful attack",
+              "text": "Threaten it",
               "outcome": "failure",
-              "failure_dialogue": "Your threat only strengthens its resolve. The cursed spirit unleashes a barrage of trees and you are defeated."
+              "failure_dialogue": "Hanami gets even stronger and beats you."
             }
           ]
         },
         "mahoraga": {
           "name": "Mahoraga",
-          "avatar": "https://static.wikia.nocookie.net/jujutsu-kaisen/images/9/90/Mahoraga_Anime.png/revision/latest?cb=20230713063548",
-          "dialogue": "...",
+          "avatar": "https://www.animesenpai.net/wp-content/uploads/2023/11/58201d9c-0b91-4cf0-9ecc-4495943a07ff.jpg",
+          "dialogue": "......",
           "type": "boss"
         }
       },
@@ -366,8 +329,12 @@
         "success": {
           "items": [
             {
-              "name": "Cursed Finger",
+              "name": "Crystalline Shard",
               "amount": 1
+            },
+            {
+              "name": "Ramen Ticket",
+              "amount": 10
             }
           ]
         }
@@ -379,32 +346,32 @@
       "cooldown": 8000,
       "chance": 0.5,
       "pre": {
-        "intro": "A gloomy, rain-soaked cave stands before you. This is the Akatsuki's hideout.",
-        "lore": "You've been tasked with infiltrating the hideout and retrieving a stolen scroll. You'll need to be stealthy and clever to get past the notorious duo of Itachi Uchiha and Kisame Hoshigaki."
+        "intro": "You find the Akatsuki hideout. It's raining and dark.",
+        "lore": "You need to sneak in and grab a scroll. Watch out for Itachi and Kisame."
       },
       "npcs": {
-        "kisame_hoshigaki": {
-          "name": "Kisame Hoshigaki",
-          "avatar": "https://static.wikia.nocookie.net/naruto/images/d/d4/Kisame.png/revision/latest?cb=20150212104111",
-          "dialogue": "A little fish has swum into the shark's den. Let's see if you can handle the monster of the mist!",
+        "kisame": {
+          "name": "Kisame",
+          "avatar": "https://static.wikia.nocookie.net/animated/images/2/25/Kisame.png/revision/latest?cb=20130801235829",
+          "dialogue": "A little fish in my pond? Let's see if you can swim.",
           "type": "choice",
           "choices": [
             {
-              "text": "Engage him in a water battle",
+              "text": "Fight with water jutsu",
               "outcome": "failure",
-              "failure_dialogue": "Kisame's Samehada drains your chakra in an instant. You've been defeated."
+              "failure_dialogue": "Kisame drains your chakra. You lose."
             },
             {
-              "text": "Try to bypass him with a fire jutsu",
+              "text": "Use fire jutsu to make steam",
               "outcome": "success",
-              "success_dialogue": "You manage to create enough steam with a powerful fire jutsu to blind him, allowing you to slip past. You hear Itachi's voice behind you."
+              "success_dialogue": "You blind Kisame and sneak past. Now Itachi is waiting."
             }
           ]
         },
         "itachi_uchiha": {
           "name": "Itachi Uchiha",
-          "avatar": "https://static.wikia.nocookie.net/naruto/images/4/4c/Itachi_Uchiha.png/revision/latest?cb=20211025000557",
-          "dialogue": "You've proven your worth by getting past my partner. Now, let's see if your will can withstand the gaze of the Mangekyou Sharingan.",
+          "avatar": "https://static.wikia.nocookie.net/naruto/images/5/53/Itachi_Using_Genjutsu.png/revision/latest/scale-to-width-down/985?cb=20150917075124",
+          "dialogue": "You got past Kisame. Let's see if you can handle my Sharingan.",
           "type": "boss"
         }
       },
@@ -412,8 +379,13 @@
         "success": {
           "items": [
             {
-              "name": "Secret Uchiha Scroll",
+              "name": "Crystalline Shard",
               "amount": 1
+            }
+          ],
+          "scrolls": [
+            {
+              "name": "Amaterasu"
             }
           ]
         }
@@ -425,32 +397,32 @@
       "cooldown": 6000,
       "chance": 0.6,
       "pre": {
-        "intro": "The mission to the Land of Waves should have been simple, but now you're facing a rogue ninja known as the Demon of the Hidden Mist.",
-        "lore": "You and your team must protect the bridge builder and face down Zabuza Momochi and his young apprentice, Haku."
+        "intro": "You reach the Land of Waves. It's foggy and quiet.",
+        "lore": "You need to protect the bridge builder. Zabuza and Haku are here."
       },
       "npcs": {
         "zabuza_momochi": {
           "name": "Zabuza Momochi",
-          "avatar": "https://static.wikia.nocookie.net/naruto/images/7/7b/Zabuza.png/revision/latest?cb=20150212061555",
-          "dialogue": "So, you've decided to get in my way, brat? You'll regret it!",
+          "avatar": "https://static.wikia.nocookie.net/naruto/images/3/37/Zabuza_Momochi.png/revision/latest/scale-to-width-down/300?cb=20240922021336",
+          "dialogue": "You think you can stop me? Let's see you try.",
           "type": "choice",
           "choices": [
             {
-              "text": "Rush him with a frontal assault",
+              "text": "Attack straight on",
               "outcome": "failure",
-              "failure_dialogue": "You are easily caught in a water prison jutsu. Zabuza laughs as he defeats you."
+              "failure_dialogue": "Zabuza traps you in water. You lose."
             },
             {
-              "text": "Try to use the surrounding mist to your advantage",
+              "text": "Hide in the mist",
               "outcome": "success",
-              "success_dialogue": "You disappear into the mist, confusing Zabuza and forcing him to retreat. But another figure appears in the mist, ready to fight."
+              "success_dialogue": "You confuse Zabuza and he runs away. Haku steps up."
             }
           ]
         },
         "haku": {
           "name": "Haku",
-          "avatar": "https://static.wikia.nocookie.net/naruto/images/b/b3/Haku_Anime.png/revision/latest?cb=20211226055536",
-          "dialogue": "I'm sorry, but I can't let you pass.",
+          "avatar": "https://static.wikia.nocookie.net/naruto/images/9/90/Haku.png/revision/latest?cb=20240918032028",
+          "dialogue": "Sorry, but I can't let you pass.",
           "type": "boss"
         }
       },
@@ -458,10 +430,15 @@
         "success": {
           "items": [
             {
-              "name": "Zabuza's Blade",
+              "name": "Crystalline Shard",
               "amount": 1
+            },
+            {
+              "name": "Ramen Ticket",
+              "amount": 10
             }
-          ]
+          ],
+          "money": 5000
         }
       }
     },
@@ -471,32 +448,32 @@
       "cooldown": 12000,
       "chance": 0.3,
       "pre": {
-        "intro": "The final stage of the Chunin Exams is about to begin. You stand in the arena, ready to fight.",
-        "lore": "You'll face off against some of the strongest genin in the world, including the Sand Village's most dangerous weapon."
+        "intro": "It's time for the Chunin Exams. The arena is packed.",
+        "lore": "You're up against some strong genin. Good luck!"
       },
       "npcs": {
         "rock_lee": {
           "name": "Rock Lee",
-          "avatar": "https://static.wikia.nocookie.net/naruto/images/3/30/Rock_Lee.png/revision/latest?cb=20150212061614",
-          "dialogue": "My goal is to prove that hard work can beat natural talent. Let's see what you've got!",
+          "avatar": "https://static.wikia.nocookie.net/naruto/images/9/97/Rock_Lee_Part_I.png/revision/latest/scale-to-width-down/1200?cb=20181229065526",
+          "dialogue": "I want to show everyone that hard work pays off. Let's fight!",
           "type": "choice",
           "choices": [
             {
-              "text": "Use a jutsu to attack him from a distance",
+              "text": "Use a jutsu from far away",
               "outcome": "failure",
-              "failure_dialogue": "Rock Lee's speed is too great! He dodges your jutsu and lands a decisive blow. You have been defeated."
+              "failure_dialogue": "Rock Lee dodges and knocks you out."
             },
             {
-              "text": "Engage him in a taijutsu fight",
+              "text": "Fight with taijutsu",
               "outcome": "success",
-              "success_dialogue": "You manage to keep up with his movements, and he decides to use his final move to test you. You pass, and he collapses."
+              "success_dialogue": "You keep up with Lee. He uses his last move and collapses."
             }
           ]
         },
         "gaara": {
           "name": "Gaara",
-          "avatar": "https://static.wikia.nocookie.net/naruto/images/a/a9/Gaara_Shippuden.png/revision/latest?cb=20211226055811",
-          "dialogue": "I am the monster of the sand. Now, die.",
+          "avatar": "https://static.wikia.nocookie.net/naruto/images/0/0f/Gaara_Part_II.png/revision/latest/scale-to-width-down/300?cb=20170914045727",
+          "dialogue": "I'm the sand monster. Get ready.",
           "type": "boss"
         }
       },
@@ -504,10 +481,11 @@
         "success": {
           "items": [
             {
-              "name": "Sand Village Headband",
+              "name": "Crystalline Shard",
               "amount": 1
             }
-          ]
+          ],
+          "exp_formula": "30 + 1 * player.level"
         }
       }
     },
@@ -517,45 +495,45 @@
       "cooldown": 7200,
       "chance": 0.4,
       "pre": {
-        "intro": "A colossal footstep shakes the ground as the gates of Wall Maria are breached. The Titans have come.",
-        "lore": "You must protect the citizens and fight alongside the Survey Corps to seal the wall."
+        "intro": "The Titans break through the wall. People are running everywhere.",
+        "lore": "You need to help the Survey Corps and save the city."
       },
       "npcs": {
         "small_titan": {
           "name": "Small Titan",
-          "avatar": "https://static.wikia.nocookie.net/attackontitan/images/8/87/Small_titan.png/revision/latest?cb=20191223013854",
-          "dialogue": "...",
+          "avatar": "https://ichef.bbci.co.uk/ace/standard/976/cpsprodpb/D3A2/production/_86087145_de53.jpg",
+          "dialogue": "Grrrr...",
           "type": "choice",
           "choices": [
             {
               "text": "Attack its nape",
               "outcome": "success",
-              "success_dialogue": "You make a clean strike to the nape, and the Titan falls. You turn to face the next threat."
+              "success_dialogue": "You hit the nape and the Titan falls."
             },
             {
-              "text": "Try to reason with it",
+              "text": "Try to talk to it",
               "outcome": "failure",
-              "failure_dialogue": "The Titan ignores your words and takes a bite out of you. You have been defeated."
+              "failure_dialogue": "The Titan ignores you and bites you."
             }
           ]
         },
         "armin_arlert": {
           "name": "Armin Arlert",
-          "avatar": "https://static.wikia.nocookie.net/attackontitan/images/a/a7/Armin_Arlert_Anime_Profile.png/revision/latest?cb=20211226060155",
-          "dialogue": "We need to get to the cannon! We'll hold them off!",
+          "avatar": "https://cdn.staticneo.com/w/attackontitan/ArminArlert.jpg",
+          "dialogue": "We need to get to the cannon! Help me out!",
           "type": "dialogue",
-          "dialogue_text": "Armin is panicking. You need to say the right thing to calm him down and make a plan.",
-          "question": "What will you say to Armin?",
+          "dialogue_text": "Armin is freaking out. Calm him down and make a plan.",
+          "question": "What do you say?",
           "choices": [
             {
               "text": "We'll get through this!",
               "outcome": "failure",
-              "failure_dialogue": "Your words do nothing to calm him, and he falls into a panic. You are left to fight alone and are quickly overwhelmed."
+              "failure_dialogue": "Armin panics and you get left behind."
             },
             {
-              "text": "Let's focus on one thing at a time. What's the plan?",
+              "text": "Let's focus and make a plan.",
               "outcome": "success",
-              "success_dialogue": "Your words calm him, and he lays out a brilliant plan to defeat the Titans. With his guidance, you make it through."
+              "success_dialogue": "You calm Armin down and he helps you win."
             }
           ]
         }
@@ -564,8 +542,12 @@
         "success": {
           "items": [
             {
-              "name": "Survey Corps Cloak",
+              "name": "Crystalline Shard",
               "amount": 1
+            },
+            {
+              "name": "Ramen Ticket",
+              "amount": 25
             }
           ]
         }
@@ -577,17 +559,17 @@
       "cooldown": 9000,
       "chance": 0.45,
       "pre": {
-        "intro": "The Mugen Train rumbles down the tracks, and you're part of the team investigating the disappearances on board.",
-        "lore": "You and the Hashira Kyojuro Rengoku must fight against the Lower Rank One demon, Enmu, who has the ability to manipulate dreams."
+        "intro": "You board the Mugen Train. Something feels off.",
+        "lore": "Rengoku is with you. There's a demon hiding somewhere."
       },
       "npcs": {
         "enmu_lower_one": {
           "name": "Enmu",
-          "avatar": "https://static.wikia.nocookie.net/kimetsu-no-yaiba/images/1/1a/Enmu_Anime.png/revision/latest?cb=20201017002542",
-          "dialogue": "Sleep now, and have a beautiful dream...",
+          "avatar": "https://i.redd.it/zlmg8xkwiqm91.jpg",
+          "dialogue": "Go to sleep... forever!",
           "type": "puzzle",
-          "puzzle_dialogue": "You fall into a deep sleep. Your dream is an endless, beautiful field. You need to find a way to break free from the dream.",
-          "question": "Which item will you use to break free?",
+          "puzzle_dialogue": "You're stuck in a dream. How do you wake up?",
+          "question": "What do you use?",
           "choices": [
             "A sword",
             "A bottle of water",
@@ -595,13 +577,13 @@
             "A knife"
           ],
           "correct_answer": "A knife",
-          "failure_dialogue": "You try to use your sword, but it is just part of the dream. You are trapped forever.",
-          "success_dialogue": "You realize that the only way to break free is to do something painful. You cut your own throat in the dream and awaken, ready to fight!"
+          "failure_dialogue": "You try the sword, but it's just a dream. You're stuck.",
+          "success_dialogue": "You use the knife and wake up, ready to fight!"
         },
         "akaza_upper_three": {
           "name": "Akaza",
-          "avatar": "https://static.wikia.nocookie.net/kimetsu-no-yaiba/images/8/87/Akaza_Anime.png/revision/latest?cb=20201121004126",
-          "dialogue": "Kyojuro, you and your little friend. Become demons and you can fight me forever!",
+          "avatar": "https://i.pinimg.com/736x/71/9c/58/719c586b0264e2a10d5706529bc7c9d5.jpg",
+          "dialogue": "Rengoku! You and your friend should become demons and fight me forever!",
           "type": "boss"
         }
       },
@@ -609,8 +591,13 @@
         "success": {
           "items": [
             {
-              "name": "Flame Hashira's Blade",
+              "name": "Crystalline Shard",
               "amount": 1
+            }
+          ],
+          "scrolls": [
+            {
+              "name": "9th form: Rengoku"
             }
           ]
         }
@@ -622,34 +609,34 @@
       "cooldown": 7200,
       "chance": 0.5,
       "pre": {
-        "intro": "The Heavens Arena looms high above you, a tower where fighters test their strength and skill.",
-        "lore": "You've entered the 200th floor, where Nen users reside. You'll have to face some of the strongest people in the world."
+        "intro": "You enter Heavens Arena. It's huge and full of fighters.",
+        "lore": "You're on the 200th floor. Time to show what you can do."
       },
       "npcs": {
         "hisoka": {
           "name": "Hisoka",
-          "avatar": "https://static.wikia.nocookie.net/hunterxhunter/images/e/e5/Hisoka_Manga.png/revision/latest?cb=20220608221040",
-          "dialogue": "My, my, what a delicious little fruit you are. Are you ripe enough to fight?",
+          "avatar": "https://static.wikia.nocookie.net/hunterxhunter/images/2/29/Hisoka_Morow_YC_Portrait.png/revision/latest?cb=20190123172039",
+          "dialogue": "You look interesting. Want to fight?",
           "type": "dialogue",
-          "dialogue_text": "Hisoka is looking for a good fight. You need to say the right thing to either fight him or get away.",
-          "question": "What will you say to Hisoka?",
+          "dialogue_text": "Hisoka wants a good fight. What do you say?",
+          "question": "Your answer?",
           "choices": [
             {
-              "text": "I'm a little rusty, maybe next time.",
+              "text": "I'm not ready, maybe next time.",
               "outcome": "success",
-              "success_dialogue": "Hisoka laughs and says, 'A clever one! The chase is half the fun.' He lets you pass, intrigued by your lack of fear."
+              "success_dialogue": "Hisoka laughs and lets you go."
             },
             {
-              "text": "I'm ready to fight! Bring it on!",
+              "text": "Bring it on!",
               "outcome": "failure",
-              "failure_dialogue": "Hisoka's eyes gleam with malice. 'A foolish choice, little fruit.' He pummels you into the ground. You are defeated."
+              "failure_dialogue": "Hisoka beats you up. Ouch."
             }
           ]
         },
         "gon_and_killua": {
           "name": "Gon and Killua",
-          "avatar": "https://static.wikia.nocookie.net/hunterxhunter/images/5/52/Gon_and_Killua_2011.png/revision/latest?cb=20210212003859",
-          "dialogue": "We're here to test our strength. We're not holding back!",
+          "avatar": "https://qph.cf2.quoracdn.net/main-qimg-386c2b64c4e55a04e2553474c4f72dc0-lq",
+          "dialogue": "We're here to test our strength. Let's fight!",
           "type": "boss"
         }
       },
@@ -657,10 +644,11 @@
         "success": {
           "items": [
             {
-              "name": "Nen Crystal",
+              "name": "Crystalline Shard",
               "amount": 1
             }
-          ]
+          ],
+          "money_formula": "200 + 0.5 * player.level"
         }
       }
     },
@@ -670,32 +658,32 @@
       "cooldown": 14400,
       "chance": 0.25,
       "pre": {
-        "intro": "You stand in the Land of Iron, where the Five Kage have gathered for a historic summit.",
-        "lore": "Sasuke Uchiha has crashed the meeting, seeking revenge on his brother's killer. You must fight your way through the samurai guards and face him."
+        "intro": "You arrive at the Kage Summit. All the leaders are here.",
+        "lore": "Sasuke crashes the meeting. You need to fight your way through."
       },
       "npcs": {
         "samurai_guards": {
           "name": "Samurai Guards",
-          "avatar": "https://static.wikia.nocookie.net/naruto/images/4/4c/Samurai_Guard.png/revision/latest?cb=20150212080800",
-          "dialogue": "Intruder! You will not get past us!",
+          "avatar": "https://i.redd.it/gp1mjul3ewfb1.jpg",
+          "dialogue": "You can't go any further!",
           "type": "choice",
           "choices": [
             {
-              "text": "Try to talk your way past them",
+              "text": "Try to talk your way past",
               "outcome": "failure",
-              "failure_dialogue": "They don't listen to your pleas and attack. You are defeated."
+              "failure_dialogue": "They ignore you and attack."
             },
             {
-              "text": "Fight them with taijutsu",
+              "text": "Fight with taijutsu",
               "outcome": "success",
-              "success_dialogue": "You manage to defeat the samurai guards, but a familiar face awaits you."
+              "success_dialogue": "You beat the guards. Sasuke is waiting."
             }
           ]
         },
         "sasuke_uchiha": {
           "name": "Sasuke Uchiha",
-          "avatar": "https://static.wikia.nocookie.net/naruto/images/7/7a/Sasuke_Uchiha_Anime.png/revision/latest?cb=20211226060010",
-          "dialogue": "I have no time for weaklings. Get out of my way.",
+          "avatar": "https://static.wikia.nocookie.net/naruto/images/1/13/Sasuke_Part_2.png/revision/latest/scale-to-width-down/300?cb=20170716092003",
+          "dialogue": "I'm not here to play. Move.",
           "type": "boss"
         }
       },
@@ -703,8 +691,13 @@
         "success": {
           "items": [
             {
-              "name": "Taka Headband",
+              "name": "Crystalline Shard",
               "amount": 1
+            }
+          ],
+          "scrolls": [
+            {
+              "name": "Chidori: Enchanced"
             }
           ]
         }
@@ -716,14 +709,14 @@
       "cooldown": 5400,
       "chance": 0.7,
       "pre": {
-        "intro": "You find a hidden underground hideout, a place of immense power and secrets.",
-        "lore": "You enter the hideout of Madara Uchiha. You must navigate the tunnels and face him to prove your strength."
+        "intro": "You find the Uchiha Hideout. It's dark and quiet.",
+        "lore": "Madara is here somewhere. Get ready."
       },
       "npcs": {
         "madara_uchiha_final": {
           "name": "Madara Uchiha",
-          "avatar": "https://static.wikia.nocookie.net/naruto/images/d/df/Madara_Uchiha.png/revision/latest?cb=20240409062323",
-          "dialogue": "Hmph, a foolish mortal has come to challenge me. Let's see if you can withstand my Susanoo.",
+          "avatar": "https://static.wikia.nocookie.net/naruto/images/b/b3/Madara%27s_Rinnegan.png/revision/latest?cb=20130725131804",
+          "dialogue": "So, you want to fight me? Let's see what you've got.",
           "type": "boss"
         }
       },
@@ -731,8 +724,12 @@
         "success": {
           "items": [
             {
-              "name": "Madara's Battle Fan",
+              "name": "Crystalline Shard",
               "amount": 1
+            },
+            {
+              "name": "Ramen Ticket",
+              "amount": 25
             }
           ]
         }
@@ -744,32 +741,32 @@
       "cooldown": 18000,
       "chance": 0.15,
       "pre": {
-        "intro": "The battlefield shakes as the monstrous Ten-Tails is reanimated. Its raw power is immense.",
-        "lore": "You must work with the entire Shinobi Alliance to stop Obito Uchiha from casting the Infinite Tsukuyomi."
+        "intro": "The ground shakes. The Ten-Tails is here.",
+        "lore": "Obito is trying to cast a big jutsu. You need to stop him."
       },
       "npcs": {
         "obito_uchiha": {
           "name": "Obito Uchiha",
-          "avatar": "https://static.wikia.nocookie.net/naruto/images/5/52/Obito_Uchiha_Anime.png/revision/latest?cb=20211226060100",
-          "dialogue": "This is the final stage. The world will be united under my Infinite Tsukuyomi.",
+          "avatar": "https://static.wikia.nocookie.net/naruto/images/3/3c/Obito.png/revision/latest/scale-to-width-down/300?cb=20220223050540",
+          "dialogue": "This is it. The world will change.",
           "type": "choice",
           "choices": [
             {
-              "text": "Talk to him and try to convince him to change his ways",
+              "text": "Talk to him and try to change his mind",
               "outcome": "success",
-              "success_dialogue": "Your words get through to him, reminding him of his past and the friends he's lost. He hesitates, giving you an opening."
+              "success_dialogue": "Obito hesitates. You get your chance."
             },
             {
-              "text": "Attack him with a powerful jutsu",
+              "text": "Attack with a big jutsu",
               "outcome": "failure",
-              "failure_dialogue": "He phases right through your attack, and you're caught in a genjutsu. You are defeated."
+              "failure_dialogue": "Obito dodges and traps you in a genjutsu."
             }
           ]
         },
         "madara_reanimated": {
           "name": "Reanimated Madara",
-          "avatar": "https://static.wikia.nocookie.net/naruto/images/d/df/Madara_Uchiha.png/revision/latest?cb=20240409062323",
-          "dialogue": "Hmph, a foolish mortal has come to challenge me. Let's see if you can withstand my Susanoo.",
+          "avatar": "https://static.wikia.nocookie.net/naruto/images/b/b3/Madara%27s_Rinnegan.png/revision/latest?cb=20130725131804",
+          "dialogue": "Let's see if you can handle me.",
           "type": "boss"
         }
       },
@@ -777,10 +774,16 @@
         "success": {
           "items": [
             {
-              "name": "Ten-Tails Shard",
+              "name": "Crystalline Shard",
               "amount": 1
+            },
+            {
+              "name": "Ramen Ticket",
+              "amount": 20
             }
-          ]
+          ],
+          "exp_formula": "100 + 1 * player.level",
+          "money": 50000
         }
       }
     }

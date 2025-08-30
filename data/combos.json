@@ -2,7 +2,7 @@
     "Basic Combo": {
         "name": "Basic Combo",
         "requiredJutsus": ["Attack", "Transformation Jutsu"],
-        "damage": 10000,
+        "damage": 250,
         "damageType": "true",
         "effects": []
     },

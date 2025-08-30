@@ -14,6 +14,7 @@ const usersPath = path.join(dataPath, 'users.json');
 const jutsusPath = path.join(dataPath, 'jutsu.json');
 const dungeonsPath = path.join(dataPath, 'dungeons.json');
 const cooldownsPath = path.join(dataPath, 'cooldowns.json');
+const giftPath = path.join(dataPath, 'gift.json');
 
 // Helper functions
 const loadData = (filePath) => {
@@ -585,6 +586,10 @@ async function handleDungeonGame(interaction, users, userId) {
     await delay(2500);
 
     async function sendNPCMessage(npc, content, options = {}) {
+        // Ensure content is a non-empty string
+        if (typeof content !== 'string' || !content.trim()) {
+            content = npc.dialogue || npc.success_dialogue || npc.failure_dialogue || "[No message available]";
+        }
         const npcWebhook = await getWebhook(interaction, npc.name, npc.avatar);
         if (npcWebhook) {
             await delay(2500);
@@ -594,6 +599,7 @@ async function handleDungeonGame(interaction, users, userId) {
 
     async function dungeonSuccess() {
         const jutsuData = loadData(jutsusPath);
+        const giftData = loadData(giftPath);
 
         // Add crystalline shard
         if (!jutsuData[userId].items) jutsuData[userId].items = {};
@@ -616,23 +622,63 @@ async function handleDungeonGame(interaction, users, userId) {
         if (dungeon.rewards?.success?.items) {
             if (!jutsuData[userId].items) jutsuData[userId].items = {};
             for (const item of dungeon.rewards.success.items) {
-                jutsuData[userId].items[item.name] = (jutsuData[userId].items[item.name] || 0) + item.amount;
+                // Only add non-ramen items to jutsu.json
+                if (item.name !== 'Ramen Ticket') {
+                    jutsuData[userId].items[item.name] = (jutsuData[userId].items[item.name] || 0) + item.amount;
+                }
             }
         }
 
-        // Handle exp rewards
-        if (dungeon.rewards?.success?.exp) {
-            user.exp = (user.exp || 0) + dungeon.rewards.success.exp;
+        // --- Send Ramen, Exp, Money to gift.json ---
+        // Ramen Ticket
+        let ramenAmount = dungeon.rewards?.success?.ramen || 0;
+        const ramenItem = dungeon.rewards?.success?.items?.find(i => i.name === 'Ramen Ticket');
+        if (ramenItem) ramenAmount += ramenItem.amount;
+        if (ramenAmount > 0) {
+            if (!giftData[userId]) giftData[userId] = [];
+            giftData[userId].push({
+                id: Math.floor(Math.random() * 1000000),
+                type: "ramen",
+                amount: ramenAmount,
+                from: "dungeon",
+                date: Date.now()
+            });
         }
-
-        // Handle money rewards
-        if (dungeon.rewards?.success?.money) {
-            user.money = (user.money || 0) + dungeon.rewards.success.money;
+        // Exp
+        let expAmount = dungeon.rewards?.success?.exp || 0;
+        if (dungeon.rewards?.success?.exp_formula) {
+            try {
+                const playerLevel = users[userId].level || 1;
+                expAmount = eval(dungeon.rewards.success.exp_formula.replace(/player\.level/g, playerLevel));
+            } catch {}
         }
-
-        // Handle ramen rewards
-        if (dungeon.rewards?.success?.ramen) {
-            user.ramen = (user.ramen || 0) + dungeon.rewards.success.ramen;
+        if (expAmount > 0) {
+            if (!giftData[userId]) giftData[userId] = [];
+            giftData[userId].push({
+                id: Math.floor(Math.random() * 1000000),
+                type: "exp",
+                amount: expAmount,
+                from: "dungeon",
+                date: Date.now()
+            });
+        }
+        // Money
+        let moneyAmount = dungeon.rewards?.success?.money || 0;
+        if (dungeon.rewards?.success?.money_formula) {
+            try {
+                const playerLevel = users[userId].level || 1;
+                moneyAmount = eval(dungeon.rewards.success.money_formula.replace(/player\.level/g, playerLevel));
+            } catch {}
+        }
+        if (moneyAmount > 0) {
+            if (!giftData[userId]) giftData[userId] = [];
+            giftData[userId].push({
+                id: Math.floor(Math.random() * 1000000),
+                type: "money",
+                amount: moneyAmount,
+                from: "dungeon",
+                date: Date.now()
+            });
         }
 
         // Handle combo rewards (array of combos)
@@ -646,9 +692,9 @@ async function handleDungeonGame(interaction, users, userId) {
         }
 
         saveData(jutsusPath, jutsuData);
+        saveData(giftPath, giftData);
         users[userId].current_dungeon = null;
         users[userId].lastDungeon = Date.now();
-        // New logic to handle dungeonscompleted variable
         if (users[userId].dungeonscompleted === undefined || users[userId].dungeonscompleted === null) {
             users[userId].dungeonscompleted = 1;
         } else {
@@ -658,12 +704,14 @@ async function handleDungeonGame(interaction, users, userId) {
 
         // Dynamically build rewards message
         const rewardsText = [];
-        if (dungeon.rewards?.success?.money) rewardsText.push(`- **${dungeon.rewards.success.money}** Ryo`);
-        if (dungeon.rewards?.success?.exp) rewardsText.push(`- **${dungeon.rewards.success.exp}** Exp`);
-        if (dungeon.rewards?.success?.ramen) rewardsText.push(`- **${dungeon.rewards.success.ramen}** Ramen`);
+        if (moneyAmount > 0) rewardsText.push(`- **${moneyAmount}** Ryo`);
+        if (expAmount > 0) rewardsText.push(`- **${expAmount}** Exp`);
+        if (ramenAmount > 0) rewardsText.push(`- **${ramenAmount}** Ramen`);
         if (dungeon.rewards?.success?.items) {
             for (const item of dungeon.rewards.success.items) {
-                rewardsText.push(`- **${item.amount}** ${item.name}`);
+                if (item.name !== 'Ramen Ticket') {
+                    rewardsText.push(`- **${item.amount}** ${item.name}`);
+                }
             }
         }
         if (dungeon.rewards?.success?.scrolls) {
@@ -695,8 +743,24 @@ async function handleDungeonGame(interaction, users, userId) {
         if (!users[userId].current_dungeon) return; // Dungeon failed, stop.
 
         const npcIndex = users[userId].current_dungeon.progress.npcIndex;
+        // PATCH: Check if npcIndex is out of bounds (all NPCs processed)
+        if (npcIndex >= npcs.length) {
+            // Check if any NPC is a boss
+            const hasBoss = Object.values(dungeon.npcs).some(npc => npc.type === 'boss');
+            if (!hasBoss) {
+                await interaction.channel.send({ content: "You're lucky. This dungeon doesn't seem to have a boss!" });
+            }
+            await dungeonSuccess();
+            return;
+        }
+
         const currentNpcKey = npcs[npcIndex];
         const currentNpc = dungeon.npcs[currentNpcKey];
+        if (!currentNpc) {
+            // Defensive: If currentNpc is undefined, just finish dungeon
+            await dungeonSuccess();
+            return;
+        }
 
         // --- Minigame: Choice ---
         if (currentNpc.type === 'choice') {

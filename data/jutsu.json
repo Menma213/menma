@@ -52,13 +52,18 @@
       "Needle Assault Scroll",
       "Chakra Infused Blade Scroll",
       "Infused Chakra Blade Scroll",
-      "Asura's Blade of Execution"
+      "Asura's Blade of Execution",
+      "Summon Manda",
+      "9th form: Rengoku"
     ],
     "rankeditems": [],
     "items": {
-      "Crystalline Shard": 8,
-      "Zoro's Locket": 3
-    }
+      "Crystalline Shard": 24,
+      "Zoro's Locket": 4,
+      "Secret Uchiha Scroll": 1,
+      "Ramen Ticket": 10
+    },
+    "exp": 25
   },
   "843680216022122516": {
     "usersjutsu": [
@@ -293,6 +298,11 @@
     ]
   },
   "963147707512418305": {
+    "usersjutsu": [
+      "Transformation Jutsu"
+    ]
+  },
+  "1039157053266067556": {
     "usersjutsu": [
       "Transformation Jutsu"
     ]

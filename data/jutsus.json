@@ -8,7 +8,7 @@
       "effects": [
         {
           "type": "damage",
-          "formula": "2 * user.power / target.defense",
+          "formula": "2 * user.power",
           "chance": 0.7
         }
       ]

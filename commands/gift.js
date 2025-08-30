@@ -231,6 +231,10 @@ module.exports = {
                     addToJutsuJson(userDiscordId, "jutsu", gift.name);
                     rewardMsg = `Claimed jutsu: **${gift.name}**`;
                 }
+            } else if (gift.type === 'exp') {
+                if (!usersData[userDiscordId].exp) usersData[userDiscordId].exp = 0;
+                usersData[userDiscordId].exp += gift.amount;
+                rewardMsg = `Claimed ${gift.amount} EXP.`;
             } else {
                 rewardMsg = `Claimed unknown gift type: ${gift.type}.`;
             }
@@ -518,6 +522,13 @@ module.exports = {
                                 } else if (chosenReward.name.toLowerCase().includes('random scroll')) {
                                     let scroll = RANDOM_SCROLLS[Math.floor(Math.random() * RANDOM_SCROLLS.length)];
                                     addToJutsuJson(userId, "scroll", scroll);
+                                    // If the reward is exp, add to user's exp
+                                } else if (chosenReward.type === "exp" || chosenReward.name.toLowerCase().includes("exp")) {
+                                    let expAmount = chosenReward.amount || 0;
+                                    if (!users[userId].exp) users[userId].exp = 0;
+                                    users[userId].exp += expAmount;
+                                    rewardMsg = `You received **${expAmount} EXP**!`;
+                                    saveUserData(users);
                                     rewardMsg = `You received a **${scroll}**!`;
                                 } else if (chosenReward.name.toLowerCase().includes('random combo')) {
                                     let combo = RANDOM_COMBOS[Math.floor(Math.random() * RANDOM_COMBOS.length)];

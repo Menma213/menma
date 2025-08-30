@@ -1,16 +1,21 @@
 {
   "dependencies": {
+    "@rank-top/sdk": "^1.0.7",
+    "@top-gg/sdk": "^3.1.6",
     "canvas": "^3.1.0",
     "discord.js": "^14.19.3",
     "dotenv": "^16.5.0",
     "ejs": "^3.1.10",
     "express": "^5.1.0",
     "fs": "^0.0.1-security",
+    "gif-encoder": "^0.7.2",
     "gif-encoder-2": "^1.0.5",
+    "gif-frames": "^1.0.1",
     "gifwrap": "^0.10.1",
     "mathjs": "^14.4.0",
     "node-fetch": "^3.3.2",
     "puppeteer": "^24.10.2",
-    "react": "^19.1.1"
+    "react": "^19.1.1",
+    "topgg-autoposter": "^2.0.2"
   }
 }
