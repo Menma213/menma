@@ -1,0 +1,502 @@
+{
+  "quizzes": [
+    {
+      "title": "Naruto General Quiz",
+      "questions": [
+        {
+          "text": "What is the name of the ninja village Naruto and his friends are from?",
+          "options": ["The Village Hidden in the Mist", "The Village Hidden in the Leaves", "The Village Hidden in the Sand", "The Village Hidden in the Clouds"],
+          "answer": "The Village Hidden in the Leaves"
+        },
+        {
+          "text": "Who is the sensei of Team 7?",
+          "options": ["Jiraiya", "Might Guy", "Kakashi Hatake", "Iruka Umino"],
+          "answer": "Kakashi Hatake"
+        },
+        {
+          "text": "What is Naruto's favorite food?",
+          "options": ["Dango", "Onigiri", "Ramen", "Soba"],
+          "answer": "Ramen"
+        },
+        {
+          "text": "What is the name of the nine-tailed beast sealed inside Naruto?",
+          "options": ["Shukaku", "Kurama", "Gyuki", "Matatabi"],
+          "answer": "Kurama"
+        },
+        {
+          "text": "Which character is known as the 'Copy Ninja'?",
+          "options": ["Naruto Uzumaki", "Sasuke Uchiha", "Itachi Uchiha", "Kakashi Hatake"],
+          "answer": "Kakashi Hatake"
+        },
+        {
+          "text": "What is the name of the main antagonist in the first part of the series?",
+          "options": ["Madara Uchiha", "Orochimaru", "Pain", "Zabuza Momochi"],
+          "answer": "Orochimaru"
+        },
+        {
+          "text": "Which character uses the 'Chidori' technique?",
+          "options": ["Naruto", "Sakura", "Sasuke", "Gaara"],
+          "answer": "Sasuke"
+        },
+        {
+          "text": "Who is the Fifth Hokage?",
+          "options": ["Tsunade", "Hiruzen Sarutobi", "Hashirama Senju", "Minato Namikaze"],
+          "answer": "Tsunade"
+        },
+        {
+          "text": "What is the name of the group of rogue ninjas who hunt tailed beasts?",
+          "options": ["The Akatsuki", "The Sound Four", "The Anbu", "The Sand Siblings"],
+          "answer": "The Akatsuki"
+        },
+        {
+          "text": "Which of Naruto's rivals is from the Sand Village?",
+          "options": ["Rock Lee", "Gaara", "Neji Hyuga", "Kankuro"],
+          "answer": "Gaara"
+        },
+        {
+          "text": "What type of jutsu is the 'Rasengan'?",
+          "options": ["Genjutsu", "Taijutsu", "Ninjutsu", "Senjutsu"],
+          "answer": "Ninjutsu"
+        },
+        {
+          "text": "Who is the younger brother of Itachi Uchiha?",
+          "options": ["Shisui", "Sasuke", "Obito", "Madara"],
+          "answer": "Sasuke"
+        },
+        {
+          "text": "What is the name of the summoning animal of Jiraiya?",
+          "options": ["Gamabunta", "Aoda", "Katsuyu", "Manda"],
+          "answer": "Gamabunta"
+        },
+        {
+          "text": "Who founded the Village Hidden in the Leaves?",
+          "options": ["Madara Uchiha and Hashirama Senju", "Tobirama Senju and Hiruzen Sarutobi", "Naruto Uzumaki and Sasuke Uchiha", "Jiraiya and Orochimaru"],
+          "answer": "Madara Uchiha and Hashirama Senju"
+        },
+        {
+          "text": "What is Sakura's signature fighting style?",
+          "options": ["Genjutsu", "Medical Ninjutsu and Strength", "Puppet Mastery", "Taijutsu"],
+          "answer": "Medical Ninjutsu and Strength"
+        },
+        {
+          "text": "What is the name of the team consisting of Naruto, Sasuke, and Sakura?",
+          "options": ["Team 8", "Team 10", "Team 7", "Team Guy"],
+          "answer": "Team 7"
+        },
+        {
+          "text": "Who is the Fourth Hokage?",
+          "options": ["Jiraiya", "Minato Namikaze", "Tobirama Senju", "Hashirama Senju"],
+          "answer": "Minato Namikaze"
+        },
+        {
+          "text": "Which character can use the 'Byakugan'?",
+          "options": ["Hinata Hyuga", "Shino Aburame", "Rock Lee", "Ino Yamanaka"],
+          "answer": "Hinata Hyuga"
+        },
+        {
+          "text": "What is the main goal of the Akatsuki?",
+          "options": ["World domination", "Bringing peace to the ninja world", "Collecting all the tailed beasts", "Destroying the ninja villages"],
+          "answer": "Collecting all the tailed beasts"
+        },
+        {
+          "text": "Who is known for saying 'Believe it!'?",
+          "options": ["Kakashi", "Sasuke", "Sakura", "Naruto"],
+          "answer": "Naruto"
+        }
+      ]
+    },
+    {
+      "title": "Naruto Guess the Char from the Eye",
+      "questions": [
+        {
+          "text": "Based on the eye in the image, who is this character?",
+          "options": ["Kakashi Hatake", "Itachi Uchiha", "Sasuke Uchiha", "Madara Uchiha"],
+          "answer": "Itachi Uchiha",
+          "note": "Image should be of Itachi's Mangekyo Sharingan.",
+          "image_url": "https://static.wikia.nocookie.net/naruto/images/5/53/Itachi_Using_Genjutsu.png/revision/latest/scale-to-width-down/985?cb=20150917075124"
+        },
+        {
+          "text": "Based on the eye in the image, who is this character?",
+          "options": ["Pain", "Nagato", "Madara Uchiha", "Sasuke Uchiha"],
+          "answer": "Pain",
+          "note": "Image should be of the Rinnegan.",
+          "image_url": "https://i.redd.it/8k0220z976t51.jpg"
+        },
+        {
+          "text": "Based on the eye in the image, who is this character?",
+          "options": ["Hinata Hyuga", "Neji Hyuga", "Himawari Uzumaki", "Hanabi Hyuga"],
+          "answer": "Hinata Hyuga",
+          "note": "Image should be of Hinata's Byakugan.",
+          "image_url": "https://i.pinimg.com/564x/4a/63/40/4a63403f221759f26d7b1a3296ba0b87.jpg"
+        },
+        {
+          "text": "Based on the eye in the image, who is this character?",
+          "options": ["Naruto Uzumaki", "Jiraiya", "Minato Namikaze", "Kakashi Hatake"],
+          "answer": "Naruto Uzumaki",
+          "note": "Image should be of Naruto's Sage Mode eyes.",
+          "image_url": "https://static.wikia.nocookie.net/naruto-fandom/images/5/5c/Fox_toad_mode.png/revision/latest/scale-to-width-down/985?cb=20130506172937"
+        },
+        {
+          "text": "Based on the eye in the image, who is this character?",
+          "options": ["Kakashi Hatake", "Obito Uchiha", "Madara Uchiha", "Itachi Uchiha"],
+          "answer": "Kakashi Hatake",
+          "note": "Image should be of Kakashi's Sharingan.",
+          "image_url": "https://w0.peakpx.com/wallpaper/424/967/HD-wallpaper-naruto-eyes-closeup-view-sage-mode-eyes-animated.jpg"
+        },
+        {
+          "text": "Based on the eye in the image, who is this character?",
+          "options": ["Sasuke Uchiha", "Obito Uchiha", "Shisui Uchiha", "Indra Otsutsuki"],
+          "answer": "Sasuke Uchiha",
+          "note": "Image should be of Sasuke's Rinne-Sharingan.",
+          "image_url": "https://static.wikia.nocookie.net/naruto/images/7/7d/Sasuke%27s_Rinnegan.png/revision/latest?cb=20160909022555"
+        },
+        {
+          "text": "Based on the eye in the image, who is this character?",
+          "options": ["Danzo Shimura", "Orochimaru", "Kabuto Yakushi", "Zetsu"],
+          "answer": "Danzo Shimura",
+          "note": "Image should be of Danzo's Sharingan-covered arm.",
+          "image_url": "https://static.wikia.nocookie.net/naruto/images/6/6b/Danz%C5%8D%27s_Sharingan.png/revision/latest/scale-to-width-down/985?cb=20150713012853"
+        },
+        {
+          "text": "Based on the eye in the image, who is this character?",
+          "options": ["Sarada Uchiha", "Sakura Haruno", "Ino Yamanaka", "Tenten"],
+          "answer": "Sarada Uchiha",
+          "note": "Image should be of Sarada's Sharingan.",
+          "image_url": "https://pbs.twimg.com/media/E6Ae53IXsAAXSUj.jpg"
+        },
+        {
+          "text": "Based on the eye in the image, who is this character?",
+          "options": ["Konan", "Deidara", "Hidan", "Kisame Hoshigaki"],
+          "answer": "Konan",
+          "note": "Image should be of Konan's Rinnegan (implied through her connection to Pain).",
+          "image_url": "https://i.pinimg.com/736x/f1/d2/9c/f1d29cb66adcb467913064ab03b4f6e5.jpg"
+        },
+        {
+          "text": "Based on the eye in the image, who is this character?",
+          "options": ["Jiraiya", "Orochimaru", "Tsunade", "Kabuto Yakushi"],
+          "answer": "Orochimaru",
+          "note": "Image should be of Orochimaru's snake-like eyes.",
+          "image_url": "https://dailyanimeart.com/wp-content/uploads/2014/02/orochimarus-eyes1.jpg?w=730"
+        },
+        {
+          "text": "Based on the eye in the image, who is this character?",
+          "options": ["Madara Uchiha", "Obito Uchiha", "Nagato", "Indra Otsutsuki"],
+          "answer": "Madara Uchiha",
+          "note": "Image should be of Madara's Eternal Mangekyo Sharingan.",
+          "image_url": "https://static.wikia.nocookie.net/naruto/images/c/c6/Madara%27s_Sharingan.png/revision/latest/scale-to-width-down/985?cb=20160428174128"
+        },
+        {
+          "text": "Based on the eye in the image, who is this character?",
+          "options": ["Shisui Uchiha", "Itachi Uchiha", "Sasuke Uchiha", "Obito Uchiha"],
+          "answer": "Shisui Uchiha",
+          "note": "Image should be of Shisui's Mangekyo Sharingan.",
+          "image_url": "https://static.wikia.nocookie.net/naruto/images/c/c7/Shisui%27s_Sharingan.png/revision/latest/scale-to-width-down/985?cb=20161013175439"
+        },
+        {
+          "text": "Based on the eye in the image, who is this character?",
+          "options": ["Boruto Uzumaki", "Kawaki", "Naruto Uzumaki", "Code"],
+          "answer": "Boruto Uzumaki",
+          "note": "Image should be of Boruto's Jougan.",
+          "image_url": "https://fictionhorizon.com/wp-content/uploads/2021/09/Boruto27s_Dojutsu.png"
+        },
+        {
+          "text": "Based on the eye in the image, who is this character?",
+          "options": ["Kaguya Otsutsuki", "Toneri Otsutsuki", "Kinshiki Otsutsuki", "Isshiki Otsutsuki"],
+          "answer": "Kaguya Otsutsuki",
+          "note": "Image should be of Kaguya's Byakugan and Rinne-Sharingan.",
+          "image_url": "https://i.pinimg.com/736x/3b/19/1d/3b191da14672c6a0409cf802307bca49.jpg"
+        },
+        {
+          "text": "Based on the eye in the image, who is this character?",
+          "options": ["Might Guy", "Rock Lee", "Jiraiya", "Tenten"],
+          "answer": "Rock Lee",
+          "note": "Image should be of Rock Lee's normal, wide eyes.",
+          "image_url": "https://i.ytimg.com/vi/z7Yo7IH9rZY/maxresdefault.jpg"
+        },
+        {
+          "text": "Based on the eye in the image, who is this character?",
+          "options": ["Shikamaru Nara", "Choji Akimichi", "Kiba Inuzuka", "Shino Aburame"],
+          "answer": "Shikamaru Nara",
+          "note": "Image should be of Shikamaru's tired-looking eyes.",
+          "image_url": "https://i.postimg.cc/pTfsqXTh/image.png"
+        },
+        {
+          "text": "Based on the eye in the image, who is this character?",
+          "options": ["Kabuto Yakushi", "Orochimaru", "Jugo", "Suigetsu Hozuki"],
+          "answer": "Kabuto Yakushi",
+          "note": "Image should be of Kabuto's Sage Mode eyes.",
+          "image_url": "https://i.postimg.cc/prSbtJN5/image.png"
+        },
+        {
+          "text": "Based on the eye in the image, who is this character?",
+          "options": ["Pain", "Obito", "Sasuke", "Nagato"],
+          "answer": "Nagato",
+          "note": "Image should be of Nagato's Rinnegan.",
+          "image_url": "https://static.wikia.nocookie.net/naruto/images/6/62/Rinnegan.png/revision/latest/scale-to-width-down/985?cb=20150821093657"
+        },
+        {
+          "text": "Based on the eye in the image, who is this character?",
+          "options": ["Karin", "Sakura", "Ino", "Tenten"],
+          "answer": "Karin",
+          "note": "Image should be of Karin's red eyes.",
+          "image_url": "https://i.postimg.cc/Bn0LWTJV/image.png"
+        },
+        {
+          "text": "Based on the eye in the image, who is this character?",
+          "options": ["Kurama", "Gyuki", "Matatabi", "Son Goku"],
+          "answer": "Kurama",
+          "note": "Image should be of Kurama's eyes.",
+          "image_url": "https://i.scdn.co/image/ab67616d00001e02d6e447177b65048511440133"
+        }
+      ]
+    },
+    {
+      "title": "Naruto Guess the Character",
+      "questions": [
+        {
+          "text": "This character is a master of genjutsu and has a unique fighting style using crows. Who is it?",
+          "options": ["Itachi Uchiha", "Sasuke Uchiha", "Shisui Uchiha", "Kakashi Hatake"],
+          "answer": "Itachi Uchiha",
+          "note": "Add an image of Itachi.",
+          "image_url": "https://static0.cbrimages.com/wordpress/wp-content/uploads/2019/12/Itachi-ANBU-Featured.jpg"
+        },
+        {
+          "text": "This character is a powerful medical ninja and one of the legendary Sannin. Who are they?",
+          "options": ["Karin", "Sakura Haruno", "Tsunade", "Shizune"],
+          "answer": "Tsunade",
+          "note": "Add an image of Tsunade.",
+          "image_url": "https://static.wikia.nocookie.net/naruto/images/b/b3/Tsunade_infobox2.png/revision/latest/scale-to-width-down/300?cb=20230315211457"
+        },
+        {
+          "text": "This character is known for their impressive taijutsu skills and for being a master of the Eight Inner Gates. Who is it?",
+          "options": ["Neji Hyuga", "Rock Lee", "Might Guy", "Kakashi Hatake"],
+          "answer": "Might Guy",
+          "note": "Add an image of Might Guy.",
+          "image_url": "https://static.wikia.nocookie.net/naruto/images/3/31/Might_Guy.png/revision/latest/scale-to-width-down/1200?cb=20150401084456"
+        },
+        {
+          "text": "This character has a strong connection to Naruto and is the jinchuriki of the one-tailed Shukaku. Who are they?",
+          "options": ["Kankuro", "Gaara", "Temari", "Shikamaru Nara"],
+          "answer": "Gaara",
+          "note": "Add an image of Gaara.",
+          "image_url": "https://static.wikia.nocookie.net/naruto/images/0/0f/Gaara_Part_II.png/revision/latest/scale-to-width-down/300?cb=20170914045727"
+        },
+        {
+          "text": "Known for his super long scarf, this character is a member of the Akatsuki and is Pain's partner. Who is it?",
+          "options": ["Kisame Hoshigaki", "Itachi Uchiha", "Deidara", "Konan"],
+          "answer": "Konan",
+          "note": "Add an image of Konan.",
+          "image_url": "https://static.wikia.nocookie.net/naruto/images/5/58/Konan_Infobox.png/revision/latest/scale-to-width-down/300?cb=20220206081756"
+        },
+        {
+          "text": "This character is known for their puppet mastery and for being a former member of the Akatsuki. Who is it?",
+          "options": ["Kankuro", "Sasori", "Chiyo", "Shino Aburame"],
+          "answer": "Sasori",
+          "note": "Add an image of Sasori.",
+          "image_url": "https://static.wikia.nocookie.net/naruto/images/f/f7/Sasori.png/revision/latest/scale-to-width-down/300?cb=20170127174522"
+        },
+        {
+          "text": "This character is known as the 'Leaf's Noble Beast' and fights with explosive scrolls. Who is it?",
+          "options": ["Naruto Uzumaki", "Rock Lee", "Tenten", "Shikamaru Nara"],
+          "answer": "Tenten",
+          "note": "Add an image of Tenten.",
+          "image_url": "https://i.pinimg.com/736x/d4/7d/9b/d47d9b16ba484440ef6968b783bf6482.jpg"
+        },
+        {
+          "text": "This character is a member of the Uchiha clan and is famous for his fire-style techniques. Who is it?",
+          "options": ["Obito Uchiha", "Sasuke Uchiha", "Itachi Uchiha", "Madara Uchiha"],
+          "answer": "Sasuke Uchiha",
+          "note": "Add an image of Sasuke.",
+          "image_url": "https://pm1.aminoapps.com/6493/8e7caf892a720f98952caf5f589e2c265458a291_hq.jpg"
+        },
+        {
+          "text": "This character is a member of the Ino-Shika-Cho trio and is known for their shadow manipulation jutsu. Who is it?",
+          "options": ["Ino Yamanaka", "Choji Akimichi", "Shikamaru Nara", "Asuma Sarutobi"],
+          "answer": "Shikamaru Nara",
+          "note": "Add an image of Shikamaru.",
+          "image_url": "https://static.wikia.nocookie.net/naruto/images/9/9a/Shikamaru_Nara.png/revision/latest/scale-to-width-down/300?cb=20180701024126"
+        },
+        {
+          "text": "This character is a user of explosive clay and is a member of the Akatsuki. Who is it?",
+          "options": ["Sasori", "Deidara", "Tobi", "Zetsu"],
+          "answer": "Deidara",
+          "note": "Add an image of Deidara.",
+          "image_url": "https://static.wikia.nocookie.net/naruto/images/0/06/Deidara.png/revision/latest/scale-to-width-down/300?cb=20240604182145"
+        },
+        {
+          "text": "This character has a dog named Akamaru and is a member of Team 8. Who is it?",
+          "options": ["Shino Aburame", "Kiba Inuzuka", "Hinata Hyuga", "Kurenai Yuhi"],
+          "answer": "Kiba Inuzuka",
+          "note": "Add an image of Kiba.",
+          "image_url": "https://static.wikia.nocookie.net/naruto/images/0/03/Kiba.png/revision/latest/scale-to-width-down/1200?cb=20180124105049"
+        },
+        {
+          "text": "This character is a spy for Orochimaru and a former member of the Anbu. Who is it?",
+          "options": ["Kabuto Yakushi", "Zetsu", "Suigetsu Hozuki", "Jugo"],
+          "answer": "Kabuto Yakushi",
+          "note": "Add an image of Kabuto.",
+          "image_url": "https://static.wikia.nocookie.net/naruto/images/3/36/Chakra_Scalpel.PNG/revision/latest/scale-to-width-down/985?cb=20240927021044"
+        },
+        {
+          "text": "This character is the leader of the Akatsuki and has the Rinnegan. Who is it?",
+          "options": ["Pain", "Nagato", "Obito Uchiha", "Konan"],
+          "answer": "Pain",
+          "note": "Add an image of Pain.",
+          "image_url": "https://i.pinimg.com/474x/1b/43/a9/1b43a902e790ac332d81d6b1e0a08ff5.jpg"
+        },
+        {
+          "text": "This character can transform into water and is a member of Sasuke's team 'Taka'. Who is it?",
+          "options": ["Jugo", "Karin", "Suigetsu Hozuki", "Orochimaru"],
+          "answer": "Suigetsu Hozuki",
+          "note": "Add an image of Suigetsu.",
+          "image_url": "https://static.wikia.nocookie.net/naruto/images/3/3e/Suigetsu_H%C5%8Dzuki.png/revision/latest?cb=20171012002428"
+        },
+        {
+          "text": "This character is known for their superhuman strength and ability to heal others. Who is it?",
+          "options": ["Sakura Haruno", "Ino Yamanaka", "Hinata Hyuga", "Tsunade"],
+          "answer": "Sakura Haruno",
+          "note": "Add an image of Sakura.",
+          "image_url": "https://images-cdn.ubuy.co.in/636a48a5d5fe7f229c6c72c4-selva-supreme-quality-stainless-steel.jpg"
+        },
+        {
+          "text": "This character is known as the 'Legendary Sannin' and is a great sage. Who is it?",
+          "options": ["Jiraiya", "Orochimaru", "Tsunade", "Hiruzen Sarutobi"],
+          "answer": "Jiraiya",
+          "note": "Add an image of Jiraiya.",
+          "image_url": "https://static.wikia.nocookie.net/naruto/images/2/21/Profile_Jiraiya.PNG/revision/latest/scale-to-width-down/1200?cb=20160115173538"
+        },
+        {
+          "text": "This character is an Anbu captain and a master of the 'Lightning Blade' jutsu. Who is it?",
+          "options": ["Itachi Uchiha", "Kakashi Hatake", "Yamato", "Sai"],
+          "answer": "Kakashi Hatake",
+          "note": "Add an image of Kakashi.",
+          "image_url": "https://static.wikitide.net/deathbattlewiki/a/a7/Portrait.kakashihatake.png"
+        },
+        {
+          "text": "This character is a master of the 'Mind Transfer' jutsu and is a member of Team 10. Who is it?",
+          "options": ["Ino Yamanaka", "Shikamaru Nara", "Choji Akimichi", "Kurenai Yuhi"],
+          "answer": "Ino Yamanaka",
+          "note": "Add an image of Ino.",
+          "image_url": "https://static.wikia.nocookie.net/naruto/images/d/dd/Ino.png/revision/latest/scale-to-width-down/1200?cb=20170622102745"
+        },
+        {
+          "text": "This character is a member of the Akatsuki and wields a giant sword called Samehada. Who is it?",
+          "options": ["Itachi Uchiha", "Kisame Hoshigaki", "Zetsu", "Tobi"],
+          "answer": "Kisame Hoshigaki",
+          "note": "Add an image of Kisame.",
+          "image_url": "https://static.wikia.nocookie.net/naruto/images/f/f7/Kisame_Hoshigaki_full.png/revision/latest?cb=20160304061903"
+        },
+        {
+          "text": "This character is the main protagonist of the series and has the nine-tailed fox sealed inside him. Who is it?",
+          "options": ["Naruto Uzumaki", "Sasuke Uchiha", "Minato Namikaze", "Boruto Uzumaki"],
+          "answer": "Naruto Uzumaki",
+          "note": "Add an image of Naruto.",
+          "image_url": "https://static.wikia.nocookie.net/naruto/images/d/dc/Naruto%27s_Sage_Mode.png/revision/latest/scale-to-width-down/985?cb=20150124180545"
+        }
+      ]
+    },
+    {
+      "title": "Guess the Anime from the Image",
+      "questions": [
+        {
+          "text": "Guess the anime from this image.",
+          "options": ["Naruto", "One Piece", "Bleach", "Dragon Ball"],
+          "answer": "Naruto",
+          "note": "Add an iconic Naruto image.",
+          "image_url": "https://static.wikia.nocookie.net/naruto/images/4/40/Kurama_vs_Susanoo.png/revision/latest?cb=20160929112839"
+        },
+        {
+          "text": "Guess the anime from this image.",
+          "options": ["Attack on Titan", "Fullmetal Alchemist", "Death Note", "One Piece"],
+          "answer": "Attack on Titan",
+          "note": "Add an iconic Attack on Titan image.",
+          "image_url": "https://i.sstatic.net/bF0tw.jpg"
+        },
+        {
+          "text": "Guess the anime from this image.",
+          "options": ["Bleach", "Demon Slayer", "My Hero Academia", "Dragon Ball"],
+          "answer": "Bleach",
+          "note": "Add an iconic Bleach image.",
+          "image_url": "https://static.wikia.nocookie.net/bleach/images/e/e8/InShot_20200322_193810478.jpg/revision/latest/scale-to-width-down/2628?cb=20200322190116&path-prefix=fr"
+        },
+        {
+          "text": "Guess the anime from this image.",
+          "options": ["One Piece", "Naruto", "Hunter x Hunter", "Demon Slayer"],
+          "answer": "One Piece",
+          "note": "Add an iconic One Piece image.",
+          "image_url": "https://i.pinimg.com/736x/4d/d6/06/4dd6060466cf3c55ae62c347ba095f2a.jpg"
+        },
+        {
+          "text": "Guess the anime from this image.",
+          "options": ["Dragon Ball", "Naruto", "Bleach", "Attack on Titan"],
+          "answer": "Dragon Ball",
+          "note": "Add an iconic Dragon Ball image.",
+          "image_url": "https://images6.alphacoders.com/640/640445.jpg"
+        },
+        {
+          "text": "Guess the anime from this image.",
+          "options": ["Fullmetal Alchemist", "Death Note", "One Piece", "Naruto"],
+          "answer": "Fullmetal Alchemist",
+          "note": "Add an iconic Fullmetal Alchemist image.",
+          "image_url": "https://i.pinimg.com/736x/df/fc/a0/dffca09d2f20f81bc60f830afb7204ea.jpg"
+        },
+        {
+          "text": "Guess the anime from this image.",
+          "options": ["Death Note", "Attack on Titan", "Bleach", "Dragon Ball"],
+          "answer": "Death Note",
+          "note": "Add an iconic Death Note image.",
+          "image_url": "https://i.postimg.cc/JzQsbVxP/image.png"
+        },
+        {
+          "text": "Guess the anime from this image.",
+          "options": ["My Hero Academia", "Demon Slayer", "One Piece", "Naruto"],
+          "answer": "Demon Slayer",
+          "note": "Add an iconic Demon Slayer image.",
+          "image_url": "https://i.pinimg.com/736x/10/81/d5/1081d5c6b9df9b5b8deb76c6a69f3c35.jpg"
+        },
+        {
+          "text": "Guess the anime from this image.",
+          "options": ["Hunter x Hunter", "Bleach", "Naruto", "Dragon Ball"],
+          "answer": "Hunter x Hunter",
+          "note": "Add an iconic Hunter x Hunter image.",
+          "image_url": "https://static.wikia.nocookie.net/hunterxhunter/images/5/50/HxH2011_EP1_Gon_fishing_for_the_Master_of_the_Swamp.png/revision/latest?cb=20230308025930"
+        },
+        {
+          "text": "Guess the anime from this image.",
+          "options": ["My Hero Academia", "Attack on Titan", "One Piece", "Fullmetal Alchemist"],
+          "answer": "My Hero Academia",
+          "note": "Add an iconic My Hero Academia image.",
+          "image_url": "https://i.pinimg.com/originals/de/31/63/de3163dc1cf84bdf85f3eba67f9ae854.jpg"
+        },
+        {
+          "text": "Guess the anime from this image.",
+          "options": ["Sword Art Online", "Bleach", "Naruto", "Dragon Ball"],
+          "answer": "Sword Art Online",
+          "note": "Add an iconic Sword Art Online image.",
+          "image_url": "https://static.wikia.nocookie.net/swordartonline/images/4/40/Aincard_in_ALO.png/revision/latest?cb=20121223021437"
+        },
+        {
+          "text": "Guess the anime from this image.",
+          "options": ["Tokyo Ghoul", "Attack on Titan", "One Piece", "Naruto"],
+          "answer": "Tokyo Ghoul",
+          "note": "Add an iconic Tokyo Ghoul image.",
+          "image_url": "https://i.pinimg.com/736x/b3/48/e4/b348e4e1c6824cd4d174e89830f6fad8.jpg"
+        },
+        {
+          "text": "Guess the anime from this image.",
+          "options": ["Demon Slayer", "Bleach", "Naruto", "Dragon Ball"],
+          "answer": "Demon Slayer",
+          "note": "Add another iconic Demon Slayer image.",
+          "image_url": "https://m.media-amazon.com/images/M/MV5BNjhhNjU3MzgtMDgyZC00NTA4LTk4NmYtNDZhMzFjYWIzNjgwXkEyXkFqcGc@._V1_.jpg"
+        },
+        {
+          "text": "Guess the anime from this image.",
+          "options": ["One Piece", "Naruto", "Bleach", "Dragon Ball"],
+          "answer": "One Piece",
+          "note": "Add another iconic One Piece image.",
+          "image_url": "https://www.dexerto.com/cdn-image/wp-content/uploads/2023/05/31/one-piece-burning-flag-1024x576.jpeg?width=1200&quality=75&format=auto"
+        }
+      ]
+    }
+  ]
+}

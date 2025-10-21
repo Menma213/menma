@@ -1,0 +1,958 @@
+[
+  {
+    "name": "anbu",
+    "description": "Appoint a user as an Anbu and initiate the oath ceremony.",
+    "type": 1
+  },
+  {
+    "options": [
+      {
+        "name": "user",
+        "description": "Anbu to appoint",
+        "required": true,
+        "type": 6
+      },
+      {
+        "type": 3,
+        "choices": [
+          {
+            "name": "Spy",
+            "value": "spy"
+          },
+          {
+            "name": "Guard",
+            "value": "guard"
+          },
+          {
+            "name": "Right Hand Man",
+            "value": "right_hand_man"
+          }
+        ],
+        "name": "role",
+        "description": "Role to assign",
+        "required": true
+      }
+    ],
+    "name": "appoint",
+    "description": "Appoint an Anbu to a specific role",
+    "type": 1
+  },
+  {
+    "options": [
+      {
+        "name": "user",
+        "description": "User to ban",
+        "required": true,
+        "type": 6
+      }
+    ],
+    "name": "ban-no-jutsu",
+    "description": "Ban a user with the forbidden Ban no Jutsu",
+    "default_member_permissions": "4",
+    "type": 1
+  },
+  {
+    "options": [
+      {
+        "type": 3,
+        "choices": [
+          {
+            "name": "awaken",
+            "value": "awaken"
+          },
+          {
+            "name": "remove",
+            "value": "remove"
+          },
+          {
+            "name": "shrine",
+            "value": "shrine"
+          }
+        ],
+        "name": "option",
+        "description": "Choose an action",
+        "required": false
+      },
+      {
+        "type": 3,
+        "choices": [
+          {
+            "name": "Uchiha",
+            "value": "Uchiha"
+          },
+          {
+            "name": "Hyuga",
+            "value": "Hyuga"
+          },
+          {
+            "name": "Uzumaki",
+            "value": "Uzumaki"
+          },
+          {
+            "name": "Senju",
+            "value": "Senju"
+          },
+          {
+            "name": "Nara",
+            "value": "Nara"
+          }
+        ],
+        "name": "bloodline",
+        "description": "Bloodline to awaken",
+        "required": false
+      }
+    ],
+    "name": "bloodline",
+    "description": "Manage your ninja bloodline abilities",
+    "type": 1
+  },
+  {
+    "options": [
+      {
+        "type": 4,
+        "name": "level",
+        "description": "Bomb level to create (1-10)",
+        "required": false
+      }
+    ],
+    "name": "blueprint",
+    "description": "View or create bomb blueprints (Akatsuki Leader only)",
+    "type": 1
+  },
+  {
+    "options": [],
+    "name": "battlepass",
+    "description": "View your battlepass progress and rewards.",
+    "type": 1
+  },
+  {
+    "options": [
+      {
+        "type": 3,
+        "name": "combo",
+        "description": "The name of the combo to buy",
+        "required": false
+      },
+      {
+        "type": 3,
+        "name": "ss",
+        "description": "Buy various stuff using Shinobi Shards",
+        "required": false
+      }
+    ],
+    "name": "buy",
+    "description": "Purchase a combo or premium item from the shop",
+    "type": 1
+  },
+  {
+    "options": [
+      {
+        "type": 1,
+        "name": "brank",
+        "description": "Single NPC battle",
+        "options": []
+      },
+      {
+        "type": 1,
+        "name": "arank",
+        "description": "Multiple NPC battle",
+        "options": []
+      },
+      {
+        "type": 1,
+        "name": "trials",
+        "description": "Hokage trials",
+        "options": []
+      },
+      {
+        "type": 1,
+        "name": "ranked",
+        "description": "Ranked queue and rewards",
+        "options": [
+          {
+            "type": 3,
+            "choices": [
+              {
+                "name": "rewards",
+                "value": "rewards"
+              }
+            ],
+            "name": "option",
+            "description": "Show rewards or join ranked queue",
+            "required": false
+          }
+        ]
+      },
+      {
+        "type": 1,
+        "name": "fight",
+        "description": "User vs user battle",
+        "options": [
+          {
+            "name": "user",
+            "description": "User to challenge",
+            "required": true,
+            "type": 6
+          }
+        ]
+      }
+    ],
+    "name": "mission",
+    "description": "All battle commands combined",
+    "type": 1
+  },
+  {
+    "options": [],
+    "name": "cooldowns",
+    "description": "View your cooldowns for drank, brank, arank, srank, and trials",
+    "type": 1
+  },
+  {
+    "options": [],
+    "name": "council",
+    "description": "View the council information",
+    "type": 1
+  },
+  {
+    "options": [],
+    "name": "crank",
+    "description": "Vote for the bot on top.gg and get rewards!",
+    "type": 1
+  },
+  {
+    "options": [
+      {
+        "type": 4,
+        "name": "level",
+        "description": "Defense level to build/repair (1-10)",
+        "required": false
+      }
+    ],
+    "name": "defense",
+    "description": "Build or view village defenses (Hokage only)",
+    "type": 1
+  },
+  {
+    "options": [],
+    "name": "drank",
+    "description": "Complete a simple D-Rank mission",
+    "type": 1
+  },
+  {
+    "options": [
+      {
+        "type": 3,
+        "choices": [
+          {
+            "name": "Beef",
+            "value": "beef"
+          },
+          {
+            "name": "Fish",
+            "value": "fish"
+          },
+          {
+            "name": "Veggie",
+            "value": "veggie"
+          }
+        ],
+        "name": "bowl",
+        "description": "Type of bowl: beef, fish, or veggie",
+        "required": true
+      },
+      {
+        "type": 4,
+        "name": "quantity",
+        "description": "Quantity to buy",
+        "required": false
+      }
+    ],
+    "name": "eat",
+    "description": "Buy bowls using your Ramen Coupons.",
+    "type": 1
+  },
+  {
+    "options": [],
+    "name": "enroll",
+    "description": "Enroll in the ninja world and face your first trial",
+    "type": 1
+  },
+  {
+    "options": [
+      {
+        "type": 3,
+        "choices": [
+          {
+            "name": "jutsu",
+            "value": "jutsu"
+          },
+          {
+            "name": "combo",
+            "value": "combo"
+          }
+        ],
+        "name": "type",
+        "description": "Type to equip: jutsu or combo",
+        "required": true
+      },
+      {
+        "type": 3,
+        "name": "name",
+        "description": "Name of the jutsu or combo",
+        "required": true
+      },
+      {
+        "type": 3,
+        "name": "slot",
+        "description": "Jutsu slot (required for jutsu)",
+        "required": true
+      }
+    ],
+    "name": "equip",
+    "description": "Equip a jutsu or combo",
+    "type": 1
+  },
+  {
+    "options": [],
+    "name": "event",
+    "description": "Raikage: A Summon Event!",
+    "type": 1
+  },
+  {
+    "options": [],
+    "name": "fod",
+    "description": "Start the Forest of Death! (Admin only)",
+    "type": 1
+  },
+  {
+    "options": [
+      {
+        "type": 3,
+        "choices": [
+          {
+            "name": "unlock",
+            "value": "unlock"
+          }
+        ],
+        "name": "action",
+        "description": "Optional action (e.g., \"unlock\" to unban a user)",
+        "required": false
+      },
+      {
+        "name": "user",
+        "description": "User for the \"unlock\" action (Admin only)",
+        "required": false,
+        "type": 6
+      }
+    ],
+    "name": "frank",
+    "description": "Do a micro training mission for quick EXP",
+    "type": 1
+  },
+  {
+    "options": [],
+    "name": "gain-bxp",
+    "description": "Simulate completing a quest and gaining BXP.",
+    "type": 1
+  },
+  {
+    "options": [
+      {
+        "type": 1,
+        "name": "money",
+        "description": "Gift money to another user",
+        "options": [
+          {
+            "name": "user",
+            "description": "Recipient",
+            "required": true,
+            "type": 6
+          },
+          {
+            "type": 4,
+            "name": "amount",
+            "description": "Amount",
+            "required": true
+          }
+        ]
+      },
+      {
+        "type": 1,
+        "name": "ss",
+        "description": "Gift Shinobi Shards (SS) to another user (Admin only)",
+        "options": [
+          {
+            "name": "user",
+            "description": "Recipient",
+            "required": true,
+            "type": 6
+          },
+          {
+            "type": 4,
+            "name": "amount",
+            "description": "Amount",
+            "required": true
+          },
+          {
+            "type": 4,
+            "name": "id",
+            "description": "Unique gift ID",
+            "required": true
+          }
+        ]
+      },
+      {
+        "type": 1,
+        "name": "combo",
+        "description": "Gift a combo to another user (Admin only)",
+        "options": [
+          {
+            "name": "user",
+            "description": "Recipient",
+            "required": true,
+            "type": 6
+          },
+          {
+            "type": 3,
+            "name": "name",
+            "description": "Combo Name",
+            "required": true
+          },
+          {
+            "type": 4,
+            "name": "id",
+            "description": "Unique gift ID",
+            "required": true
+          }
+        ]
+      },
+      {
+        "type": 1,
+        "name": "ramen",
+        "description": "Gift ramen tickets to another user (Admin only)",
+        "options": [
+          {
+            "name": "user",
+            "description": "Recipient",
+            "required": true,
+            "type": 6
+          },
+          {
+            "type": 4,
+            "name": "amount",
+            "description": "Amount",
+            "required": true
+          },
+          {
+            "type": 4,
+            "name": "id",
+            "description": "Unique gift ID",
+            "required": true
+          }
+        ]
+      },
+      {
+        "type": 1,
+        "name": "inventory",
+        "description": "View and claim your gifts",
+        "options": []
+      }
+    ],
+    "name": "gift",
+    "description": "Gift items or view/claim your gifts",
+    "type": 1
+  },
+  {
+    "options": [],
+    "name": "guard",
+    "description": "Safeguard the Hokage's office for 6 hours (Guard only)",
+    "type": 1
+  },
+  {
+    "options": [],
+    "name": "help",
+    "description": "📜 View all available commands!",
+    "type": 1
+  },
+  {
+    "options": [],
+    "name": "imbored",
+    "description": "Sends a random post from popular anime subreddits.",
+    "type": 1
+  },
+  {
+    "options": [
+      {
+        "name": "user",
+        "description": "User to invite to the Akatsuki",
+        "required": true,
+        "type": 6
+      }
+    ],
+    "name": "invite",
+    "description": "Invite a rogue ninja to the Akatsuki and initiate their induction.",
+    "type": 1
+  },
+  {
+    "options": [],
+    "name": "jutsu",
+    "description": "Display all obtainable jutsu.",
+    "type": 1
+  },
+  {
+    "options": [
+      {
+        "type": 3,
+        "name": "name",
+        "description": "Name of the jutsu",
+        "required": true
+      }
+    ],
+    "name": "jutsuinfo",
+    "description": "Get detailed info about a jutsu.",
+    "type": 1
+  },
+  {
+    "options": [],
+    "name": "leaderboard",
+    "description": "Displays the top 10 strongest ninjas on a custom leaderboard.",
+    "type": 1
+  },
+  {
+    "options": [],
+    "name": "learnjutsu",
+    "description": "Attempt to learn jutsu from your current scroll",
+    "type": 1
+  },
+  {
+    "options": [
+      {
+        "type": 1,
+        "name": "one",
+        "description": "Consumes EXP for one level up.",
+        "options": []
+      },
+      {
+        "type": 1,
+        "name": "all",
+        "description": "Consumes all available EXP to level up as much as possible.",
+        "options": []
+      }
+    ],
+    "name": "levelup",
+    "description": "Attempt to level up your ninja skills with accumulated EXP.",
+    "type": 1
+  },
+  {
+    "options": [],
+    "name": "meme",
+    "description": "Sends a random meme from r/memes",
+    "type": 1
+  },
+  {
+    "options": [
+      {
+        "type": 3,
+        "choices": [
+          {
+            "name": "list",
+            "value": "list"
+          },
+          {
+            "name": "select",
+            "value": "select"
+          },
+          {
+            "name": "learn",
+            "value": "learn"
+          }
+        ],
+        "name": "action",
+        "description": "What do you want to do?",
+        "required": true
+      },
+      {
+        "autocomplete": true,
+        "type": 3,
+        "name": "mentor",
+        "description": "Mentor name (required for select)",
+        "required": false
+      }
+    ],
+    "name": "mentor",
+    "description": "Mentor system",
+    "type": 1
+  },
+  {
+    "options": [],
+    "name": "myjutsu",
+    "description": "Display your learned jutsu and current loadout",
+    "type": 1
+  },
+  {
+    "options": [
+      {
+        "name": "user",
+        "description": "View another player's profile",
+        "required": false,
+        "type": 6
+      },
+      {
+        "type": 3,
+        "choices": [
+          {
+            "name": "Main",
+            "value": "main"
+          },
+          {
+            "name": "Ranked",
+            "value": "ranked"
+          }
+        ],
+        "name": "page",
+        "description": "Which profile page to view",
+        "required": false
+      }
+    ],
+    "name": "profile",
+    "description": "View your ninja profile card",
+    "type": 1
+  },
+  {
+    "options": [],
+    "name": "quiz",
+    "description": "Start a Ramen Quiz!",
+    "type": 1
+  },
+  {
+    "options": [],
+    "name": "rankup",
+    "description": "Rank up to the next ninja rank if you have enough wins!",
+    "type": 1
+  },
+  {
+    "options": [
+      {
+        "name": "user",
+        "description": "User to reset cooldowns for",
+        "required": true,
+        "type": 6
+      }
+    ],
+    "name": "resetcd",
+    "description": "Reset all cooldowns for a user",
+    "type": 1
+  },
+  {
+    "options": [
+      {
+        "name": "user",
+        "description": "User to demote from Sannin",
+        "required": true,
+        "type": 6
+      }
+    ],
+    "name": "revoke_sannin",
+    "description": "Remove Sannin status and buffs from a user",
+    "type": 1
+  },
+  {
+    "options": [],
+    "name": "rob",
+    "description": "Bruisers rob for ramen tickets (3h cooldown)",
+    "type": 1
+  },
+  {
+    "options": [],
+    "name": "rogue",
+    "description": "Leave the village and become a rogue ninja",
+    "type": 1
+  },
+  {
+    "options": [
+      {
+        "type": 1,
+        "name": "dungeon",
+        "description": "Attempt to clear a dungeon to earn rewards and shards.",
+        "options": []
+      },
+      {
+        "type": 1,
+        "name": "mission",
+        "description": "Begin a new quest after clearing 10 dungeons.",
+        "options": []
+      },
+      {
+        "type": 1,
+        "name": "info",
+        "description": "View your current scroll and crystalline shards",
+        "options": []
+      },
+      {
+        "type": 1,
+        "name": "set",
+        "description": "Set active scroll",
+        "options": [
+          {
+            "type": 3,
+            "name": "scrollname",
+            "description": "Name of the scroll",
+            "required": true
+          }
+        ]
+      }
+    ],
+    "name": "scroll",
+    "description": "Manage your ninja scrolls",
+    "type": 1
+  },
+  {
+    "options": [
+      {
+        "type": 3,
+        "choices": [
+          {
+            "name": "hokage",
+            "value": "hokage"
+          },
+          {
+            "name": "war",
+            "value": "war"
+          }
+        ],
+        "name": "type",
+        "description": "Type of event",
+        "required": true
+      }
+    ],
+    "name": "serverevent",
+    "description": "Start a server event",
+    "type": 1
+  },
+  {
+    "options": [
+      {
+        "name": "user",
+        "description": "Akatsuki member to assign a role",
+        "required": true,
+        "type": 6
+      },
+      {
+        "type": 3,
+        "choices": [
+          {
+            "name": "Co-Leader",
+            "value": "Co-Leader"
+          },
+          {
+            "name": "Bruiser",
+            "value": "Bruiser"
+          },
+          {
+            "name": "Scientist",
+            "value": "Scientist"
+          }
+        ],
+        "name": "role",
+        "description": "Role to assign",
+        "required": true
+      }
+    ],
+    "name": "command",
+    "description": "Command an Akatsuki member to a specific role",
+    "type": 1
+  },
+  {
+    "options": [],
+    "name": "shop",
+    "description": "View the available combos in the shop",
+    "type": 1
+  },
+  {
+    "options": [],
+    "name": "srank",
+    "description": "Embark on a dangerous S-Rank mission",
+    "type": 1
+  },
+  {
+    "options": [
+      {
+        "name": "student",
+        "description": "User to teach the jutsu to",
+        "required": true,
+        "type": 6
+      },
+      {
+        "autocomplete": true,
+        "type": 3,
+        "name": "jutsu",
+        "description": "Jutsu to teach",
+        "required": true
+      }
+    ],
+    "name": "teach",
+    "description": "[ADMIN] Teach a jutsu to a user",
+    "type": 1
+  },
+  {
+    "options": [],
+    "name": "trade",
+    "description": "Trade Shinobi Shards or Money with another user.",
+    "type": 1
+  },
+  {
+    "options": [],
+    "name": "tutorial",
+    "description": "Start the interactive tutorial with Asuma!",
+    "type": 1
+  },
+  {
+    "options": [
+      {
+        "autocomplete": true,
+        "type": 3,
+        "name": "candidate",
+        "description": "Name of the candidate",
+        "required": true
+      }
+    ],
+    "name": "vote",
+    "description": "Vote for the Hokage candidate",
+    "type": 1
+  },
+  {
+    "options": [
+      {
+        "type": 1,
+        "name": "target",
+        "description": "Set the Jinchuriki target",
+        "options": [
+          {
+            "name": "user",
+            "description": "The Jinchuriki to target",
+            "required": true,
+            "type": 6
+          }
+        ]
+      },
+      {
+        "type": 1,
+        "name": "weapon",
+        "description": "Set the nuclear chakra bomb level",
+        "options": [
+          {
+            "max_value": 10,
+            "min_value": 1,
+            "type": 4,
+            "name": "level",
+            "description": "The weapon level (1-10)",
+            "required": true
+          }
+        ]
+      },
+      {
+        "type": 1,
+        "name": "start",
+        "description": "Start the war (Akatsuki leader only)",
+        "options": []
+      },
+      {
+        "type": 1,
+        "name": "send",
+        "description": "Send a fighter to battle",
+        "options": [
+          {
+            "name": "user",
+            "description": "The user to send",
+            "required": true,
+            "type": 6
+          }
+        ]
+      },
+      {
+        "type": 1,
+        "name": "status",
+        "description": "Check the current war status",
+        "options": []
+      },
+      {
+        "type": 1,
+        "name": "villagebank",
+        "description": "Manage the village bank",
+        "options": [
+          {
+            "type": 3,
+            "choices": [
+              {
+                "name": "add",
+                "value": "add"
+              },
+              {
+                "name": "distribute",
+                "value": "distribute"
+              }
+            ],
+            "name": "action",
+            "description": "Add or distribute funds",
+            "required": true
+          },
+          {
+            "type": 4,
+            "name": "amount",
+            "description": "Amount to add (only for add action)",
+            "required": false
+          }
+        ]
+      }
+    ],
+    "name": "war",
+    "description": "Akatsuki war commands",
+    "type": 1
+  },
+  {
+    "options": [
+      {
+        "type": 1,
+        "name": "enable",
+        "description": "Enable welcome GIFs for this server",
+        "options": [
+          {
+            "name": "channel",
+            "description": "Channel to send welcome messages",
+            "required": true,
+            "type": 7
+          },
+          {
+            "name": "user",
+            "description": "(Test) Send welcome GIF for this user immediately",
+            "required": false,
+            "type": 6
+          }
+        ]
+      },
+      {
+        "type": 1,
+        "name": "disable",
+        "description": "Disable welcome GIFs for this server",
+        "options": []
+      }
+    ],
+    "name": "admincommand105",
+    "description": "Manage welcome GIF settings",
+    "default_member_permissions": "8",
+    "type": 1
+  },
+  {
+    "options": [
+      {
+        "name": "target",
+        "description": "The user whose profile you want to delete.",
+        "required": true,
+        "type": 6
+      }
+    ],
+    "name": "yeet",
+    "description": "Deletes a user profile from the database.",
+    "type": 1
+  }
+]

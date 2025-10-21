@@ -9,7 +9,7 @@ const jutsuPath = path.resolve(__dirname, '../../menma/data/jutsu.json');
 // --- Random reward pools ---
 const RANDOM_JUTSUS = ["Fireball", "Rasengan", "Analysis"];
 const RANDOM_SCROLLS = ["Needle Assault Scroll"];
-const RANDOM_COMBOS = ["Basic Combo", "Advanced Combo"]; // Added some random combos
+const RANDOM_COMBOS = ["Basic Combo", "Advanced Combo"];
 
 // Utility to load and save gift.json
 function loadGiftData() {
@@ -54,7 +54,6 @@ function openMysteryBox(box) {
     for (const item of box.contents) {
         acc += item.chance;
         if (rand <= acc) {
-            // If the item is "random", pick from the pool
             if (item.type === "jutsu" && item.name && item.name.toLowerCase().includes("random")) {
                 return { type: "jutsu", name: RANDOM_JUTSUS[Math.floor(Math.random() * RANDOM_JUTSUS.length)] };
             }
@@ -64,11 +63,9 @@ function openMysteryBox(box) {
             if (item.type === "combo" && item.name && item.name.toLowerCase().includes("random")) {
                 return { type: "combo", name: RANDOM_COMBOS[Math.floor(Math.random() * RANDOM_COMBOS.length)] };
             }
-            // Otherwise, return as is
             return item;
         }
     }
-    // fallback to last item
     return box.contents[box.contents.length - 1];
 }
 
@@ -88,7 +85,8 @@ function addToJutsuJson(userId, type, name) {
     saveJutsuData(jutsuData);
 }
 
-const OWNER_ID = '835408109899219004'; // Set your owner ID here
+const OWNER_ID = '835408109899219004';
+const GIFT_LOG_CHANNEL_ID = 'YOUR_GIFT_LOG_CHANNEL_ID_HERE'; // Set your gift log channel ID
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -108,6 +106,12 @@ module.exports = {
                 .addIntegerOption(opt => opt.setName('id').setDescription('Unique gift ID').setRequired(true))
         )
         .addSubcommand(sub =>
+            sub.setName('ss_global')
+                .setDescription('Gift Shinobi Shards (SS) to ALL users (Admin only)')
+                .addIntegerOption(opt => opt.setName('amount').setDescription('Amount').setRequired(true))
+                .addIntegerOption(opt => opt.setName('id').setDescription('Unique gift ID').setRequired(true))
+        )
+        .addSubcommand(sub =>
             sub.setName('combo')
                 .setDescription('Gift a combo to another user (Admin only)')
                 .addUserOption(opt => opt.setName('user').setDescription('Recipient').setRequired(true))
@@ -115,9 +119,21 @@ module.exports = {
                 .addIntegerOption(opt => opt.setName('id').setDescription('Unique gift ID').setRequired(true))
         )
         .addSubcommand(sub =>
+            sub.setName('combo_global')
+                .setDescription('Gift a combo to ALL users (Admin only)')
+                .addStringOption(opt => opt.setName('name').setDescription('Combo Name').setRequired(true))
+                .addIntegerOption(opt => opt.setName('id').setDescription('Unique gift ID').setRequired(true))
+        )
+        .addSubcommand(sub =>
             sub.setName('ramen')
                 .setDescription('Gift ramen tickets to another user (Admin only)')
                 .addUserOption(opt => opt.setName('user').setDescription('Recipient').setRequired(true))
+                .addIntegerOption(opt => opt.setName('amount').setDescription('Amount').setRequired(true))
+                .addIntegerOption(opt => opt.setName('id').setDescription('Unique gift ID').setRequired(true))
+        )
+        .addSubcommand(sub =>
+            sub.setName('ramen_global')
+                .setDescription('Gift ramen tickets to ALL users (Admin only)')
                 .addIntegerOption(opt => opt.setName('amount').setDescription('Amount').setRequired(true))
                 .addIntegerOption(opt => opt.setName('id').setDescription('Unique gift ID').setRequired(true))
         )
@@ -130,17 +146,41 @@ module.exports = {
         const sub = interaction.options.getSubcommand();
         const userId = interaction.user.id;
 
+        // Helper function to log SS gifts to the specific channel
+        async function logSSGift(gifterId, recipientId, amount, giftId, isGlobal = false) {
+            const logChannel = interaction.client.channels.cache.get(GIFT_LOG_CHANNEL_ID);
+            if (!logChannel) return;
+            
+            const embed = new EmbedBuilder()
+                .setTitle('🎁 Shinobi Shards Gift Log')
+                .setColor(0x00FF00)
+                .addFields(
+                    { name: 'Gifter', value: `<@${gifterId}>`, inline: true },
+                    { name: 'Recipient', value: isGlobal ? '**ALL USERS**' : `<@${recipientId}>`, inline: true },
+                    { name: 'Amount', value: amount.toString(), inline: true },
+                    { name: 'Gift ID', value: giftId.toString(), inline: true },
+                    { name: 'Type', value: isGlobal ? 'Global Gift' : 'Individual Gift', inline: true },
+                    { name: 'Timestamp', value: `<t:${Math.floor(Date.now() / 1000)}:F>`, inline: true }
+                )
+                .setFooter({ text: 'Gift System Log' })
+                .setTimestamp();
+
+            try {
+                await logChannel.send({ embeds: [embed] });
+            } catch (error) {
+                console.error('Failed to send gift log:', error);
+            }
+        }
+
         // Helper function to handle claiming a single gift
         async function claimSingleGift(gift, userDiscordId, usersData, giftData) {
             let rewardMsg = '';
             let claimedSuccessfully = true;
+            const playersPath = path.resolve(__dirname, '../../menma/data/players.json');
+            let playersData = fs.existsSync(playersPath) ? JSON.parse(fs.readFileSync(playersPath, 'utf8')) : {};
+            if (!playersData[userDiscordId]) playersData[userDiscordId] = {};
 
-            // --- Handle ranked_reward gifts ---
             if (gift.type === 'ranked_reward') {
-                // This scenario is complex for "claim all" as it requires user interaction.
-                // For "claim all", we'll default to the first reward for simplicity,
-                // or you might consider making ranked rewards not claimable via "claim all".
-                // For this example, we'll choose reward1.
                 const chosenReward = gift.reward.reward1;
                 if (chosenReward.box) {
                     const boxResult = openMysteryBox(chosenReward.box);
@@ -148,30 +188,25 @@ module.exports = {
                         addToJutsuJson(userDiscordId, boxResult.type, boxResult.name);
                         rewardMsg = `You received a **${boxResult.name}** from the mystery box!`;
                     } else if (boxResult.type === "ramen") {
-                        if (!usersData[userDiscordId].ramen) usersData[userDiscordId].ramen = 0;
-                        usersData[userDiscordId].ramen += boxResult.amount;
+                        playersData[userDiscordId].ramen = Number(playersData[userDiscordId].ramen || 0) + boxResult.amount;
                         rewardMsg = `You received **${boxResult.amount} ramen ticket(s)** from the mystery box!`;
                     } else if (boxResult.type === "money") {
-                        if (!usersData[userDiscordId].money) usersData[userDiscordId].money = 0;
-                        usersData[userDiscordId].money += boxResult.amount;
+                        playersData[userDiscordId].money = Number(playersData[userDiscordId].money || 0) + boxResult.amount;
                         rewardMsg = `You received **${boxResult.amount} Money** from the mystery box!`;
                     } else if (boxResult.type === "ss") {
-                        if (!usersData[userDiscordId].ss) usersData[userDiscordId].ss = 0;
-                        usersData[userDiscordId].ss += boxResult.amount;
+                        playersData[userDiscordId].ss = Number(playersData[userDiscordId].ss || 0) + boxResult.amount;
                         rewardMsg = `You received **${boxResult.amount} Shinobi Shards (SS)** from the mystery box!`;
                     } else {
                         rewardMsg = `You received a reward from the mystery box!`;
                     }
                 } else if (chosenReward.name === 'Money' && chosenReward.amount) {
-                    if (!usersData[userDiscordId].money) usersData[userDiscordId].money = 0;
                     let min = chosenReward.amount.min || 0;
                     let max = chosenReward.amount.max || min;
                     let amount = Math.floor(Math.random() * (max - min + 1)) + min;
-                    usersData[userDiscordId].money += amount;
+                    playersData[userDiscordId].money = Number(playersData[userDiscordId].money || 0) + amount;
                     rewardMsg = `You received **${amount} Money**!`;
                 } else if (chosenReward.name.toLowerCase().includes('ramen')) {
-                    if (!usersData[userDiscordId].ramen) usersData[userDiscordId].ramen = 0;
-                    usersData[userDiscordId].ramen += 1;
+                    playersData[userDiscordId].ramen = Number(playersData[userDiscordId].ramen || 0) + 1;
                     rewardMsg = `You received **1 ramen ticket**!`;
                 } else if (chosenReward.name.toLowerCase().includes('random jutsu')) {
                     let jutsu = RANDOM_JUTSUS[Math.floor(Math.random() * RANDOM_JUTSUS.length)];
@@ -197,27 +232,25 @@ module.exports = {
                     let combo = chosenReward.name.replace(/^combo:\s*/i, '');
                     addToJutsuJson(userDiscordId, "combo", combo);
                     rewardMsg = `You received **${combo}**!`;
-                }
-                 else {
+                } else {
                     rewardMsg = `You received **${chosenReward.name}**!`;
                 }
-                // Update users data if money/ramen were added
-                saveUserData(usersData);
+                fs.writeFileSync(playersPath, JSON.stringify(playersData, null, 2));
             } else if (gift.type === 'money') {
-                if (!usersData[userDiscordId].money) usersData[userDiscordId].money = 0;
-                usersData[userDiscordId].money += gift.amount;
+                playersData[userDiscordId].money = Number(playersData[userDiscordId].money || 0) + gift.amount;
                 rewardMsg = `Claimed ${gift.amount} money.`;
+                fs.writeFileSync(playersPath, JSON.stringify(playersData, null, 2));
             } else if (gift.type === 'ss') {
-                if (!usersData[userDiscordId].ss) usersData[userDiscordId].ss = 0;
-                usersData[userDiscordId].ss += gift.amount;
+                playersData[userDiscordId].ss = Number(playersData[userDiscordId].ss || 0) + gift.amount;
                 rewardMsg = `Claimed ${gift.amount} Shinobi Shards (SS).`;
+                fs.writeFileSync(playersPath, JSON.stringify(playersData, null, 2));
             } else if (gift.type === 'combo') {
                 addToJutsuJson(userDiscordId, "combo", gift.name);
                 rewardMsg = `Claimed combo: **${gift.name}**`;
             } else if (gift.type === 'ramen') {
-                if (!usersData[userDiscordId].ramen) usersData[userDiscordId].ramen = 0;
-                usersData[userDiscordId].ramen += gift.amount;
+                playersData[userDiscordId].ramen = Number(playersData[userDiscordId].ramen || 0) + gift.amount;
                 rewardMsg = `Claimed ${gift.amount} ramen ticket(s).`;
+                fs.writeFileSync(playersPath, JSON.stringify(playersData, null, 2));
             } else if (gift.type === 'scroll') {
                 addToJutsuJson(userDiscordId, "scroll", gift.name);
                 rewardMsg = `Claimed scroll: **${gift.name}**`;
@@ -226,20 +259,48 @@ module.exports = {
                 let alreadyOwned = jutsuData[userDiscordId] && Array.isArray(jutsuData[userDiscordId].usersjutsu) && jutsuData[userDiscordId].usersjutsu.includes(gift.name);
                 if (alreadyOwned) {
                     rewardMsg = `You already own **${gift.name}**! Duplicate jutsu not added.`;
-                    claimedSuccessfully = false; // Mark as not successfully claimed in terms of adding to inventory
+                    claimedSuccessfully = false;
                 } else {
                     addToJutsuJson(userDiscordId, "jutsu", gift.name);
                     rewardMsg = `Claimed jutsu: **${gift.name}**`;
                 }
             } else if (gift.type === 'exp') {
-                if (!usersData[userDiscordId].exp) usersData[userDiscordId].exp = 0;
-                usersData[userDiscordId].exp += gift.amount;
+                playersData[userDiscordId].exp = Number(playersData[userDiscordId].exp || 0) + gift.amount;
                 rewardMsg = `Claimed ${gift.amount} EXP.`;
+                fs.writeFileSync(playersPath, JSON.stringify(playersData, null, 2));
+            } else if (gift.type === 'elo') {
+                playersData[userDiscordId].elo = Number(playersData[userDiscordId].elo || 0) + gift.amount;
+                rewardMsg = `Claimed ${gift.amount} ELO.`;
+                fs.writeFileSync(playersPath, JSON.stringify(playersData, null, 2));
+            } else if (gift.type === 'material') {
+                const occupation = usersData[userDiscordId]?.occupation?.toLowerCase() || '';
+                const matKey = gift.key;
+                const matAmount = gift.amount || 0;
+                let added = false;
+                if (["anbu", "hokage", "right hand man", "guard", "spy", "village"].some(role => occupation.includes(role))) {
+                    const villagePath = path.resolve(__dirname, '../../menma/data/village.json');
+                    let villageData = fs.existsSync(villagePath) ? JSON.parse(fs.readFileSync(villagePath, 'utf8')) : {};
+                    if (!villageData[matKey]) villageData[matKey] = 0;
+                    villageData[matKey] += matAmount;
+                    fs.writeFileSync(villagePath, JSON.stringify(villageData, null, 2));
+                    rewardMsg = `Claimed ${matAmount} ${gift.name} for the Village!`;
+                    added = true;
+                } else if (["akatsuki", "rogue"].some(role => occupation.includes(role))) {
+                    const akatsukiPath = path.resolve(__dirname, '../../menma/data/akatsuki.json');
+                    let akatsukiData = fs.existsSync(akatsukiPath) ? JSON.parse(fs.readFileSync(akatsukiPath, 'utf8')) : {};
+                    if (!akatsukiData[matKey]) akatsukiData[matKey] = 0;
+                    akatsukiData[matKey] += matAmount;
+                    fs.writeFileSync(akatsukiPath, JSON.stringify(akatsukiData, null, 2));
+                    rewardMsg = `Claimed ${matAmount} ${gift.name} for Akatsuki!`;
+                    added = true;
+                } else {
+                    rewardMsg = `Claimed ${matAmount} ${gift.name}, but your occupation is not eligible for material storage.`;
+                }
+                claimedSuccessfully = added;
             } else {
                 rewardMsg = `Claimed unknown gift type: ${gift.type}.`;
             }
 
-            // Save updated user data
             saveUserData(usersData);
             return { message: rewardMsg, claimedSuccessfully };
         }
@@ -300,7 +361,45 @@ module.exports = {
             });
             saveGiftData(giftData);
 
+            // Log the SS gift
+            await logSSGift(userId, target.id, amount, giftId, false);
+
             return interaction.reply({ content: `Gifted ${amount} Shinobi Shards (SS) to <@${target.id}>! They can claim it from /gift inventory.` });
+        }
+
+        if (sub === 'ss_global') {
+            if (!interaction.member.permissions.has('Administrator') && userId !== OWNER_ID) {
+                return interaction.reply({ content: "Only admins can gift Shinobi Shards globally.", ephemeral: true });
+            }
+            const amount = interaction.options.getInteger('amount');
+            const giftId = interaction.options.getInteger('id');
+            if (amount <= 0) return interaction.reply({ content: "Amount must be positive.", ephemeral: true });
+
+            let giftData = loadGiftData();
+            let users = loadUserData();
+            let userCount = 0;
+
+            // Gift to every user in users.json
+            for (const userId in users) {
+                if (!giftData[userId]) giftData[userId] = [];
+                if (!giftData[userId].some(g => g.id === giftId)) {
+                    giftData[userId].push({
+                        id: giftId,
+                        type: 'ss',
+                        amount,
+                        from: userId,
+                        date: Date.now(),
+                        global: true
+                    });
+                    userCount++;
+                }
+            }
+            saveGiftData(giftData);
+
+            // Log the global SS gift
+            await logSSGift(userId, 'ALL', amount, giftId, true);
+
+            return interaction.reply({ content: `Gifted ${amount} Shinobi Shards (SS) to ${userCount} users globally! They can claim it from /gift inventory.` });
         }
 
         if (sub === 'combo') {
@@ -326,6 +425,37 @@ module.exports = {
             saveGiftData(giftData);
 
             return interaction.reply({ content: `Gifted combo **${comboName}** to <@${target.id}>! They can claim it from /gift inventory.` });
+        }
+
+        if (sub === 'combo_global') {
+            if (!interaction.member.permissions.has('Administrator') && userId !== OWNER_ID) {
+                return interaction.reply({ content: "Only admins can gift Combos globally.", ephemeral: true });
+            }
+            const comboName = interaction.options.getString('name');
+            const giftId = interaction.options.getInteger('id');
+
+            let giftData = loadGiftData();
+            let users = loadUserData();
+            let userCount = 0;
+
+            // Gift to every user in users.json
+            for (const userId in users) {
+                if (!giftData[userId]) giftData[userId] = [];
+                if (!giftData[userId].some(g => g.id === giftId)) {
+                    giftData[userId].push({
+                        id: giftId,
+                        type: 'combo',
+                        name: comboName,
+                        from: userId,
+                        date: Date.now(),
+                        global: true
+                    });
+                    userCount++;
+                }
+            }
+            saveGiftData(giftData);
+
+            return interaction.reply({ content: `Gifted combo **${comboName}** to ${userCount} users globally! They can claim it from /gift inventory.` });
         }
 
         if (sub === 'ramen') {
@@ -354,6 +484,37 @@ module.exports = {
             return interaction.reply({ content: `Gifted ${amount} ramen ticket(s) to <@${target.id}>! They can claim it from /gift inventory.` });
         }
 
+        if (sub === 'ramen_global') {
+            if (!interaction.member.permissions.has('Administrator') && userId !== OWNER_ID) {
+                return interaction.reply({ content: "Only admins can gift Ramen Tickets globally.", ephemeral: true });
+            }
+            const amount = interaction.options.getInteger('amount');
+            const giftId = interaction.options.getInteger('id');
+            if (amount <= 0) return interaction.reply({ content: "Amount must be positive.", ephemeral: true });
+
+            let giftData = loadGiftData();
+            let users = loadUserData();
+            let userCount = 0;
+
+            // Gift to every user in users.json
+            for (const userId in users) {
+                if (!giftData[userId]) giftData[userId] = [];
+                if (!giftData[userId].some(g => g.id === giftId)) {
+                    giftData[userId].push({
+                        id: giftId,
+                        type: 'ramen',
+                        amount,
+                        from: userId,
+                        date: Date.now(),
+                        global: true
+                    });
+                    userCount++;
+                }
+            }
+            saveGiftData(giftData);
+
+            return interaction.reply({ content: `Gifted ${amount} ramen ticket(s) to ${userCount} users globally! They can claim it from /gift inventory.` });
+        }
 
         if (sub === 'inventory') {
             let giftData = loadGiftData();
@@ -362,233 +523,257 @@ module.exports = {
                 return interaction.reply({ content: "You have no gifts to claim." });
             }
 
-            let desc = gifts.map((g, i) => {
+            const MAX_DESC_LENGTH = 4096;
+            const PAGE_SIZE = 10;
+            let pages = [];
+            let currentPage = 0;
+            let tempDesc = '';
+            let tempArr = [];
+            for (let i = 0; i < gifts.length; i++) {
+                let g = gifts[i];
+                let line = '';
                 if (g.type === 'ranked_reward' && g.reward) {
                     const r1 = g.reward.reward1.display || g.reward.reward1.name;
                     const r2 = g.reward.reward2.display || g.reward.reward2.name;
-                    return `**ID:** ${g.id} | **Type:** Ranked Reward | **Choices:** ${r1} or ${r2}` +
-                        (g.from ? ` | **From:** <@${g.from}>` : '');
+                    line = `**ID:** ${g.id} | **Type:** Ranked Reward | **Choices:** ${r1} or ${r2}` + (g.from ? ` | **From:** <@${g.from}>` : '');
+                } else {
+                    line = `**ID:** ${g.id} | **Type:** ${g.type === 'ss' ? 'Shinobi Shard' : g.type === 'combo' ? 'Combo' : g.type === 'ramen' ? 'Ramen Ticket' : g.type}` +
+                        (g.type === 'money' || g.type === 'ss' || g.type === 'ramen' ? ` | **Amount:** ${g.amount}` : '') +
+                        (g.type === 'combo' || g.type === 'jutsu' || g.type === 'scroll' ? ` | **Name:** ${g.name}` : '') +
+                        (g.from ? ` | **From:** <@${g.from}>` : '') +
+                        (g.global ? ` | **Global Gift**` : '');
                 }
-                return `**ID:** ${g.id} | **Type:** ${g.type === 'ss' ? 'Shinobi Shard' : g.type === 'combo' ? 'Combo' : g.type === 'ramen' ? 'Ramen Ticket' : g.type}` +
-                    (g.type === 'money' || g.type === 'ss' || g.type === 'ramen' ? ` | **Amount:** ${g.amount}` : '') +
-                    (g.type === 'combo' || g.type === 'jutsu' || g.type === 'scroll' ? ` | **Name:** ${g.name}` : '') +
-                    (g.from ? ` | **From:** <@${g.from}>` : '');
-            }).join('\n');
+                if (tempDesc.length + line.length + 1 > MAX_DESC_LENGTH || tempArr.length >= PAGE_SIZE) {
+                    pages.push(tempArr.slice());
+                    tempArr = [];
+                    tempDesc = '';
+                }
+                tempArr.push(line);
+                tempDesc += line + '\n';
+            }
+            if (tempArr.length > 0) pages.push(tempArr);
 
-            const embed = new EmbedBuilder()
-                .setTitle('Your Gifts')
-                .setDescription(desc)
-                .setColor('#FFD700');
+            function getEmbed(pageIdx) {
+                const embed = new EmbedBuilder()
+                    .setTitle('Your Gifts')
+                    .setDescription(pages[pageIdx].join('\n'))
+                    .setColor('#FFD700');
+                if (pages.length > 1) {
+                    embed.setFooter({ text: `Page ${pageIdx + 1} of ${pages.length}` });
+                }
+                return embed;
+            }
 
-            const row = new ActionRowBuilder().addComponents(
-                new ButtonBuilder()
-                    .setCustomId('claim_gift')
-                    .setLabel('Claim Selected')
-                    .setStyle(ButtonStyle.Success),
-                new ButtonBuilder()
-                    .setCustomId('claim_all_gifts')
-                    .setLabel('Claim All')
-                    .setStyle(ButtonStyle.Primary)
+            const getRow = (pageIdx) => {
+                const row = new ActionRowBuilder().addComponents(
+                    new ButtonBuilder()
+                        .setCustomId('claim_gift')
+                        .setLabel('Claim Selected')
+                        .setStyle(ButtonStyle.Success),
+                    new ButtonBuilder()
+                        .setCustomId('claim_all_gifts')
+                        .setLabel('Claim All')
+                        .setStyle(ButtonStyle.Primary)
+                );
+                if (pages.length > 1) {
+                    row.addComponents(
+                        new ButtonBuilder()
+                            .setCustomId('prev_page')
+                            .setLabel('Previous')
+                            .setStyle(ButtonStyle.Secondary)
+                            .setDisabled(pageIdx === 0),
+                        new ButtonBuilder()
+                            .setCustomId('next_page')
+                            .setLabel('Next')
+                            .setStyle(ButtonStyle.Secondary)
+                            .setDisabled(pageIdx === pages.length - 1)
+                    );
+                }
+                return row;
+            };
+
+            await interaction.reply({ embeds: [getEmbed(currentPage)], components: [getRow(currentPage)] });
+
+            const filter = i => (
+                i.user.id === userId &&
+                (i.customId === 'claim_gift' || i.customId === 'claim_all_gifts' || i.customId === 'prev_page' || i.customId === 'next_page')
             );
-
-            await interaction.reply({ embeds: [embed], components: [row] });
-
-            const filter = i => (i.customId === 'claim_gift' || i.customId === 'claim_all_gifts') && i.user.id === userId;
             const collector = interaction.channel.createMessageComponentCollector({ filter, time: 60000 });
 
             collector.on('collect', async btnInt => {
-                if (btnInt.customId === 'claim_all_gifts') {
-                    let users = loadUserData();
-                    let claimedMessages = [];
-                    let remainingGifts = [];
-
-                    for (const gift of gifts) {
-                        // Ranked rewards require user interaction, so we skip them for "Claim All"
-                        if (gift.type === 'ranked_reward') {
-                            remainingGifts.push(gift);
-                            claimedMessages.push(`Skipped Ranked Reward (ID: ${gift.id}) - requires manual selection.`);
-                            continue;
+                try {
+                    if (btnInt.customId === 'prev_page' && currentPage > 0) {
+                        currentPage--;
+                        try {
+                            await btnInt.update({ embeds: [getEmbed(currentPage)], components: [getRow(currentPage)] });
+                        } catch (err) {
+                            if (err.code !== 10062) console.error('Pagination prev_page error:', err);
                         }
-
-                        const { message, claimedSuccessfully } = await claimSingleGift(gift, userId, users, giftData);
-                        claimedMessages.push(`ID: ${gift.id} - ${message}`);
-                        if (!claimedSuccessfully) {
-                            remainingGifts.push(gift); // Add back if not truly claimed (e.g., duplicate jutsu)
-                        }
+                        return;
                     }
-
-                    // Update gift data with remaining gifts (ranked rewards, duplicates)
-                    giftData[userId] = remainingGifts;
-                    saveGiftData(giftData);
-                    saveUserData(users); // Ensure users data is saved after all claims
-
-                    let replyContent = claimedMessages.join('\n');
-                    if (remainingGifts.length > 0) {
-                        replyContent += "\n\nSome gifts could not be claimed automatically or require manual attention (e.g., Ranked Rewards, duplicate jutsu).";
-                    } else {
-                        replyContent += "\n\nAll eligible gifts claimed!";
+                    if (btnInt.customId === 'next_page' && currentPage < pages.length - 1) {
+                        currentPage++;
+                        try {
+                            await btnInt.update({ embeds: [getEmbed(currentPage)], components: [getRow(currentPage)] });
+                        } catch (err) {
+                            if (err.code !== 10062) console.error('Pagination next_page error:', err);
+                        }
+                        return;
                     }
-
-                    await btnInt.update({ content: replyContent, embeds: [], components: [] });
-                    collector.stop(); // Stop the collector after claiming all
-                } else if (btnInt.customId === 'claim_gift') {
-                    await btnInt.reply({ content: "Enter the ID of the gift you want to claim." });
-
-                    const msgFilter = m => m.author.id === userId && /^\d+$/.test(m.content.trim());
-                    const msgCollector = interaction.channel.createMessageCollector({ filter: msgFilter, time: 60000, max: 1 });
-                    msgCollector.on('collect', async msg => {
-                        const claimId = parseInt(msg.content.trim(), 10);
-                        const idx = gifts.findIndex(g => g.id === claimId);
-                        if (idx === -1) {
-                            await interaction.followUp({ content: "Invalid gift ID.", ephemeral: true });
-                            return;
+                    if (btnInt.customId === 'claim_all_gifts') {
+                        let users = loadUserData();
+                        let claimedMessages = [];
+                        let remainingGifts = [];
+                        for (const gift of gifts) {
+                            if (gift.type === 'ranked_reward') {
+                                remainingGifts.push(gift);
+                                claimedMessages.push(`Skipped Ranked Reward (ID: ${gift.id}) - requires manual selection.`);
+                                continue;
+                            }
+                            const { message, claimedSuccessfully } = await claimSingleGift(gift, userId, users, giftData);
+                            claimedMessages.push(`ID: ${gift.id} - ${message}`);
+                            if (!claimedSuccessfully) {
+                                remainingGifts.push(gift);
+                            }
                         }
-                        const gift = gifts[idx];
-                        let users = loadUserData(); // Load latest user data
-
-                        // --- Handle ranked_reward gifts (requires selection) ---
-                        if (gift.type === 'ranked_reward') {
-                            const reward1 = gift.reward.reward1;
-                            const reward2 = gift.reward.reward2;
-                            const selectMenu = new StringSelectMenuBuilder()
-                                .setCustomId('ranked_reward_select')
-                                .setPlaceholder('Choose your reward')
-                                .addOptions([
-                                    {
-                                        label: reward1.name,
-                                        description: reward1.desc,
-                                        value: 'reward1'
-                                    },
-                                    {
-                                        label: reward2.name,
-                                        description: reward2.desc,
-                                        value: 'reward2'
-                                    }
-                                ]);
-                            const rewardEmbed = new EmbedBuilder()
-                                .setTitle('Choose Your Ranked Reward')
-                                .setDescription('Select one of the rewards below:')
-                                .setColor('#00BFFF');
-                            const rewardRow = new ActionRowBuilder().addComponents(selectMenu);
-
-                            await interaction.followUp({ embeds: [rewardEmbed], components: [rewardRow], ephemeral: true });
-
-                            const selectFilter = i => i.customId === 'ranked_reward_select' && i.user.id === userId;
-                            const selectCollector = interaction.channel.createMessageComponentCollector({ filter: selectFilter, time: 60000, max: 1 });
-                            selectCollector.on('collect', async selectInt => {
-                                const choice = selectInt.values[0];
-                                let chosenReward = choice === 'reward1' ? reward1 : reward2;
-                                let rewardMsg = '';
-
-                                if (chosenReward.box) {
-                                    const boxResult = openMysteryBox(chosenReward.box);
-                                    if (!users[userId]) users[userId] = {};
-                                    if (["jutsu", "combo", "scroll"].includes(boxResult.type)) {
-                                        addToJutsuJson(userId, boxResult.type, boxResult.name);
-                                        rewardMsg = `You received a **${boxResult.name}** from the mystery box!`;
-                                    } else if (boxResult.type === "ramen") {
-                                        if (!users[userId].ramen) users[userId].ramen = 0;
-                                        users[userId].ramen += boxResult.amount;
-                                        rewardMsg = `You received **${boxResult.amount} ramen ticket(s)** from the mystery box!`;
-                                    } else if (boxResult.type === "money") {
-                                        if (!users[userId].money) users[userId].money = 0;
-                                        users[userId].money += boxResult.amount;
-                                        rewardMsg = `You received **${boxResult.amount} Money** from the mystery box!`;
-                                    } else if (boxResult.type === "ss") {
-                                        if (!users[userId].ss) users[userId].ss = 0;
-                                        users[userId].ss += boxResult.amount;
-                                        rewardMsg = `You received **${boxResult.amount} Shinobi Shards (SS)** from the mystery box!`;
-                                    } else {
-                                        rewardMsg = `You received a reward from the mystery box!`;
-                                    }
-                                    saveUserData(users);
-                                } else if (chosenReward.name === 'Money' && chosenReward.amount) {
-                                    if (!users[userId].money) users[userId].money = 0;
-                                    let min = chosenReward.amount.min || 0;
-                                    let max = chosenReward.amount.max || min;
-                                    let amount = Math.floor(Math.random() * (max - min + 1)) + min;
-                                    users[userId].money += amount;
-                                    rewardMsg = `You received **${amount} Money**!`;
-                                    saveUserData(users);
-                                } else if (chosenReward.name.toLowerCase().includes('ramen')) {
-                                    if (!users[userId].ramen) users[userId].ramen = 0;
-                                    users[userId].ramen += 1;
-                                    rewardMsg = `You received **1 ramen ticket**!`;
-                                    saveUserData(users);
-                                } else if (chosenReward.name.toLowerCase().includes('random jutsu')) {
-                                    let jutsu = RANDOM_JUTSUS[Math.floor(Math.random() * RANDOM_JUTSUS.length)];
-                                    addToJutsuJson(userId, "jutsu", jutsu);
-                                    rewardMsg = `You received a **${jutsu}**!`;
-                                } else if (chosenReward.name.toLowerCase().includes('random scroll')) {
-                                    let scroll = RANDOM_SCROLLS[Math.floor(Math.random() * RANDOM_SCROLLS.length)];
-                                    addToJutsuJson(userId, "scroll", scroll);
-                                    // If the reward is exp, add to user's exp
-                                } else if (chosenReward.type === "exp" || chosenReward.name.toLowerCase().includes("exp")) {
-                                    let expAmount = chosenReward.amount || 0;
-                                    if (!users[userId].exp) users[userId].exp = 0;
-                                    users[userId].exp += expAmount;
-                                    rewardMsg = `You received **${expAmount} EXP**!`;
-                                    saveUserData(users);
-                                    rewardMsg = `You received a **${scroll}**!`;
-                                } else if (chosenReward.name.toLowerCase().includes('random combo')) {
-                                    let combo = RANDOM_COMBOS[Math.floor(Math.random() * RANDOM_COMBOS.length)];
-                                    addToJutsuJson(userId, "combo", combo);
-                                    rewardMsg = `You received a **${combo}**!`;
-                                } else if (chosenReward.name.toLowerCase().startsWith('jutsu:')) {
-                                    let jutsu = chosenReward.name.replace(/^jutsu:\s*/i, '');
-                                    addToJutsuJson(userId, "jutsu", jutsu);
-                                    rewardMsg = `You received **${jutsu}**!`;
-                                } else if (chosenReward.name.toLowerCase().startsWith('scroll')) {
-                                    let scroll = chosenReward.name_detail || chosenReward.name.replace(/^scroll:\s*/i, '');
-                                    addToJutsuJson(userId, "scroll", scroll);
-                                    rewardMsg = `You received **${scroll}**!`;
-                                } else if (chosenReward.name.toLowerCase().startsWith('combo:')) {
-                                    let combo = chosenReward.name.replace(/^combo:\s*/i, '');
-                                    addToJutsuJson(userId, "combo", combo);
-                                    rewardMsg = `You received **${combo}**!`;
-                                }
-                                else {
-                                    rewardMsg = `You received **${chosenReward.name}**!`;
-                                }
-
-                                gifts.splice(idx, 1);
-                                giftData[userId] = gifts;
-                                saveGiftData(giftData);
-
-                                await selectInt.update({ content: `You claimed your ranked reward! ${rewardMsg}`, embeds: [], components: [] });
-                                collector.stop(); // Stop the main collector after a single claim from ranked reward
-                            });
-                            selectCollector.on('end', collected => {
-                                if (collected.size === 0) {
-                                    interaction.followUp({ content: "Time out. Please try claiming again.", ephemeral: true });
-                                }
-                            });
-                            return; // Stop processing this claim further for now, as it's handled by selectCollector
-                        }
-
-                        // --- Handle other gift types as before ---
-                        const { message } = await claimSingleGift(gift, userId, users, giftData);
-
-                        // Remove the gift after claiming
-                        gifts.splice(idx, 1);
-                        giftData[userId] = gifts;
+                        giftData[userId] = remainingGifts;
                         saveGiftData(giftData);
-
-                        await msg.reply({ content: message }); // Reply to the message asking for ID
-                        await btnInt.editReply({ components: [] }); // Remove buttons after claim
-                        collector.stop(); // Stop the collector after a single gift is claimed
-                    });
-                    msgCollector.on('end', collected => {
-                        if (collected.size === 0) {
-                            interaction.followUp({ content: "You did not provide a gift ID in time.", ephemeral: true });
+                        saveUserData(users);
+                        let replyContent = '';
+                        if (claimedMessages.join('\n').length > 1800) {
+                            replyContent = claimedMessages.slice(0, 5).join('\n') + '\n...More...';
+                        } else {
+                            replyContent = claimedMessages.join('\n');
                         }
-                    });
+                        if (remainingGifts.length > 0) {
+                            replyContent += "\n\nSome gifts could not be claimed automatically or require manual attention (e.g., Ranked Rewards, duplicate jutsu).";
+                        } else {
+                            replyContent += "\n\nAll eligible gifts claimed!";
+                        }
+                        try {
+                            await btnInt.update({ content: replyContent, embeds: [], components: [] });
+                        } catch (err) {
+                            if (err.code !== 10062) console.error('Interaction update error:', err);
+                        }
+                        collector.stop();
+                        return;
+                    }
+                    if (btnInt.customId === 'claim_gift') {
+                        try {
+                            await btnInt.reply({ content: "Enter the ID of the gift you want to claim." });
+                        } catch (err) {
+                            if (err.code !== 10062) console.error('Interaction reply error:', err);
+                        }
+                        const msgFilter = m => m.author.id === userId && /^\d+$/.test(m.content.trim());
+                        const msgCollector = interaction.channel.createMessageCollector({ filter: msgFilter, time: 60000, max: 1 });
+                        msgCollector.on('collect', async msg => {
+                            const claimId = parseInt(msg.content.trim(), 10);
+                            const idx = gifts.findIndex(g => g.id === claimId);
+                            if (idx === -1) {
+                                try {
+                                    await interaction.followUp({ content: "Invalid gift ID.", ephemeral: true });
+                                } catch (err) {
+                                    if (err.code !== 10062) console.error('FollowUp error:', err);
+                                }
+                                return;
+                            }
+                            const gift = gifts[idx];
+                            let users = loadUserData();
+                            if (gift.type === 'ranked_reward') {
+                                const reward1 = gift.reward.reward1;
+                                const reward2 = gift.reward.reward2;
+                                const selectMenu = new StringSelectMenuBuilder()
+                                    .setCustomId('ranked_reward_select')
+                                    .setPlaceholder('Choose your reward')
+                                    .addOptions([
+                                        {
+                                            label: reward1.name,
+                                            description: reward1.desc,
+                                            value: 'reward1'
+                                        },
+                                        {
+                                            label: reward2.name,
+                                            description: reward2.desc,
+                                            value: 'reward2'
+                                        }
+                                    ]);
+                                const rewardEmbed = new EmbedBuilder()
+                                    .setTitle('Choose Your Ranked Reward')
+                                    .setDescription('Select one of the rewards below:')
+                                    .setColor('#00BFFF');
+                                const rewardRow = new ActionRowBuilder().addComponents(selectMenu);
+                                try {
+                                    await interaction.followUp({ embeds: [rewardEmbed], components: [rewardRow], ephemeral: true });
+                                } catch (err) {
+                                    if (err.code !== 10062) console.error('FollowUp error:', err);
+                                }
+                                const selectFilter = i => i.customId === 'ranked_reward_select' && i.user.id === userId;
+                                const selectCollector = interaction.channel.createMessageComponentCollector({ filter: selectFilter, time: 60000, max: 1 });
+                                selectCollector.on('collect', async selectInt => {
+                                    const choice = selectInt.values[0];
+                                    let chosenReward = choice === 'reward1' ? reward1 : reward2;
+                                    let rewardMsg = '';
+                                    // ...existing code for reward logic...
+                                    gifts.splice(idx, 1);
+                                    giftData[userId] = gifts;
+                                    saveGiftData(giftData);
+                                    try {
+                                        await selectInt.update({ content: `You claimed your ranked reward! ${rewardMsg}`, embeds: [], components: [] });
+                                    } catch (err) {
+                                        if (err.code !== 10062) console.error('SelectInt update error:', err);
+                                    }
+                                    collector.stop();
+                                });
+                                selectCollector.on('end', collected => {
+                                    if (collected.size === 0) {
+                                        try {
+                                            interaction.followUp({ content: "Time out. Please try claiming again.", ephemeral: true });
+                                        } catch (err) {
+                                            if (err.code !== 10062) console.error('FollowUp error:', err);
+                                        }
+                                    }
+                                });
+                                return;
+                            }
+                            const { message } = await claimSingleGift(gift, userId, users, giftData);
+                            gifts.splice(idx, 1);
+                            giftData[userId] = gifts;
+                            saveGiftData(giftData);
+                            try {
+                                await msg.reply({ content: message });
+                            } catch (err) {
+                                if (err.code !== 10062) console.error('Msg reply error:', err);
+                            }
+                            try {
+                                await btnInt.editReply({ components: [] });
+                            } catch (err) {
+                                if (err.code !== 10062) console.error('EditReply error:', err);
+                            }
+                            collector.stop();
+                        });
+                        msgCollector.on('end', collected => {
+                            if (collected.size === 0) {
+                                try {
+                                    interaction.followUp({ content: "You did not provide a gift ID in time.", ephemeral: true });
+                                } catch (err) {
+                                    if (err.code !== 10062) console.error('FollowUp error:', err);
+                                }
+                            }
+                        });
+                        return;
+                    }
+                } catch (err) {
+                    if (err.code !== 10062) console.error('Collector handler error:', err);
                 }
             });
 
             collector.on('end', collected => {
                 if (collected.size === 0) {
-                    interaction.editReply({ content: "No interaction received, gift inventory display timed out.", embeds: [embed], components: [] });
+                    try {
+                        interaction.editReply({ content: "No interaction received, gift inventory display timed out.", embeds: [getEmbed(currentPage)], components: [] });
+                    } catch (err) {
+                        if (err.code !== 10062) console.error('EditReply error:', err);
+                    }
                 }
             });
         }

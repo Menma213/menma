@@ -1,7 +1,220 @@
-const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+const { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, AttachmentBuilder } = require('discord.js');
 const fs = require('fs');
 const path = require('path');
+const { createCanvas, loadImage } = require('canvas');
 
+// --- Configuration for Canvas Theme ---
+const CANVAS_WIDTH = 900; // Slightly wider for more content
+const CANVAS_HEIGHT = 550; // Taller
+const FONT_FAMILY = 'Arial, sans-serif'; // A common, clean font
+const BG_COLOR_DARK = '#1a1a1a'; // Very dark background
+const BG_COLOR_LIGHT = '#2d2d2d'; // Slightly lighter section background
+const TEXT_COLOR_PRIMARY = '#e0e0e0'; // Light text for main info
+const TEXT_COLOR_SECONDARY = '#b0b0b0'; // Slightly muted for details/subtext
+const ACCENT_COLOR_ORANGE = '#ff7b25'; // Brighter orange accent
+const ACCENT_COLOR_YELLOW = '#ffcc00'; // Secondary accent for highlights
+const BORDER_COLOR = '#444444'; // Subtle border/divider color
+
+const JUTSU_PER_PAGE = 4; // Still 4 jutsu per learned page for good spacing
+
+// --- Helper function to create the Equipped Jutsu Canvas ---
+async function createEquippedCanvas(user, equippedJutsuDetails) {
+    const canvas = createCanvas(CANVAS_WIDTH, CANVAS_HEIGHT);
+    const ctx = canvas.getContext('2d');
+
+    // Main Background
+    ctx.fillStyle = BG_COLOR_DARK;
+    ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+
+    // Header Area
+    ctx.fillStyle = BG_COLOR_LIGHT;
+    ctx.fillRect(0, 0, CANVAS_WIDTH, 100); // Header band
+
+    // Accent Line
+    ctx.fillStyle = ACCENT_COLOR_ORANGE;
+    ctx.fillRect(0, 95, CANVAS_WIDTH, 5); // Bottom border of header
+
+    // Title
+    ctx.font = `bold 48px ${FONT_FAMILY}`;
+    ctx.fillStyle = ACCENT_COLOR_YELLOW;
+    ctx.textAlign = 'left';
+    ctx.fillText('EQUIPPED JUTSU', 40, 65);
+
+    // User Info
+    ctx.font = `20px ${FONT_FAMILY}`;
+    ctx.fillStyle = TEXT_COLOR_SECONDARY;
+    ctx.fillText(`User: ${user.username}`, CANVAS_WIDTH - 250, 65); // Align right conceptually
+
+    // Main Content Area
+    let yPos = 140; // Starting Y position for content
+    const xOffset = 60; // Left padding for list items
+    const lineHeight = 50;
+
+    if (equippedJutsuDetails.length === 0) {
+        ctx.font = `italic 30px ${FONT_FAMILY}`;
+        ctx.fillStyle = TEXT_COLOR_SECONDARY;
+        ctx.textAlign = 'center';
+        ctx.fillText('No jutsu equipped.', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2);
+    } else {
+        equippedJutsuDetails.forEach((jutsu, index) => {
+            
+            // --- CRITICAL FIX: Determine the correct slot label ---
+            let slotLabel;
+            if (index === 0) {
+                // Internal index 0 (Original Slot 1) is the unchangeable "Default" slot
+                slotLabel = 'Default:';
+            } else {
+                // Internal indices 1 through 5 (Original Slots 2-6) are the changeable slots, 
+                // which should now be displayed as Slot 1, Slot 2, Slot 3, Slot 4, Slot 5.
+                slotLabel = `Slot ${index}:`;
+            }
+
+            // Draw a subtle divider
+            if (index > 0) { // Draw divider starting before Slot 1 (internal index 1)
+                ctx.fillStyle = BORDER_COLOR;
+                ctx.fillRect(xOffset, yPos - lineHeight / 2 - 5, CANVAS_WIDTH - (xOffset * 2), 1);
+            }
+
+            // Slot Number / Label
+            ctx.font = `bold 28px ${FONT_FAMILY}`;
+            ctx.fillStyle = ACCENT_COLOR_ORANGE;
+            ctx.textAlign = 'left';
+            ctx.fillText(slotLabel, xOffset, yPos);
+
+            // Jutsu Name and Cost
+            const name = jutsu.name;
+            const cost = jutsu.chakraCost;
+            let nameText = name;
+            let costText = cost > 0 ? ` (${cost} Chakra)` : ' (0 Chakra)';
+
+            // Measure name and cost to right-align cost while keeping name left
+            ctx.font = `28px ${FONT_FAMILY}`;
+            ctx.fillStyle = TEXT_COLOR_PRIMARY;
+            const nameWidth = ctx.measureText(nameText).width;
+            
+            // If the jutsu name is too long, truncate and add ellipsis
+            let maxNameWidth = CANVAS_WIDTH - xOffset - ctx.measureText(costText).width - ctx.measureText(slotLabel).width - 30; // Space for slot, cost, and margin
+            if (nameWidth > maxNameWidth) {
+                let tempName = nameText;
+                while (ctx.measureText(tempName + "...").width > maxNameWidth && tempName.length > 0) {
+                    tempName = tempName.slice(0, -1);
+                }
+                nameText = tempName + "...";
+            }
+
+            // Position the Jutsu Name based on the length of the dynamic slotLabel
+            ctx.fillText(nameText, xOffset + ctx.measureText(slotLabel).width + 15, yPos);
+            
+            ctx.font = `22px ${FONT_FAMILY}`;
+            ctx.fillStyle = TEXT_COLOR_SECONDARY;
+            ctx.textAlign = 'right';
+            ctx.fillText(costText, CANVAS_WIDTH - xOffset, yPos);
+
+            yPos += lineHeight;
+        });
+    }
+
+    const buffer = canvas.toBuffer('image/png');
+    return new AttachmentBuilder(buffer, { name: 'equipped_jutsu.png' });
+}
+
+
+// --- Helper function to paginate and create Learned Jutsu Canvases ---
+async function createLearnedCanvasPage(user, learnedJutsuList, pageIndex, totalPages) {
+    const canvas = createCanvas(CANVAS_WIDTH, CANVAS_HEIGHT);
+    const ctx = canvas.getContext('2d');
+
+    // Main Background
+    ctx.fillStyle = BG_COLOR_DARK;
+    ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+
+    // Header Area
+    ctx.fillStyle = BG_COLOR_LIGHT;
+    ctx.fillRect(0, 0, CANVAS_WIDTH, 100);
+
+    // Accent Line
+    ctx.fillStyle = ACCENT_COLOR_ORANGE;
+    ctx.fillRect(0, 95, CANVAS_WIDTH, 5);
+
+    // Title
+    ctx.font = `bold 48px ${FONT_FAMILY}`;
+    ctx.fillStyle = ACCENT_COLOR_YELLOW;
+    ctx.textAlign = 'left';
+    ctx.fillText('JUTSU LIBRARY', 40, 65);
+
+    // Pagination Info
+    ctx.font = `20px ${FONT_FAMILY}`;
+    ctx.fillStyle = TEXT_COLOR_SECONDARY;
+    ctx.textAlign = 'right';
+    ctx.fillText(`Page ${pageIndex + 1} of ${totalPages}`, CANVAS_WIDTH - 40, 65);
+
+    // Main Content Area
+    let yPos = 140;
+    const xOffset = 40;
+    const jutsuEntryHeight = 110; // Approximate height for each jutsu with info
+
+    if (learnedJutsuList.length === 0) {
+        ctx.font = `italic 30px ${FONT_FAMILY}`;
+        ctx.fillStyle = TEXT_COLOR_SECONDARY;
+        ctx.textAlign = 'center';
+        ctx.fillText('No jutsu learned yet!', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2);
+    } else {
+        const start = pageIndex * JUTSU_PER_PAGE;
+        const end = Math.min(start + JUTSU_PER_PAGE, learnedJutsuList.length);
+        const pageJutsu = learnedJutsuList.slice(start, end);
+
+        pageJutsu.forEach((jutsu, index) => {
+            if (index > 0) {
+                ctx.fillStyle = BORDER_COLOR;
+                ctx.fillRect(xOffset, yPos - jutsuEntryHeight / 2 - 10, CANVAS_WIDTH - (xOffset * 2), 1);
+            }
+
+            // Jutsu Name
+            ctx.font = `bold 30px ${FONT_FAMILY}`;
+            ctx.fillStyle = ACCENT_COLOR_ORANGE;
+            ctx.textAlign = 'left';
+            ctx.fillText(jutsu.name, xOffset, yPos);
+
+            // Chakra Cost
+            ctx.font = `22px ${FONT_FAMILY}`;
+            ctx.fillStyle = TEXT_COLOR_SECONDARY;
+            ctx.textAlign = 'right';
+            ctx.fillText(`(${jutsu.chakraCost} Chakra)`, CANVAS_WIDTH - xOffset, yPos);
+
+            yPos += 35; // Move down for info
+
+            // Jutsu Info (wrapped)
+            ctx.font = `18px ${FONT_FAMILY}`;
+            ctx.fillStyle = TEXT_COLOR_PRIMARY;
+            ctx.textAlign = 'left';
+            
+            const maxWidth = CANVAS_WIDTH - (xOffset * 2);
+            const words = (jutsu.info || 'No description available.').split(' ');
+            let currentLine = '';
+            
+            for (const word of words) {
+                const testLine = currentLine + word + ' ';
+                if (ctx.measureText(testLine).width > maxWidth && currentLine.length > 0) {
+                    ctx.fillText(currentLine.trim(), xOffset, yPos);
+                    yPos += 25; // Line height for info text
+                    currentLine = word + ' ';
+                } else {
+                    currentLine = testLine;
+                }
+            }
+            if (currentLine.trim()) {
+                ctx.fillText(currentLine.trim(), xOffset, yPos);
+            }
+            yPos += 50; // Space after each jutsu entry
+        });
+    }
+
+    const buffer = canvas.toBuffer('image/png');
+    return new AttachmentBuilder(buffer, { name: `learned_jutsu_p${pageIndex + 1}.png` });
+}
+
+
+// --- Main Command Execution ---
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('myjutsu')
@@ -9,14 +222,10 @@ module.exports = {
 
     async execute(interaction) {
         const userId = interaction.user.id;
-        // Define paths (ensure these are correct)
         const usersPath = path.resolve(__dirname, '../../menma/data/users.json');
-        // Path to the file listing which jutsus users have learned
-        const learnedJutsuListPath = path.resolve(__dirname, '../../menma/data/jutsu.json'); // Assuming this holds learned jutsus per user
-        // Path to the master file with details of ALL jutsus
-        const allJutsusPath = path.resolve(__dirname, '../../menma/data/jutsus.json'); // Master jutsu details
+        const learnedJutsuListPath = path.resolve(__dirname, '../../menma/data/jutsu.json');
+        const allJutsusPath = path.resolve(__dirname, '../../menma/data/jutsus.json');
 
-        // --- Load Data ---
         let users = {};
         let learnedJutsuData = {};
         let allJutsus = {};
@@ -25,146 +234,170 @@ module.exports = {
             if (fs.existsSync(usersPath)) {
                 users = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
             } else {
-                console.error(`users.json not found at ${usersPath}`);
-                // Reply directly if essential data is missing
                 return interaction.reply({ content: 'Error: User data file not found.', ephemeral: true });
             }
 
             if (fs.existsSync(learnedJutsuListPath)) {
                 learnedJutsuData = JSON.parse(fs.readFileSync(learnedJutsuListPath, 'utf8'));
-            } else {
-                console.warn(`jutsu.json (learned list) not found at ${learnedJutsuListPath}. Assuming no jutsus learned.`);
-                // We can continue, just means users will have no learned jutsus listed from this file
             }
-
+            
             if (fs.existsSync(allJutsusPath)) {
                 allJutsus = JSON.parse(fs.readFileSync(allJutsusPath, 'utf8'));
             } else {
-                 console.error(`jutsus.json (master details) not found at ${allJutsusPath}`);
-                 return interaction.reply({ content: 'Error: Jutsu details file not found.', ephemeral: true });
+                return interaction.reply({ content: 'Error: Jutsu details file not found.', ephemeral: true });
             }
 
         } catch (error) {
             console.error("Error reading or parsing JSON data:", error);
             return interaction.reply({ content: 'Error accessing necessary data files.', ephemeral: true });
         }
-        // --- End Load Data ---
-
 
         if (!users[userId]) {
-            return interaction.reply({
-                content: 'You need to enroll first! Use `/enroll`.', // Added hint
-                ephemeral: true
-            });
+            return interaction.reply({ content: 'You need to enroll first! Use `/enroll`.', ephemeral: true });
         }
 
+        // --- Equipped Jutsu Data Preparation ---
         const equippedJutsuSlots = users[userId]?.jutsu || {};
-
-        // --- CORRECTED LINE ---
-        // Get the list of learned jutsu *keys* directly from the array
-        const learnedJutsuKeys = learnedJutsuData[userId]?.usersjutsu || []; // No .map needed!
-        // --- --- --- --- --- ---
-
-        const slotsDescription = Object.entries(equippedJutsuSlots)
+        
+        // Sort and then slice to ensure only the first 6 slots (Original Slot 1 through Slot 6) are processed.
+        // This includes Default (index 0) and Slot 1 through Slot 5 (indices 1-5).
+        const equippedJutsuDetails = Object.entries(equippedJutsuSlots)
             .sort(([slotA], [slotB]) => parseInt(slotA.split('_')[1]) - parseInt(slotB.split('_')[1]))
+            .slice(0, 6) // CHANGED: Limits the array to 6 entries (index 0 to 5)
             .map(([slot, jutsuKey]) => {
-                // ... logic to look up jutsuKey in allJutsus ...
-                 let jutsuDisplay = `*Empty*`;
-                 let costDisplay = '';
-                 if (jutsuKey && jutsuKey !== 'None') {
+                if (jutsuKey && jutsuKey !== 'None') {
                     const jutsuDetails = allJutsus[jutsuKey];
-                    if (jutsuDetails) {
-                        jutsuDisplay = jutsuDetails.name ?? jutsuKey;
-                        costDisplay = ` (${jutsuDetails.chakraCost ?? '?'} Chakra)`;
-                    } else {
-                        jutsuDisplay = `${jutsuKey} (*Unknown*)`;
-                    }
-                 }
-                 return `**Slot ${slot}:** ${jutsuDisplay}${costDisplay}`;
+                    return jutsuDetails ? {
+                        name: jutsuDetails.name ?? jutsuKey,
+                        chakraCost: jutsuDetails.chakraCost ?? '?'
+                    } : {
+                        name: `${jutsuKey} (*Unknown*)`,
+                        chakraCost: '0'
+                    };
+                }
+                return { name: '*Empty Slot*', chakraCost: null };
+            });
+            
+        const equippedAttachment = await createEquippedCanvas(interaction.user, equippedJutsuDetails);
+
+        // --- Learned Jutsu Data Preparation ---
+        const learnedJutsuKeys = learnedJutsuData[userId]?.usersjutsu || [];
+        const learnedJutsuList = learnedJutsuKeys
+            .map(jutsuKey => {
+                const jutsuDetails = allJutsus[jutsuKey];
+                if (jutsuDetails) {
+                    return {
+                        name: jutsuDetails.name ?? jutsuKey,
+                        chakraCost: jutsuDetails.chakraCost ?? '?',
+                        info: jutsuDetails.info ?? 'No description available.'
+                    };
+                } else {
+                    return {
+                        name: `${jutsuKey} (*Unknown*)`,
+                        chakraCost: '0',
+                        info: 'Jutsu not found in master list.'
+                    };
+                }
             })
-            .join('\n');
+            .filter(j => j !== null); // Filter out any issues
 
-        let learnedDescription = 'No jutsu learned yet!';
-        if (learnedJutsuKeys.length > 0) {
-            // Now iterates correctly through ["Transformation Jutsu", "asura", ...]
-            learnedDescription = learnedJutsuKeys
-                .map(jutsuKey => { // jutsuKey is now the correct string
-                    const jutsuDetails = allJutsus[jutsuKey]; // Look up the key
-                    if (jutsuDetails) {
-                        const name = jutsuDetails.name ?? jutsuKey;
-                        const cost = jutsuDetails.chakraCost ?? '?';
-                        const info = jutsuDetails.info ?? '';
-                        // Show info instead of description
-                        return `• **${name}** (${cost} Chakra)\n${info}`;
-                    } else {
-                        return `• ${jutsuKey} (*Unknown*)`; // Handle if key not in master list
-                    }
-                })
-                .join('\n\n');
+
+        // --- Initial Reply Setup ---
+        let currentPageType = 'equipped';
+        let learnedPageIndex = 0;
+        const totalLearnedPages = Math.ceil(learnedJutsuList.length / JUTSU_PER_PAGE);
+
+        function getActionRow(pageType, index, totalPages) {
+            const row = new ActionRowBuilder();
+            
+            if (pageType === 'equipped') {
+                // Only show "Jutsu Library" if there are learned jutsu to display
+                if (learnedJutsuList.length > 0) {
+                    row.addComponents(
+                        new ButtonBuilder().setCustomId('switch_learned').setLabel('Jutsu Library →').setStyle(ButtonStyle.Primary)
+                    );
+                } else {
+                    row.addComponents(
+                        new ButtonBuilder().setCustomId('no_learned_info').setLabel('No Jutsu Learned').setStyle(ButtonStyle.Secondary).setDisabled(true)
+                    );
+                }
+            } else if (pageType === 'learned') {
+                row.addComponents(
+                    new ButtonBuilder().setCustomId('switch_equipped').setLabel('← Equipped').setStyle(ButtonStyle.Primary),
+                    new ButtonBuilder().setCustomId('prev_learned').setLabel('Previous').setStyle(ButtonStyle.Secondary).setDisabled(index === 0),
+                    new ButtonBuilder().setCustomId('next_learned').setLabel('Next').setStyle(ButtonStyle.Secondary).setDisabled(index >= totalPages - 1)
+                );
+            }
+            return row;
         }
-         if (learnedDescription.length > 1024) {
-             learnedDescription = learnedDescription.substring(0, 1021) + '...';
-         }
 
-        const pages = {
-            equipped: new EmbedBuilder()
-                .setColor('#0099ff')
-                .setTitle('Equipped Jutsu')
-                .setAuthor({ name: interaction.user.username, iconURL: interaction.user.displayAvatarURL() })
-                .setDescription('Currently equipped jutsu in your slots')
-                .addFields({ name: 'Equipped Jutsu', value: slotsDescription || 'No slots defined!' }),
-
-            learned: new EmbedBuilder()
-                .setColor('#0099ff')
-                .setTitle('Learned Jutsu')
-                .setAuthor({ name: interaction.user.username, iconURL: interaction.user.displayAvatarURL() })
-                .setDescription('All jutsu you have learned')
-                .addFields({ name: 'Learned Jutsu Library', value: learnedDescription })
-        };
-
-        const row = new ActionRowBuilder()
-            .addComponents(
-                new ButtonBuilder()
-                    .setCustomId('equipped')
-                    .setLabel('← ')
-                    .setStyle(ButtonStyle.Secondary),
-                new ButtonBuilder()
-                    .setCustomId('learned')
-                    .setLabel('→ ')
-                    .setStyle(ButtonStyle.Secondary)
+        let currentAttachment;
+        if (currentPageType === 'equipped') {
+            currentAttachment = equippedAttachment;
+        } else {
+             // This path might not be strictly needed for initial, but good for consistency
+             currentAttachment = await createLearnedCanvasPage(
+                interaction.user,
+                learnedJutsuList,
+                learnedPageIndex,
+                totalLearnedPages
             );
+        }
+        
+        const initialRow = getActionRow(currentPageType, learnedPageIndex, totalLearnedPages);
 
         const response = await interaction.reply({
-            embeds: [pages.equipped],
-            components: [row],
+            files: [currentAttachment],
+            components: [initialRow],
             fetchReply: true
         });
 
+        // --- Collector Logic ---
         const collector = response.createMessageComponentCollector({
             filter: i => i.user.id === interaction.user.id,
-            time: 60000
+            time: 120000 // 2 minutes
         });
 
         collector.on('collect', async i => {
+            let newAttachment;
+
+            if (i.customId === 'switch_learned') {
+                currentPageType = 'learned';
+                learnedPageIndex = 0; // Reset to first page of learned jutsu
+            } else if (i.customId === 'switch_equipped') {
+                currentPageType = 'equipped';
+            } else if (i.customId === 'prev_learned') {
+                if (learnedPageIndex > 0) learnedPageIndex--;
+            } else if (i.customId === 'next_learned') {
+                if (learnedPageIndex < totalLearnedPages - 1) learnedPageIndex++;
+            }
+
+            if (currentPageType === 'equipped') {
+                newAttachment = equippedAttachment;
+            } else { // 'learned'
+                newAttachment = await createLearnedCanvasPage(
+                    interaction.user,
+                    learnedJutsuList,
+                    learnedPageIndex,
+                    totalLearnedPages
+                );
+            }
+
+            // Update components for the new state
+            const newRow = getActionRow(currentPageType, learnedPageIndex, totalLearnedPages);
+
             await i.update({
-                embeds: [pages[i.customId]],
-                components: [new ActionRowBuilder()
-                    .addComponents(
-                        new ButtonBuilder()
-                            .setCustomId('equipped')
-                            .setLabel('⬅')
-                            .setStyle(ButtonStyle.Secondary),
-                        new ButtonBuilder()
-                            .setCustomId('learned')
-                            .setLabel('➡')
-                            .setStyle(ButtonStyle.Secondary)
-                    )]
+                files: [newAttachment],
+                components: [newRow]
             });
         });
 
         collector.on('end', () => {
             if (response.editable) {
-                response.edit({ components: [] }).catch(console.error);
+                const disabledRow = getActionRow(currentPageType, learnedPageIndex, totalLearnedPages).components.map(btn =>
+                    ButtonBuilder.from(btn).setDisabled(true)
+                );
+                response.edit({ components: [new ActionRowBuilder().addComponents(disabledRow)] }).catch(console.error);
             }
         });
     }

@@ -1039,26 +1039,37 @@ module.exports = {
 
             embed.addFields({ name: 'Your Crystalline Shards', value: `${shards}`, inline: true });
 
+            // Add user's available scrolls
+            const userScrolls = jutsuData[userId]?.scrolls || [];
+            embed.addFields({
+                name: 'Your Scrolls',
+                value: userScrolls.length > 0 ? userScrolls.join(', ') : 'None',
+                inline: false
+            });
+
             await interaction.reply({ embeds: [embed], ephemeral: true });
 
         } else if (subcommand === 'set') {
             const scrollName = interaction.options.getString('scrollname');
             const userScrolls = jutsuData[userId]?.scrolls || [];
 
-            if (!userScrolls.includes(scrollName)) {
+            // Find the scroll in a case-insensitive way
+            const matchedScroll = userScrolls.find(s => s.toLowerCase() === scrollName.toLowerCase());
+
+            if (!matchedScroll) {
                 return interaction.reply({
                     content: `You don't have the "${scrollName}" scroll!`,
                     ephemeral: true
                 });
             }
 
-            users[userId].current_scroll = scrollName;
+            users[userId].current_scroll = matchedScroll;
             saveData(usersPath, users);
 
             const embed = new EmbedBuilder()
                 .setColor('#4BB543')
                 .setTitle('ЁЯУЬ Scroll Selected')
-                .setDescription(`You are now working on **${scrollName}**!\nUse \`/scroll info\` to check progress!`)
+                .setDescription(`You are now working on **${matchedScroll}**!\nUse \`/scroll info\` to check progress!`)
                 .setThumbnail(interaction.user.displayAvatarURL());
 
             return interaction.reply({ embeds: [embed] });

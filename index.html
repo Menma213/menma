@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Discord User Stats</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #1a1a2e;
+            color: #e5e5f0;
+        }
+        .container {
+            background-color: #272740;
+            border: 1px solid #3c3c5c;
+        }
+        .discord-btn {
+            background-color: #5865f2;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .discord-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 14px rgba(88, 101, 242, 0.4);
+        }
+        .stat-item {
+            border-bottom: 1px solid #3c3c5c;
+        }
+        .stat-item:last-child {
+            border-bottom: none;
+        }
+        .text-break-all {
+            word-break: break-all;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+
+    <div class="container mx-auto p-8 rounded-xl shadow-lg w-full max-w-2xl text-center">
+        
+        <h1 class="text-3xl font-bold mb-6 text-white">Discord User Stats</h1>
+        <p class="mb-6 text-sm text-gray-400">Log in with Discord to view your stats.</p>
+
+        <!-- Login Button and Status Message -->
+        <div id="login-section" class="flex flex-col items-center">
+            <a href="/login/discord" class="discord-btn text-white font-semibold py-3 px-8 rounded-lg shadow-md hover:bg-opacity-90">
+                Login with Discord
+            </a>
+            <p id="status-message" class="mt-4 text-red-400 font-medium"></p>
+        </div>
+
+        <!-- Loading Indicator -->
+        <div id="loading-spinner" class="hidden">
+            <div class="animate-spin rounded-full h-12 w-12 border-4 border-t-4 border-blue-500 border-opacity-25 border-t-white"></div>
+            <p class="mt-4 text-gray-400">Fetching user data...</p>
+        </div>
+
+        <!-- User Stats Section -->
+        <div id="stats-section" class="hidden">
+            <div class="flex flex-col md:flex-row md:items-start justify-between items-center mb-6">
+                <div class="flex-shrink-0">
+                    <img id="user-avatar" class="w-24 h-24 rounded-full border-4 border-blue-500 mb-4 md:mb-0" src="https://placehold.co/100x100/3c3c5c/e5e5f0?text=Avatar" alt="User Avatar">
+                </div>
+                <div class="md:text-left text-center md:ml-6 flex-grow">
+                    <h2 class="text-2xl font-bold text-white mb-2">
+                        Welcome, <span id="user-name"></span>!
+                    </h2>
+                    <p class="text-sm text-gray-400">
+                        <span class="font-bold">Discord ID:</span> <span id="user-id" class="text-break-all"></span>
+                    </p>
+                </div>
+            </div>
+
+            <div id="user-stats-list" class="mt-6 border border-gray-600 rounded-lg p-4">
+                <h3 class="text-xl font-semibold mb-4 text-white">Your Stats</h3>
+                <!-- Stats will be dynamically inserted here -->
+            </div>
+
+            <button id="logout-btn" class="mt-6 bg-red-600 text-white font-semibold py-2 px-6 rounded-lg shadow-md hover:bg-red-700 transition duration-200">
+                Logout
+            </button>
+        </div>
+
+    </div>
+
+    <script>
+        // Elements
+        const loginSection = document.getElementById('login-section');
+        const statsSection = document.getElementById('stats-section');
+        const loadingSpinner = document.getElementById('loading-spinner');
+        const statusMessage = document.getElementById('status-message');
+        const logoutBtn = document.getElementById('logout-btn');
+        const userStatsList = document.getElementById('user-stats-list');
+        const userNameEl = document.getElementById('user-name');
+        const userIdEl = document.getElementById('user-id');
+        const userAvatarEl = document.getElementById('user-avatar');
+
+        const keyStats = [
+            'level', 'exp', 'wins', 'losses', 'rankedPoints', 'clan', 'bloodline', 'mentor', 'rank', 'health', 'power', 'defense',
+            'chakra', 'money', 'ramen', 'occupation', 'perks', 'elo', 'mentorPoints'
+        ];
+        
+        logoutBtn.addEventListener('click', () => {
+            localStorage.removeItem('discord_user_id');
+            window.location.href = '/';
+        });
+
+        // Function to display stats on the page
+        function displayStats(userDiscordID, userStats) {
+            if (userStats) {
+                userStatsList.innerHTML = ''; // Clear previous stats
+
+                keyStats.forEach(key => {
+                    if (userStats[key] !== undefined) {
+                        const capitalizedKey = key.charAt(0).toUpperCase() + key.slice(1);
+                        const li = document.createElement('li');
+                        li.className = 'stat-item flex justify-between items-center py-2';
+                        li.innerHTML = `
+                            <span class="font-medium text-gray-300">${capitalizedKey}:</span>
+                            <span class="font-bold text-white">${userStats[key]}</span>
+                        `;
+                        userStatsList.appendChild(li);
+                    }
+                });
+                
+                // Special handling for nested objects like 'ranked'
+                if (userStats.ranked) {
+                    const rankedData = userStats.ranked;
+                    const rankedLi = document.createElement('li');
+                    rankedLi.className = 'stat-item flex justify-between items-center py-2';
+                    rankedLi.innerHTML = `
+                        <span class="font-medium text-gray-300">Ranked:</span>
+                        <div class="text-right">
+                            <span class="font-bold text-white">${rankedData.rank}</span>
+                            <p class="text-xs text-gray-400">Total ELO: ${rankedData.totalElo}</p>
+                        </div>
+                    `;
+                    userStatsList.appendChild(rankedLi);
+                }
+
+                statsSection.classList.remove('hidden');
+                loginSection.classList.add('hidden');
+            } else {
+                statusMessage.textContent = `User with ID ${userDiscordID} not found in the database.`;
+                loginSection.classList.remove('hidden');
+                statsSection.classList.add('hidden');
+            }
+        }
+
+        // Main function to check for a stored user ID and fetch data from the backend
+        async function handleAuth() {
+            const storedUserId = localStorage.getItem('discord_user_id');
+
+            if (storedUserId) {
+                loginSection.classList.add('hidden');
+                loadingSpinner.classList.remove('hidden');
+
+                try {
+                    const response = await fetch(`/api/user/${storedUserId}`);
+                    if (response.ok) {
+                        const userStats = await response.json();
+                        // You will need a way to get the user's name and avatar from Discord,
+                        // perhaps by storing it in a session on the server side. For now,
+                        // we'll use placeholders.
+                        userNameEl.textContent = 'User'; 
+                        userIdEl.textContent = storedUserId;
+                        displayStats(storedUserId, userStats);
+                    } else if (response.status === 404) {
+                        statusMessage.textContent = 'User not found in database. Please log in again.';
+                        localStorage.removeItem('discord_user_id');
+                        loginSection.classList.remove('hidden');
+                    } else {
+                        statusMessage.textContent = 'Error fetching user data from the server.';
+                        loginSection.classList.remove('hidden');
+                    }
+                } catch (error) {
+                    statusMessage.textContent = 'Network error. Please try again.';
+                    console.error(error);
+                } finally {
+                    loadingSpinner.classList.add('hidden');
+                }
+            } else {
+                // No stored ID, show the login button
+                loginSection.classList.remove('hidden');
+                statsSection.classList.add('hidden');
+            }
+        }
+
+        // Run the main function on page load
+        document.addEventListener('DOMContentLoaded', handleAuth);
+    </script>
+</body>
+</html>

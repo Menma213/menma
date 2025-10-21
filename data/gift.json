@@ -1,39 +1,80 @@
 {
   "835408109899219004": [
     {
-      "id": 1164,
+      "id": 3914,
       "type": "jutsu",
-      "name": "Reaper Death Seal",
-      "from": "BetaEvent",
-      "date": 1752386511369
+      "name": "Tenseigan Scroll",
+      "from": "system",
+      "date": 1760301467195,
+      "source": "Otsutsuki Victory"
     },
     {
-      "id": 1,
-      "type": "ramen",
-      "amount": 99,
-      "from": "835408109899219004",
-      "date": 1753011827089
+      "id": 3260,
+      "type": "jutsu",
+      "name": "Tenseigan Scroll",
+      "from": "system",
+      "date": 1760301536167,
+      "source": "Otsutsuki Victory"
     },
     {
-      "id": 5444,
-      "from": "admincommand102",
-      "date": 1753093140412,
-      "type": "ramen",
-      "amount": 1
+      "id": 4816,
+      "type": "jutsu",
+      "name": "Tenseigan Scroll",
+      "from": "system",
+      "date": 1760301665265,
+      "source": "Otsutsuki Victory"
     },
     {
-      "id": 8739,
-      "type": "scroll",
-      "name": "Infused Chakra Blade Scroll",
-      "from": "asuma",
-      "date": 1755881454667
+      "id": 2595,
+      "type": "jutsu",
+      "name": "Tenseigan Scroll",
+      "from": "system",
+      "date": 1760301832613,
+      "source": "Otsutsuki Victory"
     },
     {
-      "id": 80779,
-      "type": "ramen",
-      "amount": 10,
-      "from": "dungeon",
-      "date": 1756037771577
+      "id": 1155,
+      "type": "jutsu",
+      "name": "Tenseigan Scroll",
+      "from": "system",
+      "date": 1760301925103,
+      "source": "Otsutsuki Victory"
+    },
+    {
+      "id": 3931,
+      "type": "jutsu",
+      "name": "Tenseigan Scroll",
+      "from": "system",
+      "date": 1760302172268,
+      "source": "Otsutsuki Victory"
+    },
+    {
+      "id": 36707,
+      "type": "exp",
+      "amount": 30,
+      "from": "trials",
+      "date": 1760981786391
+    },
+    {
+      "id": 43603,
+      "type": "money",
+      "amount": 10000,
+      "from": "trials",
+      "date": 1760981786391
+    },
+    {
+      "id": 19823,
+      "type": "exp",
+      "amount": 255,
+      "from": "trials",
+      "date": 1760981891002
+    },
+    {
+      "id": 17603,
+      "type": "money",
+      "amount": 10000,
+      "from": "trials",
+      "date": 1760981891002
     }
   ],
   "799979545046155284": [
@@ -78,64 +119,85 @@
       "amount": 100,
       "from": "835408109899219004",
       "date": 1750605974478
+    },
+    {
+      "id": 631317,
+      "type": "exp",
+      "amount": 126,
+      "from": "dungeon",
+      "date": 1758547372746
     }
   ],
   "1132693590066331828": [
     {
-      "id": 1590,
+      "id": 48260,
+      "type": "exp",
+      "amount": 3.4542105058596775,
+      "from": "brank",
+      "date": 1757429874004
+    },
+    {
+      "id": 5016,
       "type": "money",
-      "amount": 100,
-      "from": "835408109899219004",
-      "date": 1750259008797
+      "amount": 600,
+      "from": "brank",
+      "date": 1757429874004
     },
     {
-      "id": 7889,
-      "type": "scroll",
-      "name": "Infused Chakra Blade Scroll",
-      "from": "asuma",
-      "date": 1755948132874
+      "id": 36534,
+      "type": "elo",
+      "amount": -50,
+      "from": "ranked",
+      "date": 1757435973953
     },
     {
-      "id": 9207,
-      "type": "scroll",
-      "name": "Infused Chakra Blade Scroll",
-      "from": "asuma",
-      "date": 1755964596941
+      "id": 35123,
+      "type": "elo",
+      "amount": -50,
+      "from": "ranked",
+      "date": 1757435973954
     },
     {
-      "id": 5243,
-      "type": "scroll",
-      "name": "Infused Chakra Blade Scroll",
-      "from": "asuma",
-      "date": 1755965045243
+      "id": 25705,
+      "type": "elo",
+      "amount": -50,
+      "from": "ranked",
+      "date": 1757436837707
     },
     {
-      "id": 7329,
-      "type": "scroll",
-      "name": "Infused Chakra Blade Scroll",
-      "from": "asuma",
-      "date": 1755965118889
+      "id": 46944,
+      "type": "elo",
+      "amount": -50,
+      "from": "ranked",
+      "date": 1757436837708
     },
     {
-      "id": 6861,
-      "type": "scroll",
-      "name": "Infused Chakra Blade Scroll",
-      "from": "asuma",
-      "date": 1755965245572
+      "id": 33792,
+      "type": "elo",
+      "amount": -50,
+      "from": "ranked",
+      "date": 1757437028762
     },
     {
-      "id": 9801,
-      "type": "scroll",
-      "name": "Infused Chakra Blade Scroll",
-      "from": "asuma",
-      "date": 1755965578458
+      "id": 38849,
+      "type": "elo",
+      "amount": -50,
+      "from": "ranked",
+      "date": 1757437028763
     },
     {
-      "id": 6738,
-      "type": "scroll",
-      "name": "Infused Chakra Blade Scroll",
-      "from": "asuma",
-      "date": 1755965954564
+      "id": 13244,
+      "type": "elo",
+      "amount": -50,
+      "from": "ranked",
+      "date": 1757437104424
+    },
+    {
+      "id": 33751,
+      "type": "elo",
+      "amount": -50,
+      "from": "ranked",
+      "date": 1757437104425
     }
   ],
   "737913304214667345": [],
@@ -336,6 +398,27 @@
       "date": 1755966467215,
       "type": "money",
       "amount": 1
+    },
+    {
+      "id": 20638,
+      "from": "admincommand102",
+      "date": 1756922236436,
+      "type": "money",
+      "amount": 10000
+    },
+    {
+      "id": 13954,
+      "from": "admincommand102",
+      "date": 1756922283913,
+      "type": "ramen",
+      "amount": 3
+    },
+    {
+      "id": 36559,
+      "from": "admincommand102",
+      "date": 1756922523809,
+      "type": "money",
+      "amount": 10000
     }
   ],
   "728522737009819649": [
@@ -479,22 +562,7 @@
       "amount": 10000
     }
   ],
-  "961918563382362122": [
-    {
-      "id": 27192,
-      "from": "admincommand102",
-      "date": 1753973151322,
-      "type": "ss",
-      "amount": 100
-    },
-    {
-      "id": 14848,
-      "from": "admincommand102",
-      "date": 1755439451693,
-      "type": "money",
-      "amount": 100000
-    }
-  ],
+  "961918563382362122": [],
   "1129254239420551188": [
     {
       "id": 33434,
@@ -503,5 +571,183 @@
       "type": "money",
       "amount": 100000
     }
-  ]
+  ],
+  "420101737173483541": [
+    {
+      "id": 44945,
+      "from": "admincommand102",
+      "date": 1757015967447,
+      "type": "money",
+      "amount": 1
+    },
+    {
+      "id": 27948,
+      "from": "admincommand102",
+      "date": 1757016005292,
+      "type": "money",
+      "amount": 1
+    },
+    {
+      "id": 16433,
+      "from": "admincommand102",
+      "date": 1757101434750,
+      "type": "money",
+      "amount": 100000
+    }
+  ],
+  "1409902593949433958": [
+    {
+      "id": 1664,
+      "from": "admincommand102",
+      "date": 1757099214562,
+      "type": "money",
+      "amount": 10000
+    },
+    {
+      "id": 23143,
+      "from": "admincommand102",
+      "date": 1757099241318,
+      "type": "money",
+      "amount": 10000
+    }
+  ],
+  "undefined": [
+    {
+      "id": 27394,
+      "type": "exp",
+      "amount": 9,
+      "from": "arank",
+      "date": 1757430329409
+    },
+    {
+      "id": 8501,
+      "type": "money",
+      "amount": 535,
+      "from": "arank",
+      "date": 1757430329409
+    },
+    {
+      "id": 38613,
+      "type": "exp",
+      "amount": 9,
+      "from": "arank",
+      "date": 1757430367413
+    },
+    {
+      "id": 34234,
+      "type": "money",
+      "amount": 225,
+      "from": "arank",
+      "date": 1757430367413
+    },
+    {
+      "id": 40654,
+      "type": "exp",
+      "amount": 9,
+      "from": "arank",
+      "date": 1757430396227
+    },
+    {
+      "id": 15390,
+      "type": "money",
+      "amount": 225,
+      "from": "arank",
+      "date": 1757430396227
+    },
+    {
+      "id": 39941,
+      "type": "exp",
+      "amount": 9,
+      "from": "arank",
+      "date": 1757430780562
+    },
+    {
+      "id": 38471,
+      "type": "money",
+      "amount": 535,
+      "from": "arank",
+      "date": 1757430780562
+    },
+    {
+      "id": 29157,
+      "type": "exp",
+      "amount": 9,
+      "from": "arank",
+      "date": 1757430795478
+    },
+    {
+      "id": 38038,
+      "type": "money",
+      "amount": 535,
+      "from": "arank",
+      "date": 1757430795478
+    },
+    {
+      "id": 35370,
+      "type": "exp",
+      "amount": 9,
+      "from": "arank",
+      "date": 1757433693903
+    },
+    {
+      "id": 30739,
+      "type": "money",
+      "amount": 535,
+      "from": "arank",
+      "date": 1757433693903
+    },
+    {
+      "id": 2832,
+      "type": "exp",
+      "amount": 9,
+      "from": "arank",
+      "date": 1757433711283
+    },
+    {
+      "id": 15232,
+      "type": "money",
+      "amount": 535,
+      "from": "arank",
+      "date": 1757433711283
+    },
+    {
+      "id": 33003,
+      "type": "exp",
+      "amount": 9,
+      "from": "arank",
+      "date": 1757433941430
+    },
+    {
+      "id": 7465,
+      "type": "money",
+      "amount": 535,
+      "from": "arank",
+      "date": 1757433941430
+    },
+    {
+      "id": 38685,
+      "type": "exp",
+      "amount": 9,
+      "from": "arank",
+      "date": 1757434069830
+    },
+    {
+      "id": 20859,
+      "type": "money",
+      "amount": 535,
+      "from": "arank",
+      "date": 1757434069830
+    }
+  ],
+  "261684298694918144": [],
+  "1296226213781569671": [
+    {
+      "id": 1,
+      "type": "ss",
+      "amount": 500,
+      "from": "961918563382362122",
+      "date": 1759684840663
+    }
+  ],
+  "1424401734167433389": []
 }

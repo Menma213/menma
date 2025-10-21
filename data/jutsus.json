@@ -5,18 +5,20 @@
       "info": "Your Basic Attack",
       "chakraCost": 0,
       "category": "No Category",
+      "obtainment": "Starting Jutsu",
       "effects": [
         {
           "type": "damage",
-          "formula": "2 * user.power",
+          "formula": "20 * user.power / target.defense",
           "chance": 0.7
         }
       ]
     },
     "Transformation Jutsu": {
       "name": "Transformation Jutsu",
-      "description": "uses transormation jutsu",
+      "description": "uses tranfsormation jutsu",
       "info": "User Transforms, gaining a boost in power.",
+      "obtainment": "Starting Jutsu",
       "chakraCost": 5,
       "effects": [
         {
@@ -33,13 +35,14 @@
     "Asura's Blade of Execution": {
       "name": "Asura's Blade of Execution",
       "description": "Unleashes god-like power",
+      "obtainment": "Obtained after completing the naruto quest in scroll missions",
       "chakraCost": 0,
       "category": "No Category",
       "image_url": "https://static.wikia.nocookie.net/naruto/images/c/c0/Amenomihashira.png/revision/latest?cb=20160721141416",
       "effects": [
         {
           "type": "damage",
-          "formula": "50 * (1 + (user.power))"
+          "formula": "5000 * user.power / target.defense"
         },
         {
           "type": "buff",
@@ -63,8 +66,8 @@
           "type": "status",
           "target": "target",
           "status": "stun",
-          "duration": 1,
-          "chance": 0.5
+          "duration": 2,
+          "chance": 1
         }
       ]
     },
@@ -72,6 +75,7 @@
       "name": "Mystic Palm",
       "description": "heals",
       "info": "User heals based on their missing health",
+      "obtainment": "obtained from sakura mentor",
       "category": "Genin",
       "chakraCost": 4,
       "effects": [
@@ -86,6 +90,7 @@
       "name": "Summon Ninken",
       "description": "Summons ninja dogs to stun the opponent",
       "info": "User summons ninja dogs to stun the opponent for 2 rounds.",
+      "obtainement": "obtained from kakashi mentor",
       "chakraCost": 11,
       "category": "Genin",
       "effects": [
@@ -100,27 +105,29 @@
     },
     "Analysis": {
       "name": "Analysis",
-      "description": "User concentrates, forming a plan +5 chakra!",
-      "info": "User concentrades, forming a plan. Grants +5 chakra",
+      "description": "User concentrates, forming a plan gaining chakra!",
+      "info": "User concentrades, forming a plan. Grants x chakra",
+      "obtainement": "obtained from shikamaru mentor",
       "chakraCost": 0,
       "category": "Genin",
       "effects": [
         {
           "type": "chakra_gain", 
-          "formula": "user.chakra + 5"        
+          "formula": "5"        
         }
       ]
     },
     "Fireball Jutsu": {
       "name": "Fireball Jutsu",
       "description": "Launches a massive fireball at the enemy",
+      "obtainement": "obtained from sasuke mentor",
       "info": "Launches a massive fireball at the enemy",
       "chakraCost": 7,
       "category": "Genin",
       "effects": [
         {
           "type": "damage",
-          "formula": "3 * user.power + user.chakra * 2"
+          "formula": "300 * user.power / target.defense"
         }
       ]
     },
@@ -128,6 +135,7 @@
       "name": "Smoke Bomb",
       "description": "Throws a Smoke Bomb",
       "info": "User Throws a smoke bomb, increases dodge.",
+      "obtainement": "cannot obtain right now",
       "category": "No Category",
       "chakracost": 3,
       "effects":[{
@@ -143,6 +151,7 @@
     "Shadow Clone Jutsu": {
         "name": "Shadow Clone Jutsu",
         "description": "Attacks for 119\n Their clone attacks",
+        "obtainement": "obtained from naruto mentor",
         "info": "User summons their clones for assistance in battle",
 
         "category": "Genin",  
@@ -150,7 +159,7 @@
         "effects": [
             {
                 "type": "damage",
-                "formula": "2 * user.power * (1 + (user.chakra / 10))"
+                "formula": "350 * user.power / target.defense "
             }
         ]
     },
@@ -158,6 +167,7 @@
         "name": "Sexy Jutsu",
         "description": "Transforms into a dazzling lady",
         "info": "Distracts the opponent by transforming into a dazzling lady",
+        "obtainment": "obtained from naruto mentor at chuunin rank",
         "chakraCost": 3,
         "category": "Chuunin",
         "effects": [
@@ -165,7 +175,7 @@
                 "type": "status",
                 "target": "target",
                 "status": "flinch",
-                "duration": 1,
+                "duration": 2,
                 "chance": 1.0
             }
         ]
@@ -175,43 +185,47 @@
         "description": "summons a lightning bolt from the sky",
         "info": "User Summons a lightning bolt from the thunder clouds above, striking the enemy for massive damage.",
         "chakraCost": 7,
+        "obtainement": "obtained from sasuke mentor at chuunin rank",
         "category": "Chuunin",
         "effects": [
             {
                 "type": "damage",
-                "formula": "4 * user.power"
+                "formula": "450 * user.power / target.defense"
             }
         ]
     },
     "Lightning Blade": {
         "name": "Lightning Blade",
         "description": "Gathers chakra into a thunderous blade and strikes",
+        "obtainment": "obtained from kakashi mentor at chuunin rank",
         "info": "User gathers their chakra into a thunderous blade of lightning and strikes the opponent.",
         "chakraCost": 6,
         "category": "Chuunin",
         "effects": [
             {
                 "type": "damage",
-                "formula": "3 * user.power * 100 / target.defense"
+                "formula": "370 * user.power / target.defense"
             }
         ]
     },
     "Cherry Blossom Impact": {
         "name": "Cherry Blossom Impact",
         "description": "attacks with cherry blossoms",
+        "obtainment": "obtained from sakura mentor at chuunin rank",
         "info": "User Attacks the enemy with Cherry Blossoms, trust me bro it's strong.",
         "category": "Chuunin",
         "chakraCost": 4,
         "effects": [
             {
                 "type": "damage",
-                "formula": "3.5 * user.power / target.defense"
+                "formula": "250 * user.power / target.defense"
             }
         ]
     },
     "Water Prison": {
         "name": "Water Prison",
         "description": "Traps the enemy in a sphere of water, slowly drowning them",
+        "obtainment": "cannot obtain right now",
         "info": "User traps the opponent in a sphere of water drowning them each round for chakra.",
         "chakraCost": 5,
         "category": "S-Rank",
@@ -229,13 +243,14 @@
     "Needle Assault": {
         "name": "Needle Assault",
         "description": "Launches a barrage of senbon needles that causes bleeding",
+        "obtainment": "from haku srank",
         "info": "User launches senbon needles at the opponent inflicting bleed and dealing damage.",
         "chakraCost": 4,
         "category": "S-Rank",
         "effects": [
             {
                 "type": "damage",
-                "formula": "2 * user.power"
+                "formula": "200 * user.power / target.defense"
             },
             {
                 "type": "status",
@@ -250,13 +265,14 @@
     "Silent Assassination": {
         "name": "Silent Assassination",
         "description": "uses Silent Assassination technique",
+        "obtainment": "from zabuza srank",
         "info": "User gets into the opponents blind spot and attacks them.",
         "chakraCost": 4,
         "category": "S-Rank",
         "effects": [
             {
                 "type": "damage",
-                "formula": "user.power * 2.5 + (user.accuracy * 0.5)"
+                "formula": "250 * user.power / target.defense"
             },
             {
                 "type": "debuff",
@@ -270,13 +286,14 @@
     "Serpents Wrath": {
         "name": "Serpents Wrath",
         "description": "unleashes a devastating Serpent Wrath",
+        "obtainment": "obtained from orochimaru srank",
         "info": "User unleashes a devestating serpent wrath on the opponent, deals alot of damage. ",
         "chakraCost": 5,
         "category": "S-Rank",
         "effects": [
             {
                 "type": "damage",
-                "formula": "user.power * 3 + (target.defense * -0.3)"
+                "formula": "370 * user.power / target.defense"
             },
             {
                 "type": "status",
@@ -289,6 +306,7 @@
     "Creation Rebirth": {
         "name": "Creation Rebirth",
         "description": "uses powerful healing technique that continuously restores health",
+        "obtainment": "obtained from tsunade during hokage trials",
         "info": "A powerful healing technique that continuously restores health every round for chakra",
         "chakraCost": 5,
         "category": "Hokage",
@@ -307,12 +325,13 @@
         "name": "Water Dragon Jutsu",
         "description": "Creates a powerful water dragon that strikes the enemy",
         "info": "User summons a water dragon which deals massive damage to the opponent.",
+        "obtainment": "obtained from tobirama during hokage trials",
         "chakraCost": 4,
         "category": "Hokage",
         "effects": [
           {
             "type": "damage",
-            "formula": "user.power * 2.5"
+            "formula": "250 * user.power / target.defense"
           }
         ],
         "image_url": "https://example.com/water-dragon.gif"
@@ -322,12 +341,13 @@
         "name": "Rasengan",
         "description": "Gathers chakra in his palm and attacks the enemy",
         "info": "User uses Naruto's trademark move why are you still checking this description?",
+        "obtainment": "obtained from naruto at jounin rank",
         "chakraCost": 3,
         "category": "Jounin",
         "effects": [
           {
             "type": "damage",
-            "formula": "user.power * 2.8"
+            "formula": "420 * user.power / target.defense"
           }
         ],
         "image_url": "https://example.com/rasengan.gif"
@@ -337,12 +357,13 @@
         "name": "Flying Raijin Jutsu",
         "description": "dodges all incoming attacks and strikes the enemy",
         "info": "User dodges all incoming attacks and attacks the enemy.",
+        "obtainement": "obtained from minato during hokage trials",
         "chakraCost": 5,
         "category": "Hokage",
         "effects": [
           {
             "type": "damage",
-            "formula": "user.power * 2"
+            "formula": "200 * user.power / target.defense"
           },
           {
             "type": "buff",
@@ -359,12 +380,13 @@
         "name": "Great Forest Crumbling",
         "description": "summons a barrage of wooden branches that crushes the enemy",
         "info": "User summonns a barrage of dead trees that crush the enemy and stun them.",
+        "obtainment": "obtained from hashirama during hokage trials",
         "chakraCost": 6,
         "category": "Hokage",
         "effects": [
           {
             "type": "damage",
-            "formula": "user.power * 2.2"
+            "formula": "300 * user.power / target.defense"
           },
           {
            "type": "status",
@@ -376,30 +398,25 @@
         ],
         "image_url": "https://example.com/great-forest.gif"
       },
-    
+
       "Rasenshuriken": {
         "name": "Rasenshuriken",
+        "obtainment": "obtained from naruto during hokage trials",
         "description": "Gathers a massive amount of Spiralling wind chakra into the form of a shuriken then strikes the enemy",
         "info": "User Gathers a massive amount of Spiralling wind chakra into the form of a shuriken then strikes the enemy and also applies bleed.",
-        "chakraCost": 7,
+        "chakraCost": 10,
         "category": "Hokage",
         "effects": [
           {
             "type": "damage",
-            "formula": "user.power * 2.5"
-          },
-          {
-                "type": "status",
-                "target": "target",
-                "status": "bleed",
-                "duration": 2,
-                "chance": 1.0,
-                "damagePerTurn": "target.health * 0.2"}
+            "formula": "user.power * 700 / target.defense"
+          }
         ],
-        "image_url": "https://example.com/rasenshuriken.gif"
+        "image_url": "https://media.tenor.com/56I7_V97auUAAAAM/naruto.gif"
       },
       "Infused Chakra Blade": {
         "name": "Infused Chakra Blade",
+        "obtainment": "obtained during tutorial",
         "description": "Strikes with chakra-infused blades, causing bleeding and greatly increasing power.",
         "chakraCost": 6,
         "info": "User Strikes with chakra-infused blades, causing bleeding and greatly increasing power.",
@@ -407,7 +424,7 @@
         "effects": [
             {
                 "type": "damage",
-                "formula": "user.power * 1.5 + 50"
+                "formula": "400 * user.power / target.defense"
             },
             {
                 "type": "buff",
@@ -430,26 +447,28 @@
     "One Thousand Years of Death": {
         "name": "One Thousand Years of Death",
         "description": "Pokes the Enemy Butt",
+        "obtainment": "obtained during kakashi hokage trials",
         "info": "Pokes the Enemy butt. :)",
         "chakraCost": 1,
         "category": "Genin",
         "effects": [
           {
             "type": "damage",
-            "formula": "1"
+            "formula": "5 * user.power"
           }
         ]
       },
       "Burning Ash": {
         "name": "Burning Ash",
         "description": "Burns the opponent, causing damage over time.",
+        "obtainment": "obtained during hiruzen hokage trials",
         "info": "User spews ash over the battlefield which Burns the opponent, causing damage over time.",
         "chakraCost": 5,
         "category": "Chuunin",
         "effects": [
           {
             "type": "damage",
-            "formula": "user.power * 1.2"
+            "formula": "270 * user.power / target.defense"
           },
           {
             "type": "status",
@@ -461,53 +480,17 @@
           }
         ]
       },
-      "Swamp Grasp": {
-        "name": "Swamp Grasp",
-        "description": "A slimy hand grabs the target, dealing damage.",
-        "chakraCost": 2,
-        "category": "No Category",
-        "effects": [
-          { "type": "damage", "formula": "user.power * 1.1" }
-        ]
-      },
-      "Mire Slam": {
-        "name": "Mire Slam",
-        "description": "The guardian slams the ground, shaking the earth.",
-        "chakraCost": 3,
-        "category": "No Category",
-        "effects": [
-          { "type": "damage", "formula": "user.power * 1.3" }
-        ]
-      },
-      "Forbidden Drain": {
-        "name": "Forbidden Drain",
-        "description": "Kagami drains the target's chakra and health.",
-        "chakraCost": 4,
-        "category": "No Category",
-        "effects": [
-          { "type": "damage", "formula": "user.power * 1.2" },
-          { "type": "debuff", "stats": { "chakra": 3 }, "duration": 1 }
-        ]
-      },
-      "Shadow Bind": {
-        "name": "Shadow Bind",
-        "description": "Kagami binds the target, lowering their defense.",
-        "chakraCost": 3,
-        "category": "No Category",
-        "effects": [
-          { "type": "debuff", "stats": { "defense": -50 }, "duration": 2 }
-        ]
-      },
       "Lightning Blade: All out": {
         "name": "Lightning Blade: All Out",
         "description": "performs the lightning blade jutsu but this time, with rage. Lightning engulfs the battlefield sending shocks through the ground and air and also deals damage",
         "info": "An Enhanced Version of the jutsu Lightning Blade",
+        "obtainment": "from kakashi at jounin mentor rank",
         "chakraCost": 10,
         "category": "Jounin",
         "effects": [
           {
              "type": "damage",
-                "formula": "3 * user.power * 100"
+                "formula": "600 * user.power / target.defense"
           },
           {
              "type": "debuff",
@@ -531,17 +514,19 @@
         "name": "Heaven Slaughter",
         "description": "Shuts their eyes then casually swings their sword\n **The Air Splits**",
         "chakraCost": 5,
+        "obtainment": "unobtainable",
         "image_url": "https://i.imgur.com/yyPFEWA.gif",
         "category": "Custom",
         "effects": [
           {
             "type": "damage",
-            "formula": "8 * user.chakra + user.power * 8"
+            "formula": "700 * user.power / target.defense"
           }
         ]
       },
       "Mystic Palm Enhanced": {
         "name": "Mystic Palm Enhanced",
+        "obtainment": "obtained from sakura at jounin mentor rank",
         "description": "Enhanced version of the jutsu Mystic Palm",
         "info": "User heals based on their missing health, but this time it's more healing than before.",
         "chakraCost": 7,
@@ -555,6 +540,7 @@
       },
       "Corrupted Needle Assault": {
         "name": "Corrupted Needle Assault",
+        "obtainment": "unobtainable",
         "description": "Launches a barrage of cursed senbon needles that causes heavy bleeding",
         "info": "Corrupted Haku launches cursed senbon needles at the opponent inflicting heavy bleed and dealing more damage.",
         "chakraCost": 6,
@@ -600,6 +586,7 @@
     "Lord of Bloodsea": {
   "name": "Lord of Bloodsea",
   "description": "A multi-phase blood manipulation technique",
+  "obtainment": "unobtainable",
   "chakraCost": 0,
   "category": "Custom",
   "image_url": "https://i.imgur.com/n7rnp0C.png",
@@ -632,7 +619,7 @@
       "effects": [
         {
           "type": "damage",
-          "formula": "user.power * 0.5"
+          "formula": "user.power * 500 / target.defense"
         }
       ]
     },
@@ -641,7 +628,7 @@
       "effects": [
         {
           "type": "damage",
-          "formula": "user.power * 0.7"
+          "formula": "user.power * 700 / target.defense"
         },
         {
           "type": "status",
@@ -656,7 +643,7 @@
       "effects": [
         {
           "type": "damage",
-          "formula": "user.power * 0.9"
+          "formula": "user.power * 800 / target.defense"
         },
         {
           "type": "status",
@@ -672,7 +659,7 @@
         {
           "type": "buff",
           "stats": {
-            "defense": "user.defense * 1.2"
+            "defense": 1000
           },
           "duration": 5
         }
@@ -703,13 +690,13 @@
         {
           "type": "buff",
           "stats": {
-            "dodge": 15
+            "dodge":70
           },
           "duration": 5
         },
         {
           "type": "damage",
-          "formula": "user.health * -0.02 + user.chakra * -0.02"
+          "formula": "user.power * 1000 / (target.defense * 0.5)"
         }
       ]
     },
@@ -719,7 +706,7 @@
         {
           "type": "buff",
           "stats": {
-            "power": "user.power * 1.3"
+            "power": "user.power * 2000 / target.defense"
           },
           "duration": 5
         }
@@ -730,7 +717,7 @@
       "effects": [
         {
           "type": "damage",
-          "formula": "user.power * 1.5"
+          "formula": "user.power * 2100 / target.defense"
         },
         {
           "type": "status",
@@ -754,7 +741,7 @@
         },
         {
           "type": "damage",
-          "formula": "user.health * -0.03 + user.chakra * -0.03"
+          "formula": "target.chakra * 0.3"
         }
       ]
     },
@@ -766,7 +753,7 @@
       "effects": [
         {
           "type": "damage",
-          "formula": "user.power * 2"
+          "formula": "user.power * 2500 / target.defense"
         }
       ]
     },
@@ -785,7 +772,7 @@
       "effects": [
         {
           "type": "heal",
-          "formula": "target.health * 0.2"
+          "formula": "target.health * 1.0"
         }
       ]
     },
@@ -796,6 +783,7 @@
 },
 "The Grand Rebellion": { 
   "name": "The Grand Rebellion",
+  "obtainment": "unobtainable",
   "description": "Summons the Grand Rebellion",
   "chakraCost": 10,
   "category": "Custom",
@@ -811,7 +799,7 @@
       "effects": [
         {
           "type": "damage",
-          "formula": "6 * user.power"
+          "formula": "420 * user.power / target.defense"
         }
       ]
     },
@@ -819,9 +807,8 @@
       "description": "Sasuke cuts through the target.",
       "effects": [
         {
-          "type": "status",
-          "status": "bleed",
-          "duration": 2
+          "type": "damage",
+          "formula": "1 * user.power"
 
         }
       ]
@@ -841,7 +828,7 @@
       "effects": [
         {
           "type": "damage",
-          "formula": "user.power * 1"
+          "formula": "user.power * 40 / target.defense"
         }
       ]
     }
@@ -850,6 +837,7 @@
 "Last Resort": {
   "name": "Last Resort",
   "description": "***OBLIVION***\n decimates target",
+  "obtainment": "unobtainable",
   "chakraCost": 0,
   "category": "Custom",
   "image_url": "https://media.tenor.com/uYC6C2nnVNAAAAAM/energy-beam.gif",
@@ -860,13 +848,14 @@
     },
     {
       "type": "chakra_gain",
-      "formula": "user.chakra + 100"
+      "formula": "100"
     }
     
   ]
 },
 "Shuriken Throw": {
   "name": "Shuriken Throw",
+  "obtainment": "npc jutsu",
   "description": "Throws a shuriken at target ",
   "chakraCost": 0,
   "category": "No Category",
@@ -879,61 +868,605 @@
 },
 "Puppet Master": {
   "name": "Puppet Master",
+  "obtainment": "npc jutsu",
   "description": "Controls a puppet to attacktarget ",
   "chakraCost": 2,
   "category": "No Category",
   "effects": [
     {
       "type": "damage",
-      "formula": "1.5 * user.power"
+      "formula": "1.5 * user.power / 5"
     }
   ]
 },
 "Wind Scythe": {
   "name": "Wind Scythe",
+  "obtainment": "npc jutsu",
   "description": "Unleashes a blade of wind at target ",
   "chakraCost": 2,
   "category": "No Category",
   "effects": [
     {
       "type": "damage",
-      "formula": "1.2 * user.power"
+      "formula": "1.2 * user.power / 5"
     }
   ]
 },
 "Monster Claw": {
   "name": "Monster Claw",
+  "obtainment": "npc jutsu",
   "description": "Transforms his hand into a claw and unleashes a powerful claw attack ",
   "chakraCost": 2,
   "category": "No Category",
   "effects": [
     {
       "type": "damage",
-      "formula": "1.9 * user.power"
+      "formula": "1.9 * user.power / 5"
     }
   ]
 },
 "Samehada Slash": {
   "name": "Samehada Slash",
+  "obtainment": "npc jutsu",
   "description": "Unleashes a powerful slash with the Samehada sword.",
   "chakraCost": 3,
   "category": "No Category",
   "effects": [
     {
       "type": "damage",
-      "formula": "2.0 * user.power"
+      "formula": "2.0 * user.power / 5"
     }
   ]
 },
 "One Thousand Slashes": {
   "name": "One Thousand Slashes",
+  "obtainment": "npc jutsu",
   "description": "Unleashes a flurry of slashes at the target.",
   "chakraCost": 0,
   "category": "No Category",
   "effects": [
     {
       "type": "damage",
-      "formula": "3.0 * user.power"
+      "formula": "3.0 * user.power / 5"
+    }
+  ]
+},
+"Amaterasu": {
+  "name": "Amaterasu",
+  "obtainment": "from scroll dungeons",
+  "description": "Summons black flames that burn anything in their path.",
+  "chakraCost": 8,
+  "category": "No Category",
+  "effects": [
+    {
+      "type": "damage",
+      "formula": "4.0 * user.power"
+    },
+    {
+      "type": "status",
+      "target": "target",
+      "status": "burn",
+      "duration": 3,
+      "chance": 1.0,
+      "damagePerTurn": "target.health * 0.15"
+    }
+  ]
+},
+"Summon Manda": {
+  "name": "Summon Manda",
+  "obtainment": "from scroll dungeons",
+  "description": "Summons the giant snake Manda to crush the enemy.",
+  "chakraCost": 12,
+  "category": "No Category",
+  "effects": [
+    {
+      "type": "damage",
+      "formula": "40 * user.power / target.defense"
+    },
+    {
+      "type": "status",
+      "target": "target",
+      "status": "stun",
+      "duration": 2,
+      "chance": 1.0
+    }
+  ]
+},
+"Kamehameha": {
+  "name": "Kamehameha",
+  "obtainment": "from scroll dungeons",
+  "description": "Unleashes a powerful energy wave at the enemy.",
+  "chakraCost": 5,
+  "category": "No Category",
+  "effects": [
+    {
+      "type": "damage",
+      "formula": "600 * user.power / target.defense"
+    }
+  ]
+},
+"Crimson Lightning Dragon": {
+  "name": "Crimson Lightning Dragon",
+  "description": "***BEGONE***\n user summons a massive dragon of lightning that strikes target and stuns them ",
+  "chakraCost": 10,
+  "image_url": "https://giffiles.alphacoders.com/211/211562.gif",
+  "obtainment": "unobtainable",
+  "category": "Custom",
+  "effects": [
+    {
+      "type": "damage",
+      "formula": "700 * user.power / target.defense"
+    },
+    {
+      "type": "status",
+      "target": "target",
+      "status": "stun",
+      "duration": 2,
+      "chance": 1.0
+    }
+  ]
+},
+"Azora Raizen": {
+  "name": "Azora Raizen",
+  "description": "***𝕬𝖟𝖔𝖗𝖆 𝕽𝖆𝖎𝖟𝖊𝖓***\n Come Forth .. And Prepare To Meet Your DEMISEEE!!",
+  "obtainment": "unobtainable",
+  "chakraCost": 15,
+  "image_url": "https://media.tenor.com/UIkbVJygWwAAAAAM/zenitsu-thunder-clap-and-flash.gif",
+  "category": "Custom",
+  "effects": [
+    {
+      "type": "damage",
+      "formula": "700 * user.power / target.defense"
+    },
+    {
+      "type": "chakra_gain",
+      "formula": "2"
+    },
+    {
+      "type": "debuff",
+      "target": "target",
+      "stats": {
+        "chakra": "-target.chakra * 0.3"
+      }
+    }
+  ]
+},
+"Azora Tenpo": {
+  "name": "Azora Tenpo",
+  "obtainment": "unobtainable",
+  "description": "***𝕬𝖟𝖔𝖗𝖆 𝕿𝖊𝖓𝖕𝖔***\n heals and buffs",
+  "chakraCost": 10,
+  "image_url": "https://media.tenor.com/TO7TgmfZanYAAAAM/gear-5-luffy-gear-5.gif",
+  "category": "Custom",
+  "effects": [
+    {
+      "type": "heal",
+      "formula": "user.health * 0.2"
+    },
+    {
+      "type": "damage",
+      "formula": "user.power * 300 / target.defense"
+    }
+  
+  ]
+},
+"Get Flexed on":  {
+  "name": "Get Flexed on",
+  "obtainment": "unobtainable",
+  "description": "Get Flexed on Kiddo\n user flexes so hard they deal emotional damage to target",
+  "chakraCost": 10,
+  "category": "Custom",
+  "image_url": "https://media.tenor.com/KPspeKFSzBkAAAAM/piccolo-griddy.gif",
+  "effects": [
+    {
+      "type": "damage",
+      "formula": "100 * user.power / target.defense"
+    },
+    {
+      "type": "status",
+      "target": "target",
+      "status": "stun",
+      "duration": 1
+    }
+  
+  ]
+},
+"Heavenly Palm of Annihilation": {
+  "name": "Heavenly Palm of Annihilation",
+  "obtainment": "unobtainable",
+  "description": "***HEAVENLY PALM OF ANNIHILATION***\n user unleashes a devastating palm strike ",
+  "chakraCost": 7,
+  "category": "Custom",
+  "image_url": "https://i.pinimg.com/originals/bc/87/50/bc8750969b08836a8c83747e2d62804a.gif",
+  "effects": [
+    {
+      "type": "damage",
+      "formula": "100 * user.power / target.defense"
+    },
+   {
+    "type": "buff",
+    "target": "user",
+    "stats": {
+      "power": 1000,
+      "defense": 100
+    },
+    "duration": 2
+   }
+  
+  ]
+},
+"Carnage": {
+  "name": "Carnage",
+  "obtainment": "unobtainable",
+  "description": "user goes berserk, increasing power and defense.",
+  "chakraCost": 0,
+  "category": "Custom",
+  "effects": [
+    {
+      "type": "buff",
+      "target": "user",
+      "stats": {
+        "power": 1000000000000,
+        "defense": 1000000000000
+      },
+      "duration": 2
+    },
+    {
+          "type": "damage",
+      "formula": "500000 * user.power"
+    },
+    {
+      "type": "heal",
+      "formula": "user.health * 1.0"
+    },
+    {
+      "type": "debuff",
+      "target": "user",
+      "stats": {
+        "power": -1000000000000,
+        "defense": -1000000000000
+      },
+      "duration": 2
+    }
+  ]
+},
+"Explosive Paper Clone": {
+  "name": "Explosive Paper Clone",
+  "obtainment": "Obtained from the raikage event",
+  "description": "tags target with an explosive tag",
+  "chakraCost": 4,
+  "category": "No Category",
+  "roundBased": true,
+  "roundEffects": {
+    "1": {
+      "description": "User tags target with an explosive tag ",
+      "effects": []
+    },
+    "2": {
+      "description": "The explosive tag detonates, dealing damage to target.",
+      "effects": [
+        {
+          "type": "damage",
+          "formula": "0.2 * target.health"
+        }
+      ]
+    }
+
+}
+},
+"Kirin: Lightning Storm": {
+  "name": "Kirin: Lightning Storm",
+  "Obtainment": "obtained from the raikage event",
+  "description": "User summons a lightning storm that deals massive damage to target ",
+  "chakraCost": 20,
+  "category": "Shinobi Master",
+  "image_url": "https://i.pinimg.com/originals/1c/3b/8e/1c3b8e2f3f4e4c6f4e4c6f4e4c6f4c6f.gif",
+  "effects": [
+    {
+      "type": "damage",
+      "formula": "1500 * user.power / target.defense"
+    }
+  
+  ]
+},
+"9th form: Rengoku": {
+  "name": "9th form: Rengoku",
+  "Obtainment": "obtained from the scroll dungeons",
+  "description": "**Fire Breathing 9th Form: Rengoku**\n cuts through target",
+  "chakraCost": 15,
+  "category": "Shinobi Master",
+  "image_url": "https://i.pinimg.com/originals/7c/8e/1e/7c8e1e2f3f4e4c6f4e4c6f4e4c6f4c6f.gif",
+  "effects": [
+    {
+      "type": "damage",
+      "formula": "720 * user.power / target.defense"
+    }
+  
+  ]
+},
+"Guillotine Drop": {
+  "name": "Guillotine Drop",
+  "obtainment": "Obtained from the raikage event",
+  "description": "**user leaps high into the air and slams down target breaking their defense.**\n deals damage ",
+  "chakraCost": 12,
+  "category": "Ultimate Jutsu",
+  "image_url": "https://static.wikia.nocookie.net/naruto/images/e/ef/Guillotine_Drop_Manga.png/revision/latest?cb=20150901133757&path-prefix=es",
+  "effects": [
+    {
+      "type": "damage",
+      "formula": "user.power * 700 / (target.defense / 10)"
+    },
+    {
+      "type": "status",
+      "target": "target",
+      "status": "stun",
+      "duration": 2,
+      "chance": 1.0
+    },
+    {
+      "type": "buff",
+      "target": "user",
+      "stats": {
+        "power": 100,
+        "defense": 100
+      },
+      "duration": 2
+    }
+  ]
+},
+"Shadow Clone Jutsu: 1000 clones": {
+  "name": "Shadow Clone Jutsu: 1000 clones",
+  "obtainment": "Obtained from the raikage event",
+  "description": "user creates 1000 clones of themself to confuse and attack target\n clones attack ",
+  "chakraCost": 15,
+  "category": "No Category",
+  "image_url": "https://i.pinimg.com/originals/1c/3b/8e/1c3b8e2f3f4e4c6f4e4c6f4e4c6f4c6f.gif",
+  "effects": [
+    {
+      "type": "damage",
+      "formula": "1000 * user.power / target.defense"
+    },
+    {
+      "type": "status",
+      "target": "target",
+      "status": "flinch",
+      "duration": 1,
+      "chance": 1.0
+    }
+  ]
+},
+"Lightning Hound": {
+  "name": "Lightning Hound",
+  "obtainment": "Obtained from the raikage event",
+  "description": "Summons a giant hound made of lightning to attack target ",
+  "chakraCost": 6,
+  "category": "Custom",
+  "image_url": "https://i.pinimg.com/originals/1c/3b/8e/1c3b8e2f3f4e4c6f4e4c6f4e4c6f4c6f.gif",
+  "effects": [
+    {
+      "type": "damage",
+      "formula": "300 * user.power / target.defense"
+    },
+    {
+      "type": "status",
+      "target": "target",
+      "status": "stun",
+      "duration": 1,
+      "chance": 1.0
+    }
+  ]
+},
+"Black Flash: Deaths Awakened Itself": {
+  "name": "Black Flash: Deaths Awakened Itself",
+  "obtainment": "shop",
+  "description": "***BLACK, FLASH!***\n user attacks and unleashes a devastating upward strike into the opponent’s gut, piercing their heart with overwhelming force ", 
+  "chakraCost": 8,
+  "category": "Custom",
+  "image_url": "https://media.discordapp.net/attachments/1417123972780130446/1417127908517871626/22690b8e91f7a756202a438c5e124c49.jpg?ex=68ca0376&is=68c8b1f6&hm=3657bafe79cafad380e535285a99c05d50419bce091f079dd8b24a371fca9748&=&format=webp",
+  "effects": [
+    {
+      "type": "damage",
+      "formula": "980 * user.power / target.defense"
+    },
+    {
+      "type": "status",
+      "target": "target",
+      "status": "bleed",
+      "duration": 2,
+      "chance": 1.0
+    },
+    {
+      "type": "status",
+      "target": "target",
+      "status": "stun",
+      "duration": 1,
+      "chance": 1.0
+    }
+  ]
+},
+"Human Boulder": {
+  "name": "Human Boulder",
+  "obtainment": "unobtainable",
+  "description": "***user transforms into a massive boulder and rolls over target ",
+  "chakraCost": 5,
+  "category": "Shop",
+  "image_url": "https://i.pinimg.com/originals/1c/3b/8e/1c3b8e2f3f4e4c6f4e4c6f4e4c6f4c6f.gif",
+  "effects": [
+    {
+      "type": "damage",
+      "formula": "500 * user.power / target.defense"
+    },
+    {
+      "type": "status",
+      "target": "target",
+      "status": "stun",
+      "duration": 1,
+      "chance": 1.0
+    }
+  ]
+},
+"Puppet Kazekage": {
+  "name": "Puppet Kazekage",
+  "obtainment": "Shop",
+  "description": "user summons a puppet to attack target.\n the puppet stays with user until they die and keeps attacking",
+  "chakraCost": 15,
+  "category": "Shop",
+  "roundBased": true,
+  "roundEffects": {
+    "1": {
+      "description": "User summons a puppet to attack target.",
+      "effects": []
+    },
+    "2-99": {
+      "description": "The puppet attacks target dealing damage.",
+      "effects": [
+        {
+          "type": "damage",
+          "formula": "600 * user.power / target.defense"
+        }
+      ]
+}
+}
+},
+"Demonic Illusion": {
+  "name": "Demonic Illusion",
+  "obtainment": "unobtainable",
+  "description": "user traps target in a powerful genjutsu, stunning and confusing them",
+  "chakraCost": 7,
+  "category": "None",
+  "effects": [
+    {
+      "type": "status",
+      "target": "target",
+      "status": "stun",
+      "duration": 2,
+      "chance": 1.0
+    }
+  ]
+},
+"Tenseigan Chakra Mode": {
+  "name": "Tenseigan Chakra Mode",
+  "obtainment": "Otsutsuki",
+  "description": "user enters tenseigan chakra mode, greatly increasing power, defense for a short duration",
+  "chakraCost": 20,
+  "category": "Otsutsuki",
+  "roundBased": true,
+  "roundEffects": {
+    "1": {
+      "description": "User enters tenseigan chakra mode, greatly increasing power and defense.",
+      "effects": [
+        {
+          "type": "buff",
+          "target": "user",
+          "stats": {
+            "power": "user.power * 2.0",
+            "defense": "user.defense * 2.0"
+          },
+          "duration": 5
+        }
+      ]
+    },
+    "2-5": {
+      "description": "Tenseigan Orbs attack target ",
+      "effects": [
+        {
+          "type": "heal",
+          "formula": "user.health * 1.0"
+        }
+      ]
+    },
+    "6": {
+      "description": "User exits tenseigan chakra mode, returning to normal state.",
+      "effects": [
+        {
+          "type": "debuff",
+          "target": "user",
+          "stats": {
+            "power": "-user.power * 1.0",
+            "defense": "-user.defense * 1.0"
+          },
+          "duration": 1
+        }
+      ]
+    }
+  }
+},
+"Otsutsuki's Wrath": {
+  "name": "Otsutsuki's Wrath",
+  "obtainment": "unobtainable",
+  "description": "user unleashes a devastating attack, dealing massive damage to target",
+  "chakraCost": 30,
+  "category": "Otsutsuki",
+  "effects": [
+    {
+      "type": "damage",
+      "formula": "user.power * 2000 / target.defense"
+    }
+  ]
+},
+"Truth-Seeking Orbs": {
+  "name": "Truth-Seeking Orbs",
+  "obtainment": "unobtainable",
+  "description": "user creates orbs of truth that seek out the target and deal damage",
+  "chakraCost": 25,
+  "category": "Otsutsuki",
+  "effects": [
+    {
+      "type": "damage",
+      "formula": "user.power * 4500 / target.defense"
+    }
+  ]
+},
+"Blades of Judgement": {
+  "name": "Blades of Judgement",
+  "obtainment": "unobtainable",
+  "description": "user uses the energy from their halo to fire a barrage of energy blades at target that explode on impact",
+  "chakraCost": 10,
+  "image_url": "https://media.discordapp.net/attachments/1427210584427991130/1427211104513167451/image0.gif?ex=68ee096b&is=68ecb7eb&hm=3aff39159acc52c1aaf97ef01f4a52229725cf19a79cc4d859362529e019036b&=",
+  "category": "Custom",
+  "background": "https://static.wikia.nocookie.net/dragonuniverse/images/b/b1/Blades_of_Judgement.png/revision/latest?cb=20170412223221",
+  "effects": [
+    {
+      "type": "damage",
+      "formula": "user.power * 700 / target.defense"
+    },
+    {
+      "type": "status",
+      "target": "target",
+      "status": "bleed",
+      "duration": 2,
+      "chance": 1.0,
+      "damagePerTurn": "target.health * 0.1"
+    }
+  ]
+},
+"Set Your Face Ablaze": {
+  "name": "Set Your Face Ablaze",
+  "obtainment": "unobtainable",
+  "description": "**No Matter How Devestated You May Be!**\n user hands ignite in flames, greatly increasing power and attacking target consecutively 3 times",
+  "chakraCost": 8,
+  "image_url": "https://i.pinimg.com/originals/ee/8c/21/ee8c21cbc213428ae44f6c968f8264e4.gif",
+  "category": "Custom",
+  "effects": [
+    {
+      "type": "buff",
+      "target": "user",
+      "stats": {
+        "power": 1000
+      },
+      "duration": 100
+    },
+    {
+      "type": "damage",
+      "formula": "2000 * user.power / target.defense"
+    },
+    {
+      "type": "status",
+      "target": "target",
+      "status": "bleed",
+      "duration": 2,
+      "chance": 0.7,
+      "damagePerTurn": "target.health * 0.1"
     }
   ]
 }

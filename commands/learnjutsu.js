@@ -39,13 +39,33 @@ const SCROLL_JUTSU_INFO = {
         jutsu: "Infused Chakra Blade",
         shards: 1
     },
+    "Amaterasu": {
+        jutsu: "Amaterasu",
+        shards: 6
+    },
+    "Lightning Blade: All Out": {
+        jutsu: "Lightning Blade: All Out",
+        shards: 10
+    },
+    "9th form: Rengoku": {
+        jutsu: "9th form: Rengoku",
+        shards: 15
+        },
+    "Summon Manda": {
+        jutsu: "Summon Manda",
+        shards: 10
+    },
     "Kamehameha Scroll": {
         jutsu: "Kamehameha",
         shards: 50
     },
     "Asura's Blade of Execution": {
         jutsu: "Asura's Blade of Execution",
-        shards: 100 // A very high cost for this ultimate jutsu
+        shards: 50 // A very high cost for this ultimate jutsu
+    },
+    "Tenseigan Scroll": {
+        jutsu: "Tenseigan Chakra Mode",
+        shards: 20
     }
 };
 

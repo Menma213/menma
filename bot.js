@@ -31,10 +31,20 @@ const client = new Client({
     ]
 });
 
-client.commands = new Collection();
+client.commands = new Collection(); // Ensure commands is a Collection
+
+// Add global prompt counter
+const userPromptCounts = {};
+
+// --- Load story.js and run setup for minigame engine ---
+const storyModule = require('./commands/story');
+if (typeof storyModule.setup === 'function') {
+    storyModule.setup(client, userPromptCounts);
+}
+// --- End minigame engine setup ---
 
 // Load all command files
-const commandsPath = path.join(__dirname, 'commands');
+const commandsPath = path.join(__dirname, '/commands');
 const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
 
 for (const file of commandFiles) {
@@ -48,7 +58,8 @@ for (const file of commandFiles) {
 
         // Register event-based commands (like admincommand102.js)
         if (typeof command.setup === 'function') {
-            command.setup(client);
+            // Pass client and userPromptCounts to setup
+            command.setup(client, userPromptCounts);
         }
     } catch (error) {
         console.error(`❌ Error loading command "${file}":`, error);
@@ -62,7 +73,10 @@ const rest = new REST({ version: '10' }).setToken(TOKEN);
     try {
         console.log('🔄 Registering slash commands...');
         
-        const commands = Array.from(client.commands.values()).map(cmd => cmd.data.toJSON());
+        // Only include commands with a valid .data.toJSON method
+        const commands = Array.from(client.commands.values())
+            .filter(cmd => cmd.data && typeof cmd.data.toJSON === 'function')
+            .map(cmd => cmd.data.toJSON());
         await rest.put(
             Routes.applicationCommands(CLIENT_ID),
             { body: commands }
@@ -97,6 +111,17 @@ client.on('interactionCreate', async interaction => {
 client.once('ready', () => {
     console.log(`✅ ${client.user.tag} is online!`);
     console.log(`🌐 Connected to ${client.guilds.cache.size} server(s).`);
+
+    // Start Forest of Death auto-start every 3 hours
+    try {
+        const fodCmd = require('./commands/fod');
+        if (typeof fodCmd.startAutoFOD === 'function') {
+            fodCmd.startAutoFOD(client);
+            console.log('⏰ Forest of Death auto-start enabled.');
+        }
+    } catch (err) {
+        console.error('❌ Failed to enable Forest of Death auto-start:', err);
+    }
 });
 
 // Listen for messages to trigger Thunderbird NPC

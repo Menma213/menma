@@ -2,7 +2,7 @@ const { SlashCommandBuilder, EmbedBuilder, WebhookClient, PermissionFlagsBits, C
 const fs = require('fs');
 const path = require('path');
 
-const usersPath = path.resolve(__dirname, '../../menma/data/users.json');
+const usersPath = path.resolve(__dirname, '../../menma/data/players.json');
 
 // Gatō's avatar (Naruto anime villain, business man)
 const GATO_AVATAR = 'https://static.wikia.nocookie.net/near_pure_evil/images/d/d8/Gato.png/revision/latest?cb=20210922075636';
@@ -42,6 +42,10 @@ async function cleanupWebhooks(channel, client) {
     }
 }
 
+// --- MAIN SERVER GUILD ID ---
+// Replace with your actual main server guild ID
+const MAIN_SERVER_GUILD_ID = '1381268582595297321';
+
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('trade')
@@ -51,7 +55,13 @@ module.exports = {
     // in its messageCreate event handler.
     async thunderbirdListener(message) {
         // Ignore bot messages, DMs, and messages if an event is already active in this guild
-        if (message.author.bot || !message.guild || thunderbirdEvents.has(message.guild.id)) {
+        // Only allow Thunderbird event in the main server
+        if (
+            message.author.bot ||
+            !message.guild ||
+            thunderbirdEvents.has(message.guild.id) ||
+            message.guild.id !== MAIN_SERVER_GUILD_ID
+        ) {
             return;
         }
 
@@ -67,37 +77,44 @@ module.exports = {
                 console.log(`Thunderbird event has ended for guild ${message.guild.id}.`);
             }, THUNDERBIRD_DURATION_MS);
 
-            // Find or create a webhook for the initial trigger message in this channel
-            let webhooks = await message.channel.fetchWebhooks();
-            let thunderbirdTriggerWebhook = webhooks.find(w => w.owner && w.owner.id === message.client.user.id && w.name === THUNDERBIRD_NAME);
-            
-            // If the webhook doesn't exist or there are too many, try to create one.
-            if (!thunderbirdTriggerWebhook) {
-                try {
-                    thunderbirdTriggerWebhook = await message.channel.createWebhook({
-                        name: THUNDERBIRD_NAME,
-                        avatar: THUNDERBIRD_AVATAR,
-                        reason: 'For Thunderbird NPC event trigger'
-                    });
-                } catch (error) {
-                    console.error("Failed to create webhook for Thunderbird trigger:", error);
-                    return;
+            // Only send the trigger message in the main server
+            if (message.guild.id === MAIN_SERVER_GUILD_ID) {
+                let webhooks = await message.channel.fetchWebhooks();
+                let thunderbirdTriggerWebhook = webhooks.find(w => w.owner && w.owner.id === message.client.user.id && w.name === THUNDERBIRD_NAME);
+                
+                // If the webhook doesn't exist or there are too many, try to create one.
+                if (!thunderbirdTriggerWebhook) {
+                    try {
+                        thunderbirdTriggerWebhook = await message.channel.createWebhook({
+                            name: THUNDERBIRD_NAME,
+                            avatar: THUNDERBIRD_AVATAR,
+                            reason: 'For Thunderbird NPC event trigger'
+                        });
+                    } catch (error) {
+                        console.error("Failed to create webhook for Thunderbird trigger:", error);
+                        return;
+                    }
                 }
-            }
 
-            // Send the trigger message via the webhook
-            await thunderbirdTriggerWebhook.send({
-                content: "Good night everyone.",
-                username: THUNDERBIRD_NAME,
-                avatarURL: THUNDERBIRD_AVATAR
-            });
+                // Send the trigger message via the webhook
+                await thunderbirdTriggerWebhook.send({
+                    content: "Good night everyone.",
+                    username: THUNDERBIRD_NAME,
+                    avatarURL: THUNDERBIRD_AVATAR
+                });
+            }
         }
     },
 
     async execute(interaction) {
         // Only allow in guild text channels
         if (!interaction.guild || !interaction.channel) {
-            return interaction.reply({ content: "This command can only be used in a server channel.", ephemeral: true });
+            try {
+                await interaction.reply({ content: "This command can only be used in a server channel.", ephemeral: true });
+            } catch (err) {
+                if (err.code !== 10062) console.error('Interaction reply error:', err);
+            }
+            return;
         }
 
         // Clean up old webhooks before starting a new interaction
@@ -105,12 +122,22 @@ module.exports = {
 
         // Load users
         if (!fs.existsSync(usersPath)) {
-            return interaction.reply({ content: "Database not found.", ephemeral: true });
+            try {
+                await interaction.reply({ content: "Database not found.", ephemeral: true });
+            } catch (err) {
+                if (err.code !== 10062) console.error('Interaction reply error:', err);
+            }
+            return;
         }
         const users = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
         const userId = interaction.user.id;
         if (!users[userId]) {
-            return interaction.reply({ content: "You need to enroll first!", ephemeral: true });
+            try {
+                await interaction.reply({ content: "You need to enroll first!", ephemeral: true });
+            } catch (err) {
+                if (err.code !== 10062) console.error('Interaction reply error:', err);
+            }
+            return;
         }
 
         // --- COMMON WEBHOOK HELPERS ---
@@ -150,11 +177,16 @@ module.exports = {
         }
 
         // Check if Thunderbird is active for this guild
-        const isThunderbirdActive = thunderbirdEvents.has(interaction.guild.id);
+        // Only allow Thunderbird event in the main server
+        const isThunderbirdActive = thunderbirdEvents.has(interaction.guild.id) && interaction.guild.id === MAIN_SERVER_GUILD_ID;
 
         // --- THUNDERBIRD INTERACTION LOGIC ---
         if (isThunderbirdActive) {
-            await interaction.reply({ content: "You sense a new presence...", ephemeral: true });
+            try {
+                await interaction.reply({ content: "You sense a new presence...", ephemeral: true });
+            } catch (err) {
+                if (err.code !== 10062) console.error('Interaction reply error:', err);
+            }
 
             const thunderbirdWebhook = await getWebhook(THUNDERBIRD_NAME, THUNDERBIRD_AVATAR);
             if (!thunderbirdWebhook) return;
@@ -231,7 +263,11 @@ module.exports = {
         }
 
         // Step 1: Introduction
-        await interaction.reply({ content: "Summoning Gatō...", ephemeral: true });
+        try {
+            await interaction.reply({ content: "Summoning Gatō...", ephemeral: true });
+        } catch (err) {
+            if (err.code !== 10062) console.error('Interaction reply error:', err);
+        }
         await gatoSay(`Greetings! I am **Gatō**, the wealthiest businessman in the Land of Waves. I'll be your host for this trade!\n\nIf you wish to continue, type **continue** in chat.`);
 
         // Step 2: Wait for "continue" from the command user
@@ -337,8 +373,11 @@ module.exports = {
         }
 
         // Step 9: Validate and perform the trade
-        let u1 = users[userId];
-        let u2 = users[partnerId];
+        // Load players.json for resource trading
+        const playersPath = path.resolve(__dirname, '../../menma/data/players.json');
+        let players = fs.existsSync(playersPath) ? JSON.parse(fs.readFileSync(playersPath, 'utf8')) : {};
+        let p1 = players[userId] || {};
+        let p2 = players[partnerId] || {};
         // Shinobi Shards variable: "ss" or "SS" (case-insensitive), Money: "money"
         function getSS(user) {
             return user.ss || user.SS || 0;
@@ -348,10 +387,10 @@ module.exports = {
             else if ('SS' in user) user.SS = val;
             else user.ss = val;
         }
-        // Validate offers
+        // Validate offers using players.json
         let errors = [];
         for (const [uid, offer] of Object.entries(offers)) {
-            const user = users[uid];
+            const user = uid === userId ? p1 : p2;
             if (offer.type === 'ss') {
                 if (getSS(user) < offer.amount) errors.push(`<@${uid}> does not have enough Shinobi Shards.`);
             } else if (offer.type === 'money') {
@@ -362,24 +401,24 @@ module.exports = {
             await gatoSay("Trade failed:\n" + errors.join('\n'));
             return;
         }
-
-        // Perform the trade
-        // User1 gives their offer to user2, and vice versa
+        // Perform the trade using players.json
         if (offers[userId].type === 'ss') {
-            setSS(u1, getSS(u1) - offers[userId].amount);
-            setSS(u2, getSS(u2) + offers[userId].amount);
+            setSS(p1, getSS(p1) - offers[userId].amount);
+            setSS(p2, getSS(p2) + offers[userId].amount);
         } else {
-            u1.money -= offers[userId].amount;
-            u2.money += offers[userId].amount;
+            p1.money = (p1.money || 0) - offers[userId].amount;
+            p2.money = (p2.money || 0) + offers[userId].amount;
         }
         if (offers[partnerId].type === 'ss') {
-            setSS(u2, getSS(u2) - offers[partnerId].amount);
-            setSS(u1, getSS(u1) + offers[partnerId].amount);
+            setSS(p2, getSS(p2) - offers[partnerId].amount);
+            setSS(p1, getSS(p1) + offers[partnerId].amount);
         } else {
-            u2.money -= offers[partnerId].amount;
-            u1.money += offers[partnerId].amount;
+            p2.money = (p2.money || 0) - offers[partnerId].amount;
+            p1.money = (p1.money || 0) + offers[partnerId].amount;
         }
-        fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
+        players[userId] = p1;
+        players[partnerId] = p2;
+        fs.writeFileSync(playersPath, JSON.stringify(players, null, 2));
 
         // Step 10: Final message
         await gatoSay("The trade is complete! Thank you for using Gatō's Trading Service. Come back anytime for more business!");

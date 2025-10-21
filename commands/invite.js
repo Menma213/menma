@@ -99,16 +99,17 @@ module.exports = {
 
         collector.on('collect', async m => {
             let currentUserData = users[targetUser.id]; // Get the latest data for the target user
-
-            // Check if the user has enough money
-            if ((currentUserData.money || 0) < 10000) {
+            // Deduct money from players.json instead of users.json
+            const playersPath = path.resolve(__dirname, '../../menma/data/players.json');
+            let players = fs.existsSync(playersPath) ? JSON.parse(fs.readFileSync(playersPath, 'utf8')) : {};
+            if (!players[targetUser.id]) players[targetUser.id] = {};
+            if ((players[targetUser.id].money || 0) < 10000) {
                 await mysteriousEntitySay(`You do not have enough money, <@${targetUser.id}>. This offer is rescinded.`);
                 return interaction.followUp({ content: `${targetUser.username} failed to join the Akatsuki due to insufficient funds.`, ephemeral: false });
             }
+            players[targetUser.id].money = (players[targetUser.id].money || 0) - 10000;
+            fs.writeFileSync(playersPath, JSON.stringify(players, null, 2));
 
-            // Deduct money
-            currentUserData.money = (currentUserData.money || 0) - 10000;
-            
             // Update occupation and save to database
             currentUserData.occupation = "Akatsuki";
             fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));

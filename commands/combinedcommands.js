@@ -171,11 +171,21 @@ const effectHandlers = {
     },
     instantKill: (chance) => Math.random() < chance,
     status: (chance) => Math.random() < (chance || 1),
-    bleed: (target, effect = {}) => {
-        // Bleed deals either a fixed damagePerTurn or 20% of health
-        if (effect.damagePerTurn) return Math.floor(effect.damagePerTurn);
-        return Math.floor(target.health * 0.2);
-    },
+    // ...existing code...
+bleed: (target, effect = {}) => {
+    // Bleed deals either a fixed damagePerTurn or 20% of health
+    if (effect.damagePerTurn) {
+        if (typeof effect.damagePerTurn === 'string') {
+            try {
+                return Math.floor(math.evaluate(effect.damagePerTurn, { target }));
+            } catch (err) {
+                return Math.floor(target.health * 0.2);
+            }
+        }
+        return Math.floor(effect.damagePerTurn);
+    }
+    return Math.floor(target.health * 0.2);
+},
     poison: (target, effect = {}) => {
         // Poison deals either a fixed damagePerTurn or 5% of health
         if (effect.damagePerTurn) return Math.floor(effect.damagePerTurn);
@@ -213,7 +223,23 @@ processActiveEffects: (combatant) => {
         // Handle status effect with bleed
         if (effect.type === 'status' && effect.status === 'bleed') {
             // Use damagePerTurn if present, else default to 20% health
+            // Handle bleed effect (status: "bleed")
             let bleedDamage = effect.damagePerTurn;
+            if (typeof bleedDamage !== 'number') {
+                bleedDamage = Math.floor(combatant.health * 0.2);
+            }
+            combatant.currentHealth = Math.max(0, combatant.currentHealth - bleedDamage);
+            result.specialEffects.push(`${combatant.name} is bleeding, taking ${bleedDamage} damage.`);
+
+            // Handle burn effect (status: "burn") -- same as bleed but different name
+            if (effect.type === 'status' && effect.status === 'burn') {
+                let burnDamage = effect.damagePerTurn;
+                if (typeof burnDamage !== 'number') {
+                    burnDamage = Math.floor(combatant.health * 0.2);
+                }
+                combatant.currentHealth = Math.max(0, combatant.currentHealth - burnDamage);
+                result.specialEffects.push(`${combatant.name} is burned, taking ${burnDamage} damage.`);
+            }
             if (typeof bleedDamage !== 'number') {
                 bleedDamage = Math.floor(combatant.health * 0.2);
             }
@@ -273,16 +299,7 @@ const BLOODLINE_DEPARTMENTS = {
     Senju: "Your body pulses with ancient vitality.",
     Nara: "Your mind sharpens, calculating every move."
 };
-// --- S-Rank Specific Image/Webhook Assets ---
-const ASUMA_AVATAR = 'https://pm1.aminoapps.com/7847/98cca195c3bc0047d813f25357661be5f67818b3r1-750-754v2_hq.jpg';
-const KAGAMI_AVATAR = 'https://i.redd.it/n75z59iot9se1.jpeg'; // Placeholder, use your actual Kagami avatar
-const ZABUZA_AVATAR = 'https://static.wikia.nocookie.net/naruto/images/7/77/Zabuza_Anime.png/revision/latest?cb=20150125134709';
-const OROCHIMARU_AVATAR = 'https://www.pngplay.com/wp-content/uploads/12/Orochimaru-PNG-Free-File-Download.png';
-const KURENAI_AVATAR = 'https://static.wikia.nocookie.net/naruto/images/6/67/Kurenai_Part_I.png/revision/latest?cb=20150207094753'; // For future S-Rank
-const ASUMA_BG = 'https://i.pinimg.com/originals/5d/e5/62/5de5622ecdd4e24685f141f10e4573e3.jpg'; // Generic forest/path background
-const ZABUZA_BG = 'https://i.pinimg.com/474x/a6/e4/b6/a6e4b61fd616f4452c7f52f814477bc0.jpg'; // Mist background
-const OROCHIMARU_BG = 'https://i.pinimg.com/originals/c8/5c/58/c85c5897c8d9e2b2c8c5c7d0e5f0e7f7.jpg'; // Dark cave/hideout background
-const CORRUPTED_BG = 'https://i.postimg.cc/SxKGdrVF/image.png'; // Corrupted/hellish background
+
 // --- Ranked Queue System (from ranked.js) ---
 const rankedQueue = {
     standard: new Map(), // Map of user IDs to queue entry timestamps
@@ -290,7 +307,6 @@ const rankedQueue = {
     matches: new Map(),  // Ongoing matches (channelId -> matchData)
     logChannel: null
 };
-
 // --- Rank Configuration (from ranked.js) ---
 const RANK_CONFIG = {
     ranks: [
@@ -301,9 +317,8 @@ const RANK_CONFIG = {
         "Master Shinobi",
         "The Shinobi God"
     ],
-    divisions: [5, 4, 3, 2, 1],
-    eloPerDivision: 100,
-    winElo: 50,
+    rankThresholds: [0, 100, 200, 300, 400, 500], // ELO required for each rank
+    winElo: 25,
     lossElo: 50 // For user vs user, users lose 50 ELO on loss
 };
 
@@ -380,6 +395,7 @@ async function generateBattleImage(player1, player2, customBgUrl = null) {
         } else {
             bgImg = await loadImage('https://i.pinimg.com/originals/5d/e5/62/5de5622ecdd4e24685f141f10e4573e3.jpg');
         }
+        
     } catch {
         ctx.fillStyle = '#222';
         ctx.fillRect(0, 0, width, height);
@@ -1272,34 +1288,28 @@ function createBattleSummary(
 }
 
 
-
 // --- ELO System Functions (from ranked.js) ---
 
 /**
- * Gets the rank and division based on ELO.
+ * Gets the rank based on ELO.
  * @param {number} elo - The user's ELO.
- * @returns {{rank: string, division: number, elo: number}} The rank details.
+ * @returns {{rank: string, elo: number}} The rank details.
  */
-function getTierAndDivision(elo) {
-    if (!elo && elo !== 0) return { rank: "Genin", division: 5, elo: 0 };
-    let totalDivisions = RANK_CONFIG.ranks.length * 5;
-    let currentDivision = Math.floor(elo / RANK_CONFIG.eloPerDivision);
-    if (currentDivision >= totalDivisions) {
-        return {
-            rank: "The Shinobi God",
-            division: 1,
-            elo: elo % RANK_CONFIG.eloPerDivision
-        };
+function getTierByElo(elo) {
+    if (!elo && elo !== 0) return { rank: "Genin", elo: 0 };
+    let rankIndex = 0;
+    for (let i = RANK_CONFIG.rankThresholds.length - 1; i >= 0; i--) {
+        if (elo >= RANK_CONFIG.rankThresholds[i]) {
+            rankIndex = i;
+            break;
+        }
     }
-    let rankIndex = Math.floor(currentDivision / 5);
-    let division = 5 - (currentDivision % 5);
     return {
         rank: RANK_CONFIG.ranks[rankIndex],
-        division: division,
-        elo: elo % RANK_CONFIG.eloPerDivision
+        elo: elo
     };
 }
-
+// ...existing code...
 /**
  * Updates ELO for winner and loser.
  * @param {string} winnerId - The ID of the winner.
@@ -1308,47 +1318,13 @@ function getTierAndDivision(elo) {
  * @returns {{winnerChange: number, loserChange: number, winnerNew: object, loserNew: object}} ELO changes and new ranks.
  */
 function updateElo(winnerId, loserId, isNpcMatch = false) {
-    const users = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
-
-    // If winner or loser is an NPC, do not update users.json, just return dummy values
-    if (
-        (typeof winnerId === "string" && winnerId.startsWith("NPC_")) ||
-        (typeof loserId === "string" && loserId.startsWith("NPC_"))
-    ) {
-        const winElo = isNpcMatch ? 20 : RANK_CONFIG.winElo;
-        const lossElo = isNpcMatch ? 0 : RANK_CONFIG.lossElo;
-        return {
-            winnerChange: winElo,
-            loserChange: lossElo,
-            winnerNew: { rank: "NPC", division: 0, elo: 0 },
-            loserNew: { rank: "NPC", division: 0, elo: 0 }
-        };
-    }
-
-    // Ensure elo and rank exist directly on user object
-    if (typeof users[winnerId].elo !== "number") users[winnerId].elo = 0;
-    if (typeof users[loserId].elo !== "number") users[loserId].elo = 0;
-
     const winElo = isNpcMatch ? 20 : RANK_CONFIG.winElo;
     const lossElo = isNpcMatch ? 0 : RANK_CONFIG.lossElo;
-
-    users[winnerId].elo += winElo;
-    users[loserId].elo = Math.max(0, users[loserId].elo - lossElo);
-
-    // Update rank (and division) directly
-    const winnerRank = getTierAndDivision(users[winnerId].elo);
-    const loserRank = getTierAndDivision(users[loserId].elo);
-
-    users[winnerId].rank = winnerRank.rank;
-    users[loserId].rank = loserRank.rank;
-
-    fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
-
     return {
         winnerChange: winElo,
         loserChange: lossElo,
-        winnerNew: winnerRank,
-        loserNew: loserRank
+        winnerNew: { rank: "N/A", elo: 0 },
+        loserNew: { rank: "N/A", elo: 0 }
     };
 }
 
@@ -1364,6 +1340,15 @@ async function generateEloImage(user, oldElo, newElo, isWinner) {
     const width = 600, height = 220;
     const canvas = createCanvas(width, height);
     const ctx = canvas.getContext('2d');
+     const playersPath = path.resolve(__dirname, '../../menma/data/players.json');
+    let players = {};
+    if (fs.existsSync(playersPath)) {
+        players = JSON.parse(fs.readFileSync(playersPath, 'utf8'));
+    }
+    const playerObj = players[user.id || user.userId];
+    if (playerObj && typeof playerObj.elo === "number") {
+        newElo = playerObj.elo;
+    }
 
     // Theme colors
     const bgColor = isWinner ? '#1a3a1a' : '#3a1a1a';
@@ -1377,10 +1362,19 @@ async function generateEloImage(user, oldElo, newElo, isWinner) {
 
     // ELO bar
     const barX = 120, barY = 90, barW = 360, barH = 28;
-    const oldRank = getTierAndDivision(oldElo);
-    const newRank = getTierAndDivision(newElo);
-    const progress = Math.max(0, Math.min(1, (newElo % 100) / 100));
-    
+    const oldRank = getTierByElo(oldElo);
+    const newRank = getTierByElo(newElo);
+    // Progress to next rank
+    let nextRankElo = 0;
+    for (let i = 0; i < RANK_CONFIG.rankThresholds.length; i++) {
+        if (newElo < RANK_CONFIG.rankThresholds[i]) {
+            nextRankElo = RANK_CONFIG.rankThresholds[i];
+            break;
+        }
+    }
+    if (!nextRankElo) nextRankElo = RANK_CONFIG.rankThresholds[RANK_CONFIG.rankThresholds.length - 1] + 100;
+    const progress = Math.max(0, Math.min(1, (newElo - RANK_CONFIG.rankThresholds[newRank.rank === "Genin" ? 0 : RANK_CONFIG.ranks.indexOf(newRank.rank)]) / (nextRankElo - RANK_CONFIG.rankThresholds[RANK_CONFIG.ranks.indexOf(newRank.rank)])));
+
     ctx.save();
     ctx.fillStyle = '#222c';
     ctx.beginPath();
@@ -1403,26 +1397,26 @@ async function generateEloImage(user, oldElo, newElo, isWinner) {
     ctx.font = 'bold 22px Segoe UI, Arial';
     ctx.fillStyle = textColor;
     ctx.textAlign = 'center';
-    ctx.fillText(`${isWinner ? '+' : ''}${newElo - oldElo} ELO`, barX + barW / 2, barY + barH / 2 + 7);
+    ctx.fillText(`${isWinner ? '+' : ''}${ newElo - oldElo} ELO`, barX + barW / 2, barY + barH / 2 + 7);
 
     // Current rank (left)
     ctx.font = 'bold 15px Segoe UI, Arial';
     ctx.textAlign = 'left';
-    ctx.fillText(`${newRank.rank} Div. ${newRank.division}`, barX, barY - 8);
+    ctx.fillText(`${newRank.rank}`, barX, barY - 8);
     ctx.font = '10px Segoe UI, Arial';
     ctx.fillText('Current Rank', barX, barY + barH + 16);
 
     // Previous rank (right)
     ctx.font = 'bold 15px Segoe UI, Arial';
     ctx.textAlign = 'right';
-    ctx.fillText(`${oldRank.rank} Div. ${oldRank.division}`, barX + barW, barY - 8);
+    ctx.fillText(`${oldRank.rank}`, barX + barW, barY - 8);
     ctx.font = '10px Segoe UI, Arial';
     ctx.fillText('Previous Rank', barX + barW, barY + barH + 16);
 
     // Progress text below bar
     ctx.font = '11px Segoe UI, Arial';
     ctx.textAlign = 'center';
-    ctx.fillText(`${newElo % 100}/100`, barX + barW / 2, barY + barH + 16);
+    ctx.fillText(`${newElo}/${nextRankElo}`, barX + barW / 2, barY + barH + 16);
 
     // Save to file
     if (!fs.existsSync(imagesPath)) {
@@ -1441,144 +1435,6 @@ async function generateEloImage(user, oldElo, newElo, isWinner) {
     
     return fullPath;
 }
-
-/**
- * Generates an image displaying ranked rewards.
- * @param {object} user - The user object.
- * @param {number} userElo - The user's current ELO.
- * @param {string} userRank - The user's current rank.
- * @param {number} userDiv - The user's current division.
- * @param {object|null} claimable - The next claimable reward, or null.
- * @param {object|null} nextReward - The next upcoming reward, or null.
- * @returns {Promise<string>} Path to the generated image file.
- */
-async function generateRankedRewardsImage(user, userElo, userRank, userDiv, claimable, nextReward) {
-    const width = 700, height = 500;
-    const canvas = createCanvas(width, height);
-    const ctx = canvas.getContext('2d');
-
-    // Theme colors by rank
-    const themes = {
-        "Genin":    { bg: "#0a1a3a", accent: "#1e3a8a", text: "#e0eaff", border: "#274690" },
-        "Chuunin":  { bg: "#1e4023", accent: "#4ade80", text: "#eaffea", border: "#22c55e" },
-        "Jounin":   { bg: "#0e3c3c", accent: "#2dd4bf", text: "#eafffa", border: "#14b8a6" },
-        "Sannin":   { bg: "#2a1a3a", accent: "#a78bfa", text: "#f3eaff", border: "#7c3aed" },
-        "Master Shinobi": { bg: "#3a3a1a", accent: "#fde68a", text: "#fffbe0", border: "#facc15" },
-        "The Shinobi God": { bg: "#0a2a3a", accent: "#67e8f9", text: "#e0faff", border: "#06b6d4" }
-    };
-    const theme = themes[userRank] || themes["Genin"];
-
-    // Background
-    ctx.fillStyle = theme.bg;
-    ctx.fillRect(0, 0, width, height);
-    ctx.strokeStyle = theme.border;
-    ctx.lineWidth = 4;
-    ctx.strokeRect(0, 0, width, height);
-
-    // Title
-    ctx.font = 'bold 36px Arial';
-    ctx.fillStyle = theme.accent;
-    ctx.textAlign = 'center';
-    ctx.fillText('Ranked Rewards', width / 2, 50);
-
-    // Rank box
-    ctx.fillStyle = `${theme.accent}33`;
-    ctx.beginPath();
-    ctx.roundRect(50, 80, width - 100, 60, 10);
-    ctx.fill();
-    ctx.strokeStyle = theme.accent;
-    ctx.lineWidth = 2;
-    ctx.stroke();
-
-    ctx.font = 'bold 18px Arial';
-    ctx.fillStyle = theme.accent;
-    ctx.textAlign = 'left';
-    ctx.fillText('Your Rank:', 70, 110);
-
-    ctx.font = 'bold 24px Arial';
-    ctx.fillStyle = theme.text;
-    ctx.fillText(`${userRank} Div. ${userDiv} (${userElo} ELO)`, 180, 110);
-
-    // Upcoming rewards
-    ctx.font = 'bold 22px Arial';
-    ctx.fillStyle = theme.accent;
-    ctx.textAlign = 'left';
-    ctx.fillText('Upcoming Rewards', 70, 170);
-
-    ctx.fillStyle = `${theme.bg}cc`;
-    ctx.beginPath();
-    ctx.roundRect(50, 180, width - 100, 100, 10);
-    ctx.fill();
-    ctx.strokeStyle = theme.accent;
-    ctx.lineWidth = 2;
-    ctx.stroke();
-
-    if (nextReward) {
-        ctx.font = 'bold 18px Arial';
-        ctx.fillStyle = theme.text;
-        ctx.fillText(`${nextReward.rank} Div. ${nextReward.division} (${nextReward.elo} ELO)`, 70, 210);
-        
-        ctx.font = '16px Arial';
-        ctx.fillText(`1️⃣ ${nextReward.reward1.name}: ${nextReward.reward1.desc}`, 70, 240);
-        ctx.fillText(`2️⃣ ${nextReward.reward2.name}: ${nextReward.reward2.desc}`, 70, 270);
-    } else {
-        ctx.font = '18px Arial';
-        ctx.fillStyle = theme.text;
-        ctx.fillText('No more upcoming rewards', 70, 230);
-    }
-
-    // Available claims
-    ctx.font = 'bold 22px Arial';
-    ctx.fillStyle = theme.accent;
-    ctx.fillText('Available Claims', 70, 310);
-
-    ctx.fillStyle = `${theme.bg}cc`;
-    ctx.beginPath();
-    ctx.roundRect(50, 320, width - 100, 100, 10);
-    ctx.fill();
-    ctx.strokeStyle = theme.accent;
-    ctx.lineWidth = 2;
-    ctx.stroke();
-
-    if (claimable) {
-        ctx.font = 'bold 18px Arial';
-        ctx.fillStyle = theme.text;
-        ctx.fillText(`${claimable.rank} Div. ${claimable.division} (${claimable.elo} ELO)`, 70, 350);
-        
-        ctx.font = '16px Arial';
-        ctx.fillStyle = theme.text;
-        ctx.fillText(`1️⃣ ${claimable.reward1.name}: ${claimable.reward1.desc}`, 70, 380);
-        ctx.fillText(`2️⃣ ${claimable.reward2.name}: ${claimable.reward2.desc}`, 70, 410);
-    } else {
-        ctx.font = '18px Arial';
-        ctx.fillStyle = theme.text;
-        ctx.fillText('No claimable rewards at this time', 70, 370);
-    }
-
-    // Footer
-    ctx.font = 'italic 15px Arial';
-    ctx.fillStyle = `${theme.text}cc`;
-    ctx.textAlign = 'center';
-    ctx.fillText('*All these gifts are sent to your gift inventory, check using /gift inventory.*', width / 2, 470);
-
-    // Save to file
-    if (!fs.existsSync(imagesPath)) {
-        fs.mkdirSync(imagesPath, { recursive: true });
-    }
-    const filename = `rewards_${user.id}_${Date.now()}.png`;
-    const fullPath = path.join(imagesPath, filename);
-    const out = fs.createWriteStream(fullPath);
-    const stream = canvas.createPNGStream();
-    
-    await new Promise((resolve, reject) => {
-        stream.pipe(out);
-        out.on('finish', resolve);
-        out.on('error', reject);
-    });
-    
-    return fullPath;
-}
-
 // --- B-Rank NPCs Database ---
 const BRANK_NPCS = [
     {
@@ -1597,9 +1453,9 @@ const ARANK_NPCS = [
     {
         name: "Jugo",
         image: "https://i.postimg.cc/vmfSx5V1/17-D3-B777-0-FC6-4-EE4-957-D-513-CC60-D8924.png",
-        baseHealth: 1.2,
+        baseHealth: 0.8,
         basePower: 1.2,
-        baseDefense: 0.8,
+        baseDefense: 0.5,
         accuracy: 85,
         dodge: 0,
         jutsu: ["Attack", "Monster Claw"]
@@ -1630,7 +1486,7 @@ const ARANK_NPCS = [
     {
         name: "Suigetsu",
         image: "https://i.postimg.cc/GmBfrW3x/54-AE56-B1-E2-EE-4179-BD24-EEC282-A8-B3-BF.png",
-        baseHealth: 0.9,
+        baseHealth: 0.6,
         basePower: 1.0,
         baseDefense: 0.6,
         accuracy: 75,
@@ -1641,7 +1497,7 @@ const ARANK_NPCS = [
     {
         name: "Fuguki",
         image: "https://i.postimg.cc/QMJJrm7q/064262-C0-1-BC4-47-B2-A06-A-59-DC193-C0285.png",
-        baseHealth: 0.9,
+        baseHealth: 0.6,
         basePower: 1.2,
         baseDefense: 0.8,
         accuracy: 70,
@@ -1652,7 +1508,7 @@ const ARANK_NPCS = [
     {
         name: "Jinpachi",
         image: "https://i.postimg.cc/SsZLnKD2/809-EBF4-E-70-EF-4-C83-BCE4-3-D6-C228-B1239.png",
-        baseHealth: 1.1,
+        baseHealth: 0.7,
         basePower: 1.1,
         baseDefense: 0.7,
         accuracy: 85,
@@ -1663,7 +1519,7 @@ const ARANK_NPCS = [
     {
         name: "Kushimaru",
         image: "https://i.postimg.cc/3wTF6VkR/53-BE91-D0-8-A53-47-C9-BD48-A06728-AFE79-C.png",
-        baseHealth: 0.8,
+        baseHealth: 0.6,
         basePower: 1.1,
         baseDefense: 0.6,
         accuracy: 95,
@@ -1674,7 +1530,7 @@ const ARANK_NPCS = [
     {
         name: "Baki",
         image: "https://i.postimg.cc/Jn7c7XcC/5997-D785-7-C7-D-4-BC0-93-DB-CCF7-CA3-CDB56.png",
-        baseHealth: 1.0,
+        baseHealth: 0.5,
         basePower: 1.0,
         baseDefense: 0.7,
         accuracy: 85,
@@ -1700,7 +1556,11 @@ const ARANK_NPCS = [
 
 // Accept npcTemplate as an optional parameter for custom NPCs (like Hokage Trials)
 async function runBattle(interaction, player1Id, player2Id, battleType, npcTemplate = null) {
-    const users = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
+    const users = JSON.parse(fs.readFileSync(usersPath, 'utf8')); 
+    // Load players.json (levels and persistent player stats)
+    const PLAYERS_FILE_PATH = path.resolve(__dirname, '../../menma/data/players.json');
+    const playersData = fs.existsSync(PLAYERS_FILE_PATH) ? JSON.parse(fs.readFileSync(PLAYERS_FILE_PATH, 'utf8')) : {};
+
     const client = interaction.client; // Get client from interaction
     // Initialize player1 (always a user)
     const player1User = await client.users.fetch(player1Id);
@@ -1721,7 +1581,9 @@ async function runBattle(interaction, player1Id, player2Id, battleType, npcTempl
         dodge: 0,
         jutsu: users[player1Id].jutsu || {},
         maxHealth: Number(users[player1Id].health) || 0, // Store max health for healing calculations
-        comboState: users[player1Id].Combo && comboList[users[player1Id].Combo] ? { combo: comboList[users[player1Id].Combo], usedJutsus: new Set() } : null
+        comboState: users[player1Id].Combo && comboList[users[player1Id].Combo] ? { combo: comboList[users[player1Id].Combo], usedJutsus: new Set() } : null,
+        // Use level from players.json (fallback to users.json or default 1)
+        level: (playersData[player1Id] && typeof playersData[player1Id].level === 'number') ? playersData[player1Id].level : (users[player1Id] && users[player1Id].level ? users[player1Id].level : 1)
     };
     // Initialize player2 (user or NPC)
     let player2;
@@ -1764,7 +1626,7 @@ async function runBattle(interaction, player1Id, player2Id, battleType, npcTempl
             defense: Math.floor(player1.defense * (npcData.baseDefense || 1)) || 0,
             accuracy: Number(npcData.accuracy) || 0,
             dodge: Number(npcData.dodge) || 0,
-            chakra: 10,
+            chakra: npcData.chakra || 1000,
             activeEffects: [],
             jutsu: Object.fromEntries(npcData.jutsu.map((j, i) => [i, j]))
         };
@@ -1787,7 +1649,9 @@ async function runBattle(interaction, player1Id, player2Id, battleType, npcTempl
             dodge: 0,
             jutsu: users[player2Id].jutsu || {},
             maxHealth: Number(users[player2Id].health) || 0,
-            comboState: users[player2Id].Combo && comboList[users[player2Id].Combo] ? { combo: comboList[users[player2Id].Combo], usedJutsus: new Set() } : null
+            comboState: users[player2Id].Combo && comboList[users[player2Id].Combo] ? { combo: comboList[users[player2Id].Combo], usedJutsus: new Set() } : null,
+            // Use level from players.json (fallback to users.json or default 1)
+            level: (playersData[player2Id] && typeof playersData[player2Id].level === 'number') ? playersData[player2Id].level : (users[player2Id] && users[player2Id].level ? users[player2Id].level : 1)
         };
     }
 
@@ -1803,7 +1667,7 @@ async function runBattle(interaction, player1Id, player2Id, battleType, npcTempl
     let player1RoundBasedSummaries = [];
     let player2RoundBasedSummaries = [];
 
-    let roundNum = 1;
+    let roundNum = 0;
     let battleActive = true;
     let totalDamageDealt1 = 0;
     let totalDamageTaken1 = 0;
@@ -1815,6 +1679,7 @@ async function runBattle(interaction, player1Id, player2Id, battleType, npcTempl
     if (battleType === 'ranked') {
         const guild = await client.guilds.fetch(SERVER_ID);
         const channelName = `ranked-${Math.floor(Math.random() * 900000 + 100000).toString()}`; // Generate random ID
+        
         
         const permissionOverwrites = [
             {
@@ -1936,12 +1801,12 @@ async function runBattle(interaction, player1Id, player2Id, battleType, npcTempl
                         } else {
                             // If NPC didn't accept, user wins against NPC. Award 20 ELO.
                             const oldElo = users[player1Id]?.elo || 0;
-                            const usersData = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
+                            const usersData = JSON.parse(fs.readFileSync(usersPath, 'utf8')); 
                             if (typeof usersData[player1Id].elo !== "number") usersData[player1Id].elo = 0;
-                            usersData[player1Id].elo += 20;
-                            const newRank = getTierAndDivision(usersData[player1Id].elo);
+                            usersData[player1Id].elo += 10; // NPC win by default = +20 ELO
+                            const newRank = getTierByElo(usersData[player1Id].elo);
                             usersData[player1Id].rank = newRank.rank;
-                            fs.writeFileSync(usersPath, JSON.stringify(usersData, null, 2));
+                            fs.writeFileSync(usersPath, JSON.stringify(usersData, null, 2)); 
                             let summaryChannel;
                             try { summaryChannel = await client.channels.fetch(SUMMARY_CHANNEL_ID); } catch (e) { summaryChannel = battleChannel; }
                             await summaryChannel.send(
@@ -2284,14 +2149,6 @@ async function runBattle(interaction, player1Id, player2Id, battleType, npcTempl
                         if (roundEffect.buff) {
                             const buffChanges = effectHandlers.buff(user, roundEffect.buff.stats);
                             if (!user.activeEffects) user.activeEffects = [];
-                            user.activeEffects.push({
-                                type: 'buff',
-                                stats: buffChanges,
-                                duration: roundEffect.duration || 1
-                            });
-                            effectSummary.push({ type: 'buff', value: buffChanges });
-                        }
-                        if (roundEffect.bleed) {
                             let bleedDamage = roundEffect.bleed.damagePerTurn;
                             if (roundEffect.bleed.damagePerTurnFormula) {
                                 try {
@@ -2310,7 +2167,7 @@ async function runBattle(interaction, player1Id, player2Id, battleType, npcTempl
                         }
                         if (roundEffect.chakra_gain) {
                             const chakraGain = effectHandlers.chakraGain(effectiveUser, roundEffect.chakra_gain.formula);
-                            user.chakra = Math.min((user.chakra || 0) + chakraGain, 15);
+                            user.chakra = Math.min((user.chakra || 0) + chakraGain);
                             effectSummary.push({ type: 'chakra_gain', value: chakraGain });
                         }
 
@@ -2346,6 +2203,9 @@ async function runBattle(interaction, player1Id, player2Id, battleType, npcTempl
         const p1Bg = getActiveCustomBg(player1ActiveJutsus);
         const p2Bg = getActiveCustomBg(player2ActiveJutsus);
         customBgUrl = p1Bg || p2Bg; // Player 1's background takes precedence if both apply
+        if (!customBgUrl && npcData?.background) {
+    customBgUrl = npcData.background;
+}
 
         // --- Player 1's Turn ---
         const { embed: embed1, components: components1 } = createMovesEmbed(player1, roundNum);
@@ -2399,6 +2259,23 @@ async function runBattle(interaction, player1Id, player2Id, battleType, npcTempl
                     if (player1.comboState && player1.comboState.combo.requiredJutsus.includes(jutsuName)) {
                         player1.comboState.usedJutsus.add(jutsuName);
                     }
+                    // ...inside the collector for player1 and player2...
+const statusEffect = (player1.activeEffects || []).find(e =>
+    e.type === 'status' && ['stun', 'flinch', 'drown'].includes(e.status)
+);
+if (statusEffect) {
+    resolve({
+        damage: 0,
+        heal: 0,
+        description: `${player1.name} is ${statusEffect.status} and can't move!`,
+        specialEffects: [statusEffect.status.charAt(0).toUpperCase() + statusEffect.status.slice(1) + " active"],
+        hit: false,
+        isStatusEffect: true,
+        jutsuUsed: null
+    });
+    collector.stop();
+    return;
+}
                     resolve(result);
                 } else {
                     try {
@@ -2500,6 +2377,23 @@ async function runBattle(interaction, player1Id, player2Id, battleType, npcTempl
                             collector.stop();
                             return;
                         }
+                        // ...inside the collector for player1 and player2...
+const statusEffect = (player1.activeEffects || []).find(e =>
+    e.type === 'status' && ['stun', 'flinch', 'drown'].includes(e.status)
+);
+if (statusEffect) {
+    resolve({
+        damage: 0,
+        heal: 0,
+        description: `${player1.name} is ${statusEffect.status} and can't move!`,
+        specialEffects: [statusEffect.status.charAt(0).toUpperCase() + statusEffect.status.slice(1) + " active"],
+        hit: false,
+        isStatusEffect: true,
+        jutsuUsed: null
+    });
+    collector.stop();
+    return;
+}
                         const result = executeJutsu(player2, player1, effective2, effective1, jutsuName);
                         if (player2.comboState && player2.comboState.combo.requiredJutsus.includes(jutsuName)) {
                             player2.comboState.usedJutsus.add(jutsuName);
@@ -2676,7 +2570,7 @@ async function runBattle(interaction, player1Id, player2Id, battleType, npcTempl
         }
 
         // --- Global Round Summary ---
-        roundNum += 1;
+        roundNum ++;
         const summaryEmbed = createBattleSummary(
             player1Action, player2Action, player1, player2, roundNum,
             comboCompleted1, comboDamageText1, comboCompleted2, comboDamageText2,
@@ -2693,108 +2587,161 @@ async function runBattle(interaction, player1Id, player2Id, battleType, npcTempl
                 winner = player1;
                 loser = player2;
                 // Send the same reward embed and drop message as in brankCommand
-               if (battleType === 'brank') {
-                    const expReward = math.random(5.0, 8.0);
-                    const moneyReward = 500 + Math.floor((player1.level || 1) * 20);
+       if (player1.currentHealth > 0 && player2.currentHealth <= 0) {
+        winner = player1;
+        loser = player2;
+        if (battleType === 'otsutsuki') {
+            battleResult = 'win';
+        }
+    } else if (player2.currentHealth > 0 && player1.currentHealth <= 0) {
+        winner = player2;
+        loser = player1;
+        if (battleType === 'otsutsuki') {
+            battleResult = 'lose';
+        }
+    } else {
+        // Draw or both dead
+        if (battleType === 'otsutsuki') {
+            battleResult = 'lose';
+        }
+    }
+                if (battleType === 'brank') {
+                // Calculate rewards
+                const expReward = math.random(10, 30);
+                // mark brank tutorial as completed for this user
+                if (!users[player1.userId]) users[player1.userId] = {};
+                users[player1.userId].brankwon = true;
+                fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
+                const moneyReward = 500 + Math.floor((player1.level || 1) * 20);
 
-                    // Update user data
-                    player1.exp = (player1.exp || 0) + expReward;
-                    player1.money = (player1.money || 0) + moneyReward;
-                    player1.wins = (player1.wins || 0) + 1;
-                    player1.mentorExp = (player1.mentorExp || 0) + 1;
-                    player1.brankWon = true;
-                    // Restore health after battle
-                    player1.health = player1.maxHealth || player1.health;
-                    fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
+                // --- Send rewards to gift inventory (gift.json) ---
+                // Load gift inventory
+                const giftDataPath = giftPath;
+                let giftData = fs.existsSync(giftDataPath) ? JSON.parse(fs.readFileSync(giftDataPath, 'utf8')) : {};
+                if (!giftData[player1.userId]) giftData[player1.userId] = [];
 
-                    // Material drop logic (copied from brank.js)
-                    function getMaterialDrop(role) {
-                        if (role === "Hokage") return Math.floor(Math.random() * 3) + 12;
-                        if (role === "Right Hand Man") return Math.floor(Math.random() * 3) + 10;
-                        if (role === "Guard") return Math.floor(Math.random() * 3) + 8;
-                        if (role === "Spy") return Math.floor(Math.random() * 3) + 2;
-                        return 0;
-                    }
-                    function getRandomMaterial() {
-                        const mats = [
-                            { name: "Iron", emoji: "🪓", key: "iron" },
-                            { name: "Wood", emoji: "🌲", key: "wood" },
-                            { name: "Rope", emoji: "🪢", key: "rope" }
-                        ];
-                        return mats[Math.floor(Math.random() * mats.length)];
-                    }
-                    function getAkatsukiMaterialDrop(role) {
-                        if (role === "Akatsuki Leader") return Math.floor(Math.random() * 3) + 12;
-                        if (role === "Co-Leader") return Math.floor(Math.random() * 3) + 10;
-                        if (role === "Bruiser") return Math.floor(Math.random() * 3) + 8;
-                        if (role === "Scientist") return Math.floor(Math.random() * 3) + 2;
-                        return 0;
-                    }
-                    function getRandomAkatsukiMaterial() {
-                        const mats = [
-                            { name: "Metal", emoji: "🪙", key: "metal" },
-                            { name: "Gunpowder", emoji: "💥", key: "gunpowder" },
-                            { name: "Copper", emoji: "🔌", key: "copper" }
-                        ];
-                        return mats[Math.floor(Math.random() * mats.length)];
-                    }
-
-                    // Village drop
-                    let role = player1.role || "";
-                    if (interaction.member.roles.cache.has('1349278752944947240')) role = "Hokage";
-                    const amount = getMaterialDrop(role);
-                    const mat = getRandomMaterial();
-
-                    // Only add to village and show if amount > 0
-                    let villageDropMsg = "";
-                    if (amount > 0) {
-                        const villagePath = path.resolve(__dirname, '../../menma/data/village.json');
-                        let village = { iron: 0, wood: 0, rope: 0, defense: 0 };
-                        if (fs.existsSync(villagePath)) {
-                            village = JSON.parse(fs.readFileSync(villagePath, 'utf8'));
-                        }
-                        village[mat.key] = (village[mat.key] || 0) + amount;
-                        fs.writeFileSync(villagePath, JSON.stringify(village, null, 2));
-                        villageDropMsg = `You found ${amount} ${mat.name} ${mat.emoji} during the mission\n`;
-                    }
-
-                    // Akatsuki drop
-                    let akatsukiDropMsg = "";
-                    if (player1.occupation === "Akatsuki") {
-                        let akatsukiRole = player1.role || "";
-                        let akatsukiAmount = getAkatsukiMaterialDrop(akatsukiRole);
-                        if (akatsukiAmount > 0) {
-                            const akatsukiMat = getRandomAkatsukiMaterial();
-                            const akatsukiPath = path.resolve(__dirname, '../../menma/data/akatsuki.json');
-                            let akatsuki = { metal: 0, gunpowder: 0, copper: 0, bombs: {} };
-                            if (fs.existsSync(akatsukiPath)) {
-                                akatsuki = JSON.parse(fs.readFileSync(akatsukiPath, 'utf8'));
-                            }
-                            akatsuki[akatsukiMat.key] = (akatsuki[akatsukiMat.key] || 0) + akatsukiAmount;
-                            fs.writeFileSync(akatsukiPath, JSON.stringify(akatsuki, null, 2));
-                            akatsukiDropMsg = `You found ${akatsukiAmount} ${akatsukiMat.name} ${akatsukiMat.emoji} during the mission\n`;
-                        }
-                    }
-
-                    // Prepare drop message
-                    let dropMsg = "```";
-                    if (player1.occupation === "Akatsuki" && akatsukiDropMsg) {
-                        dropMsg += `\n${akatsukiDropMsg}`;
-                    } else if (amount > 0) {
-                        dropMsg += `\n${villageDropMsg}`;
-                    }
-                    dropMsg += "```";
-
-                    // Reward embed
-                    const rewardEmbed = new EmbedBuilder()
-                        .setTitle(`Battle End! ${player1.name} has won!`)
-                        .setDescription(
-                            `<@${player1.userId}> has earned ${expReward.toFixed(1)} exp!\n<@${player1.userId}> has earned $${moneyReward}!`
-                        )
-                        .setColor('#006400');
-
-                    await battleChannel.send({ embeds: [rewardEmbed], content: dropMsg });
+                // Helper to generate unique gift ID
+                function generateGiftId(userGifts) {
+                    let id;
+                    do {
+                        id = Math.floor(Math.random() * 50000) + 1;
+                    } while (userGifts && userGifts.some(g => g.id === id));
+                    return id;
                 }
+
+                // Add EXP reward as a gift
+                giftData[player1.userId].push({
+                    id: generateGiftId(giftData[player1.userId]),
+                    type: 'exp',
+                    amount: expReward,
+                    from: 'brank',
+                    date: Date.now()
+                });
+
+                // Add Money reward as a gift
+                giftData[player1.userId].push({
+                    id: generateGiftId(giftData[player1.userId]),
+                    type: 'money',
+                    amount: moneyReward,
+                    from: 'brank',
+                    date: Date.now()
+                });
+
+                // --- Material drop logic (copied from brank.js, but sent to gift inventory) ---
+                function getMaterialDrop(role) {
+                    if (role === "Hokage") return Math.floor(Math.random() * 3) + 12;
+                    if (role === "Right Hand Man") return Math.floor(Math.random() * 3) + 10;
+                    if (role === "Guard") return Math.floor(Math.random() * 3) + 8;
+                    if (role === "Spy") return Math.floor(Math.random() * 3) + 2;
+                    return 0;
+                }
+                function getRandomMaterial() {
+                    const mats = [
+                        { name: "Iron", emoji: "🪓", key: "iron" },
+                        { name: "Wood", emoji: "🌲", key: "wood" },
+                        { name: "Rope", emoji: "🪢", key: "rope" }
+                    ];
+                    return mats[Math.floor(Math.random() * mats.length)];
+                }
+                function getAkatsukiMaterialDrop(role) {
+                    if (role === "Akatsuki Leader") return Math.floor(Math.random() * 3) + 12;
+                    if (role === "Co-Leader") return Math.floor(Math.random() * 3) + 10;
+                    if (role === "Bruiser") return Math.floor(Math.random() * 3) + 8;
+                    if (role === "Scientist") return Math.floor(Math.random() * 3) + 2;
+                    return 0;
+                }
+                function getRandomAkatsukiMaterial() {
+                    const mats = [
+                        { name: "Metal", emoji: "🪙", key: "metal" },
+                        { name: "Gunpowder", emoji: "💥", key: "gunpowder" },
+                        { name: "Copper", emoji: "🔌", key: "copper" }
+                    ];
+                    return mats[Math.floor(Math.random() * mats.length)];
+                }
+
+                // Village drop
+                let role = player1.role || "";
+                if (interaction.member.roles.cache.has('1349278752944947240')) role = "Hokage";
+                const amount = getMaterialDrop(role);
+                const mat = getRandomMaterial();
+
+                // Only add to gift inventory if amount > 0
+                let villageDropMsg = "";
+                if (amount > 0) {
+                    giftData[player1.userId].push({
+                        id: generateGiftId(giftData[player1.userId]),
+                        type: 'material',
+                        name: mat.name,
+                        key: mat.key,
+                        amount: amount,
+                        from: 'brank',
+                        date: Date.now()
+                    });
+                    villageDropMsg = `You found ${amount} ${mat.name} ${mat.emoji} during the mission\n`;
+                }
+
+                // Akatsuki drop
+                let akatsukiDropMsg = "";
+                if (player1.occupation === "Akatsuki") {
+                    let akatsukiRole = player1.role || "";
+                    let akatsukiAmount = getAkatsukiMaterialDrop(akatsukiRole);
+                    if (akatsukiAmount > 0) {
+                        const akatsukiMat = getRandomAkatsukiMaterial();
+                        giftData[player1.userId].push({
+                            id: generateGiftId(giftData[player1.userId]),
+                            type: 'material',
+                            name: akatsukiMat.name,
+                            key: akatsukiMat.key,
+                            amount: akatsukiAmount,
+                            from: 'brank',
+                            date: Date.now()
+                        });
+                        akatsukiDropMsg = `You found ${akatsukiAmount} ${akatsukiMat.name} ${akatsukiMat.emoji} during the mission\n`;
+                    }
+                }
+
+                // Save updated gift inventory
+                fs.writeFileSync(giftDataPath, JSON.stringify(giftData, null, 2));
+
+                // Prepare drop message
+                let dropMsg = "```";
+                if (player1.occupation === "Akatsuki" && akatsukiDropMsg) {
+                    dropMsg += `\n${akatsukiDropMsg}`;
+                } else if (amount > 0) {
+                    dropMsg += `\n${villageDropMsg}`;
+                }
+                dropMsg += "```";
+
+                // Reward embed
+                const rewardEmbed = new EmbedBuilder()
+                    .setTitle(`Battle End! ${player1.name} has won!`)
+                    .setDescription(
+                        `<@${player1.userId}> has earned ${expReward.toFixed(1)} exp!\n<@${player1.userId}> has earned $${moneyReward}!\n\nAll rewards have been sent to your gift inventory. Use **/gift inventory** to claim them!`
+                    )
+                    .setColor('#006400');
+
+                await battleChannel.send({ embeds: [rewardEmbed], content: dropMsg });
+            }
                 
                 if (battleType === 'trials') battleResult = 'win';
             } else if (player2.currentHealth > 0 && player1.currentHealth <= 0) {
@@ -2807,6 +2754,15 @@ async function runBattle(interaction, player1Id, player2Id, battleType, npcTempl
                 if (battleType === 'trials') battleResult = 'lose';
                 break;
             }
+           
+    } else if (player2.currentHealth > 0 && player1.currentHealth <= 0) {
+        winner = player2;
+        loser = player1;
+        
+        // ADD THIS SECTION FOR OTSUTSUKI BATTLES
+        if (battleType === 'otsutsuki') {
+            battleResult = 'lose';
+        }
         
 
             // Handle match end (ELO, summaries, channel cleanup)
@@ -2841,7 +2797,7 @@ async function runBattle(interaction, player1Id, player2Id, battleType, npcTempl
         }, 15000); // 15 seconds delay
     }
     // For trials, return the result so the trialsCommand can check win/lose
-    if (battleType === 'trials') {
+    if (battleType === 'trials' || battleType === 'otsutsuki') {
         return battleResult;
     }
 }
@@ -2876,22 +2832,65 @@ async function handleMatchEnd(channel, winner, loser, usersData, roundNum = 0, d
         }
     }
 
-    // Update users.json for real users
-    if (!isWinnerNPC) {
-        const winnerUserInDb = usersData[winner.userId];
-        if (winnerUserInDb) {
-            winnerUserInDb.elo = (winnerUserInDb.elo || 0) + eloUpdate.winnerChange;
-            winnerUserInDb.rank = getTierAndDivision(winnerUserInDb.elo).rank;
+    // --- PATCH: Send ELO to gift inventory instead of adding directly to users.json ---
+    // Only for real users (not NPCs) and only for ranked battles
+    if (battleType === 'ranked') {
+        const giftDataPath = giftPath;
+        let giftData = fs.existsSync(giftDataPath) ? JSON.parse(fs.readFileSync(giftDataPath, 'utf8')) : {};
+
+        // Helper to generate unique gift ID
+        function generateGiftId(userGifts) {
+            let id;
+            do {
+                id = Math.floor(Math.random() * 50000) + 1;
+            } while (userGifts && userGifts.some(g => g.id === id));
+            return id;
         }
-    }
-    if (!isLoserNPC) {
-        const loserUserInDb = usersData[loser.userId];
-        if (loserUserInDb) {
-            loserUserInDb.elo = Math.max(0, (loserUserInDb.elo || 0) - eloUpdate.loserChange);
-            loserUserInDb.rank = getTierAndDivision(loserUserInDb.elo).rank;
+
+        // Winner ELO gift
+        if (!isWinnerNPC && eloUpdate.winnerChange > 0) {
+            if (!giftData[winner.userId]) giftData[winner.userId] = [];
+            giftData[winner.userId].push({
+                id: generateGiftId(giftData[winner.userId]),
+                type: 'elo',
+                amount: eloUpdate.winnerChange,
+                from: 'ranked',
+                date: Date.now()
+            });
         }
+        // Loser ELO gift (if negative ELO is to be claimed, but usually not)
+        if (!isLoserNPC && eloUpdate.loserChange > 0) {
+            if (!giftData[loser.userId]) giftData[loser.userId] = [];
+            giftData[loser.userId].push({
+                id: generateGiftId(giftData[loser.userId]),
+                type: 'elo',
+                amount: -eloUpdate.loserChange,
+                from: 'ranked',
+                date: Date.now()
+            });
+        }
+        fs.writeFileSync(giftDataPath, JSON.stringify(giftData, null, 2));
     }
-    fs.writeFileSync(usersPath, JSON.stringify(usersData, null, 2));
+
+    // Do NOT update users.json ELO directly for ranked battles (handled by claiming gift)
+    // Only update users.json for other stats if needed (e.g., rank, etc.)
+    if (battleType !== 'ranked') {
+        if (!isWinnerNPC) {
+            const winnerUserInDb = usersData[winner.userId];
+            if (winnerUserInDb) {
+                winnerUserInDb.elo = (winnerUserInDb.elo || 0) + eloUpdate.winnerChange;
+                winnerUserInDb.rank = getTierByElo(winnerUserInDb.elo).rank;
+            }
+        }
+        if (!isLoserNPC) {
+            const loserUserInDb = usersData[loser.userId];
+            if (loserUserInDb) {
+                loserUserInDb.elo = Math.max(0, (loserUserInDb.elo || 0) - eloUpdate.loserChange);
+                loserUserInDb.rank = getTierByElo(loserUserInDb.elo).rank;
+            }
+        }
+        fs.writeFileSync(usersPath, JSON.stringify(usersData, null, 2));
+    }
 
     // Prepare stats for summary embeds
     const winnerStats = {
@@ -2917,114 +2916,153 @@ async function handleMatchEnd(channel, winner, loser, usersData, roundNum = 0, d
     let winnerImagePath = null;
     let loserImagePath = null;
 
+    // Always send ELO changes to gift inventory (for both ranked and non-ranked battles)
+    {
+        const giftDataPath = giftPath;
+        let giftData = fs.existsSync(giftDataPath) ? JSON.parse(fs.readFileSync(giftDataPath, 'utf8')) : {};
+
+        // Helper to generate unique gift ID
+        function generateGiftId(userGifts) {
+            let id;
+            do {
+                id = Math.floor(Math.random() * 50000) + 1;
+            } while (userGifts && userGifts.some(g => g.id === id));
+            return id;
+        }
+
+        // Winner ELO gift
+        if (!isWinnerNPC && eloUpdate.winnerChange > 0) {
+            if (!giftData[winner.userId]) giftData[winner.userId] = [];
+            giftData[winner.userId].push({
+                id: generateGiftId(giftData[winner.userId]),
+                type: 'elo',
+                amount: eloUpdate.winnerChange,
+                from: battleType,
+                date: Date.now()
+            });
+        }
+        // Loser ELO gift (if negative ELO is to be claimed, but usually not)
+        if (!isLoserNPC && eloUpdate.loserChange > 0) {
+            if (!giftData[loser.userId]) giftData[loser.userId] = [];
+            giftData[loser.userId].push({
+                id: generateGiftId(giftData[loser.userId]),
+                type: 'elo',
+                amount: -eloUpdate.loserChange,
+                from: battleType,
+                date: Date.now()
+            });
+        }
+        fs.writeFileSync(giftDataPath, JSON.stringify(giftData, null, 2));
+    }
+
     // Only generate and send winner/loser embeds for ranked battles
     if (battleType === 'ranked') {
-        if (!isWinnerNPC) {
-            winnerImagePath = await generateEloImage(winner, (usersData[winner.userId]?.elo || 0) - eloUpdate.winnerChange, usersData[winner.userId]?.elo || 0, true);
-        }
-        if (!isLoserNPC) {
-            loserImagePath = await generateEloImage(loser, (usersData[loser.userId]?.elo || 0) + eloUpdate.loserChange, usersData[loser.userId]?.elo || 0, false);
-        }
+        await (async () => {
+            if (!isWinnerNPC) {
+                winnerImagePath = await generateEloImage(winner, (usersData[winner.userId]?.elo || 0) - eloUpdate.winnerChange, usersData[winner.userId]?.elo || 0, true);
+            }
+            if (!isLoserNPC) {
+                loserImagePath = await generateEloImage(loser, (usersData[loser.userId]?.elo || 0) + eloUpdate.loserChange, usersData[loser.userId]?.elo || 0, false);
+            }
 
-        // Prepare summary embeds
-        const winnerEmbed = new EmbedBuilder()
-            .setTitle("🏆 Battle Summary")
-            .setColor("#22c55e")
-            .setDescription(
-                `**Result:** Victory\n` +
-                `**Rounds Played:** ${roundNum}\n` +
-                `**Total Damage Dealt:** ${winnerDamageDealt}\n` +
-                `**Total Damage Taken:** ${winnerDamageTaken}\n\n` +
-                `**Your Stats:**\n` +
-                `> Power: ${winnerStats.power}\n` +
-                `> Defense: ${winnerStats.defense}\n` +
-                `> Health: ${winnerStats.health}\n` +
-                `> Chakra: ${winnerStats.chakra}\n` +
-                `> Accuracy: ${winnerStats.accuracy}\n` +
-                `> Dodge: ${winnerStats.dodge}\n` +
-                `> Rank: ${winnerStats.rank}\n` +
-                `> ELO: ${winnerStats.elo}\n\n` +
-                `**Enemy Stats:**\n` +
-                `> Power: ${loserStats.power}\n` +
-                `> Defense: ${loserStats.defense}\n` +
-                `> Health: ${loserStats.health}\n` +
-                `> Chakra: ${loserStats.chakra}\n` +
-                `> Accuracy: ${loserStats.accuracy}\n` +
-                `> Dodge: ${loserStats.dodge}\n` +
-                `> Rank: ${loserStats.rank}\n` +
-                `> ELO: ${loserStats.elo}`
-            )
-            .setFooter({ text: "Congratulations on your victory!" });
-        
-        if (winnerImagePath) {
-            winnerEmbed.setImage(`attachment://winner_elo.png`);
-        }
+            // Prepare summary embeds
+            const winnerEmbed = new EmbedBuilder()
+                .setTitle("🏆 Battle Summary")
+                .setColor("#22c55e")
+                .setDescription(
+                    `**Result:** Victory\n` +
+                    `**Rounds Played:** ${roundNum}\n` +
+                    `**Total Damage Dealt:** ${winnerDamageDealt}\n` +
+                    `**Total Damage Taken:** ${winnerDamageTaken}\n\n` +
+                    `**Your Stats:**\n` +
+                    `> Power: ${winnerStats.power}\n` +
+                    `> Defense: ${winnerStats.defense}\n` +
+                    `> Health: ${winnerStats.health}\n` +
+                    `> Chakra: ${winnerStats.chakra}\n` +
+                    `> Accuracy: ${winnerStats.accuracy}\n` +
+                    `> Dodge: ${winnerStats.dodge}\n` +
+                    `> Rank: ${winnerStats.rank}\n` +
+                    `> ELO: ${winnerStats.elo}\n\n` +
+                    `**Enemy Stats:**\n` +
+                    `> Power: ${loserStats.power}\n` +
+                    `> Defense: ${loserStats.defense}\n` +
+                    `> Health: ${loserStats.health}\n` +
+                    `> Chakra: ${loserStats.chakra}\n` +
+                    `> Accuracy: ${loserStats.accuracy}\n` +
+                    `> Dodge: ${loserStats.dodge}\n` +
+                    `> Rank: ${loserStats.rank}\n` +
+                    `> ELO: ${loserStats.elo}`
+                )
+                .setFooter({ text: "Congratulations on your victory!" });
 
-        const loserEmbed = new EmbedBuilder()
-            .setTitle("💔 Battle Summary")
-            .setColor("#dc2626")
-            .setDescription(
-                `**Result:** Defeat\n` +
-                `**Rounds Played:** ${roundNum}\n` +
-                `**Total Damage Dealt:** ${loserDamageDealt}\n` +
-                `**Total Damage Taken:** ${loserDamageTaken}\n\n` +
-                `**Your Stats:**\n` +
-                `> Power: ${loserStats.power}\n` +
-                `> Defense: ${loserStats.defense}\n` +
-                `> Health: ${loserStats.health}\n` +
-                `> Chakra: ${loserStats.chakra}\n` +
-                `> Accuracy: ${loserStats.accuracy}\n` +
-                `> Dodge: ${loserStats.dodge}\n` +
-                `> Rank: ${loserStats.rank}\n` +
-                `> ELO: ${loserStats.elo}\n\n` +
-                `**Enemy Stats:**\n` +
-                `> Power: ${winnerStats.power}\n` +
-                `> Defense: ${winnerStats.defense}\n` +
-                `> Health: ${winnerStats.health}\n` +
-                `> Chakra: ${winnerStats.chakra}\n` +
-                `> Accuracy: ${winnerStats.accuracy}\n` +
-                `> Dodge: ${winnerStats.dodge}\n` +
-                `> Rank: ${winnerStats.rank}\n` +
-                `> ELO: ${winnerStats.elo}`
-            )
-            .setFooter({ text: "Better luck next time!" });
+            if (winnerImagePath) {
+                winnerEmbed.setImage(`attachment://winner_elo.png`);
+            }
 
-        if (loserImagePath) {
-            loserEmbed.setImage(`attachment://loser_elo.png`);
-        }
+            const loserEmbed = new EmbedBuilder()
+                .setTitle("💔 Battle Summary")
+                .setColor("#dc2626")
+                .setDescription(
+                    `**Result:** Defeat\n` +
+                    `**Rounds Played:** ${roundNum}\n` +
+                    `**Total Damage Dealt:** ${loserDamageDealt}\n` +
+                    `**Total Damage Taken:** ${loserDamageTaken}\n\n` +
+                    `**Your Stats:**\n` +
+                    `> Power: ${loserStats.power}\n` +
+                    `> Defense: ${loserStats.defense}\n` +
+                    `> Health: ${loserStats.health}\n` +
+                    `> Chakra: ${loserStats.chakra}\n` +
+                    `> Accuracy: ${loserStats.accuracy}\n` +
+                    `> Dodge: ${loserStats.dodge}\n` +
+                    `> Rank: ${loserStats.rank}\n` +
+                    `> ELO: ${loserStats.elo}\n\n` +
+                    `**Enemy Stats:**\n` +
+                    `> Power: ${winnerStats.power}\n` +
+                    `> Defense: ${winnerStats.defense}\n` +
+                    `> Health: ${winnerStats.health}\n` +
+                    `> Chakra: ${winnerStats.chakra}\n` +
+                    `> Accuracy: ${winnerStats.accuracy}\n` +
+                    `> Dodge: ${winnerStats.dodge}\n` +
+                    `> Rank: ${winnerStats.rank}\n` +
+                    `> ELO: ${winnerStats.elo}`
+                )
+                .setFooter({ text: "Better luck next time!" });
 
-        // Send to summary channel (or battle channel if summary channel not found)
-        let summaryChannel;
-        try {
-            summaryChannel = await client.channels.fetch(SUMMARY_CHANNEL_ID);
-        } catch (e) {
-            summaryChannel = channel;
-        }
+            if (loserImagePath) {
+                loserEmbed.setImage(`attachment://loser_elo.png`);
+            }
 
-        if (!isWinnerNPC) {
-            await summaryChannel.send({
-                content: `🏆 <@${winner.userId}>`,
-                embeds: [winnerEmbed],
-                files: winnerImagePath ? [{ attachment: winnerImagePath, name: "winner_elo.png" }] : []
-            });
-        } else {
-            // If NPC won, send a simpler message to the battle channel
-            await channel.send(`The NPC ${winner.name} was victorious!`);
-        }
+            // Send to summary channel (or battle channel if summary channel not found)
+            let summaryChannel;
+            try {
+                summaryChannel = await client.channels.fetch(SUMMARY_CHANNEL_ID);
+            } catch (e) {
+                summaryChannel = channel;
+            }
 
-        if (!isLoserNPC) {
-            await summaryChannel.send({
-                content: `💔 <@${loser.userId}>`,
-                embeds: [loserEmbed],
-                files: loserImagePath ? [{ attachment: loserImagePath, name: "loser_elo.png" }] : []
-            });
-        }
+            if (!isWinnerNPC) {
+                await summaryChannel.send({
+                    content: `🏆 <@${winner.userId}>`,
+                    embeds: [winnerEmbed],
+                    files: winnerImagePath ? [{ attachment: winnerImagePath, name: "winner_elo.png" }] : []
+                });
+            } else {
+                // If NPC won, send a simpler message to the battle channel
+                await channel.send(`The NPC ${winner.name} was victorious!`);
+            }
+
+            if (!isLoserNPC) {
+                await summaryChannel.send({
+                    content: `💔 <@${loser.userId}>`,
+                    embeds: [loserEmbed],
+                    files: loserImagePath ? [{ attachment: loserImagePath, name: "loser_elo.png" }] : []
+                });
+            }
+        })();
     } else {
         // For non-ranked battles, only send simple win/lose messages (already handled in runBattle)
         // Do not send winner/loser summary embeds
     }
-
-
 }
 
 /**
@@ -3174,111 +3212,18 @@ async function brankCommand(interaction) {
     // After battle, reload user and NPC data to check outcome
     const usersAfter = fs.existsSync(usersPath) ? JSON.parse(fs.readFileSync(usersPath, 'utf8')) : {};
     const player = usersAfter[userId];
-    // Find the Bandit NPC definition
-    const banditNpc = BRANK_NPCS[0];
 
     // If player won (player health > 0 and NPC health <= 0)
     if (player && player.health > 0) {
-        const expReward = math.random(5.0, 8.0);
-        const moneyReward = 500 + Math.floor((player.level || 1) * 20);
-
-        // Update user data
-        player.exp = (player.exp || 0) + expReward;
-        player.money = (player.money || 0) + moneyReward;
-        player.wins = (player.wins || 0) + 1;
-        player.mentorExp = (player.mentorExp || 0) + 1;
-        player.brankWon = true;
-        // Restore health after battle
-        player.health = player.maxHealth || player.health;
-        fs.writeFileSync(usersPath, JSON.stringify(usersAfter, null, 2));
-
-        // Material drop logic (copied from brank.js)
-        function getMaterialDrop(role) {
-            if (role === "Hokage") return Math.floor(Math.random() * 3) + 12;
-            if (role === "Right Hand Man") return Math.floor(Math.random() * 3) + 10;
-            if (role === "Guard") return Math.floor(Math.random() * 3) + 8;
-            if (role === "Spy") return Math.floor(Math.random() * 3) + 2;
-            return 0;
-        }
-        function getRandomMaterial() {
-            const mats = [
-                { name: "Iron", emoji: "🪓", key: "iron" },
-                { name: "Wood", emoji: "🌲", key: "wood" },
-                { name: "Rope", emoji: "🪢", key: "rope" }
-            ];
-            return mats[Math.floor(Math.random() * mats.length)];
-        }
-        function getAkatsukiMaterialDrop(role) {
-            if (role === "Akatsuki Leader") return Math.floor(Math.random() * 3) + 12;
-            if (role === "Co-Leader") return Math.floor(Math.random() * 3) + 10;
-            if (role === "Bruiser") return Math.floor(Math.random() * 3) + 8;
-            if (role === "Scientist") return Math.floor(Math.random() * 3) + 2;
-            return 0;
-        }
-        function getRandomAkatsukiMaterial() {
-            const mats = [
-                { name: "Metal", emoji: "🪙", key: "metal" },
-                { name: "Gunpowder", emoji: "💥", key: "gunpowder" },
-                { name: "Copper", emoji: "🔌", key: "copper" }
-            ];
-            return mats[Math.floor(Math.random() * mats.length)];
-        }
-
-        // Village drop
-        let role = player.role || "";
-        if (interaction.member.roles.cache.has('1349278752944947240')) role = "Hokage";
-        const amount = getMaterialDrop(role);
-        const mat = getRandomMaterial();
-
-        // Only add to village and show if amount > 0
-        let villageDropMsg = "";
-        if (amount > 0) {
-            const villagePath = path.resolve(__dirname, '../../menma/data/village.json');
-            let village = { iron: 0, wood: 0, rope: 0, defense: 0 };
-            if (fs.existsSync(villagePath)) {
-                village = JSON.parse(fs.readFileSync(villagePath, 'utf8'));
-            }
-            village[mat.key] = (village[mat.key] || 0) + amount;
-            fs.writeFileSync(villagePath, JSON.stringify(village, null, 2));
-            villageDropMsg = `You found ${amount} ${mat.name} ${mat.emoji} during the mission\n`;
-        }
-
-        // Akatsuki drop
-        let akatsukiDropMsg = "";
-        if (player.occupation === "Akatsuki") {
-            let akatsukiRole = player.role || "";
-            let akatsukiAmount = getAkatsukiMaterialDrop(akatsukiRole);
-            if (akatsukiAmount > 0) {
-                const akatsukiMat = getRandomAkatsukiMaterial();
-                const akatsukiPath = path.resolve(__dirname, '../../menma/data/akatsuki.json');
-                let akatsuki = { metal: 0, gunpowder: 0, copper: 0, bombs: {} };
-                if (fs.existsSync(akatsukiPath)) {
-                    akatsuki = JSON.parse(fs.readFileSync(akatsukiPath, 'utf8'));
-                }
-                akatsuki[akatsukiMat.key] = (akatsuki[akatsukiMat.key] || 0) + akatsukiAmount;
-                fs.writeFileSync(akatsukiPath, JSON.stringify(akatsuki, null, 2));
-                akatsukiDropMsg = `You found ${akatsukiAmount} ${akatsukiMat.name} ${akatsukiMat.emoji} during the mission\n`;
-            }
-        }
-
-        // Prepare drop message
-        let dropMsg = "```";
-        if (player.occupation === "Akatsuki" && akatsukiDropMsg) {
-            dropMsg += `\n${akatsukiDropMsg}`;
-        } else if (amount > 0) {
-            dropMsg += `\n${villageDropMsg}`;
-        }
-        dropMsg += "```";
-
-        // Reward embed
+        // Rewards are now handled and sent to gift inventory in runBattle.
+        // Only send a summary message here.
         const rewardEmbed = new EmbedBuilder()
-            .setTitle(`Battle End! ${player.name} has won!`)
+            .setTitle(`Battle End!`)
             .setDescription(
-                `<@${userId}> has earned ${expReward.toFixed(1)} exp!\n<@${userId}> has earned $${moneyReward}!`
+                `<@${userId}> has earned rewards!\n\nAll rewards have been sent to your gift inventory. Use **/gift inventory** to claim them!`
             )
             .setColor('#006400');
-
-        await interaction.followUp({ embeds: [rewardEmbed], content: dropMsg });
+        await interaction.followUp({ embeds: [rewardEmbed] });
     }
 }
 // --- arank: Multiple NPC fight (50 battles, rewards, and bonus logic) ---
@@ -3332,38 +3277,72 @@ async function arankCommand(interaction) {
         player.comboState = comboState;
     }
 
-    // Chakra regen rates per rank
-    const CHAKRA_REGEN = {
-        'Academy Student': 1,
-        'Genin': 2,
-        'Chunin': 2,
-        'Jounin': 2
-    };
 
     // Reward calculation (from arank.js)
-    function calculateRewards(totalEnemiesDefeated, player) {
-        const baseExp = 3.0;
+    // --- Gift Inventory Reward System (like brank) ---
+    // --- Gift Inventory Reward System (like brank) ---
+    async function calculateRewards(totalEnemiesDefeated, player) {
+        const baseExp = 9;
         const baseMoney = 200 + Math.floor((player.level || 1) * 5);
+        let exp = baseExp, money = baseMoney, isJackpot = false, isBonus = false, isNormal = false;
         if ((totalEnemiesDefeated + 1) % 5 === 0) {
-            let bonusExp = Math.max(2 * (player.level || 1), baseExp);
+            let bonusExp = Math.max(1 * (player.level || 1), baseExp);
             let bonusMoney = baseMoney;
             if (totalEnemiesDefeated + 1 === 50) {
-                return {
-                    exp: Math.floor(bonusExp * 2),
-                    money: Math.floor(bonusMoney * 2),
-                    isJackpot: true
-                };
+                exp = Math.floor(bonusExp * 3.0);
+                money = Math.floor(bonusMoney * 20);
+                isJackpot = true;
+            } else {
+                exp = Math.floor(bonusExp);
+                money = Math.floor(bonusMoney);
+                isBonus = true;
             }
-            return {
-                exp: Math.floor(bonusExp),
-                money: Math.floor(bonusMoney),
-                isBonus: true
-            };
+        } else {
+            isNormal = true;
         }
+
+        // --- Send rewards to gift inventory (gift.json) ---
+        const giftDataPath = giftPath;
+        let giftData = fs.existsSync(giftDataPath) ? JSON.parse(fs.readFileSync(giftDataPath, 'utf8')) : {};
+        // Use player.userId if present, else player.id, else fallback to interaction.user.id
+        if (!giftData[userId]) giftData[userId] = [];
+
+        // Helper to generate unique gift ID (matches runBattle logic)
+        function generateGiftId(userGifts) {
+            let id;
+            do {
+                id = Math.floor(Math.random() * 50000) + 1;
+            } while (userGifts && userGifts.some(g => g.id === id));
+            return id;
+        }
+
+        // Add EXP reward as a gift
+        giftData[userId].push({
+            id: generateGiftId(giftData[userId]),
+            type: 'exp',
+            amount: exp,
+            from: 'arank',
+            date: Date.now()
+        });
+
+        // Add Money reward as a gift
+        giftData[userId].push({
+            id: generateGiftId(giftData[userId]),
+            type: 'money',
+            amount: money,
+            from: 'arank',
+            date: Date.now()
+        });
+
+        // Save updated gift inventory
+        fs.writeFileSync(giftDataPath, JSON.stringify(giftData, null, 2)); 
+
         return {
-            exp: baseExp,
-            money: baseMoney,
-            isNormal: true
+            exp,
+            money,
+            isJackpot,
+            isBonus,
+            isNormal
         };
     }
 
@@ -3439,9 +3418,9 @@ async function arankCommand(interaction) {
         totalEnemiesDefeated++;
 
         // --- REWARDS ---
-        const rewards = calculateRewards(totalEnemiesDefeated - 1, player);
-        usersAfter[userId].exp = (usersAfter[userId].exp || 0) + rewards.exp;
-        usersAfter[userId].money = (usersAfter[userId].money || 0) + rewards.money;
+        const rewards = await calculateRewards(totalEnemiesDefeated - 1, player);
+        // Do NOT add exp/money directly to usersAfter[userId] here!
+        // Only update wins and health
         usersAfter[userId].wins = (usersAfter[userId].wins || 0) + 1;
         usersAfter[userId].health = player.health;
         fs.writeFileSync(usersPath, JSON.stringify(usersAfter, null, 2));
@@ -3512,7 +3491,7 @@ async function arankCommand(interaction) {
             rewardEmbed = new EmbedBuilder()
                 .setTitle(`Battle End!`)
                 .setDescription(
-                    `<@${userId}> has earned ${rewards.exp} exp!\n<@${userId}> has earned $${rewards.money}!\nEnemies Defeated: ${totalEnemiesDefeated}`
+                    `<@${userId}> has earned ${rewards.exp} exp!\n<@${userId}> has earned $${rewards.money}!\nEnemies Defeated: ${totalEnemiesDefeated}\n All rewards have been sent to your gift inventory. Use **/gift inventory** to claim them!`
                 )
                 .setColor('#006400');
         }
@@ -3573,7 +3552,7 @@ const HOKAGE_TRIALS = [
     {
         name: "Kakashi Hatake",
         image: "https://www.pngplay.com/wp-content/uploads/12/Kakashi-Hatake-Transparent-Background.png",
-        baseHealth: 3,
+        baseHealth: 2.5,
         basePower: 2.1,
         baseDefense: 1.5,
         accuracy: 95,
@@ -3585,9 +3564,9 @@ const HOKAGE_TRIALS = [
     {
         name: "Tsunade",
         image: "https://static.wikia.nocookie.net/all-worlds-alliance/images/5/5a/8-83829_senju-tsunade-random-pinterest-boruto-and-naruto-png.png/revision/latest?cb=20190502024736",
-        baseHealth: 4,
+        baseHealth: 3,
         basePower: 3,
-        baseDefense: 4,
+        baseDefense: 0.9,
         accuracy: 90,
         dodge: 15,
         jutsu: ["Attack", "Cherry Blossom Impact", "Creation Rebirth"],
@@ -3597,9 +3576,9 @@ const HOKAGE_TRIALS = [
     {
         name: "Hiruzen Sarutobi",
         image: "https://www.pngplay.com/wp-content/uploads/12/Hiruzen-Sarutobi-PNG-Photos.png",
-        baseHealth: 6,
+        baseHealth: 4.1,
         basePower: 3,
-        baseDefense: 8,
+        baseDefense: 1,
         accuracy: 92,
         dodge: 20,
         jutsu: ["Attack", "Fireball Jutsu", "Burning Ash"],
@@ -3609,9 +3588,9 @@ const HOKAGE_TRIALS = [
     {
         name: "Tobirama Senju",
         image: "https://www.pngplay.com/wp-content/uploads/12/Tobirama-Senju-PNG-Pic-Background.png",
-        baseHealth: 5,
-        basePower: 10,
-        baseDefense: 11,
+        baseHealth: 5.1,
+        basePower: 7,
+        baseDefense: 2,
         accuracy: 97,
         dodge: 30,
         jutsu: ["Attack", "Water Dragon Jutsu", "Shadow Clone Jutsu"],
@@ -3621,9 +3600,9 @@ const HOKAGE_TRIALS = [
     {
         name: "Minato Namikaze",
         image: "https://www.pngplay.com/wp-content/uploads/12/Minato-Namikaze-Transparent-Free-PNG.png",
-        baseHealth: 6,
+        baseHealth: 5.7,
         basePower: 8,
-        baseDefense: 12,
+        baseDefense: 2,
         accuracy: 100,
         dodge: 40,
         jutsu: ["Attack", "Rasengan", "Flying Raijin Jutsu"],
@@ -3633,9 +3612,9 @@ const HOKAGE_TRIALS = [
     {
         name: "Hashirama Senju",
         image: "https://www.pngplay.com/wp-content/uploads/12/Hashirama-Senju-No-Background.png",
-        baseHealth: 10,
+        baseHealth: 5.9,
         basePower: 3,
-        baseDefense: 8,
+        baseDefense: 2,
         accuracy: 95,
         dodge: 25,
         jutsu: ["Attack", "Creation Rebirth", "Great Forest Crumbling"],
@@ -3645,9 +3624,9 @@ const HOKAGE_TRIALS = [
     {
         name: "Naruto Uzumaki",
         image: "https://pngimg.com/d/naruto_PNG18.png",
-        baseHealth: 8,
+        baseHealth: 5.9,
         basePower: 13,
-        baseDefense: 9,
+        baseDefense: 2,
         accuracy: 98,
         dodge: 35,
         jutsu: ["Attack", "Shadow Clone Jutsu", "Rasenshuriken"],
@@ -3711,41 +3690,74 @@ async function trialsCommand(interaction) {
 
         if (battleResult === 'win') {
             // Player won this trial
-            const expReward = 200;
+            const expReward = 5 + Math.floor((users[userId].level || 1) * 0.5);
             const moneyReward = 10000;
-            
-            users[userId].exp = (users[userId].exp || 0) + expReward;
-            users[userId].money = (users[userId].money || 0) + moneyReward;
+
+            // --- Send rewards to gift inventory (gift.json) ---
+            const giftDataPath = giftPath;
+            let giftData = fs.existsSync(giftDataPath) ? JSON.parse(fs.readFileSync(giftDataPath, 'utf8')) : {};
+            if (!giftData[userId]) giftData[userId] = [];
+
+            // Helper to generate unique gift ID (matches runBattle logic)
+            function generateGiftId(userGifts) {
+            let id;
+            do {
+                id = Math.floor(Math.random() * 50000) + 1;
+            } while (userGifts && userGifts.some(g => g.id === id));
+            return id;
+            }
+
+            // Add EXP reward as a gift
+            giftData[userId].push({
+            id: generateGiftId(giftData[userId]),
+            type: 'exp',
+            amount: expReward,
+            from: 'trials',
+            date: Date.now()
+            });
+
+            // Add Money reward as a gift
+            giftData[userId].push({
+            id: generateGiftId(giftData[userId]),
+            type: 'money',
+            amount: moneyReward,
+            from: 'trials',
+            date: Date.now()
+            });
+
+            // Save updated gift inventory
+            fs.writeFileSync(giftDataPath, JSON.stringify(giftData, null, 2));
+
             users[userId].wins = (users[userId].wins || 0) + 1;
 
             const rewardEmbed = new EmbedBuilder()
-                .setTitle(`Trial ${currentTrialIndex + 1} Cleared!`)
-                .setDescription(
-                    `<@${userId}> has earned ${expReward} exp!\n<@${userId}> has earned $${moneyReward}!`
-                )
-                .setColor('#006400');
+            .setTitle(`Trial ${currentTrialIndex + 1} Cleared!`)
+            .setDescription(
+                `<@${userId}> has earned ${expReward} exp!\n<@${userId}> has earned $${moneyReward}!\n\nAll rewards have been sent to your gift inventory. Use **/gift inventory** to claim them!`
+            )
+            .setColor('#006400');
             await interaction.followUp({ embeds: [rewardEmbed] });
 
-            // Handle Jutsu Drop
+            // Handle Jutsu Drop (add directly to jutsu.json if user doesn't have it)
             const dropJutsu = npcTemplate.dropJutsu;
             if (dropJutsu) {
-                const userJutsuInventoryPath = path.resolve(__dirname, '../../menma/data/userJutsuInventory.json');
-                let userJutsuData = fs.existsSync(userJutsuInventoryPath) ? JSON.parse(fs.readFileSync(userJutsuInventoryPath, 'utf8')) : {};
-                if (!userJutsuData[userId]) userJutsuData[userId] = { usersjutsu: [] };
-                if (!Array.isArray(userJutsuData[userId].usersjutsu)) userJutsuData[userId].usersjutsu = [];
-
-                if (!userJutsuData[userId].usersjutsu.includes(dropJutsu)) {
-                    userJutsuData[userId].usersjutsu.push(dropJutsu);
-                    fs.writeFileSync(userJutsuInventoryPath, JSON.stringify(userJutsuData, null, 2));
-                    await interaction.followUp({ content: ` You obtained a new jutsu: **${dropJutsu}**!` });
-                } else {
-                    await interaction.followUp({ content: `You already know **${dropJutsu}**!` });
-                }
+            // Add jutsu to jutsu.json if user doesn't have it
+            const jutsuJsonPath = path.resolve(__dirname, '../../menma/data/jutsu.json');
+            let jutsuJson = fs.existsSync(jutsuJsonPath) ? JSON.parse(fs.readFileSync(jutsuJsonPath, 'utf8')) : {};
+            if (!jutsuJson[userId]) jutsuJson[userId] = { usersjutsu: [] };
+            if (!Array.isArray(jutsuJson[userId].usersjutsu)) jutsuJson[userId].usersjutsu = [];
+            if (!jutsuJson[userId].usersjutsu.includes(dropJutsu)) {
+                jutsuJson[userId].usersjutsu.push(dropJutsu);
+                fs.writeFileSync(jutsuJsonPath, JSON.stringify(jutsuJson, null, 2));
+                await interaction.followUp({ content: `You obtained a new jutsu: **${dropJutsu}**! (Added to your jutsu list)` });
+            } else {
+                await interaction.followUp({ content: `You already have the jutsu: **${dropJutsu}**.` });
             }
-            
+            }
+
             // Move to the next trial
             currentTrialIndex++; 
-            
+
         } else { // Battle result is 'lose' or player fled
             userLostTrial = true;
             users[userId].losses = (users[userId].losses || 0) + 1;
@@ -3963,7 +3975,7 @@ async function handleRankedRewards(interaction) {
     }
     
     const userElo = user.elo || 0;
-    const userRankObj = getTierAndDivision(userElo);
+    const userRankObj = getTierByElo(userElo);
     const userRank = userRankObj.rank;
     const userDiv = userRankObj.division;
 
@@ -4183,24 +4195,45 @@ async function checkQueue(client, mode = 'standard') {
         }
 
         // --- Create a more robust dummy interaction object for `runBattle` ---
+        let fetchedUser = null;
+        let fetchedGuild = null;
+        try {
+            if (client && client.users && typeof client.users.fetch === "function") {
+                fetchedUser = await client.users.fetch(userId);
+            }
+        } catch (err) {
+            console.error(`[ERROR] Failed to fetch user (${userId}):`, err);
+        }
+        try {
+            if (client && client.guilds && typeof client.guilds.fetch === "function") {
+                fetchedGuild = await client.guilds.fetch(SERVER_ID);
+            }
+        } catch (err) {
+            console.error(`[ERROR] Failed to fetch guild (${SERVER_ID}):`, err);
+        }
         const dummyInteraction = {
             client: client,
-            user: await client.users.fetch(userId) || 1234,
-            guild: await client.guilds.fetch(SERVER_ID) || 5678,
+            user: fetchedUser || { id: userId, username: "Unknown" },
+            guild: fetchedGuild || { id: SERVER_ID, channels: { create: async () => ({ send: async () => ({}) }) } },
             // Mock the reply methods to avoid crashes, returning a mock message object
             deferReply: async () => ({}),
             editReply: async () => ({}),
             fetchReply: async () => ({}),
             followUp: async (content) => {
-                const channel = await dummyInteraction.guild.channels.create({
-                    name: `ranked-${dummyInteraction.user.username.toLowerCase()}`,
-                    type: 0, // Text channel
-                    permissionOverwrites: [{
-                        id: dummyInteraction.guild.id,
-                        deny: ['ViewChannel']
-                    }]
-                });
-                return channel.send(content);
+                try {
+                    const channel = await dummyInteraction.guild.channels.create({
+                        name: `ranked-${dummyInteraction.user.username ? dummyInteraction.user.username.toLowerCase() : "unknown"}`,
+                        type: 0, // Text channel
+                        permissionOverwrites: [{
+                            id: dummyInteraction.guild.id,
+                            deny: ['ViewChannel']
+                        }]
+                    });
+                    return channel.send(content);
+                } catch (err) {
+                    console.error("[ERROR] Failed to create channel or send message in followUp:", err);
+                    return {};
+                }
             },
             options: { getSubcommand: () => 'ranked' }
         };
@@ -4321,5 +4354,8 @@ module.exports = {
     // Export checkQueue for the main bot file to call periodically
     checkQueue,
     getMostUsedJutsu, // Export for profile.js or similar
-    getAverageDamage // Export for profile.js or similar
+    getAverageDamage,
+    runBattle,
+    getEffectiveStats,
+    npcChooseMove // Export for profile.js or similar
 };

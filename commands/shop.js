@@ -1,4 +1,6 @@
 const { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } = require('discord.js');
+const fs = require('fs');
+const path = require('path');
 
 // Shop database
 const shopItems = {
@@ -45,8 +47,64 @@ const premiumItems = [
     {
         name: "Custom Jutsu",
         description: "Create your own custom jutsu! (single effect)",
-        price: 1000,
+        price: 500,
         // No roleId, no duration, handled in real time
+    }
+];
+
+// Jutsu shop items (money)
+const jutsuShopItems = [
+    {
+        name: "Human Boulder",
+        description: "Transforms into a massive boulder and rolls over target.",
+        price: 10000,
+        key: "Human Boulder"
+    },
+    {
+        name: "Puppet Kazekage",
+        description: "Summons a puppet to attack target. Stays until death.",
+        price: 100000,
+        key: "Puppet Kazekage"
+    }
+];
+
+// Event shop items (Ay tokens)
+const eventShopItems = [
+    {
+        name: "Guillotine Drop",
+        description: "Leaps high and slams down target, breaking defense.",
+        price: 250,
+        key: "Guillotine Drop"
+    },
+    {
+        name: "Kirin: Lightning Storm",
+        description: "Summons a lightning storm for massive damage.",
+        price: 150,
+        key: "Kirin: Lightning Storm"
+    },
+    {
+        name: "Shadow Clone Jutsu: 1000 clones",
+        description: "Creates 1000 clones to confuse and attack target.",
+        price: 100,
+        key: "Shadow Clone Jutsu: 1000 clones"
+    },
+    {
+        name: "Explosive Paper Clone",
+        description: "Tags target with an explosive tag.",
+        price: 100,
+        key: "Explosive Paper Clone"
+    },
+    {
+        name: "Lightning Hound",
+        description: "Summons a giant hound made of lightning.",
+        price: 50,
+        key: "Lightning Hound"
+    },
+    {
+        name: "Ramen Coupon",
+        description: "Redeem for 1 ramen ticket.",
+        price: 5,
+        key: "ramen"
     }
 ];
 
@@ -77,10 +135,63 @@ module.exports = {
                     inline: false 
                 }
             )
-            .setFooter({ text: 'Page 1/1' });
+            .setFooter({ text: 'Page 1/3' });
 
-        // Add Shinobi Shards button
+        // Add Jutsu Shop embed
+        const jutsuEmbed = new EmbedBuilder()
+            .setColor(0x1e90ff)
+            .setTitle('JUTSUS SHOP')
+            .setDescription('Buy powerful jutsus for money!')
+            .addFields(
+                ...jutsuShopItems.map(item => ({
+                    name: item.name,
+                    value: `${item.description}\nCost: $${item.price}`,
+                    inline: false
+                }))
+            )
+            .setFooter({ text: 'Page 2/3' });
+
+        // Add Event Shop embed
+        // Get user's Ay tokens from jutsu.json
+        const jutsuDataPath = path.join(__dirname, '../menma/data/jutsu.json');
+        let ayTokens = 0;
+        try {
+            const jutsuData = JSON.parse(fs.readFileSync(jutsuDataPath, 'utf8'));
+            const userData = jutsuData[interaction.user.id];
+            if (userData && userData.items && typeof userData.items["Ay Token"] === "number") {
+            ayTokens = userData.items["Ay Token"];
+            }
+        } catch (err) {
+            ayTokens = 0;
+        }
+
+        const eventEmbed = new EmbedBuilder()
+            .setColor(0x00ff99)
+            .setTitle('EVENT SHOP')
+            .setDescription(`Spend your Ay tokens on exclusive event jutsus!\nYour Ay tokens: **${ayTokens}**`)
+            .addFields(
+            ...eventShopItems.map(item => ({
+                name: item.name,
+                value: `${item.description}\nCost: ${item.price} Ay tokens`,
+                inline: false
+            }))
+            )
+            .setFooter({ text: 'Page 3/3' });
+
+        // Add navigation buttons
         const row = new ActionRowBuilder().addComponents(
+            new ButtonBuilder()
+                .setCustomId('main_shop')
+                .setLabel('Combos')
+                .setStyle(ButtonStyle.Primary),
+            new ButtonBuilder()
+                .setCustomId('jutsu_shop')
+                .setLabel('Jutsus')
+                .setStyle(ButtonStyle.Secondary),
+            new ButtonBuilder()
+                .setCustomId('event_shop')
+                .setLabel('Event')
+                .setStyle(ButtonStyle.Success),
             new ButtonBuilder()
                 .setCustomId('shinobi_shards')
                 .setLabel('Shinobi Shards')
@@ -89,14 +200,19 @@ module.exports = {
 
         await interaction.reply({ embeds: [embed], components: [row] });
 
-        // Create a collector for the button
         const collector = interaction.channel.createMessageComponentCollector({
             filter: i => i.user.id === interaction.user.id,
             time: 60000
         });
 
         collector.on('collect', async i => {
-            if (i.customId === 'shinobi_shards') {
+            if (i.customId === 'main_shop') {
+                await i.update({ embeds: [embed], components: [row] });
+            } else if (i.customId === 'jutsu_shop') {
+                await i.update({ embeds: [jutsuEmbed], components: [row] });
+            } else if (i.customId === 'event_shop') {
+                await i.update({ embeds: [eventEmbed], components: [row] });
+            } else if (i.customId === 'shinobi_shards') {
                 // Only allow in main server
                 if (i.guildId !== MAIN_GUILD_ID) {
                     await i.reply({

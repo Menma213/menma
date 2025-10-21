@@ -5,6 +5,7 @@ const path = require('path');
 // Path setup
 const dataPath = path.resolve(__dirname, '../../menma/data');
 const usersPath = path.join(dataPath, 'users.json');
+const playersPath = path.join(dataPath, 'players.json');
 const shrineGif = 'https://static.wikia.nocookie.net/naruto/images/7/76/Naka_Shrine.png/revision/latest/scale-to-width-down/1200?cb=20150816111302'; // Replace with your shrine GIF URL
 // Bloodline data
 const BLOODLINES = {
@@ -64,6 +65,22 @@ function saveUserData(userId, data) {
 	fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
 }
 
+// New helper functions for players.json
+function loadPlayerData(userId) {
+	const players = JSON.parse(fs.readFileSync(playersPath, 'utf8'));
+	if (!players[userId]) {
+		players[userId] = { money: 0 };
+		fs.writeFileSync(playersPath, JSON.stringify(players, null, 2));
+	}
+	return players[userId];
+}
+
+function savePlayerData(userId, data) {
+	const players = JSON.parse(fs.readFileSync(playersPath, 'utf8'));
+	players[userId] = { ...players[userId], ...data };
+	fs.writeFileSync(playersPath, JSON.stringify(players, null, 2));
+}
+
 async function getAsumaWebhook(channel) {
 	const webhooks = await channel.fetchWebhooks();
 	let asumaWebhook = webhooks.find(wh => wh.name === 'Asuma');
@@ -106,6 +123,7 @@ module.exports = {
 	async execute(interaction) {
 		const userId = interaction.user.id;
 		const user = loadUserData(userId);
+		const player = loadPlayerData(userId);
 
 		// Tutorial check
 		if (!user.bloodlineTuto) {
@@ -132,7 +150,7 @@ module.exports = {
 					ephemeral: true
 				});
 			}
-			if (user.money < BLOODLINES[bloodline].cost) {
+			if (player.money < BLOODLINES[bloodline].cost) {
 				return interaction.reply({
 					content: `You need ${BLOODLINES[bloodline].cost.toLocaleString()} Ryo to awaken the ${bloodline} bloodline!`,
 					ephemeral: true
@@ -152,7 +170,6 @@ module.exports = {
 		}
 
 		if (option === 'shrine') {
-			// Only need to check user's pending bloodline
 			const pendingBloodline = user.bloodline_pending;
 			if (!pendingBloodline || !BLOODLINES[pendingBloodline]) {
 				return interaction.reply({
@@ -160,7 +177,6 @@ module.exports = {
 					ephemeral: true
 				});
 			}
-			// Shrine cooldown check
 			const now = Date.now();
 			if (user.lastShrineVisit && now - user.lastShrineVisit < SHRINE_COOLDOWN) {
 				const remaining = Math.ceil((SHRINE_COOLDOWN - (now - user.lastShrineVisit)) / (1000 * 60 * 60));
@@ -169,41 +185,40 @@ module.exports = {
 					ephemeral: true
 				});
 			}
-			// Update shrine visit count
 			const visits = (user.bloodline_shrine_visits || 0) + 1;
 			saveUserData(userId, {
 				lastShrineVisit: now,
 				bloodline_shrine_visits: visits
 			});
 
-			// 40% chance to reset a cooldown
 			let bonusText = "Nothing special happened this time.";
 			if (Math.random() < 0.4) {
 				const cooldowns = ['lastdrank', 'lastbrank', 'lastsrank', 'lastArank'].filter(cd => user[cd]);
-			 if (cooldowns.length > 0) {
+				if (cooldowns.length > 0) {
 					const resetCD = cooldowns[Math.floor(Math.random() * cooldowns.length)];
 					saveUserData(userId, { [resetCD]: null });
 					bonusText = `Your ${resetCD.replace('last', '')} cooldown has been reset!`;
 				}
 			}
 
-			// Use shrine GIF from bloodline config
 			const shrineGif = BLOODLINES[pendingBloodline].shrine;
 
 			const embed = new EmbedBuilder()
 				.setTitle(`Visiting the ${pendingBloodline} Shrine`)
 				.setDescription(`You pray at the ${BLOODLINES[pendingBloodline].emoji} ${pendingBloodline} shrine and perform the blood ritual.\n\n${bonusText}`)
 				.setImage(shrineGif)
-				.setColor(0x8B4513); // Brown color for shrine
+				.setColor(0x8B4513);
 
 			if (visits >= user.bloodline_shrine_visits_needed) {
-				// Grant bloodline
+				// Deduct money from players.json
+				savePlayerData(userId, {
+					money: player.money - BLOODLINES[pendingBloodline].cost
+				});
 				saveUserData(userId, {
 					bloodline: pendingBloodline,
 					bloodline_pending: null,
 					bloodline_shrine_visits_needed: null,
-					bloodline_shrine_visits: null,
-					money: user.money - BLOODLINES[pendingBloodline].cost
+					bloodline_shrine_visits: null
 				});
 				return interaction.reply({
 					embeds: [embed],
@@ -226,7 +241,6 @@ module.exports = {
 					ephemeral: true
 				});
 			}
-			// If bloodline is 'unknown', removal is free
 			if (user.bloodline === 'unknown') {
 				saveUserData(userId, {
 					bloodline: null
@@ -236,16 +250,18 @@ module.exports = {
 					ephemeral: false
 				});
 			}
-			if (user.money < REMOVAL_COST) {
+			if (player.money < REMOVAL_COST) {
 				return interaction.reply({
 					content: `You need ${REMOVAL_COST.toLocaleString()} Ryo to remove your bloodline!`,
 					ephemeral: true
 				});
 			}
 			const removedBloodline = user.bloodline;
+			savePlayerData(userId, {
+				money: player.money - REMOVAL_COST
+			});
 			saveUserData(userId, {
-				bloodline: null,
-				money: user.money - REMOVAL_COST
+				bloodline: null
 			});
 			return interaction.reply({
 				content: `You've removed your ${removedBloodline} bloodline for ${REMOVAL_COST.toLocaleString()} Ryo.`,
@@ -348,6 +364,7 @@ module.exports = {
 	},
 
 	async handleAwaken(interaction, user) {
+		const player = loadPlayerData(interaction.user.id);
 		if (user.bloodline) {
 			return interaction.reply({
 				content: `You already have the ${user.bloodline} bloodline! Use \`/bloodline remove\` first.`,
@@ -378,16 +395,18 @@ module.exports = {
 			collector.stop();
 
 			const bloodlineData = BLOODLINES[bloodline];
-			if (user.money < bloodlineData.cost) {
+			if (player.money < bloodlineData.cost) {
 				return interaction.followUp({
 					content: `You need ${bloodlineData.cost.toLocaleString()} Ryo to awaken the ${bloodline} bloodline!`,
 					ephemeral: true
 				});
 			}
 
+			savePlayerData(interaction.user.id, {
+				money: player.money - bloodlineData.cost
+			});
 			saveUserData(interaction.user.id, {
-				bloodline,
-				money: user.money - bloodlineData.cost
+				bloodline
 			});
 
 			await interaction.followUp({
@@ -398,6 +417,7 @@ module.exports = {
 	},
 
 	async handleRemove(interaction, user) {
+		const player = loadPlayerData(interaction.user.id);
 		if (!user.bloodline) {
 			return interaction.reply({
 				content: "You don't have a bloodline to remove!",
@@ -405,9 +425,8 @@ module.exports = {
 			});
 		}
 
-		// If bloodline is 'unknown', removal is free
 		if (user.bloodline === 'unknown') {
-			saveUserData(userId, {
+			saveUserData(interaction.user.id, {
 				bloodline: null
 			});
 			return interaction.reply({
@@ -415,7 +434,7 @@ module.exports = {
 				ephemeral: false
 			});
 		}
-		if (user.money < REMOVAL_COST) {
+		if (player.money < REMOVAL_COST) {
 			return interaction.reply({
 				content: `You need ${REMOVAL_COST.toLocaleString()} Ryo to remove your bloodline!`,
 				ephemeral: true
@@ -423,9 +442,11 @@ module.exports = {
 		}
 
 		const removedBloodline = user.bloodline;
+		savePlayerData(interaction.user.id, {
+			money: player.money - REMOVAL_COST
+		});
 		saveUserData(interaction.user.id, {
-			bloodline: null,
-			money: user.money - REMOVAL_COST
+			bloodline: null
 		});
 
 		await interaction.reply({

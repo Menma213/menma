@@ -1,0 +1,24 @@
+{
+    "What this is": {
+        "This": "is a json file that will be a part of the useful data that will help you the ai set up plans for a user to reach their level goal."
+    },
+    "How this will go usually": "The user in their prompt to you will include the key word `goal` or `goalset` or `help me reach <level> you'll have to properly identify this action, this will be handled inside the code but im telling you the process anyway.",
+    "Example Simulation": "USers level: 12. They say `help me reach level 20`, you'll have to lay out a plan for them to reach level 20. This involves a json. You'll do all the calculation based on the exp system and give them a quest like interface which can then be used for the tasks.",
+    "How this works": "You will be given users level along with their exp now you calculate the exp needed to reach the goal and you will also be given each missions reward drops so you can calculate how many missions user has to do before they can reach their goal.",
+    "The actual content": {
+        "The above": "Was just context, this is the real content."
+    },
+    "Current exp system": {
+        "getExpRequirement": "function getExpRequirement(currentLevel) { if (currentLevel < 1) return 2; if (currentLevel < 50) return (1 + currentLevel) * 2; if (currentLevel < 100) return (1 + currentLevel) * 3; if (currentLevel < 200) return (1 + currentLevel) * 4; return (1 + currentLevel) * 5; }"
+    },
+    "Explanation": "These numbers are basically working like this: if a user is level 1, they would need 2 exp to level up. If they are 10, they need 20. But it changes after level 50 and so on.",
+    "Mission rewards": {
+        "drank": "(fixed) 10 exp. You can combine this information with the other databases you have to get a 100% accurate information bar.",
+        "brank": "random between 10 to 30 exp.",
+        "arank": "fixed exp is 9. But every 5 battles, the exp drop is based on the users level i.e 1 * player.level. There's also a jackpot award that drops after completing 50 arank battles: which drops 3 times the player level exp.",
+        "crank": "exp drop is 100 + user.level.",
+        "frank": "1 exp per mission since this missions cooldown is 3 seconds.",
+        "srank": "varies between each srank. Haku Srank drops (all are fixed)  drops total 50 exp: Normal 25 and corrupted 25. Zabuza drops 60 exp. Orochimaru drops 80 exp. Kurenai mission drops 300 in total: Corrupted orochimaru 100, Kurenai vs Kagami 100 exp and USer vs Kurenai survival battle 100 exp.",
+        "trials": "const expReward = 5 + Math.floor((users[userId].level || 1) * 0.5);"
+    }
+}

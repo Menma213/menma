@@ -4,11 +4,15 @@ const path = require('path');
 // const { updateRequirements } = require('./scroll'); // Keep if still needed for other features
 
 const usersPath = path.resolve(__dirname, '../../menma/data/users.json');
+const playersPath = path.resolve(__dirname, '../../menma/data/players.json');
 
 // Function to calculate EXP requirement for the next level
 function getExpRequirement(currentLevel) {
-    if (currentLevel < 1) return 2; // Should not happen if level is 1-indexed
-    return Math.ceil(1.1 ** currentLevel); // Exp needed to reach (currentLevel + 1), ensure integer
+    if (currentLevel < 1) return 2;
+    if (currentLevel < 50) return (1 + currentLevel) * 2;
+    if (currentLevel < 100) return (1 + currentLevel) * 3;
+    if (currentLevel < 200) return (1 + currentLevel) * 4;
+    return (1 + currentLevel) * 5;
 }
 
 module.exports = {
@@ -45,19 +49,25 @@ module.exports = {
             });
         }
 
-        const player = users[userId];
+        // Only use players.json for level and exp
+        let players = fs.existsSync(playersPath) ? JSON.parse(fs.readFileSync(playersPath, 'utf8')) : {};
+        if (!players[userId]) players[userId] = { level: 1, exp: 0 };
+        // Ensure level and exp are numbers
+        players[userId].level = Number(players[userId].level) || 1;
+        players[userId].exp = Number(players[userId].exp) || 0;
 
         // Initialize player stats if they don't exist (for new enrollments)
-        if (player.level === undefined) player.level = 1;
-        if (player.exp === undefined) player.exp = 0;
-        if (player.health === undefined) player.health = 1000;
-        if (player.power === undefined) player.power = 10;
-        if (player.defense === undefined) player.defense = 5;
-        if (player.chakra === undefined) player.chakra = 10; // Default chakra
+        const player = users[userId];
+        
+        // TYPE COERCION: Force all stats to be numbers before any calculations
+        player.health = Number(player.health) || 100;
+        player.power = Number(player.power) || 10;
+        player.defense = Number(player.defense) || 5;
+        player.chakra = Number(player.chakra) || 10; // Default chakra
 
         // Store original stats for comparison in embed
         const originalStats = {
-            level: player.level,
+            level: players[userId].level,
             health: player.health,
             power: player.power,
             defense: player.defense,
@@ -69,81 +79,82 @@ module.exports = {
         let finalReplyContent = "";
 
         if (subCommand === 'one') {
-            const requiredExp = getExpRequirement(player.level);
-
-            if (player.exp < requiredExp) {
+            const requiredExp = getExpRequirement(players[userId].level);
+            if (players[userId].exp < requiredExp) {
                 return interaction.editReply({
-                    content: `You need **${requiredExp.toLocaleString()} EXP** to reach Level ${player.level + 1}.\n` +
-                             `Current EXP: ${player.exp.toLocaleString()}`,
+                    content: `You need **${requiredExp.toLocaleString()} EXP** to reach Level ${players[userId].level + 1}.\n` +
+                             `Current EXP: ${players[userId].exp.toLocaleString()}`,
                     ephemeral: true
                 });
             }
-
-            // Apply single level up
-            player.level += 1;
-            player.exp -= requiredExp;
+            // Apply single level up (only in players.json)
+            players[userId].level = Number(players[userId].level) + 1;
+            players[userId].exp = Number(players[userId].exp) - requiredExp;
             totalExpConsumed = requiredExp;
             levelsGained = 1;
 
             // Calculate stat gains for one level
-            const healthGain = Math.floor(Math.random() * 101) + 100; // 100-200
-            const powerGain = Math.floor(Math.random() * 2) + 2;     // 2-3
-            const defenseGain = Math.floor(Math.random() * 3) + 2;   // 2-4
-            
-            player.health += healthGain;
-            player.power += powerGain;
-            player.defense += defenseGain;
+            const healthGain = Math.floor(Math.random() * 2) + 2; // 2-3
+            const powerGain = Math.floor(Math.random() * 2) + 3;     // 3-4
+            const defenseGain = Math.floor(Math.random() * 2) + 1;   // 1-2
+
+            // TYPE COERCION: Ensure numeric addition
+            player.health = Number(player.health) + healthGain;
+            player.power = Number(player.power) + powerGain;
+            player.defense = Number(player.defense) + defenseGain;
 
         } else if (subCommand === 'all') {
-            let currentLevelUpExp = getExpRequirement(player.level);
+            let currentLevelUpExp = getExpRequirement(players[userId].level);
             let cumulativeHealthGain = 0;
             let cumulativePowerGain = 0;
             let cumulativeDefenseGain = 0;
-
-            while (player.exp >= currentLevelUpExp) {
-                player.exp -= currentLevelUpExp;
+            while (players[userId].exp >= currentLevelUpExp) {
+                players[userId].exp = Number(players[userId].exp) - currentLevelUpExp;
                 totalExpConsumed += currentLevelUpExp;
-                player.level += 1;
+                players[userId].level = Number(players[userId].level) + 1;
                 levelsGained += 1;
-
-                // Calculate stat gains for each level
-                cumulativeHealthGain += Math.floor(Math.random() * 101) + 100;
-                cumulativePowerGain += Math.floor(Math.random() * 2) + 2;
-                cumulativeDefenseGain += Math.floor(Math.random() * 3) + 2;
-
-                currentLevelUpExp = getExpRequirement(player.level); // Get next level's requirement
+                cumulativeHealthGain += Math.floor(Math.random() * 2) + 2;
+                cumulativePowerGain += Math.floor(Math.random() * 2) + 3;
+                cumulativeDefenseGain += Math.floor(Math.random() * 2) + 1;
+                currentLevelUpExp = getExpRequirement(players[userId].level);
             }
-
             if (levelsGained === 0) {
                 return interaction.editReply({
-                    content: `You don't have enough EXP to level up even once. You need **${getExpRequirement(player.level).toLocaleString()} EXP** to reach Level ${player.level + 1}.\n` +
-                             `Current EXP: ${player.exp.toLocaleString()}`,
+                    content: `You don't have enough EXP to level up even once. You need **${getExpRequirement(players[userId].level).toLocaleString()} EXP** to reach Level ${players[userId].level + 1}.\n` +
+                             `Current EXP: ${players[userId].exp.toLocaleString()}`,
                     ephemeral: true
                 });
             }
-
-            // Apply cumulative stat gains
-            player.health += cumulativeHealthGain;
-            player.power += cumulativePowerGain;
-            player.defense += cumulativeDefenseGain;
-
+            
+            // TYPE COERCION: Ensure numeric addition
+            player.health = Number(player.health) + cumulativeHealthGain;
+            player.power = Number(player.power) + cumulativePowerGain;
+            player.defense = Number(player.defense) + cumulativeDefenseGain;
         }
 
+        // Save stats as backup in players.json
+        players[userId].backup = {
+            health: player.health,
+            power: player.power,
+            defense: player.defense,
+            chakra: player.chakra
+        };
         // Save changes
         fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
+        fs.writeFileSync(playersPath, JSON.stringify(players, null, 2));
 
         // Prepare the embed
         const levelUpEmbed = new EmbedBuilder()
             .setColor('#FF9800') // Orange color for level up
-            .setTitle(`⬆️ Level Up! Ninja ${interaction.user.username} Reached Level ${player.level}!`)
+            .setTitle(`⬆️ Level Up! Ninja ${interaction.user.username} Reached Level ${players[userId].level}!`)
             .setDescription(`Congratulations, **${interaction.user.username}**! You've become stronger by reaching a new level${levelsGained > 1 ? `s!` : `!`}`)
             .setThumbnail(interaction.user.displayAvatarURL({ dynamic: true, size: 256 }))
             .addFields(
                 {
                     name: '__EXP & Level Progress__',
-                    value: `**Levels Gained:** ${originalStats.level} ➡️ ${player.level} (Total: ${levelsGained})\n` +
+                    value: `**Levels Gained:** ${originalStats.level} ➡️ ${players[userId].level} (Total: ${levelsGained})\n` +
                            `**EXP Consumed:** ${totalExpConsumed.toLocaleString()} EXP\n` +
-                           `**Remaining EXP:** ${player.exp.toLocaleString()} EXP`,
+                           `**Remaining EXP:** ${players[userId].exp.toLocaleString()} EXP`,
                     inline: false
                 },
                 {
@@ -157,7 +168,7 @@ module.exports = {
                 },
                 {
                     name: '__Next Level Up Requirement__',
-                    value: `To reach Level ${player.level + 1}, you will need **${getExpRequirement(player.level).toLocaleString()} EXP**.`,
+                    value: `To reach Level ${players[userId].level + 1}, you will need **${getExpRequirement(players[userId].level).toLocaleString()} EXP**.`,
                     inline: false
                 }
             )

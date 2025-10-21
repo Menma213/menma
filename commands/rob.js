@@ -64,7 +64,14 @@ module.exports = {
 
         // 60% chance success
         if (Math.random() < 0.6) {
-            user.ramen = (user.ramen || 0) + 1;
+            // Load players.json and update ramen for this user
+            const playersPath = path.resolve(__dirname, '../../menma/data/players.json');
+            const players = JSON.parse(fs.readFileSync(playersPath, 'utf8'));
+            if (players[userId]) {
+                // Ensure ramen is a number
+                players[userId].ramen = (parseInt(players[userId].ramen) || 0) + 1; 
+                fs.writeFileSync(playersPath, JSON.stringify(players, null, 2));
+            }
             fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
             return interaction.followUp({
                 embeds: [

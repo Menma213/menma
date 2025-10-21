@@ -160,14 +160,18 @@ module.exports = {
         }
 
         // Calculate and award EXP
+        const playersPath = path.resolve(__dirname, '../../menma/data/players.json');
         let exp = 1; 
         let boosterMessage = '';
         if (interaction.member && interaction.member.roles.cache.has(SERVER_BOOSTER_ROLE)) {
-            exp = 1.1; 
+            exp = 2; 
             boosterMessage = ' *(Server Booster Bonus!)*';
         }
-        player.exp = (player.exp || 0) + exp;
-        fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
+        // Update EXP in players.json
+        let players = fs.existsSync(playersPath) ? JSON.parse(fs.readFileSync(playersPath, 'utf8')) : {};
+        if (!players[userId]) players[userId] = {};
+        players[userId].exp = (players[userId].exp || 0) + exp;
+        fs.writeFileSync(playersPath, JSON.stringify(players, null, 2));
 
         // Create and send the embed
         const frankEmbed = new EmbedBuilder()

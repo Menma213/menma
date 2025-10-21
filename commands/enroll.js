@@ -25,11 +25,15 @@ module.exports = {
         const userId = interaction.user.id;
         const userAvatar = interaction.user.displayAvatarURL({ format: 'png', size: 128 });
         const enemyImage = "https://image.tmdb.org/t/p/original/o33WNqmy81CX1QaHXpYl5oQVGE4.jpg";
+        const playersPath = path.resolve(__dirname, '../../menma/data/players.json');
         const usersPath = path.resolve(__dirname, '../../menma/data/users.json');
         const inventoryPath = path.resolve(__dirname, '../../menma/data/inventory.json');
         const jutsuPath = path.resolve(__dirname, '../../menma/data/jutsu.json');
 
         // Initialize files if they don't exist
+        if (!fs.existsSync(playersPath)) {
+            fs.writeFileSync(playersPath, JSON.stringify({}, null, 2));
+        }
         if (!fs.existsSync(usersPath)) {
             fs.writeFileSync(usersPath, JSON.stringify({}, null, 2));
         }
@@ -40,12 +44,13 @@ module.exports = {
             fs.writeFileSync(jutsuPath, JSON.stringify({}, null, 2));
         }
 
+        let players = JSON.parse(fs.readFileSync(playersPath, 'utf8'));
         let users = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
         let inventory = JSON.parse(fs.readFileSync(inventoryPath, 'utf8'));
         let jutsuData = JSON.parse(fs.readFileSync(jutsuPath, 'utf8'));
 
-        // Check if user is already enrolled
-        if (users[userId]) {
+        // Check if user is already enrolled by checking either file
+        if (players[userId] || users[userId]) {
             return interaction.reply({ 
                 content: "You are already enrolled! Use /profile to view your stats.", 
                 ephemeral: true 
@@ -89,10 +94,18 @@ module.exports = {
             if (i.user.id !== userId) return i.reply({ content: "This isn't your enrollment!", ephemeral: true });
 
             if (i.customId === `accept-${userId}`) {
-                // Create user profile with slot-based jutsu
-                users[userId] = {
+                // Create player data with the 6 core stats
+                players[userId] = {
                     level: 1,
                     exp: 0,
+                    money: 1000,
+                    ramen: 1,
+                    SS: 0,
+                    elo: 0
+                };
+                
+                // Create user data with all other stats
+                users[userId] = {
                     wins: 0,
                     losses: 0,
                     rankedPoints: 0,
@@ -100,7 +113,8 @@ module.exports = {
                     bloodline: 'Unknown',
                     mentor: 'None',
                     rank: 'Academy Student',
-                    health: 1000,
+                    occupation: 'Village',
+                    health: 100,
                     power: 100,
                     defense: 50,
                     chakra: 10,
@@ -112,11 +126,9 @@ module.exports = {
                         slot_4: 'None',
                         slot_5: 'None'
                     },
-                    money: 10000,
-                    ramen: 1,
                     Combo: "Basic Combo"
                 };
-                
+
                 // Add to inventory
                 inventory[userId] = {
                     usersjutsu: ['Transformation Jutsu']
@@ -132,6 +144,7 @@ module.exports = {
                 }
 
                 // Save all files
+                fs.writeFileSync(playersPath, JSON.stringify(players, null, 2));
                 fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
                 fs.writeFileSync(inventoryPath, JSON.stringify(inventory, null, 2));
                 fs.writeFileSync(jutsuPath, JSON.stringify(jutsuData, null, 2));
@@ -163,9 +176,12 @@ module.exports = {
     },
 
     async startBattle(interaction, userId, userAvatar, enemyImage) {
+        const playersPath = path.resolve(__dirname, '../../menma/data/players.json');
         const usersPath = path.resolve(__dirname, '../../menma/data/users.json');
+        let players = JSON.parse(fs.readFileSync(playersPath, 'utf8'));
         let users = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
-        let player = users[userId];
+        let playerData = players[userId];
+        let userData = users[userId];
 
         // Process player move
         const processPlayerMove = (move) => {
@@ -174,13 +190,13 @@ module.exports = {
             let chakraCost = 0;
             
             if (move === 'attack') {
-                damage = 2 * (player.power + (transformationActive ? 5 : 0));
+                damage = 2 * (userData.power + (transformationActive ? 5 : 0));
                 description = 'used Attack';
             } 
             else if (move === 'transform') {
                 chakraCost = 5;
-                if (player.chakra >= chakraCost) {
-                    player.chakra -= chakraCost;
+                if (userData.chakra >= chakraCost) {
+                    userData.chakra -= chakraCost;
                     transformationActive = true;
                     transformationRounds = 3;
                     description = 'used Transformation Jutsu';
@@ -202,7 +218,7 @@ module.exports = {
 
         // Process enemy move
         const processEnemyMove = () => {
-            const damage = 11 * enemy.power / player.defense;
+            const damage = 11 * enemy.power / userData.defense;
             return { 
                 damage, 
                 description: 'used Shuriken Throw' 
@@ -225,7 +241,7 @@ module.exports = {
 
         // Create moves embed with slot-based jutsu and combo progress
         const createMovesEmbed = () => {
-            const jutsuSlots = Object.entries(player.jutsu)
+            const jutsuSlots = Object.entries(userData.jutsu)
                 .filter(([_, jutsu]) => jutsu !== 'None')
                 .map(([slot, jutsu]) => `${slot.replace('_', ' ')}: ${jutsu}`)
                 .join('\n');
@@ -251,7 +267,7 @@ module.exports = {
                         value: jutsuSlots || 'No jutsu equipped'
                     }
                 )
-                .setFooter({ text: `Chakra: ${player.chakra}/10` });
+                .setFooter({ text: `Chakra: ${userData.chakra}/10` });
 
             const row = new ActionRowBuilder();
             // Attack button (always available)
@@ -263,7 +279,7 @@ module.exports = {
             );
 
             // Transformation Jutsu button if available and has chakra
-            if (Object.values(player.jutsu).includes('Transformation Jutsu') && player.chakra >= 5) {
+            if (Object.values(userData.jutsu).includes('Transformation Jutsu') && userData.chakra >= 5) {
                 row.addComponents(
                     new ButtonBuilder()
                         .setCustomId(`transform-${userId}-${roundNum}`)
@@ -332,15 +348,15 @@ module.exports = {
                 .addFields(
                     { 
                         name: 'Battle Status', 
-                        value: `${interaction.user.username} | ${player.health.toFixed(0)} HP  ${enemy.name} | ${enemy.currentHealth.toFixed(0)} HP`
+                        value: `${interaction.user.username} | ${userData.health.toFixed(0)} HP  ${enemy.name} | ${enemy.currentHealth.toFixed(0)} HP`
                     }
                 )
-                .setFooter({ text: `Chakra: ${player.chakra}` });
+                .setFooter({ text: `Chakra: ${userData.chakra}` });
         };
 
         // Check battle status
         const checkBattleStatus = async () => {
-            if (player.health <= 0) {
+            if (userData.health <= 0) {
                 return { 
                     content: `Defeat! You were defeated by the rogue ninja.`, 
                     components: [] 
@@ -348,12 +364,13 @@ module.exports = {
             }
             if (enemy.currentHealth <= 0) {
                 // Update user stats on victory
-                player.wins += 1;
-                player.exp += 0.1;
-                player.money += 5000;
+                userData.wins += 1;
+                playerData.exp += 1;
+                playerData.money += 500;
                 // Restore player health and chakra to max after enrollment battle
-                player.health = 1000;
-                player.chakra = 10;
+                userData.health = 1000;
+                userData.chakra = 10;
+                fs.writeFileSync(playersPath, JSON.stringify(players, null, 2));
                 fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
                 
                 return { 
@@ -363,7 +380,7 @@ module.exports = {
             }
             
             // Passive chakra regeneration
-            player.chakra = Math.min(player.chakra + 2, 10);
+            userData.chakra = Math.min(userData.chakra + 2, 10);
             
             // Update transformation status
             if (transformationActive) {
@@ -503,7 +520,7 @@ module.exports = {
             ctx.textBaseline = "middle";
             ctx.shadowColor = "#000";
             ctx.shadowBlur = 1;
-           
+            
             ctx.shadowBlur = 0;
             ctx.restore();
 
@@ -548,7 +565,7 @@ module.exports = {
             userId,
             userAvatar,
             enemyImage,
-            playerHealth: player.health,
+            playerHealth: userData.health,
             playerMaxHealth: 1000,
             enemyHealth: enemy.currentHealth,
             enemyMaxHealth: enemy.health,
@@ -590,7 +607,7 @@ module.exports = {
                 enemy.currentHealth -= playerMove.damage;
                 totalDamageDealt += playerMove.damage; // Track damage dealt
                 enemyMove = processEnemyMove();
-                player.health -= enemyMove.damage;
+                userData.health -= enemyMove.damage;
                 totalDamageTaken += enemyMove.damage; // Track damage taken
             } 
             else if (action === 'transform') {
@@ -602,13 +619,13 @@ module.exports = {
                     return;
                 }
                 enemyMove = processEnemyMove();
-                player.health -= enemyMove.damage;
+                userData.health -= enemyMove.damage;
                 totalDamageTaken += enemyMove.damage;
             }
             else if (action === 'rest') {
-                player.chakra = Math.min(player.chakra + 1, 10);
+                userData.chakra = Math.min(userData.chakra + 1, 10);
                 enemyMove = processEnemyMove();
-                player.health -= enemyMove.damage;
+                userData.health -= enemyMove.damage;
                 playerMove = { 
                     damage: 0, 
                     description: 'rested and gained +1 Chakra',
@@ -650,7 +667,7 @@ module.exports = {
                 userId,
                 userAvatar,
                 enemyImage,
-                playerHealth: player.health,
+                playerHealth: userData.health,
                 playerMaxHealth: 1000,
                 enemyHealth: enemy.currentHealth,
                 enemyMaxHealth: enemy.health,
@@ -673,7 +690,7 @@ module.exports = {
                     embeds: [summaryEmbed], 
                     components: [], 
                 });
-               
+                
 
                 // Show final stats in the win/lose screen
                 if (enemy.currentHealth <= 0) {

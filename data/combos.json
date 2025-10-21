@@ -23,5 +23,18 @@
                 "duration": 2
             }
         ]
+    },
+    "Dance of the Shadows": {
+        "name": "Dance of the Shadows",
+        "requiredJutsus": ["Shadow Clone Jutsu", "Rasenshuriken", "Sexy Jutsu"],
+        "damage": 50000,
+        "damageType": "true",
+        "effects": [
+            {
+                "type": "status",
+                "status": "bleed",
+                "duration": 3
+            }
+        ]
     }
 }

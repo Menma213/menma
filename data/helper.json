@@ -1,0 +1,47 @@
+{
+    "basics":{
+        "Shinobi Basics": "You start your journey using the /enroll command. From there Asuma will help the new player out inside the tutorial command.",
+        "premium stuff": "The Shinobi Shards (SS) is the premium currency of the bot. To obtain SS you can either buy them using real money or trade them with other users or buy them in the secret SS shop which randomly spawns whenever there is a 'Goodnight Everyone' Message in the chat.",
+        "leveling": "Leveling in this game is relatively simple which is basically accumilation of exp and then using the /levelup command to level up. You can gain exp from missions, spinning in the event, Dungeons and more.",
+        "chakra": "Important: **base** chakra cannot be increased. The only way to increase base chakra is by buying Jinchuriki Gamepass which sets users chakra to 15 from the base 10. You need to do /profile for it work though. Chakra can be increased while in a battle using jutsus that grant chakra gain effects.",
+        "jutsus": "Jutsus are the main way to fight in this bot. You can obtain jutsus from scrolls, events, mentors, srank missions, and sometimes if your lucky inside ranked rewards. You can see what jutsus you have by using the /myjutsu command which shows currently equipped and all the available jutsus.",
+        "combos": "Combos are a combination of the jutsus that you can use together inside a battle. Combos can be bought from the shop or found in dungeons or in events, equipped using the /equip command. To use a combo, simply use the jutsus that were mentioned in the combo.",
+        "stats": "Stats are the main thing that determines how strong you are, as the saying goes: level dosent matter, stats do. Your stats are increased by leveling up or you can choose to manually upgrade a specific stat at the ramen shop.",
+        "ramen": "Ramen increases stats and is one of the most important thing in the game. Ramen can be claimed everyday at the ramen shop using the /claim command, similarly, ramen can be obtained from event, dungeons and ranked rewards.",
+        "Crystalline Shards": "Many people will ask about this i think. Crystalline shards are obtained from dungeons and these things are used to updgrade your scroll into a jutsu inside the /learnjutsu command.",
+        "bugs": "If users ever talk about any bugs ask them to report it immidiately in the official server. If the bug is related to rewards not being added or obtained or anything similar to that, ask the user to check their gift inventory and if the rewards are still missing, contact support in the official server.",
+        "ranks": "to get a higher rank people basically need to win ranked battles which adds elo to them and eventually increases their rank."
+
+
+    },
+    "helper for gemini api": {
+        "missions": {
+            "brank": "Brank type of missions are relatively easy and straightforward. IF the users ever ask you about a brank, tell them to use the 'basic combo' if they are low level and if they are higher level, ask them to use a high power jutsu that one shots, eg: rasenshuriken, lightning blade, infused chakra blade etc.",
+            "arank": "A-Rank missions are more challenging and involve fighting multiple strong NPCs in succession. Advise users to manage their health and chakra carefully, use healing jutsus when needed, and save their strongest moves for tougher enemies. Completing all 50 battles gives a jackpot reward.",
+            "trials": "Hokage Trials are special missions where users face legendary Hokage NPCs one after another. Each trial may unlock new jutsus and offers significant rewards. Suggest users to prepare by equipping their best jutsus and combos, and to get stronger jutsu if they are struggling.",
+            "ranked": "Ranked missions are competitive battles against other users or bots, affecting the user's ELO and rank. Encourage users to use strategic jutsu choices, track their progress, and claim ranked rewards from their gift inventory. Remind users that ranked battles are only available in the main server.",
+            "fight": "Fight missions are direct user vs user challenges. Advise users to challenge friends or rivals, and to use their best combos and tactics to win. Remind them that both participants must accept the challenge for the battle to begin.",
+            "srank": "S-Rank missions are the most dangerous, featuring powerful bosses like Haku, Zabuza, and Orochimaru. These missions often include story elements and require advanced strategies. Suggest users to unlock new bosses by progressing, use buffs/debuffs wisely, and be prepared for multi-phase battles.",
+            "scrolls": "Scrolls are used to unlock new jutsus and abilities. Users can obtain scrolls from missions, events, or the shop. Advise users to check their scroll inventory and use scrolls to learn powerful techniques. Some scrolls have requirements or can be traded.",
+            "frank": "Frank missions are micro training missions for quick EXP. Users can do them frequently but may encounter anti-macro captcha checks. Advise users to complete the captcha if prompted and to approach an admin if banned.",
+            "drank": "D-Rank missions are simple tasks that reward EXP, money, and sometimes materials for the village or Akatsuki. Users can complete them regularly, and roles like Hokage, Anbu, or Akatsuki Leader may affect rewards.",
+            "cooldown": "Most missions and commands have cooldowns. Users can check their cooldowns by attempting the command; the bot will reply with the remaining time. Advise users to plan their actions around cooldowns for efficient progression."
+        },
+        "server_events": {
+            "fod": "Forest of Death is a team-based event where users join, form teams, and answer quiz questions. Teams compete in rounds, and the winners earn rewards like ramen and money. Advise users to join quickly when the event starts and work together with their team.",
+            "hokage_election": "Hokage Election is a server event where candidates compete for votes. Users can vote during the election phase, and the winner receives the Hokage role. Advise users to participate in the voting and support their favorite candidate.",
+            "event_summon": "Event summon allows users to spend Shinobi Shards (SS) to summon for rare jutsus, items, and rewards. Each summon guarantees an Ay Token, which can be used in the event shop. Advise users to check the event drops and use their SS wisely."
+        },
+        "roles_and_appointments": {
+            "anbu": "To become Anbu, the Hokage must appoint you using the /anbu command. You must take an oath in chat to confirm your commitment. Once appointed, you can be assigned specific roles like Spy, Guard, or Right Hand Man using /appoint.",
+            "akatsuki": "To join the Akatsuki, you must first become a rogue ninja. The Akatsuki Leader can invite you using /invite. You must pay 10,000 money and confirm in chat to be officially inducted and receive the Akatsuki role.",
+            "rogue": "Users can become rogue ninjas by leaving their village using the /rogue command. This is a serious decision and means abandoning your comrades and home.",
+            "appoint": "The Hokage can assign specific roles to Anbu members using /appoint. Roles include Spy (max 5), Guard, and Right Hand Man (only one allowed). Each role has unique responsibilities and benefits.",
+            "council": "The /council command allows Hokage, Akatsuki Leader, and Sannin to view council information, including village or Akatsuki resources, roles, and war status. Advise users to use this command in the appropriate council channel."
+        },
+        "trade_and_shop": {
+            "trade": "The /trade command allows users to trade Shinobi Shards or money with other players. The process involves both users confirming the trade and the bot handling the transaction. Advise users to follow the prompts and ensure both parties have enough resources.",
+            "secret_shop": "Occasionally, the Thunderbird NPC may spawn in chat, offering a secret shop where users can buy Shinobi Shards for money. Advise users to watch for Thunderbird's messages and respond quickly to access the shop."
+        }
+    }
+}

@@ -41,12 +41,20 @@
       "Heaven Slaughter",
       "Thunder's Sigil",
       "Last Resort",
-      "Kamehameha"
+      "Kamehameha",
+      "One Thousand Years of Death",
+      "Explosive Paper Clone",
+      "Girochin Doroppu",
+      "Kirin: Lightning Storm",
+      "Lightning Hound",
+      "Shadow Clone Jutsu: 1000 clones",
+      "Tenseigan Scroll",
+      "Blades of Judgement"
     ],
     "combos": [
       "Basic Combo",
-      "Intermediate Combo",
-      "Shadow Dance"
+      "Shadow Dance",
+      "Intermediate Combo"
     ],
     "scrolls": [
       "Needle Assault Scroll",
@@ -58,10 +66,11 @@
     ],
     "rankeditems": [],
     "items": {
-      "Crystalline Shard": 24,
+      "Crystalline Shard": 141,
       "Zoro's Locket": 4,
       "Secret Uchiha Scroll": 1,
-      "Ramen Ticket": 10
+      "Ramen Ticket": 10,
+      "Ay Token": 92
     },
     "exp": 25
   },
@@ -95,7 +104,10 @@
       "Needle Assault Scroll",
       "Silent Assassination Scroll"
     ],
-    "rankeditems": []
+    "rankeditems": [],
+    "items": {
+      "Crystalline Shard": 2
+    }
   },
   "737913304214667345": {
     "usersjutsu": [
@@ -213,7 +225,8 @@
       "Infused Chakra Blade"
     ],
     "scrolls": [
-      "Needle Assault Scroll"
+      "Needle Assault Scroll",
+      "Infused Chakra Blade Scroll"
     ],
     "items": {
       "Crystalline Shard": 2
@@ -303,6 +316,41 @@
     ]
   },
   "1039157053266067556": {
+    "usersjutsu": [
+      "Transformation Jutsu"
+    ]
+  },
+  "1409902593949433958": {
+    "usersjutsu": [
+      "Transformation Jutsu"
+    ]
+  },
+  "420101737173483541": {
+    "usersjutsu": [
+      "Transformation Jutsu"
+    ]
+  },
+  "450496711123795979": {
+    "usersjutsu": [
+      "Transformation Jutsu"
+    ]
+  },
+  "646149279437553664": {
+    "usersjutsu": [
+      "Transformation Jutsu"
+    ]
+  },
+  "261684298694918144": {
+    "usersjutsu": [
+      "Transformation Jutsu"
+    ]
+  },
+  "1407794200518459464": {
+    "usersjutsu": [
+      "Transformation Jutsu"
+    ]
+  },
+  "1424401734167433389": {
     "usersjutsu": [
       "Transformation Jutsu"
     ]

@@ -2,6 +2,11 @@ const { SlashCommandBuilder } = require('discord.js');
 const fs = require('fs');
 const path = require('path');
 
+// New path to the players data file
+const playersPath = path.join(__dirname, '../../menma/data/players.json');
+// Add usersPath so profile.js (which reads users.json) sees premiumRoles
+const usersPath = path.join(__dirname, '../../menma/data/users.json');
+
 // Use the same shopItems as in shop.js
 const shopItems = {
     "basic combo": {
@@ -18,7 +23,6 @@ const shopItems = {
         price: 10000,
         requirements: ["analysis", "transformation", "rasengan"]
     }
-    // ...future combos...
 };
 
 // Premium shop items (should match shop.js)
@@ -53,9 +57,54 @@ const premiumItems = [
         description: "Create your own custom jutsu! (single effect)",
         price: 1000,
         roleId: "1399097723554234448"
-        // No roleId, no duration, handled in real time
     }
 ];
+
+const jutsuShopItems = {
+    "human boulder": {
+        name: "Human Boulder",
+        price: 10000,
+        key: "Human Boulder"
+    },
+    "puppet kazekage": {
+        name: "Puppet Kazekage",
+        price: 100000,
+        key: "Puppet Kazekage"
+    }
+};
+
+const eventShopItems = {
+    "guillotine drop": {
+        name: "Guillotine Drop",
+        price: 250,
+        key: "Guillotine Drop"
+    },
+    "kirin: lightning storm": {
+        name: "Kirin: Lightning Storm",
+        price: 150,
+        key: "Kirin: Lightning Storm"
+    },
+    "shadow clone jutsu: 1000 clones": {
+        name: "Shadow Clone Jutsu: 1000 clones",
+        price: 100,
+        key: "Shadow Clone Jutsu: 1000 clones"
+    },
+    "explosive paper clone": {
+        name: "Explosive Paper Clone",
+        price: 100,
+        key: "Explosive Paper Clone"
+    },
+    "lightning hound": {
+        name: "Lightning Hound",
+        price: 50,
+        key: "Lightning Hound"
+    },
+    "ramen coupon": {
+        name: "ramen",
+        price: 5,
+        key: "ramen"
+    }
+};
 
 // Replace with your log channel ID
 const LOG_CHANNEL_ID = '1381278641144467637';
@@ -80,13 +129,19 @@ function setLongTimeout(callback, ms, ...args) {
     return setTimeout(callback, ms, ...args);
 }
 
-async function scheduleRoleRemoval(guild, userId, roleId, duration, usersPath) {
+async function scheduleRoleRemoval(guild, userId, roleId, duration, playersPath) {
     setLongTimeout(async () => {
         try {
             const member = await guild.members.fetch(userId);
             await member.roles.remove(roleId, "Premium role expired");
-            // Remove from users.json
-            const users = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
+            // remove from players.json
+            const players = fs.existsSync(playersPath) ? JSON.parse(fs.readFileSync(playersPath, 'utf8')) : {};
+            if (players[userId] && players[userId].premiumRoles) {
+                players[userId].premiumRoles = players[userId].premiumRoles.filter(r => r.roleId !== roleId);
+                fs.writeFileSync(playersPath, JSON.stringify(players, null, 4));
+            }
+            // also remove from users.json so profile sees removal immediately
+            const users = fs.existsSync(usersPath) ? JSON.parse(fs.readFileSync(usersPath, 'utf8')) : {};
             if (users[userId] && users[userId].premiumRoles) {
                 users[userId].premiumRoles = users[userId].premiumRoles.filter(r => r.roleId !== roleId);
                 fs.writeFileSync(usersPath, JSON.stringify(users, null, 4));
@@ -108,39 +163,45 @@ module.exports = {
         .addStringOption(option =>
             option.setName('ss')
                 .setDescription('Buy various stuff using Shinobi Shards')
+                .setRequired(false))
+        .addStringOption(option => // ✨ ADDED JUTSU OPTION
+            option.setName('jutsu')
+                .setDescription('Buy a jutsu for money')
+                .setRequired(false))
+        .addStringOption(option => // ✨ ADDED EVENT OPTION
+            option.setName('event')
+                .setDescription('Buy an event item using Ay Tokens')
                 .setRequired(false)),
 
     async execute(interaction) {
         const comboName = interaction.options.getString('combo');
         const ssName = interaction.options.getString('ss');
+        const eventName = interaction.options.getString('event');
+        const jutsuName = interaction.options.getString('jutsu');
 
-        if (!comboName && !ssName) {
+        if (!comboName && !ssName && !eventName && !jutsuName) {
             return interaction.reply("Buy something...c'mon.");
         }
 
-        // If using SS option
         if (ssName) {
             const premium = premiumItems.find(item => item.name === ssName.toLowerCase());
             if (!premium) {
                 return interaction.reply('That premium item doesn\'t exist in the shop!');
             }
 
-            const usersPath = path.join(__dirname, '../data', 'users.json');
-            const users = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
+            const players = JSON.parse(fs.readFileSync(playersPath, 'utf8'));
             const userId = interaction.user.id;
 
-            if (!users[userId]) {
+            if (!players[userId]) {
                 return interaction.reply('You need to be enrolled first!');
             }
 
-            // Custom Jutsu purchase logic
             if (premium.name === "custom jutsu") {
-                if (!users[userId].ss || users[userId].ss < premium.price) {
+                if (!players[userId].ss || players[userId].ss < premium.price) {
                     return interaction.reply(`You need ${premium.price} Shinobi Shards to buy this item!`);
                 }
-                users[userId].ss -= premium.price;
-                fs.writeFileSync(usersPath, JSON.stringify(users, null, 4));
-                // Add the role if it exists (for display and real-time)
+                players[userId].ss -= premium.price;
+                fs.writeFileSync(playersPath, JSON.stringify(players, null, 4));
                 if (premium.roleId) {
                     try {
                         const member = await interaction.guild.members.fetch(userId);
@@ -153,30 +214,41 @@ module.exports = {
                 return interaction.reply(`<@${userId}> Successfully purchased a Custom Jutsu! Instructions on creating a custom are in <#1399109319051579422>.`);
             }
 
-            // Check if user already has this premium role in premiumRoles
-            if (users[userId].premiumRoles && users[userId].premiumRoles.some(r => r.roleId === premium.roleId)) {
+            if (players[userId].premiumRoles && players[userId].premiumRoles.some(r => r.roleId === premium.roleId)) {
                 return interaction.reply('You already own this premium item!');
             }
 
-            if (!users[userId].ss || users[userId].ss < premium.price) {
+            if (!players[userId].ss || players[userId].ss < premium.price) {
                 return interaction.reply(`You need ${premium.price} Shinobi Shards to buy this item!`);
             }
 
-            users[userId].ss -= premium.price;
+            players[userId].ss -= premium.price;
 
-            // Remove roles property if it exists (cleanup)
-            if (users[userId].roles) {
-                delete users[userId].roles;
+            if (players[userId].roles) {
+                delete players[userId].roles;
             }
 
-            // Track premium role with expiration
-            if (!users[userId].premiumRoles) users[userId].premiumRoles = [];
+            if (!players[userId].premiumRoles) players[userId].premiumRoles = [];
             const expiresAt = Date.now() + premium.duration;
-            users[userId].premiumRoles.push({ roleId: premium.roleId, expiresAt });
+            players[userId].premiumRoles.push({ roleId: premium.roleId, expiresAt });
 
-            fs.writeFileSync(usersPath, JSON.stringify(users, null, 4));
+            fs.writeFileSync(playersPath, JSON.stringify(players, null, 4));
 
-            // Add role to user
+            // Also mirror the premium role into users.json so profile.js sees it immediately
+            try {
+                const users = fs.existsSync(usersPath) ? JSON.parse(fs.readFileSync(usersPath, 'utf8')) : {};
+                if (!users[userId]) users[userId] = {};
+                if (!Array.isArray(users[userId].premiumRoles)) users[userId].premiumRoles = [];
+                users[userId].premiumRoles = users[userId].premiumRoles.filter(r => r && r.roleId); // normalize
+                // avoid duplicates
+                if (!users[userId].premiumRoles.some(r => r.roleId === premium.roleId)) {
+                    users[userId].premiumRoles.push({ roleId: premium.roleId, expiresAt });
+                    fs.writeFileSync(usersPath, JSON.stringify(users, null, 4));
+                }
+            } catch (e) {
+                console.error('[buy.js] Failed to update users.json with premiumRoles:', e);
+            }
+
             try {
                 const member = await interaction.guild.members.fetch(userId);
                 await member.roles.add(premium.roleId, "Purchased premium item");
@@ -184,16 +256,13 @@ module.exports = {
                 // Ignore errors
             }
 
-            // Log the purchase
-            await logPurchase(interaction, ` <@${userId}> purchased **${premium.display}** for ${premium.price} Shinobi Shards. Expires <t:${Math.floor(expiresAt/1000)}:R>`);
+            await logPurchase(interaction, `<@${userId}> purchased **${premium.display}** for ${premium.price} Shinobi Shards. Expires <t:${Math.floor(expiresAt/1000)}:R>`);
 
-            // Schedule role removal
-            scheduleRoleRemoval(interaction.guild, userId, premium.roleId, premium.duration, usersPath);
+            scheduleRoleRemoval(interaction.guild, userId, premium.roleId, premium.duration, playersPath);
 
             return interaction.reply(`<@${userId}> Successfully purchased ${premium.display} for 1 month!`);
         }
 
-        // If using combo option
         if (comboName) {
             const comboKey = comboName.toLowerCase();
             if (!shopItems[comboKey]) {
@@ -214,13 +283,12 @@ module.exports = {
             }
 
             if (combo.price > 0) {
-                const usersPath = path.join(__dirname, '../data', 'users.json');
-                const users = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
-                if (!users[userId] || users[userId].money < combo.price) {
+                const players = JSON.parse(fs.readFileSync(playersPath, 'utf8'));
+                if (!players[userId] || players[userId].money < combo.price) {
                     return interaction.reply(`You need $${combo.price} to buy this combo!`);
                 }
-                users[userId].money -= combo.price;
-                fs.writeFileSync(usersPath, JSON.stringify(users, null, 4));
+                players[userId].money -= combo.price;
+                fs.writeFileSync(playersPath, JSON.stringify(players, null, 4));
             }
 
             if (!jutsuData[userId].combos) {
@@ -230,10 +298,179 @@ module.exports = {
 
             fs.writeFileSync(jutsusPath, JSON.stringify(jutsuData, null, 4));
 
-            // Log the purchase
-            await logPurchase(interaction, `🟢 <@${userId}> purchased combo **${combo.name}** for $${combo.price || 0}.`);
+            // Fixed logging emoji (replaced mojibake)
+            await logPurchase(interaction, ` <@${userId}> purchased combo **${combo.name}** for $${combo.price || 0}.`);
 
             return interaction.reply(`Successfully learned ${combo.name}!`);
         }
-    }
+
+        // --- BUY JUTSU SHOP ---
+        if (jutsuName) {
+            const jutsuKey = jutsuName.toLowerCase();
+            const item = jutsuShopItems[jutsuKey];
+            if (!item) {
+                return interaction.reply('That jutsu does not exist in the shop!');
+            }
+            const players = JSON.parse(fs.readFileSync(playersPath, 'utf8'));
+            const userId = interaction.user.id;
+            if (!players[userId] || players[userId].money < item.price) {
+                return interaction.reply(`You need $${item.price} to buy this jutsu!`);
+            }
+            
+            // Check if user already has the jutsu
+            const jutsuJsonPath = path.join(__dirname, '../data', 'jutsu.json');
+            const jutsuData = JSON.parse(fs.readFileSync(jutsuJsonPath, 'utf8'));
+
+            // The code provided doesn't explicitly check if the user already has the jutsu before purchasing
+            // but the add logic inside the block is checking it.
+            // I'll add an explicit check here for a better user experience.
+            if (jutsuData[userId] && jutsuData[userId].usersjutsu && jutsuData[userId].usersjutsu.includes(item.key)) {
+                return interaction.reply(`You already know the jutsu **${item.name}**!`);
+            }
+
+            players[userId].money -= item.price;
+            fs.writeFileSync(playersPath, JSON.stringify(players, null, 4));
+
+            // Add jutsu to jutsu.json usersjutsu
+            if (!jutsuData[userId]) jutsuData[userId] = { usersjutsu: [] };
+            if (!jutsuData[userId].usersjutsu) jutsuData[userId].usersjutsu = []; // Ensure array exists
+            
+            // Check again for redundancy (though logic above handles it, this is for safety)
+            if (!jutsuData[userId].usersjutsu.includes(item.key)) {
+                jutsuData[userId].usersjutsu.push(item.key);
+                fs.writeFileSync(jutsuJsonPath, JSON.stringify(jutsuData, null, 4));
+            }
+            await logPurchase(interaction, `<@${userId}> purchased jutsu **${item.name}** for $${item.price}.`);
+            return interaction.reply(`Successfully learned ${item.name}!`);
+        }
+
+        // --- BUY EVENT SHOP ---
+        if (eventName) {
+            const eventKey = eventName.toLowerCase();
+            const item = eventShopItems[eventKey];
+            if (!item) {
+                return interaction.reply('That event item does not exist in the shop!');
+            }
+            
+            const jutsuJsonPath = path.join(__dirname, '../data', 'jutsu.json');
+            const jutsuData = JSON.parse(fs.readFileSync(jutsuJsonPath, 'utf8'));
+            const userId = interaction.user.id;
+            
+            // Check if user is enrolled (since Ay tokens are in jutsu.json)
+            if (!jutsuData[userId]) {
+                return interaction.reply('You need to be enrolled first!');
+            }
+            
+            let ayTokens = 0;
+            if (jutsuData[userId].items && typeof jutsuData[userId].items["Ay Token"] === "number") {
+                ayTokens = jutsuData[userId].items["Ay Token"];
+            }
+
+            if (ayTokens < item.price) {
+                return interaction.reply(`You need ${item.price} Ay tokens to buy this item!`);
+            }
+
+            // Check if already learned (if it's a jutsu)
+            if (item.key !== "ramen" && jutsuData[userId].usersjutsu && jutsuData[userId].usersjutsu.includes(item.key)) {
+                return interaction.reply(`You already know the jutsu **${item.name}**!`);
+            }
+
+            // Deduct tokens
+            if (!jutsuData[userId].items) jutsuData[userId].items = {}; // Ensure items object exists
+            jutsuData[userId].items["Ay Token"] = ayTokens - item.price;
+
+            // If buying ramen coupon, add to players.json ramen
+            if (item.key === "ramen") {
+                const players = JSON.parse(fs.readFileSync(playersPath, 'utf8'));
+                if (!players[userId]) players[userId] = {};
+                players[userId].ramen = (players[userId].ramen || 0) + 1;
+                fs.writeFileSync(playersPath, JSON.stringify(players, null, 4));
+                fs.writeFileSync(jutsuJsonPath, JSON.stringify(jutsuData, null, 4));
+                await logPurchase(interaction, `<@${userId}> purchased 1 ramen coupon for ${item.price} Ay tokens.`);
+                return interaction.reply(`Successfully bought 1 ramen coupon!`);
+            } else {
+                // Add jutsu to usersjutsu
+                if (!jutsuData[userId].usersjutsu) jutsuData[userId].usersjutsu = [];
+                // Redundancy check added earlier, so we can just push if it wasn't a ramen coupon and we passed the check
+                if (!jutsuData[userId].usersjutsu.includes(item.key)) {
+                    jutsuData[userId].usersjutsu.push(item.key);
+                }
+                
+                fs.writeFileSync(jutsuJsonPath, JSON.stringify(jutsuData, null, 4));
+                await logPurchase(interaction, `<@${userId}> purchased event jutsu **${item.name}** for ${item.price} Ay tokens.`);
+                return interaction.reply(`Successfully learned ${item.name}!`);
+            }
+        }
+    },
+
+    // --- Persisted premium-role cleanup / scheduler on startup ---
+    // This function will be called by the bot main file after commands are loaded:
+    // e.g. command.setup(client, userPromptCounts) or command.setup(client)
+    setup: (client) => {
+        try {
+            if (!fs.existsSync(playersPath)) return;
+            const players = JSON.parse(fs.readFileSync(playersPath, 'utf8'));
+            let modified = false;
+            for (const [userId, pdata] of Object.entries(players)) {
+                if (!pdata || !Array.isArray(pdata.premiumRoles)) continue;
+
+                // Filter roles: remove expired now, schedule future removals
+                const remainingRoles = [];
+                for (const roleObj of pdata.premiumRoles) {
+                    if (!roleObj || !roleObj.roleId || !roleObj.expiresAt) {
+                        // keep malformed entries to avoid data loss
+                        remainingRoles.push(roleObj);
+                        continue;
+                    }
+                    const msLeft = roleObj.expiresAt - Date.now();
+                    if (msLeft <= 0) {
+                        // expired already -> attempt immediate removal across guilds
+                        client.guilds.cache.forEach(async (guild) => {
+                            try {
+                                const member = await guild.members.fetch(userId).catch(() => null);
+                                if (member && member.roles.cache.has(roleObj.roleId)) {
+                                    await member.roles.remove(roleObj.roleId, 'Premium role expired (startup cleanup)');
+                                }
+                            } catch (e) {
+                                // ignore per-guild errors
+                            }
+                        });
+                        // also remove from users.json immediately
+                        try {
+                            const users = fs.existsSync(usersPath) ? JSON.parse(fs.readFileSync(usersPath, 'utf8')) : {};
+                            if (users[userId] && Array.isArray(users[userId].premiumRoles)) {
+                                const before = users[userId].premiumRoles.length;
+                                users[userId].premiumRoles = users[userId].premiumRoles.filter(r => r && r.roleId !== roleObj.roleId);
+                                if (users[userId].premiumRoles.length !== before) {
+                                    fs.writeFileSync(usersPath, JSON.stringify(users, null, 4));
+                                }
+                            }
+                        } catch (e) {
+                            console.error('[buy.js] Failed to remove expired premium role from users.json on startup:', e);
+                        }
+                        modified = true;
+                        // do not push to remainingRoles (removing entry)
+                    } else {
+                        // schedule future removal for each guild (will ignore guilds where user is not present)
+                        client.guilds.cache.forEach((guild) => {
+                            scheduleRoleRemoval(guild, userId, roleObj.roleId, msLeft, playersPath);
+                        });
+                        remainingRoles.push(roleObj);
+                    }
+                }
+
+                // update if changed
+                if (remainingRoles.length !== pdata.premiumRoles.length) {
+                    players[userId].premiumRoles = remainingRoles;
+                }
+            }
+
+            if (modified) {
+                fs.writeFileSync(playersPath, JSON.stringify(players, null, 4));
+            }
+            console.log('[buy.js] Scheduled premium role expirations on startup.');
+        } catch (e) {
+            console.error('[buy.js] Failed to schedule premium role expirations on startup:', e);
+        }
+    },
 };
