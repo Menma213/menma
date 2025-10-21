@@ -2610,7 +2610,7 @@ if (statusEffect) {
                 const expReward = math.random(10, 30);
                 // mark brank tutorial as completed for this user
                 if (!users[player1.userId]) users[player1.userId] = {};
-                users[player1.userId].brankwon = true;
+                users[player1.userId].brankWon = true;
                 fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
                 const moneyReward = 500 + Math.floor((player1.level || 1) * 20);
 
