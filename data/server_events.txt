@@ -1,0 +1,150 @@
+```javascript
+const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+const fs = require('fs');
+const path = require('path');
+const { runBattle, getCooldownString } = require('./combinedcommands.js');
+
+// --- Paths to Data Files ---
+const usersPath = path.resolve(__dirname, '../../menma/data/users.json');
+const playersPath = path.resolve(__dirname, '../../menma/data/players.json');
+const giftPath = path.resolve(__dirname, '../../menma/data/gift.json');
+
+// --- Constants (Optional) ---
+// Define any role IDs for cooldown modifications if needed.
+// const JINCHURIKI_ROLE = "1385641469507010640";
+
+// Helper function to generate unique gift IDs (copied from trials.js or similar)
+function generateGiftId(userGifts) {
+    let id = Math.floor(Math.random() * 1000000);
+    while (userGifts.some(gift => gift.id === id)) {
+        id = Math.floor(Math.random() * 1000000);
+    }
+    return id;
+}
+
+
+module.exports = {
+    data: new SlashCommandBuilder()
+        .setName('arena_challenge')
+        .setDescription('Challenge a formidable opponent in the arena.'),
+
+    async execute(interaction) {
+        // A. Initial Setup & User Verification
+        const userId = interaction.user.id;
+        let users;
+        try {
+            users = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
+        } catch (error) {
+            console.error("Error reading users.json:", error);
+            return interaction.reply({ content: "An error occurred while loading user data.", ephemeral: true });
+        }
+
+        if (!users[userId]) {
+            return interaction.reply({ content: "You need to enroll first!", ephemeral: true });
+        }
+
+        // B. Cooldown Management
+        const now = Date.now();
+        const cooldownMs = 30 * 60 * 1000; // 30 minutes base cooldown
+
+        // Placeholder for premium role cooldown reduction
+        // const memberRoles = interaction.member.roles.cache;
+        // if (memberRoles.has(JINCHURIKI_ROLE)) {
+        //     cooldownMs /= 2; // Halve cooldown for premium role
+        // }
+
+        const lastArenaChallenge = users[userId].lastArenaChallenge; // Use a specific key for this command
+
+        if (lastArenaChallenge && now - lastArenaChallenge < cooldownMs) {
+            const left = cooldownMs - (now - lastArenaChallenge);
+            return interaction.reply(`You can challenge again in ${getCooldownString(left)}.`);
+        }
+
+        // Update cooldown timestamp
+        users[userId].lastArenaChallenge = now;
+        try {
+            fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
+        } catch (error) {
+            console.error("Error writing users.json:", error);
+            return interaction.reply({ content: "An error occurred while saving your cooldown data.", ephemeral: true });
+        }
+
+
+        // C. Battle Execution
+        await interaction.deferReply();
+
+        const npcTemplate = {
+            name: "Master Swordsman",
+            image: "https://i.imgur.com/jHj5i4f.png", // Example image URL
+            health: 30000,
+            power: 3500,
+            defense: 1500,
+            accuracy: 98,
+            dodge: 15,
+            jutsu: ["Heavy Strike", "Parry", "Quick Slash"],
+            statsType: "fixed" // This is essential!
+        };
+
+        const npcId = `NPC_${npcTemplate.name.replace(/\s+/g, '_')}`;
+        const battleResult = await runBattle(interaction, userId, npcId, 'arena_challenge', npcTemplate);
+
+        // D. Handling Battle Results & Rewards
+        if (battleResult === 'win') {
+            // Player won
+            let players;
+            try {
+                players = JSON.parse(fs.readFileSync(playersPath, 'utf8'));
+            } catch (error) {
+                console.error("Error reading players.json:", error);
+                // Proceed with rewards even if player stats can't be loaded
+            }
+
+            const playerLevel = players?.[userId]?.level || 1;
+
+            const expReward = 150 + (playerLevel * 3);
+            const moneyReward = 7500;
+
+            // Add rewards to gift inventory
+            let giftData = {};
+            if (fs.existsSync(giftPath)) {
+                try {
+                    giftData = JSON.parse(fs.readFileSync(giftPath, 'utf8'));
+                } catch (error) {
+                    console.error("Error reading gift.json:", error);
+                    // Continue with empty giftData if file is corrupted
+                }
+            }
+            if (!giftData[userId]) giftData[userId] = [];
+
+            // Ensure giftData[userId] is an array before pushing
+            if (!Array.isArray(giftData[userId])) {
+                giftData[userId] = [];
+            }
+
+            giftData[userId].push({ id: generateGiftId(giftData[userId]), type: 'exp', amount: expReward, from: 'arena_challenge', date: Date.now() });
+            giftData[userId].push({ id: generateGiftId(giftData[userId]), type: 'money', amount: moneyReward, from: 'arena_challenge', date: Date.now() });
+
+            try {
+                fs.writeFileSync(giftPath, JSON.stringify(giftData, null, 2));
+            } catch (error) {
+                console.error("Error writing gift.json:", error);
+                return interaction.followUp({ content: "Victory! However, an error occurred while processing your rewards. Please check your inventory later.", ephemeral: true });
+            }
+
+            const winEmbed = new EmbedBuilder()
+                .setTitle('Victory in the Arena!')
+                .setDescription(`You have successfully defeated the **${npcTemplate.name}**! Your rewards have been sent to your /gift inventory.`)
+                .setColor('#00FF00'); // Green for victory
+            await interaction.followUp({ embeds: [winEmbed] });
+
+        } else {
+            // Player lost or fled
+            const lossEmbed = new EmbedBuilder()
+                .setTitle('Defeat in the Arena!')
+                .setDescription(`You were overcome by the **${npcTemplate.name}**. Better luck next time!`)
+                .setColor('#FF0000'); // Red for defeat
+            await interaction.followUp({ embeds: [lossEmbed] });
+        }
+    }
+};
+```

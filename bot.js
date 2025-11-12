@@ -122,6 +122,19 @@ client.once('ready', () => {
     } catch (err) {
         console.error('❌ Failed to enable Forest of Death auto-start:', err);
     }
+
+    // --- Register tournament module interaction handler if present ---
+    try {
+        const tournamentCmd = client.commands.get('tournament');
+        if (tournamentCmd && typeof tournamentCmd.registerClient === 'function') {
+            tournamentCmd.registerClient(client);
+            console.log('✅ Tournament module interaction listener registered.');
+        } else {
+            console.log('ℹ️ Tournament module or registerClient not found; skipping registration.');
+        }
+    } catch (err) {
+        console.error('❌ Error registering tournament client handler:', err);
+    }
 });
 
 // Listen for messages to trigger Thunderbird NPC
@@ -129,6 +142,22 @@ const tradeCmd = require('./commands/trade');
 client.on('messageCreate', async (message) => {
     if (typeof tradeCmd.thunderbirdListener === 'function') {
         await tradeCmd.thunderbirdListener(message);
+    }
+});
+
+client.on('guildMemberAdd', async member => {
+    try {
+        const welcomeModule = require('./commands/welcome.js');
+        const welcomeChannelId = welcomeModule.WELCOME_CHANNEL;
+        const welcomeChannel = await client.channels.fetch(welcomeChannelId);
+
+        if (welcomeChannel) {
+            const welcomeCard = await welcomeModule.generateWelcomeCard(member);
+            const attachment = new AttachmentBuilder(welcomeCard, { name: 'welcome-card.png' });
+            await welcomeChannel.send({ content: `Welcome to the server, <@${member.id}>!`, files: [attachment] });
+        }
+    } catch (error) {
+        console.error('Error sending welcome message:', error);
     }
 });
 

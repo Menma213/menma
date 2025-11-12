@@ -1,21 +1,22 @@
 const { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, EmbedBuilder, StringSelectMenuBuilder, AttachmentBuilder, ButtonStyle } = require('discord.js');
 const fs = require('fs').promises;
 const path = require('path');
-const { createCanvas, loadImage } = require('canvas');
 
 // Paths
 const DATA_PATH = path.join(__dirname, '../../menma/data/users.json');
 const MENTORS_PATH = path.join(__dirname, '../../menma/data/mentors.json');
-const STORYLINES_PATH = path.join(__dirname, '../../menma/data/storylines.json');
+const MENTOR_EXP_PATH = path.join(__dirname, '../../menma/data/mentorexp.json');
+const JUTSU_PATH = path.join(__dirname, '../../menma/data/jutsu.json');
 
 // Load data files
 async function loadData() {
-    const [users, mentors, storylines] = await Promise.all([
+    const [users, mentors, mentorExp, jutsus] = await Promise.all([
         loadJsonFile(DATA_PATH),
         loadJsonFile(MENTORS_PATH),
-        loadJsonFile(STORYLINES_PATH)
+        loadJsonFile(MENTOR_EXP_PATH),
+        loadJsonFile(JUTSU_PATH)
     ]);
-    return { users, mentors, storylines };
+    return { users, mentors, mentorExp, jutsus };
 }
 
 async function loadJsonFile(filePath) {
@@ -43,7 +44,8 @@ module.exports = {
                 .addChoices(
                     { name: 'list', value: 'list' },
                     { name: 'select', value: 'select' },
-                    { name: 'learn', value: 'learn' }
+                    { name: 'learn', value: 'learn' },
+                    { name: 'train', value: 'train' }
                 )
         )
         .addStringOption(option =>
@@ -53,7 +55,7 @@ module.exports = {
                 .setAutocomplete(true)
         ),
     async execute(interaction) {
-        const { users, mentors, storylines } = await loadData();
+        const { users, mentors, mentorExp, jutsus } = await loadData();
         const userId = interaction.user.id;
         const player = users[userId] || {};
 
@@ -66,13 +68,13 @@ module.exports = {
         const playerRank = player.rank || 'Genin';
         const rankMentors = mentors[playerRank] || {};
 
-        // Action: list
         if (action === 'list') {
+            const userMentorExp = mentorExp[userId] ? mentorExp[userId].exp : 0;
             const embed = new EmbedBuilder()
                 .setTitle(`Available ${playerRank} Mentors`)
                 .setDescription(
-                    `Use \`/mentor action:select mentor:<mentor>\` to select a mentor.\n\n` +
-                    `**Your Mentor EXP:** ${player.mentorExp || 0}\n\n` +
+                    `Use \\\`/mentor action:select mentor:<mentor>\\\` to select a mentor.\n\n` +
+                    `**Your Mentor EXP:** ${userMentorExp}\n\n` +
                     `Here are the mentors available for your rank:\n If you don't see any mentors, it's probably because you are not high enough rank yet. Rankup through ranked.`
                 )
                 .setColor('#0099ff');
@@ -90,92 +92,79 @@ module.exports = {
             return interaction.reply({ embeds: [embed] });
         }
 
-        // Action: select
         if (action === 'select') {
             if (!mentorName) {
                 return interaction.reply({ content: "Please specify a mentor name.", ephemeral: true });
             }
-            // --- Case-insensitive mentor lookup ---
             const mentorKey = Object.keys(rankMentors).find(
                 k => k.toLowerCase() === mentorName.toLowerCase()
             );
-            const mentorData = mentorKey ? rankMentors[mentorKey] : undefined;
-            if (!mentorData) {
+            if (!mentorKey) {
                 return interaction.reply({ content: "That mentor doesn't exist for your rank.", ephemeral: true });
             }
-            // If story completed, directly select mentor
-            if (player.completedMentorStories?.[mentorKey]) {
-                // Reset mentorExp when switching mentors
-                player.mentor = mentorKey;
-                player.mentorExp = 0;
-                users[userId] = player;
-                await saveJsonFile(DATA_PATH, users);
-                return interaction.reply({ content: `You have selected **${mentorKey}** as your mentor! Your Mentor EXP has been reset.`, ephemeral: true });
-            }
-            // Otherwise, start storyline/minigame
-            // --- Case-insensitive storyline lookup ---
-            const storylineKey = Object.keys(storylines).find(
-                k => k.toLowerCase() === mentorName.toLowerCase()
-            );
-            const storyline = storylineKey ? storylines[storylineKey] : undefined;
-            if (!storyline) {
-                return interaction.reply({ content: "This mentor doesn't have a storyline yet.", ephemeral: true });
-            }
-            // Show only storyline, not jutsus
-            let currentPage = 0;
-            const embed = new EmbedBuilder()
-                .setTitle(storyline.title)
-                .setDescription(storyline.pages[currentPage])
-                .setColor('#3498db')
-                .setFooter({ text: `Page ${currentPage + 1}/${storyline.pages.length}` });
 
-            const row = new ActionRowBuilder().addComponents(
-                new ButtonBuilder()
-                    .setCustomId('story_prev')
-                    .setLabel('Previous')
-                    .setStyle(ButtonStyle.Secondary)
-                    .setDisabled(true),
-                new ButtonBuilder()
-                    .setCustomId('story_next')
-                    .setLabel('Next')
-                    .setStyle(ButtonStyle.Primary)
-            );
+            player.mentor = mentorKey;
+            users[userId] = player;
+            await saveJsonFile(DATA_PATH, users);
 
-            const response = await interaction.reply({
-                embeds: [embed],
-                components: [row],
-                fetchReply: true
-            });
-
-            const collector = response.createMessageComponentCollector({
-                filter: i => i.user.id === userId,
-                time: 60000
-            });
-
-            collector.on('collect', async i => {
-                if (i.customId === 'story_next') {
-                    currentPage++;
-                    if (currentPage >= storyline.pages.length - 1) {
-                        collector.stop();
-                        await showMinigame(i, player, userId, users, mentorKey, storyline);
-                        return;
-                    }
-                } else {
-                    currentPage--;
-                }
-                row.components[0].setDisabled(currentPage <= 0);
-                row.components[1].setLabel(currentPage >= storyline.pages.length - 1 ? 'Start Minigame' : 'Next');
-                embed.setDescription(storyline.pages[currentPage]);
-                embed.setFooter({ text: `Page ${currentPage + 1}/${storyline.pages.length}` });
-                await i.update({ embeds: [embed], components: [row] });
-            });
-            return;
+            return interaction.reply({ content: `You have selected **${mentorKey}** as your mentor!`, ephemeral: true });
         }
 
-        // Action: learn
+        if (action === 'train') {
+            const userMentorExp = mentorExp[userId] || { exp: 0, last_train: 0 };
+            const now = Date.now();
+            const cooldown = 15 * 60 * 1000; // 15 minutes
+
+            if (now - userMentorExp.last_train < cooldown) {
+                const remaining = cooldown - (now - userMentorExp.last_train);
+                return interaction.reply({ content: `You can train again in ${Math.ceil(remaining / 60000)} minutes.`, ephemeral: true });
+            }
+
+            userMentorExp.exp += 10;
+            userMentorExp.last_train = now;
+            mentorExp[userId] = userMentorExp;
+            await saveJsonFile(MENTOR_EXP_PATH, mentorExp);
+
+            return interaction.reply({ content: `You trained and gained 10 mentor EXP! You now have ${userMentorExp.exp} EXP.`, ephemeral: true });
+        }
+
         if (action === 'learn') {
-            await handleLearnJutsu(interaction, player, userId, users, mentors);
-            return;
+            if (!player.mentor) {
+                return interaction.reply({ content: "You don't have a mentor selected. Use /mentor select first.", ephemeral: true });
+            }
+
+            const mentorKey = player.mentor;
+            const mentorData = rankMentors[mentorKey];
+
+            if (!mentorData) {
+                return interaction.reply({ content: "Your current mentor isn't available for your rank anymore.", ephemeral: true });
+            }
+
+            const userMentorExp = mentorExp[userId] ? mentorExp[userId].exp : 0;
+            const userJutsus = jutsus[userId] ? jutsus[userId].usersjutsu : [];
+
+            const availableJutsu = mentorData.jutsu.filter(j =>
+                userMentorExp >= j.required_exp && !userJutsus.includes(j.name)
+            );
+
+            if (availableJutsu.length === 0) {
+                return interaction.reply({ content: "No jutsus available to learn right now (either not enough EXP or already learned).", ephemeral: true });
+            }
+
+            const jutsuToLearn = availableJutsu[0];
+
+            if (!jutsus[userId]) {
+                jutsus[userId] = { usersjutsu: [], scrolls: [] };
+            }
+            jutsus[userId].usersjutsu.push(jutsuToLearn.name);
+            await saveJsonFile(JUTSU_PATH, jutsus);
+
+            const userMentorExpData = mentorExp[userId] || { exp: 0, last_train: 0 };
+            userMentorExpData.exp -= jutsuToLearn.required_exp;
+            mentorExp[userId] = userMentorExpData;
+            await saveJsonFile(MENTOR_EXP_PATH, mentorExp);
+
+            interaction.reply({ content: `You've learned **${jutsuToLearn.name}** from ${mentorName}!`, ephemeral: true });
         }
     },
     async autocomplete(interaction) {
@@ -196,291 +185,3 @@ module.exports = {
         }
     }
 };
-
-// Main mentor command handler
-async function handleSelectMentor(interaction, player, userId, users, mentors, storylines) {
-    const playerRank = player.rank || 'Genin';
-    const rankMentors = mentors[playerRank] || {};
-
-    // If no specific mentor mentioned, show list
-    if (!interaction.options.getString('mentor')) {
-        const embed = new EmbedBuilder()
-            .setTitle(`Available ${playerRank} Mentors`)
-            .setDescription('Here are the mentors available for your rank:')
-            .setColor('#0099ff');
-
-        for (const [name, data] of Object.entries(rankMentors)) {
-            const jutsuList = data.jutsu.map(j => `• ${j.name} (${j.required_exp} EXP)`).join('\n');
-            embed.addFields({
-                name: name,
-                value: `${data.clan ? `Clan: ${data.clan}\n` : ''}${jutsuList}`,
-                inline: true
-            });
-        }
-
-        embed.setFooter({ 
-            text: "Use /mentor select <mentor> to choose one\nYou cannot learn previous ranks' jutsu once you rank up!" 
-        });
-
-        return interaction.reply({ embeds: [embed] });
-    }
-
-    // Handle specific mentor selection
-    const mentorName = interaction.options.getString('mentor');
-    // --- Case-insensitive mentor lookup ---
-    const mentorKey = Object.keys(rankMentors).find(
-        k => k.toLowerCase() === mentorName.toLowerCase()
-    );
-    const mentorData = mentorKey ? rankMentors[mentorKey] : undefined;
-
-    if (!mentorData) {
-        return interaction.reply({ 
-            content: "That mentor doesn't exist for your rank.", 
-            ephemeral: true 
-        });
-    }
-
-    // Check if story already completed
-    if (player.completedMentorStories?.[mentorKey]) {
-        return interaction.reply({ 
-            content: `You've already completed ${mentorKey}'s storyline.`, 
-            ephemeral: true 
-        });
-    }
-
-    // Start the storyline
-    // --- Case-insensitive storyline lookup ---
-    const storylineKey = Object.keys(storylines).find(
-        k => k.toLowerCase() === mentorName.toLowerCase()
-    );
-    const storyline = storylineKey ? storylines[storylineKey] : undefined;
-    if (!storyline) {
-        return interaction.reply({ 
-            content: "This mentor doesn't have a storyline yet.", 
-            ephemeral: true 
-        });
-    }
-
-    await startStoryline(interaction, player, userId, users, mentorKey, storyline);
-}
-
-// Storyline handler
-async function startStoryline(interaction, player, userId, users, mentorName, storyline) {
-    let currentPage = 0;
-
-    const embed = new EmbedBuilder()
-        .setTitle(storyline.title)
-        .setDescription(storyline.pages[currentPage])
-        .setColor('#3498db')
-        .setFooter({ text: `Page ${currentPage + 1}/${storyline.pages.length}` });
-
-    const row = new ActionRowBuilder().addComponents(
-        new ButtonBuilder()
-            .setCustomId('story_prev')
-            .setLabel('Previous')
-            .setStyle(ButtonStyle.Secondary)
-            .setDisabled(true),
-        new ButtonBuilder()
-            .setCustomId('story_next')
-            .setLabel('Next')
-            .setStyle(ButtonStyle.Primary)
-    );
-
-    const response = await interaction.reply({ 
-        embeds: [embed], 
-        components: [row],
-        fetchReply: true
-    });
-
-    const collector = response.createMessageComponentCollector({ 
-        filter: i => i.user.id === userId, 
-        time: 60000 
-    });
-
-    collector.on('collect', async i => {
-        if (i.customId === 'story_next') {
-            currentPage++;
-            if (currentPage === storyline.pages.length) {
-                collector.stop();
-                await showMinigame(i, player, userId, users, mentorName, storyline);
-                return;
-            }
-        } else {
-            currentPage--;
-        }
-
-        // Update buttons
-        row.components[0].setDisabled(currentPage <= 0);
-        row.components[1].setLabel(currentPage === storyline.pages.length - 1 ? 'Start Minigame' : 'Next');
-
-        // Show last page before minigame
-        if (currentPage < storyline.pages.length) {
-            embed.setDescription(storyline.pages[currentPage]);
-            embed.setFooter({ text: `Page ${currentPage + 1}/${storyline.pages.length}` });
-            await i.update({ embeds: [embed], components: [row] });
-        }
-    });
-}
-
-// Minigame handler
-async function showMinigame(interaction, player, userId, users, mentorName, storyline) {
-    const minigame = storyline.minigame;
-    const embed = new EmbedBuilder()
-        .setTitle(minigame.title || "Solve the Challenge")
-        .setDescription(minigame.description)
-        .setColor('#e67e22');
-
-    minigame.options.forEach((option, index) => {
-        embed.addFields({
-            name: `${index + 1}. ${option.text}`,
-            value: option.hint || '',
-            inline: false
-        });
-    });
-
-    const row = new ActionRowBuilder();
-    minigame.options.forEach((_, index) => {
-        row.addComponents(
-            new ButtonBuilder()
-                .setCustomId(`mg_${index}`)
-                .setLabel(`${index + 1}`)
-                .setStyle(ButtonStyle.Primary)
-        );
-    });
-
-    let response;
-    if (!interaction.replied && !interaction.deferred) {
-        response = await interaction.reply({
-            embeds: [embed],
-            components: [row],
-            fetchReply: true
-        });
-    } else {
-        response = await interaction.followUp({
-            embeds: [embed],
-            components: [row],
-            fetchReply: true
-        });
-    }
-
-    const collector = response.createMessageComponentCollector({
-        filter: i => i.user.id === userId,
-        time: 60000
-    });
-
-    collector.on('collect', async i => {
-        const selected = parseInt(i.customId.split('_')[1]);
-        const isCorrect = selected === minigame.correct;
-
-        // Ensure mentorExp is initialized
-        const { users } = await loadData();
-        const user = users[userId] || {};
-        if (typeof user.mentorExp !== "number") user.mentorExp = 0;
-
-        if (isCorrect) {
-            user.completedMentorStories = user.completedMentorStories || {};
-            user.completedMentorStories[mentorName] = true;
-            // Reduce mentorExp reward (was 10, now 3)
-            user.mentorExp += (minigame.rewardExp !== undefined ? minigame.rewardExp : 3);
-            // Reset mentorExp if switching mentors
-            user.mentor = mentorName;
-            user.mentorExp = 0 + (minigame.rewardExp !== undefined ? minigame.rewardExp : 3);
-            users[userId] = user;
-            await saveJsonFile(DATA_PATH, users);
-
-            const successEmbed = new EmbedBuilder()
-                .setTitle("Success!")
-                .setDescription(minigame.successText)
-                .addFields({
-                    name: 'Rewards',
-                    value: `+${minigame.rewardExp !== undefined ? minigame.rewardExp : 3} Mentor EXP\nYou have selected **${mentorName}** as your mentor! Your Mentor EXP has been reset.`
-                })
-                .setColor('#2ecc71');
-
-            await i.update({ embeds: [successEmbed], components: [] });
-        } else {
-            const failEmbed = new EmbedBuilder()
-                .setTitle("Try Again")
-                .setDescription(minigame.failText || "That wasn't the correct choice.")
-                .setColor('#e74c3c');
-
-            await i.update({ embeds: [failEmbed], components: [] });
-        }
-    });
-}
-
-// Learn jutsu handler
-async function handleLearnJutsu(interaction, player, userId, users, mentors) {
-    if (!player.mentor) {
-        return interaction.reply({
-            content: "You don't have a mentor selected. Use /mentor select first.",
-            ephemeral: true
-        });
-    }
-
-    // --- Case-insensitive mentor lookup for mentorData ---
-    const mentorName = player.mentor;
-    const playerRank = player.rank || 'Genin';
-    const rankMentors = mentors[playerRank] || {};
-    const mentorKey = Object.keys(rankMentors).find(
-        k => k.toLowerCase() === mentorName.toLowerCase()
-    );
-    const mentorData = mentorKey ? rankMentors[mentorKey] : undefined;
-
-    if (!mentorData) {
-        return interaction.reply({
-            content: "Your current mentor isn't available for your rank anymore.",
-            ephemeral: true
-        });
-    }
-
-    // Check if story completed
-    if (!player.completedMentorStories?.[mentorKey]) {
-        return interaction.reply({
-            content: `Complete ${mentorKey}'s storyline first with /mentor select ${mentorKey}`,
-            ephemeral: true
-        });
-    }
-
-    // Find available jutsu the player can learn
-    const availableJutsu = mentorData.jutsu.filter(j =>
-        (player.mentorExp || 0) >= j.required_exp &&
-        !Object.values(player.jutsu || {}).includes(j.name)
-    );
-
-    if (availableJutsu.length === 0) {
-        return interaction.reply({
-            content: "No jutsus available to learn right now (either not enough EXP or already learned).",
-            ephemeral: true
-        });
-    }
-
-    // Auto-learn the first available jutsu (or could make a select menu)
-    const jutsuToLearn = availableJutsu[0];
-
-    // Save to jutsu.json instead of user slots
-    const jutsusPath = path.join(__dirname, '../../menma/data/jutsu.json');
-    let jutsuData = {};
-    try {
-        jutsuData = JSON.parse(await fs.readFile(jutsusPath, 'utf8'));
-    } catch (e) {
-        jutsuData = {};
-    }
-    // Use usersjutsu array for saving learned jutsu
-    if (!jutsuData[userId]) jutsuData[userId] = { usersjutsu: [], scrolls: [] };
-    if (!Array.isArray(jutsuData[userId].usersjutsu)) jutsuData[userId].usersjutsu = [];
-    if (!jutsuData[userId].usersjutsu.includes(jutsuToLearn.name)) {
-        jutsuData[userId].usersjutsu.push(jutsuToLearn.name);
-    }
-    await fs.writeFile(jutsusPath, JSON.stringify(jutsuData, null, 2));
-
-    // Deduct EXP
-    player.mentorExp -= jutsuToLearn.required_exp;
-    users[userId] = player;
-    await saveJsonFile(DATA_PATH, users);
-
-    interaction.reply({
-        content: `You've learned **${jutsuToLearn.name}** from ${mentorName}!`,
-        ephemeral: true
-    });
-}

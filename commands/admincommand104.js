@@ -4,7 +4,7 @@ const path = require('path');
 
 const usersPath = path.resolve(__dirname, '../../menma/data/users.json');
 const ALLOWED_COLORS = ['default', 'grey', 'donator', 'legendary', 'jinchuriki', 'blue', 'cyan', 'green', 'orange'];
-const HOKAGE_ROLE_ID = '1381268735557501058'; // Replace with your actual Hokage role ID
+const HOKAGE_ROLE_ID = '1381268854776529028'; // Replace with your actual Hokage role ID
 
 module.exports = {
     data: new SlashCommandBuilder()

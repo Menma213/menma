@@ -1,241 +1,145 @@
-const { SlashCommandBuilder, AttachmentBuilder, PermissionFlagsBits } = require('discord.js');
-const { createCanvas, loadImage } = require('canvas');
-const { GifUtil, GifFrame, GifCodec } = require('gifwrap');
+const { createCanvas, loadImage, registerFont } = require('canvas');
 const path = require('path');
-const fs = require('fs');
-// const welcomeCmd = require('./commands/welcome.js');
+const { AttachmentBuilder } = require('discord.js');
 
-// Configuration
-const BASE_GIF_PATH = path.join('C:\\Users\\HI\\Downloads\\menma\\assets\\welcome_poke_base.gif');
-const CONFIG_PATH = path.join(__dirname, 'welcome_config.json');
-const AVATAR_SIZE = 128; // Size for user avatars
+// --- Configuration ---
+const SERVER_NAME = "Shinobi RPG Official Server";
+const WELCOME_CHANNEL = "1388552015311011911";
 
-// Frame data for avatar placement (pre-analyzed)
-const avatarPlacementData = [
-    // Frame 0 - Initial position
-    { frameIndex: 0, x: 150, y: 180, width: 40, height: 40, rotation: 0 },
-    // Frame 1 - Poke contact
-    { frameIndex: 1, x: 155, y: 178, width: 40, height: 40, rotation: 0 },
-    // Frame 2 - Start moving (35 degrees up-left)
-    { frameIndex: 2, x: 140, y: 160, width: 40, height: 40, rotation: -0.61 },
-    // Frame 3 - Continue trajectory
-    { frameIndex: 3, x: 120, y: 140, width: 40, height: 40, rotation: -0.61 },
-    // Frame 4 - Further along
-    { frameIndex: 4, x: 100, y: 120, width: 40, height: 40, rotation: -0.61 },
-    // Frame 5 - Almost off-screen
-    { frameIndex: 5, x: 80, y: 100, width: 40, height: 40, rotation: -0.61 },
-    // Frame 6 - Off-screen
-    { frameIndex: 6, x: 60, y: 80, width: 40, height: 40, rotation: -0.61 }
-];
-
-// Load or create config file
-function loadConfig() {
-    try {
-        if (fs.existsSync(CONFIG_PATH)) {
-            return JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf8'));
-        }
-        return {};
-    } catch (error) {
-        console.error('Error loading config:', error);
-        return {};
-    }
-}
-
-// Save config to file
-function saveConfig(config) {
-    try {
-        fs.writeFileSync(CONFIG_PATH, JSON.stringify(config, null, 2), 'utf8');
-    } catch (error) {
-        console.error('Error saving config:', error);
-    }
-}
-
-// Create the welcome GIF with user's avatar
-async function createWelcomeGif(userAvatarUrl) {
-    try {
-        // Load base GIF
-        const gif = await GifUtil.read(BASE_GIF_PATH);
-        const codec = new GifCodec();
-        
-        // Load user avatar
-        const avatar = await loadImage(userAvatarUrl);
-        
-        // Process each frame
-        const newFrames = [];
-        for (let i = 0; i < gif.frames.length; i++) {
-            const frame = gif.frames[i];
-            const frameData = avatarPlacementData.find(data => data.frameIndex === i);
-            
-            // Create canvas for this frame
-            const canvas = createCanvas(frame.bitmap.width, frame.bitmap.height);
-            const ctx = canvas.getContext('2d');
-            
-            // Draw original frame
-            ctx.drawImage(await loadImage(frame.bitmap), 0, 0);
-            
-            // Add user avatar if this frame needs it
-            if (frameData) {
-                ctx.save();
-                
-                // Position and rotate avatar
-                ctx.translate(frameData.x + frameData.width / 2, frameData.y + frameData.height / 2);
-                ctx.rotate(frameData.rotation);
-                
-                // Draw avatar (centered at the translation point)
-                ctx.drawImage(
-                    avatar,
-                    -frameData.width / 2,
-                    -frameData.height / 2,
-                    frameData.width,
-                    frameData.height
-                );
-                
-                ctx.restore();
-            }
-            
-            // Create new frame with original timing
-            const newFrame = new GifFrame(
-                ctx.getImageData(0, 0, canvas.width, canvas.height),
-                {
-                    delayCentisecs: frame.delayCentisecs,
-                    disposalMethod: frame.disposalMethod
-                }
-            );
-            
-            newFrames.push(newFrame);
-        }
-        
-        // Encode the new GIF
-        const outputBuffer = await codec.encodeGif(newFrames, { loops: gif.loops });
-        return outputBuffer.buffer;
-    } catch (error) {
-        console.error('Error creating welcome GIF:', error);
-        throw error;
-    }
-}
-
-// Admin command to enable/disable welcome GIFs
-module.exports = {
-    data: new SlashCommandBuilder()
-        .setName('admincommand105')
-        .setDescription('Manage welcome GIF settings')
-        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
-        .addSubcommand(subcommand =>
-            subcommand
-                .setName('enable')
-                .setDescription('Enable welcome GIFs for this server')
-                .addChannelOption(option =>
-                    option.setName('channel')
-                        .setDescription('Channel to send welcome messages')
-                        .setRequired(true)
-                )
-                .addUserOption(option =>
-                    option.setName('user')
-                        .setDescription('(Test) Send welcome GIF for this user immediately')
-                        .setRequired(false)
-                )
-        )
-        .addSubcommand(subcommand =>
-            subcommand
-                .setName('disable')
-                .setDescription('Disable welcome GIFs for this server')
-        ),
-    
-    async execute(interaction) {
-        if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
-            return interaction.reply({ content: 'You need administrator permissions to use this command.', ephemeral: true });
-        }
-        
-        const config = loadConfig();
-        const guildId = interaction.guild.id;
-        const subcommand = interaction.options.getSubcommand();
-        
-        if (subcommand === 'enable') {
-            const channel = interaction.options.getChannel('channel');
-            const testUser = interaction.options.getUser('user');
-            
-            config[guildId] = {
-                enabled: true,
-                channelId: channel.id
-            };
-            
-            saveConfig(config);
-
-            // If a user is provided, send the welcome GIF for that user (test mode)
-            if (testUser) {
-                try {
-                    // Get user avatar URL
-                    const avatarURL = testUser.displayAvatarURL({
-                        extension: 'png',
-                        size: AVATAR_SIZE,
-                        forceStatic: true
-                    });
-                    const gifBuffer = await createWelcomeGif(avatarURL);
-                    await channel.send({
-                        content: `Hey <@${testUser.id}>, welcome to the server! (Test)`,
-                        files: [new AttachmentBuilder(gifBuffer, { name: 'welcome.gif' })]
-                    });
-                    await interaction.reply({ content: `Welcome GIF sent for <@${testUser.id}> in ${channel}.`, ephemeral: true });
-                } catch (error) {
-                    console.error('Error sending test welcome GIF:', error);
-                    await interaction.reply({ content: 'Failed to send test welcome GIF.', ephemeral: true });
-                }
-            } else {
-                await interaction.reply({ content: `Welcome GIFs enabled! They will be sent to ${channel}.`, ephemeral: true });
-            }
-        } else if (subcommand === 'disable') {
-            if (config[guildId]) {
-                delete config[guildId];
-                saveConfig(config);
-            }
-            await interaction.reply({ content: 'Welcome GIFs disabled for this server.', ephemeral: true });
-        }
-    },
-    
-    // Function to handle new member joins
-    async handleNewMember(member) {
-        const config = loadConfig();
-        const guildConfig = config[member.guild.id];
-        
-        if (!guildConfig || !guildConfig.enabled) return;
-        
-        try {
-            const channel = member.guild.channels.cache.get(guildConfig.channelId);
-            if (!channel) return;
-            
-            // Get user avatar URL
-            const avatarURL = member.user.displayAvatarURL({
-                extension: 'png',
-                size: AVATAR_SIZE,
-                forceStatic: true
-            });
-            
-            // Create welcome GIF
-            const gifBuffer = await createWelcomeGif(avatarURL);
-            
-            // Send welcome message
-            await channel.send({
-                content: `Hey ${member}, welcome to the server!`,
-                files: [new AttachmentBuilder(gifBuffer, { name: 'welcome.gif' })]
-            });
-        } catch (error) {
-            console.error('Error handling new member:', error);
-        }
-    }
+// Naruto Theme Colors (Konoha-style)
+const THEME = {
+    primary: '#F59E0B', // Konoha Orange
+    secondary: '#1F2937', // Dark Gray/Black (Card Background)
+    accent: '#EF4444', // Red Accent
+    background: '#111827', // Deep background
 };
 
-// Listen for new guild members and trigger welcome GIF
-// Remove the direct use of 'client' here. Instead, in your main bot file (e.g., index.js or main.js), add:
+// Assuming the bot has access to fonts like Arial as per profile.js setup
+try {
+    // You should ensure these fonts are registered in your main bot entry point
+    // For this example, we assume Arial is available.
+} catch (err) {
+    console.warn('Font registration skipped in welcome.js. Ensure fonts are registered globally.');
+}
 
-// const welcomeCommand = require('./commands/welcome.js');
-// client.on('guildMemberAdd', member => {
-//     welcomeCommand.handleNewMember(member);
-// });
+/**
+ * Generates the welcome card image for a new user.
+ * @param {object} member The Discord GuildMember object.
+ * @returns {Buffer} The generated PNG image buffer.
+ */
+async function generateWelcomeCard(member) {
+    const canvas = createCanvas(700, 250);
+    const ctx = canvas.getContext('2d');
 
-// 1. Add this to your client's 'guildMemberAdd' event:
-// client.on('guildMemberAdd', member => {
-//     module.exports.handleNewMember(member);
-// });
-//
-// 2. Make sure you have the base GIF file at assets/welcome_poke_base.gif
-// 3. The config will be saved to welcome_config.json
+    // 1. Background (Naruto-themed pattern/color)
+    ctx.fillStyle = THEME.background;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Subtle gradient/shadow for depth
+    const gradient = ctx.createLinearGradient(0, 0, canvas.width, 0);
+    gradient.addColorStop(0, THEME.secondary);
+    gradient.addColorStop(0.5, THEME.background);
+    gradient.addColorStop(1, THEME.secondary);
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Konoha-orange border along the left edge
+    ctx.fillStyle = THEME.primary;
+    ctx.fillRect(0, 0, 10, canvas.height);
+
+    // 2. Load and Draw Avatar
+    const avatarSize = 128;
+    const avatarX = 50;
+    const avatarY = (canvas.height / 2) - (avatarSize / 2);
+
+    let avatar;
+    try {
+        // Discord utility to get the user's avatar URL
+        const avatarUrl = member.user.displayAvatarURL({ extension: 'png', size: 128 });
+        avatar = await loadImageWithRetry(avatarUrl);
+    } catch (err) {
+        console.error('Error loading avatar for welcome card:', err);
+        // Fallback placeholder
+        ctx.fillStyle = '#333333';
+        ctx.fillRect(avatarX, avatarY, avatarSize, avatarSize);
+        avatar = null;
+    }
+
+    // Draw the orange headband border
+    ctx.strokeStyle = THEME.primary;
+    ctx.lineWidth = 6;
+    ctx.beginPath();
+    ctx.arc(avatarX + (avatarSize / 2), avatarY + (avatarSize / 2), (avatarSize / 2) + 5, 0, Math.PI * 2, true);
+    ctx.stroke();
+
+    // Draw the avatar (clipped to a circle)
+    if (avatar) {
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(avatarX + (avatarSize / 2), avatarY + (avatarSize / 2), avatarSize / 2, 0, Math.PI * 2, true);
+        ctx.closePath();
+        ctx.clip();
+        ctx.drawImage(avatar, avatarX, avatarY, avatarSize, avatarSize);
+        ctx.restore();
+    }
+
+    // 3. Text Content
+
+    // Username
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 32px Arial';
+    ctx.fillText(member.user.username, 200, 75);
+
+    // Welcome Message
+    ctx.fillStyle = '#cccccc';
+    ctx.font = '24px Arial';
+    ctx.fillText("has joined the Shinobi World!", 200, 120);
+
+    // Server Call-to-Action
+    ctx.fillStyle = THEME.primary;
+    ctx.font = 'bold 20px Arial';
+    ctx.fillText(`Visit ${WELCOME_CHANNEL} to begin your Genin training!`, 200, 160);
+
+    // Server Name Footer
+    ctx.fillStyle = THEME.accent;
+    ctx.font = 'italic 16px Arial';
+    ctx.textAlign = 'right';
+    ctx.fillText(SERVER_NAME, canvas.width - 25, canvas.height - 20);
+
+    return canvas.toBuffer('image/png');
+}
+
+// --- Utility Functions (Copied from profile.js for dependency) ---
+
+/**
+ * Utility to load an image with a retry, attempting JPG if PNG fails.
+ * @param {string} url Image URL.
+ * @returns {Promise<Image>} Loaded Image object.
+ */
+async function loadImageWithRetry(url) {
+    try {
+        return await loadImage(url);
+    } catch (error) {
+        try {
+            const jpgUrl = url.replace(/\.png(\?.*)?$/, '.jpg$1');
+            return await loadImage(jpgUrl);
+        } catch (error2) {
+            throw error2;
+        }
+    }
+}
+
+/**
+ * Converts hex color to RGB string (mostly for internal use if needed).
+ * @param {string} hex Hex color code.
+ * @returns {string} RGB string (e.g., "245, 158, 11").
+ */
+function hexToRgb(hex) {
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result ?
+        `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` :
+        '255, 255, 255';
+}
+
+
+module.exports = { generateWelcomeCard, WELCOME_CHANNEL };

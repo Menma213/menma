@@ -94,6 +94,7 @@ async function getAsumaWebhook(channel) {
 }
 
 module.exports = {
+    BLOODLINES,
 	data: new SlashCommandBuilder()
 		.setName('bloodline')
 		.setDescription('Manage your ninja bloodline abilities')

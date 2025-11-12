@@ -6,30 +6,47 @@ const { runBattle } = require('./combinedcommands');
 const TONERI_NPC = {
     name: "Toneri Otsutsuki",
     image: "https://www.pngplay.com/wp-content/uploads/12/Toneri-Otsutsuki-Transparent-Images.png",
-    baseHealth: 15,
-    basePower: 10,
-    baseDefense: 10,
+    health: 150000,
+    currentHealth: 150000,
+    power: 150000,
+    defense: 15000,
     accuracy: 1000,
-    Chakra: 1000,
-    dodge: 75,
-    background: "https://static.wikia.nocookie.net/naruto/images/1/13/Luna.png/revision/latest?cb=20100606104042&path-prefix=it",
+    chakra: 1000,
+    "statsType": "fixed",
+    immunities: ["stun", "bleed", "burn", "status"],
+    dodge: 100,
+    background: "https://i.postimg.cc/cLxM7Gbm/image.png",
     jutsu: [
         "Attack",
-        "Tenseigan Chakra Mode",
+        "Rasengan",
         "Otsutsuki's Wrath",
         "Truth-Seeking Orbs"
     ]
 };
 
-const TONERI_REWARDS = {
-    xp: 25000,
-    ryo: 100000,
-    item: "Tenseigan Scroll"
-};
+
 
 const usersPath = path.resolve(__dirname, '../../menma/data/users.json');
 const giftPath = path.resolve(__dirname, '../../menma/data/gift.json');
 const cooldownPath = path.resolve(__dirname, '../../menma/data/otsutsuki_cooldowns.json');
+
+const TONERI_REWARDS = {
+    ryo: 100000,
+    item: "Tenseigan Scroll",
+    // xp as a helper function (call with player level)
+    xp: (level = 1) => 50 + (Number(level) * 4)
+};
+
+// Helper to build the rewards object for a specific userId by reading their level from players.json
+function getToneriRewardsForUser(userId) {
+    const players = fs.existsSync(path.resolve(__dirname, '../../menma/data/players.json')) ? JSON.parse(fs.readFileSync(path.resolve(__dirname, '../../menma/data/players.json'), 'utf8')) : {};
+    const playerLevel = players[userId] && players[userId].level ? players[userId].level : 1;
+    return {
+        ryo: TONERI_REWARDS.ryo,
+        item: TONERI_REWARDS.item,
+        xp: TONERI_REWARDS.xp(playerLevel)
+    };
+}
 
 const COOLDOWN_DURATION = 20 * 60 * 1000; // 20 minutes in ms
 
@@ -162,12 +179,15 @@ module.exports = {
         }
         // -------------------------
 
-        if (battleResult === 'win') {
+        if (battleResult && battleResult.winner && battleResult.winner.userId === userId) {
             // Set cooldown for 20 minutes
             setCooldown(userId);
 
+            // Get the calculated rewards for the user
+            const calculatedRewards = getToneriRewardsForUser(userId);
+
             // Add rewards to gift inventory
-            const giftedRewards = addRewardsToGiftInventory(userId, TONERI_REWARDS);
+            const giftedRewards = addRewardsToGiftInventory(userId, calculatedRewards);
             
             // Create rewards embed
             const rewardsEmbed = new EmbedBuilder()
@@ -176,13 +196,13 @@ module.exports = {
                 .setColor('#00ff00')
                 .addFields(
                     { 
-                        name: 'Ryo Earned', 
-                        value: `+${TONERI_REWARDS.ryo.toLocaleString()}`, 
+                       name: 'Ryo Earned', 
+                        value: `+${calculatedRewards.ryo.toLocaleString()}`, 
                         inline: true 
                     },
                     { 
                         name: 'XP Gained', 
-                        value: `+${TONERI_REWARDS.xp.toLocaleString()}`, 
+                        value: `+${calculatedRewards.xp.toLocaleString()}`, 
                         inline: true 
                     },
                     { 

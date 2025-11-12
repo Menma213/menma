@@ -49,7 +49,20 @@
       "Lightning Hound",
       "Shadow Clone Jutsu: 1000 clones",
       "Tenseigan Scroll",
-      "Blades of Judgement"
+      "Blades of Judgement",
+      "Wood Style: Deep Forest Emergence",
+      "Amaterasu",
+      "A Twins Sacrifice",
+      "Authentic Mutual Love",
+      "Super Saiyan",
+      "Fire Style: Nuclear Armageddon",
+      "Punisher Shield",
+      "Perfect Susano",
+      "Gyakuten no Horu",
+      "Izanagi",
+      "Carnage",
+      "Set Your Face Ablaze",
+      "Heaven's Supremacy"
     ],
     "combos": [
       "Basic Combo",
@@ -62,7 +75,8 @@
       "Infused Chakra Blade Scroll",
       "Asura's Blade of Execution",
       "Summon Manda",
-      "9th form: Rengoku"
+      "9th form: Rengoku",
+      "Tenseigan Scroll"
     ],
     "rankeditems": [],
     "items": {
@@ -79,35 +93,6 @@
       "Transformation Jutsu"
     ],
     "rankeditems": []
-  },
-  "799979545046155284": {
-    "usersjutsu": [
-      "Transformation Jutsu",
-      "asura",
-      "Serpents Wrath",
-      "Shadow Clone Jutsu",
-      "Fireball Jutsu",
-      "Analysis",
-      "Mystic Palms",
-      "Parry",
-      "Mystic Palm",
-      "Smoke Bomb",
-      "Sexy Jutsu",
-      "Rasenshuriken",
-      "Flying Raijin Jutsu"
-    ],
-    "combos": [
-      "Basic Combo",
-      "Intermediate Combo"
-    ],
-    "scrolls": [
-      "Needle Assault Scroll",
-      "Silent Assassination Scroll"
-    ],
-    "rankeditems": [],
-    "items": {
-      "Crystalline Shard": 2
-    }
   },
   "737913304214667345": {
     "usersjutsu": [
@@ -217,21 +202,6 @@
     "items": {
       "Crystalline Shard": 1
     }
-  },
-  "1132693590066331828": {
-    "usersjutsu": [
-      "Transformation Jutsu",
-      "asura",
-      "Infused Chakra Blade"
-    ],
-    "scrolls": [
-      "Needle Assault Scroll",
-      "Infused Chakra Blade Scroll"
-    ],
-    "items": {
-      "Crystalline Shard": 2
-    },
-    "rankeditems": []
   },
   "1239968214130102424": {
     "usersjutsu": [
@@ -351,6 +321,16 @@
     ]
   },
   "1424401734167433389": {
+    "usersjutsu": [
+      "Transformation Jutsu"
+    ]
+  },
+  "1303128250079383583": {
+    "usersjutsu": [
+      "Transformation Jutsu"
+    ]
+  },
+  "1132693590066331828": {
     "usersjutsu": [
       "Transformation Jutsu"
     ]

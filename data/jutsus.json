@@ -417,7 +417,7 @@
       {
         "type": "buff",
         "stats": {
-          "power": "user.power * 1.5"
+          "power": 40000
         },
         "duration": 2
       },
@@ -427,6 +427,34 @@
         "duration": 1,
         "chance": 100,
         "damagePerTurn": "target.health * 0.15"
+      }
+    ]
+  },
+  "Infused Chakra Blade: Enhanced": {
+    "name": "Infused Chakra Blade: Enhanced",
+    "obtainment": "obtained from asuma at chuunin mentor rank",
+    "description": "Enhanced version of the jutsu Infused Chakra Blade",
+    "info": "user Strikes with chakra-infused blades, causing more bleeding and greatly increasing power.",
+    "chakraCost": 8,
+    "category": "Chuunin",
+    "effects": [
+      {
+        "type": "damage",
+        "formula": "4000 * user.power / target.defense"
+      },
+      {
+        "type": "buff",
+        "stats": {
+          "power": 25000
+        },
+        "duration": 3
+      },
+      {
+        "type": "status",
+        "status": "bleed",
+        "duration": 2,
+        "chance": 100,
+        "damagePerTurn": "target.health * 0.2"
       }
     ]
   },
@@ -466,7 +494,7 @@
     ]
   },
   "Lightning Blade: All out": {
-    "name": "Lightning Blade: All Out",
+    "name": "Lightning Blade: All out",
     "description": "performs the lightning blade jutsu but this time, with rage. Lightning engulfs the battlefield sending shocks through the ground and air and also deals damage",
     "info": "An Enhanced Version of the jutsu Lightning Blade",
     "obtainment": "from kakashi at jounin mentor rank",
@@ -491,6 +519,52 @@
         "duration": 2,
         "chance": 100,
         "damagePerTurn": "target.health * 0.2"
+      }
+    ]
+  },
+  "Shadow Strangle": {
+    "name": "Shadow Strangle",
+    "description": "user uses shadow to strangle the opponent, dealing damage and immobilizing them.",
+    "info": "User uses their shadow to strangle the opponent, dealing damage and stunning them.",
+    "obtainment": "from shikamaru at jounin mentor rank",
+    "chakraCost": 8,
+    "category": "Jounin",
+    "effects": [
+      {
+        "type": "damage",
+        "formula": "3000 * user.power / target.defense"
+      },
+      {
+        "type": "status",
+        "status": "stun",
+        "duration": 2,
+        "chance": 100
+      }
+    ]
+  },
+  "Singularity Pulse: Requiem of the Stars": {
+    "name": "Singularity Pulse: Requiem of the Stars",
+    "description": "user raises their hand, forming a sphere of radiant silver light that bends gravity and time itself. With a calm gesture, the orb erupts into a blinding pulse of cosmic energy, collapsing everything in its path into pure stillness",
+    "info": "An advanced version of Singularity Pulse that deals massive damage by crushing the target with gravitational force.",
+    "obtainment": "unobtainable",
+    "image_url": "https://c4.wallpaperflare.com/wallpaper/379/966/340/silver-surfer-space-stars-marvel-character-shiny-hd-wallpaper-preview.jpg",
+    "chakraCost": 15,
+    "category": "Custom",
+    "effects": [
+      {
+        "type": "damage",
+        "formula": "5000 * user.power / target.defense"
+      },
+      {
+        "type": "buff",
+        "stats": {
+          "power": 40000,
+          "defense": 40000
+        }
+      },
+      {
+        "type": "heal",
+        "formula": "user.health * 0.35"
       }
     ]
   },
@@ -858,6 +932,61 @@
       }
     ]
   },
+  "Dynamic Entry": {
+    "name": "Dynamic Entry",
+    "obtainment": "Gai Mentor",
+    "description": "user leaps into the air and crashes down on target",
+    "chakraCost": 5,
+    "category": "No Category",
+    "effects": [
+      {
+        "type": "damage",
+        "formula": "2500 * user.power / target.defense"
+      },
+      {
+        "type": "status",
+        "status": "flinch",
+        "duration": 1,
+        "chance": 50
+      }
+    ]
+  },
+  "Thirty Two Palms": {
+    "name": "Thirty Two Palms",
+    "obtainment": "Hinata Hyuga Mentor",
+    "description": "user Strikes target 32 times in rapid succession",
+    "chakraCost": 10,
+    "category": "No Category",
+    "effects": [
+      {
+        "type": "damage",
+        "formula": "2500 * user.power / target.defense"
+      },
+      {
+        "type": "chakra_drain",
+        "amount": "-target.chakra * 0.3",
+        "duration": 1
+      }
+    ]
+  },
+  "Sixty Four Palms": {
+    "name": "Sixty Four Palms",
+    "obtainment": "Hinata Hyuga Mentor",
+    "description": "user Strikes target 64 times in rapid succession",
+    "chakraCost": 15,
+    "category": "No Category",
+    "effects": [
+      {
+        "type": "damage",
+        "formula": "3200 * user.power / target.defense"
+      },
+      {
+        "type": "chakra_drain",
+        "amount": "-target.chakra * 0.5",
+        "duration": 1
+      }
+    ]
+  },
   "Wind Scythe": {
     "name": "Wind Scythe",
     "obtainment": "npc jutsu",
@@ -1084,6 +1213,7 @@
     "obtainment": "unobtainable",
     "description": "user goes berserk, increasing power and defense.",
     "chakraCost": 0,
+
     "category": "Custom",
     "effects": [
       {
@@ -1096,11 +1226,11 @@
       },
       {
         "type": "damage",
-        "formula": "3 * target.health"
+        "formula": "target.health * 69"
       },
       {
         "type": "heal",
-        "formula": "user.health * 0.5"
+        "formula": "user.health * 1.5"
       },
       {
         "type": "debuff",
@@ -1330,8 +1460,8 @@
           {
             "type": "buff",
             "stats": {
-              "power": "user.power * 2.0",
-              "defense": "user.defense * 2.0"
+              "power": 20000,
+              "defense": 20000
             },
             "duration": 5
           }
@@ -1339,23 +1469,14 @@
       },
       "6": {
         "description": "User exits tenseigan chakra mode, returning to normal state.",
-        "effects": [
-          {
-            "type": "debuff",
-            "stats": {
-              "power": "-user.power * 0.5",
-              "defense": "-user.defense * 0.5"
-            },
-            "duration": 2
-          }
-        ]
+        "effects": [] 
       },
       "2-5": {
         "description": "Tenseigan Orbs attack target",
         "effects": [
           {
             "type": "damage",
-            "formula": "user.power * 500 / target.defense"
+            "formula": "target.health * 0.1"
           }
         ]
       }
@@ -1419,7 +1540,7 @@
       {
         "type": "buff",
         "stats": {
-          "power": 1000
+          "power": 40000
         },
         "duration": 3
       },
@@ -1447,7 +1568,8 @@
       {
         "type": "buff",
         "stats": {
-          "defense": 20000000000000
+          "defense": 20000000000000,
+          "power": 20000000000000
         },
         "duration": 30
       }
@@ -1658,37 +1780,6 @@
     }
     ]
 },
-"Gyakuten no Horu": {
-  "name": "Gyakuten no Horu",
-  "obtainment": "unobtainable",
-  "description": "**Lay your past to bare before my eyes, your future falls next.**\n Dispersed into the edges of their own psyche, those effected will find themselves in an endless darkened hall lined with mirrors displaying their worst fears, insecurities, griefs, regrets, and nightmares all screaming through their ears and overloading their senses. A display of torture not escaped so easily, the caster uses it as a medium to siphon their strength into themselves ",
-  "chakraCost": 10,
-  "category": "Custom",
-  "image_url": "https://64.media.tumblr.com/fc85cc1ca34c12d621158350ab365e85/d1012b927ae959d2-a5/s540x810/dff2882f0f2310c69e33de3ed18267058fb2f36b.gif",
-  "effects": [
-    {
-      "type": "status",
-      "status": "stun",
-      "duration": 2,
-      "chance": 100
-    },
-    {
-      "type": "debuff",
-      "stats": {
-        "power": "target.power * 0.4",
-        "defense": "target.defense * 0.4"
-      },
-      "duration": 3
-    },
-    {
-      "type":"buff",
-      "stats": {
-        "power": 40000,
-        "defense": 20000
-    }
-  }
-    ]
-    },
     "Fire Style: Nuclear Armageddon": {
     "name": "Fire Style: Nuclear Armageddon",
     "obtainment": "unobtainable",
@@ -1728,52 +1819,11 @@
     "name": "Punisher Shield",
     "obtainment": "unobtainable",
     "description": "**It's Futile!**\n  user calmly swipes their hand through the air, forming a blazing sphere of divine ki. The barrier shimmers, reflecting incoming energy before they follow up with a sharp spin kick",
-    "chakraCost": 30,
+    "chakraCost": 20,
     "image_url": "https://i.pinimg.com/originals/8c/a2/77/8ca27764c69760935f20d7ca15eb6783.gif",
     "category": "Custom",
     "scriptFile": "punishershield.js",
     "effects": []
-  },
-  "Susano Slash": {
-    "name": "Susano Slash",
-    "obtainment": "Perfect Susanoo active",
-    "description": "A powerful slash from the Perfect Susanoo.",
-    "chakraCost": 0,
-    "category": "Custom",
-    "custom": "data/custom_jutsus/susanoSlash.js"
-  },
-  "Perfect Susano": {
-    "obtainment": "Perfect Susano active",
-    "name": "Perfect Susano",
-    "description": "The ultimate defensive and offensive form of Susano, granting immense power and protection.",
-    "chakraCost": 0,
-    "category": "Custom",
-    "scriptFile": "perfectSusanoo.js",
-    "roundBased": true,
-    "roundEffects": {
-      "1": {
-        "description": "User summons Perfect Susano to aid in battle."
-      },
-      "2": {
-        "description": "Perfect Susano attacks target dealing damage.",
-        "effects": [
-          {
-            "type": "damage",
-            "formula": "3000 * user.power / target.defense"
-          }
-        ]
-      },
-      "3": {
-        "description": "Perfect Susano defends user, reducing damage taken.",
-        "effects": [
-          {
-            "type": "buff",
-            "stats": { "defense": 20000 },
-            "duration": 2
-          }
-        ]
-      }
-    }
   },
   "Izanagi": {
     "name": "Izanagi",
@@ -1783,6 +1833,44 @@
     "image_url": "https://i.pinimg.com/originals/68/b2/c7/68b2c790e0f92b9f62fb870aa0ac7d56.gif",
     "category": "Custom",
     "scriptFile": "izanagi.js",
+    "effects": []
+  },
+  "Meteoric Burst": {
+    "name": "Meteoric Burst",
+    "obtainment": "unobtainable",
+    "description": "user unleashes their ultimate transformation, Meteoric Burst. Their body radiates with blinding energy as power erupts from within, splitting the ground beneath them. With blitz speed, the user charges forward and delivers a cataclysmic punch that obliterates everything in their path",
+    "chakraCostType": "all_chakra",
+    "image_url": "https://i.pinimg.com/736x/81/b2/c6/81b2c653e5596120b3e5694c69a168b7.jpg",
+    "category": "Custom",
+    "effects": [
+      {
+        "type": "damage",
+        "formula": "6000 * user.power / target.defense"
+      },
+      {
+        "type": "status",
+        "status": "burn",
+        "duration": 3,
+        "chance": 100,
+        "damagePerTurn": "target.health * 0.1"
+      },
+      {
+        "type": "debuff",
+        "stats": {
+          "defense": "target.defense * 0.3"
+        }
+      }
+    ]
+  },
+    "Eight Gates": {
+    "name": "Eight Gates",
+    "description": "Opens one of the Eight Gates, boosting power at the cost of health.",
+    "info": "Each use opens a new gate, up to the 7th gate. Each gate costs 20% of the user's max health.",
+    "chakraCost": 20,
+    "chakraCostType": "percent_health",
+    "category": "Taijutsu",
+    "obtainment": "A special jutsu.",
+    "scriptFile": "eightgates.js",
     "effects": []
   }
 }

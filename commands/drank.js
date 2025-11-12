@@ -126,7 +126,7 @@ module.exports = {
         ];
         let taskMessage = tasks[Math.floor(Math.random() * tasks.length)];
 
-        let expReward = 1.0;
+        let expReward = 1 + (player.level * 0.1);
         let moneyReward = 1000
 
         player.exp += expReward;
@@ -178,7 +178,7 @@ module.exports = {
             )
             .setColor("Blue")
             .setThumbnail(userPfp)
-            .setFooter({ text: "KonohaRPG • D-Rank Missions", iconURL: "https://static.wikia.nocookie.net/naruto/images/3/34/Konohagakure.png/revision/latest?cb=20160728115517" })
+            .setFooter({ text: "Shinobi RPG • D-Rank Mission", iconURL: "https://static.wikia.nocookie.net/naruto/images/3/34/Konohagakure.png/revision/latest?cb=20160728115517" })
             .setTimestamp();
 
         let dropMsg = "```";

@@ -6,6 +6,7 @@ const path = require('path');
 const playersPath = path.join(__dirname, '../../menma/data/players.json');
 // Add usersPath so profile.js (which reads users.json) sees premiumRoles
 const usersPath = path.join(__dirname, '../../menma/data/users.json');
+const autofrankPath = path.join(__dirname, '../../menma/data/autofrank.json');
 
 // Use the same shopItems as in shop.js
 const shopItems = {
@@ -33,7 +34,8 @@ const premiumItems = [
         description: "Unlocks the exclusive Donator role.",
         price: 100,
         roleId: "1385640728130097182",
-        duration: 30 * 24 * 60 * 60 * 1000 // 1 month in ms, use 15000 for 15 seconds
+        duration: 30 * 24 * 60 * 60 * 1000, // 1 month in ms, use 15000 for 15 seconds
+        type: 'role'
     },
     {
         name: "legendary ninja",
@@ -41,7 +43,8 @@ const premiumItems = [
         description: "Grants the Legendary Ninja role.",
         price: 200,
         roleId: "1385640798581952714",
-        duration: 30 * 24 * 60 * 60 * 1000 // 1 month in ms, use 15000 for 15 seconds
+        duration: 30 * 24 * 60 * 60 * 1000, // 1 month in ms, use 15000 for 15 seconds
+        type: 'role'
     },
     {
         name: "jinchuriki",
@@ -49,29 +52,41 @@ const premiumItems = [
         description: "Become a Jinchuriki and receive the Jinchuriki role.",
         price: 500,
         roleId: "1385641469507010640",
-        duration: 30 * 24 * 60 * 60 * 1000 // 1 month in ms, use 15000 for 15 seconds
+        duration: 30 * 24 * 60 * 60 * 1000, // 1 month in ms, use 15000 for 15 seconds
+        type: 'role'
     },
     {
         name: "custom jutsu",
         display: "Custom Jutsu",
-        description: "Create your own custom jutsu! (single effect)",
+        description: "Create your own custom jutsu! (3 effects)",
         price: 1000,
-        roleId: "1399097723554234448"
+        type: 'custom_jutsu'
+    },
+    {
+        name: "auto frank 3h",
+        display: "Auto-Frank (3 Hours)",
+        description: "Automatically run F-rank missions for 3 hours. Grants 21,600 base EXP.",
+        price: 600, // Example price
+        type: 'autofrank',
+        durationKey: '3h'
+    },
+    {
+        name: "auto frank 6h",
+        display: "Auto-Frank (6 Hours)",
+        description: "Automatically run F-rank missions for 6 hours. Grants 43,200 base EXP.",
+        price: 1400, // Example price
+        type: 'autofrank',
+        durationKey: '6h'
+    },
+    {
+        name: "auto frank 12h",
+        display: "Auto-Frank (12 Hours)",
+        description: "Automatically run F-rank missions for 12 hours. Grants 86,400 base EXP.",
+        price: 2000, // Example price
+        type: 'autofrank',
+        durationKey: '12h'
     }
 ];
-
-const jutsuShopItems = {
-    "human boulder": {
-        name: "Human Boulder",
-        price: 10000,
-        key: "Human Boulder"
-    },
-    "puppet kazekage": {
-        name: "Puppet Kazekage",
-        price: 100000,
-        key: "Puppet Kazekage"
-    }
-};
 
 const eventShopItems = {
     "guillotine drop": {
@@ -103,6 +118,14 @@ const eventShopItems = {
         name: "ramen",
         price: 5,
         key: "ramen"
+    }
+};
+
+const miscShopItems = {
+    "stat refund": {
+        name: "Stat Refund",
+        price: 500, // Example price in Shinobi Shards
+        key: "stat_refund"
     }
 };
 
@@ -171,6 +194,10 @@ module.exports = {
         .addStringOption(option => // ✨ ADDED EVENT OPTION
             option.setName('event')
                 .setDescription('Buy an event item using Ay Tokens')
+                .setRequired(false))
+        .addStringOption(option => // ✨ ADDED MISC OPTION
+            option.setName('misc')
+                .setDescription('Buy miscellaneous items')
                 .setRequired(false)),
 
     async execute(interaction) {
@@ -178,8 +205,9 @@ module.exports = {
         const ssName = interaction.options.getString('ss');
         const eventName = interaction.options.getString('event');
         const jutsuName = interaction.options.getString('jutsu');
+        const miscName = interaction.options.getString('misc');
 
-        if (!comboName && !ssName && !eventName && !jutsuName) {
+        if (!comboName && !ssName && !eventName && !jutsuName && !miscName) {
             return interaction.reply("Buy something...c'mon.");
         }
 
@@ -196,22 +224,35 @@ module.exports = {
                 return interaction.reply('You need to be enrolled first!');
             }
 
-            if (premium.name === "custom jutsu") {
+            // --- Auto-Frank purchase handling ---
+            if (premium.type === 'autofrank') {
                 if (!players[userId].ss || players[userId].ss < premium.price) {
                     return interaction.reply(`You need ${premium.price} Shinobi Shards to buy this item!`);
                 }
                 players[userId].ss -= premium.price;
                 fs.writeFileSync(playersPath, JSON.stringify(players, null, 4));
-                if (premium.roleId) {
-                    try {
-                        const member = await interaction.guild.members.fetch(userId);
-                        await member.roles.add(premium.roleId, "Purchased Custom Jutsu");
-                    } catch (e) {
-                        // Ignore errors
+
+                // Update autofrank.json with consumable count
+                try {
+                    let autofrankData = {};
+                    if (fs.existsSync(autofrankPath)) {
+                        autofrankData = JSON.parse(fs.readFileSync(autofrankPath, 'utf8')) || {};
                     }
+                    if (!autofrankData[userId]) {
+                        autofrankData[userId] = { activeSession: null, features: {} };
+                    }
+                    if (!autofrankData[userId].features[premium.durationKey]) {
+                        autofrankData[userId].features[premium.durationKey] = 0;
+                    }
+                    autofrankData[userId].features[premium.durationKey]++;
+                    fs.writeFileSync(autofrankPath, JSON.stringify(autofrankData, null, 4));
+                } catch (e) {
+                    console.error('[buy.js] Failed to update autofrank file:', e);
+                    return interaction.reply('Failed to process auto-frank purchase due to a file error.');
                 }
-                await logPurchase(interaction, `<@${userId}> purchased **Custom Jutsu** for ${premium.price} Shinobi Shards.`);
-                return interaction.reply(`<@${userId}> Successfully purchased a Custom Jutsu! Instructions on creating a custom are in <#1399109319051579422>.`);
+
+                await logPurchase(interaction, `<@${userId}> purchased **${premium.display}** for ${premium.price} Shinobi Shards. Added 1 ${premium.durationKey} auto-frank session.`);
+                return interaction.reply(`<@${userId}> Successfully purchased ${premium.display}! You now have 1 more ${premium.durationKey} auto-frank session.`);
             }
 
             if (players[userId].premiumRoles && players[userId].premiumRoles.some(r => r.roleId === premium.roleId)) {
@@ -400,6 +441,54 @@ module.exports = {
                 await logPurchase(interaction, `<@${userId}> purchased event jutsu **${item.name}** for ${item.price} Ay tokens.`);
                 return interaction.reply(`Successfully learned ${item.name}!`);
             }
+        }
+
+        // --- BUY MISC SHOP ---
+        if (miscName) {
+            const miscKey = miscName.toLowerCase();
+            const item = miscShopItems[miscKey];
+            if (!item) {
+                return interaction.reply('That miscellaneous item does not exist in the shop!');
+            }
+
+            const players = JSON.parse(fs.readFileSync(playersPath, 'utf8'));
+            const userId = interaction.user.id;
+
+            if (!players[userId]) {
+                return interaction.reply('You need to be enrolled first!');
+            }
+            
+            if (!players[userId].ss || players[userId].ss < item.price) {
+                return interaction.reply(`You need ${item.price} Shinobi Shards to buy this item!`);
+            }
+
+            if (item.key === 'stat_refund') {
+                // Load autofrank data to update stat refund count
+                let autofrankData = {};
+                if (fs.existsSync(autofrankPath)) {
+                    autofrankData = JSON.parse(fs.readFileSync(autofrankPath, 'utf8')) || {};
+                }
+                if (!autofrankData[userId]) {
+                    autofrankData[userId] = { activeSession: null, features: {} };
+                }
+                if (!autofrankData[userId].features['stat_refund']) {
+                    autofrankData[userId].features['stat_refund'] = 0;
+                }
+                if (autofrankData[userId].features['stat_refund'] >= 1) {
+                    return interaction.reply('You already own a Stat Refund! Use it before buying another.');
+                }
+                autofrankData[userId].features['stat_refund']++;
+                fs.writeFileSync(autofrankPath, JSON.stringify(autofrankData, null, 4));
+            } else {
+                return interaction.reply('Unknown miscellaneous item.');
+            }
+
+            players[userId].ss -= item.price;
+            fs.writeFileSync(playersPath, JSON.stringify(players, null, 4));
+
+            await logPurchase(interaction, `<@${userId}> purchased **${item.name}** for ${item.price} Shinobi Shards.`);
+            return interaction.reply(`Successfully purchased ${item.name}!
+You now have 1 Stat Refund available. Use the /refund command to access it.`);
         }
     },
 

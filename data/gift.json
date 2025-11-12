@@ -49,32 +49,529 @@
       "source": "Otsutsuki Victory"
     },
     {
-      "id": 36707,
+      "id": 2730,
+      "type": "money",
+      "amount": 100000,
+      "from": "system",
+      "date": 1762090451580,
+      "source": "Otsutsuki Victory"
+    },
+    {
+      "id": 3299,
+      "type": "scroll",
+      "name": "Tenseigan Scroll",
+      "from": "system",
+      "date": 1762090451580,
+      "source": "Otsutsuki Victory"
+    },
+    {
+      "id": 112,
+      "type": "exp",
+      "amount": 550,
+      "from": "Otsutsuki",
+      "date": 1762090451580,
+      "source": "Otsutsuki Victory"
+    },
+    {
+      "id": 38455,
+      "type": "exp",
+      "amount": 220,
+      "from": "trials",
+      "date": 1762091083456
+    },
+    {
+      "id": 30164,
+      "type": "money",
+      "amount": 10000,
+      "from": "trials",
+      "date": 1762091083456
+    },
+    {
+      "id": 988,
+      "type": "money",
+      "amount": 100000,
+      "from": "system",
+      "date": 1762096335753,
+      "source": "Otsutsuki Victory"
+    },
+    {
+      "id": 4334,
+      "type": "scroll",
+      "name": "Tenseigan Scroll",
+      "from": "system",
+      "date": 1762096335753,
+      "source": "Otsutsuki Victory"
+    },
+    {
+      "id": 4214,
+      "type": "exp",
+      "amount": 550,
+      "from": "Otsutsuki",
+      "date": 1762096335753,
+      "source": "Otsutsuki Victory"
+    },
+    {
+      "id": 12754,
       "type": "exp",
       "amount": 30,
-      "from": "trials",
-      "date": 1760981786391
+      "from": "brank",
+      "date": 1762157620529
     },
     {
-      "id": 43603,
+      "id": 25989,
       "type": "money",
-      "amount": 10000,
-      "from": "trials",
-      "date": 1760981786391
+      "amount": 2500,
+      "from": "brank",
+      "date": 1762157620529
     },
     {
-      "id": 19823,
+      "id": 15476,
+      "type": "material",
+      "name": "Copper",
+      "key": "copper",
+      "amount": 8,
+      "from": "brank",
+      "date": 1762157620529
+    },
+    {
+      "id": 35366,
       "type": "exp",
-      "amount": 255,
-      "from": "trials",
-      "date": 1760981891002
+      "amount": 30,
+      "from": "brank",
+      "date": 1762157656524
     },
     {
-      "id": 17603,
+      "id": 10529,
+      "type": "money",
+      "amount": 2500,
+      "from": "brank",
+      "date": 1762157656524
+    },
+    {
+      "id": 30920,
+      "type": "material",
+      "name": "Metal",
+      "key": "metal",
+      "amount": 8,
+      "from": "brank",
+      "date": 1762157656524
+    },
+    {
+      "id": 19849,
+      "type": "exp",
+      "amount": 30,
+      "from": "brank",
+      "date": 1762157983215
+    },
+    {
+      "id": 9374,
+      "type": "money",
+      "amount": 2500,
+      "from": "brank",
+      "date": 1762157983215
+    },
+    {
+      "id": 49094,
+      "type": "material",
+      "name": "Metal",
+      "key": "metal",
+      "amount": 8,
+      "from": "brank",
+      "date": 1762157983215
+    },
+    {
+      "id": 20383,
+      "type": "exp",
+      "amount": 30,
+      "from": "brank",
+      "date": 1762158042754
+    },
+    {
+      "id": 22691,
+      "type": "money",
+      "amount": 2500,
+      "from": "brank",
+      "date": 1762158042754
+    },
+    {
+      "id": 48797,
+      "type": "material",
+      "name": "Gunpowder",
+      "key": "gunpowder",
+      "amount": 10,
+      "from": "brank",
+      "date": 1762158042754
+    },
+    {
+      "id": 49648,
+      "type": "exp",
+      "amount": 30,
+      "from": "brank",
+      "date": 1762158076501
+    },
+    {
+      "id": 42714,
+      "type": "money",
+      "amount": 2500,
+      "from": "brank",
+      "date": 1762158076501
+    },
+    {
+      "id": 12606,
+      "type": "material",
+      "name": "Metal",
+      "key": "metal",
+      "amount": 9,
+      "from": "brank",
+      "date": 1762158076502
+    },
+    {
+      "id": 26666,
+      "type": "exp",
+      "amount": 30,
+      "from": "brank",
+      "date": 1762158216689
+    },
+    {
+      "id": 8707,
+      "type": "money",
+      "amount": 2500,
+      "from": "brank",
+      "date": 1762158216689
+    },
+    {
+      "id": 3758,
+      "type": "material",
+      "name": "Copper",
+      "key": "copper",
+      "amount": 9,
+      "from": "brank",
+      "date": 1762158216689
+    },
+    {
+      "id": 12732,
+      "type": "exp",
+      "amount": 25,
+      "from": "arank",
+      "date": 1762160795324
+    },
+    {
+      "id": 24798,
+      "type": "money",
+      "amount": 700,
+      "from": "arank",
+      "date": 1762160795324
+    },
+    {
+      "id": 38903,
+      "type": "exp",
+      "amount": 25,
+      "from": "arank",
+      "date": 1762160810877
+    },
+    {
+      "id": 5757,
+      "type": "money",
+      "amount": 700,
+      "from": "arank",
+      "date": 1762160810877
+    },
+    {
+      "id": 40521,
+      "type": "exp",
+      "amount": 25,
+      "from": "arank",
+      "date": 1762160891641
+    },
+    {
+      "id": 29482,
+      "type": "money",
+      "amount": 700,
+      "from": "arank",
+      "date": 1762160891641
+    },
+    {
+      "id": 31623,
+      "type": "exp",
+      "amount": 25,
+      "from": "arank",
+      "date": 1762160905473
+    },
+    {
+      "id": 15294,
+      "type": "money",
+      "amount": 700,
+      "from": "arank",
+      "date": 1762160905473
+    },
+    {
+      "id": 12696,
+      "type": "exp",
+      "amount": 101,
+      "from": "trials",
+      "date": 1762160929309
+    },
+    {
+      "id": 46863,
       "type": "money",
       "amount": 10000,
       "from": "trials",
-      "date": 1760981891002
+      "date": 1762160929309
+    },
+    {
+      "id": 4132,
+      "type": "money",
+      "amount": 100000,
+      "from": "system",
+      "date": 1762160966658,
+      "source": "Otsutsuki Victory"
+    },
+    {
+      "id": 882,
+      "type": "scroll",
+      "name": "Tenseigan Scroll",
+      "from": "system",
+      "date": 1762160966658,
+      "source": "Otsutsuki Victory"
+    },
+    {
+      "id": 3552,
+      "type": "exp",
+      "amount": 450,
+      "from": "Otsutsuki",
+      "date": 1762160966658,
+      "source": "Otsutsuki Victory"
+    },
+    {
+      "id": 34247,
+      "type": "exp",
+      "amount": 30,
+      "from": "brank",
+      "date": 1762163581098
+    },
+    {
+      "id": 42391,
+      "type": "money",
+      "amount": 2500,
+      "from": "brank",
+      "date": 1762163581098
+    },
+    {
+      "id": 12381,
+      "type": "material",
+      "name": "Copper",
+      "key": "copper",
+      "amount": 10,
+      "from": "brank",
+      "date": 1762163581098
+    },
+    {
+      "id": 48170,
+      "type": "exp",
+      "amount": 30,
+      "from": "brank",
+      "date": 1762163607224
+    },
+    {
+      "id": 16377,
+      "type": "money",
+      "amount": 2500,
+      "from": "brank",
+      "date": 1762163607224
+    },
+    {
+      "id": 24791,
+      "type": "material",
+      "name": "Gunpowder",
+      "key": "gunpowder",
+      "amount": 9,
+      "from": "brank",
+      "date": 1762163607225
+    },
+    {
+      "id": 7977,
+      "type": "exp",
+      "amount": 30,
+      "from": "brank",
+      "date": 1762163632019
+    },
+    {
+      "id": 33533,
+      "type": "money",
+      "amount": 2500,
+      "from": "brank",
+      "date": 1762163632019
+    },
+    {
+      "id": 44524,
+      "type": "material",
+      "name": "Copper",
+      "key": "copper",
+      "amount": 8,
+      "from": "brank",
+      "date": 1762163632019
+    },
+    {
+      "id": 6111,
+      "type": "exp",
+      "amount": 30,
+      "from": "brank",
+      "date": 1762163659014
+    },
+    {
+      "id": 19453,
+      "type": "money",
+      "amount": 2500,
+      "from": "brank",
+      "date": 1762163659014
+    },
+    {
+      "id": 4590,
+      "type": "material",
+      "name": "Copper",
+      "key": "copper",
+      "amount": 10,
+      "from": "brank",
+      "date": 1762163659014
+    },
+    {
+      "id": 42200,
+      "type": "exp",
+      "amount": 30,
+      "from": "brank",
+      "date": 1762163688900
+    },
+    {
+      "id": 26015,
+      "type": "money",
+      "amount": 2500,
+      "from": "brank",
+      "date": 1762163688900
+    },
+    {
+      "id": 33330,
+      "type": "material",
+      "name": "Metal",
+      "key": "metal",
+      "amount": 10,
+      "from": "brank",
+      "date": 1762163688900
+    },
+    {
+      "id": 40570,
+      "type": "exp",
+      "amount": 30,
+      "from": "brank",
+      "date": 1762163829846
+    },
+    {
+      "id": 10955,
+      "type": "money",
+      "amount": 2500,
+      "from": "brank",
+      "date": 1762163829846
+    },
+    {
+      "id": 3320,
+      "type": "material",
+      "name": "Copper",
+      "key": "copper",
+      "amount": 10,
+      "from": "brank",
+      "date": 1762163829846
+    },
+    {
+      "id": 7763,
+      "type": "exp",
+      "amount": 30,
+      "from": "brank",
+      "date": 1762163865019
+    },
+    {
+      "id": 33039,
+      "type": "money",
+      "amount": 2500,
+      "from": "brank",
+      "date": 1762163865019
+    },
+    {
+      "id": 24954,
+      "type": "material",
+      "name": "Gunpowder",
+      "key": "gunpowder",
+      "amount": 10,
+      "from": "brank",
+      "date": 1762163865019
+    },
+    {
+      "id": 3991,
+      "type": "exp",
+      "amount": 30,
+      "from": "brank",
+      "date": 1762163919551
+    },
+    {
+      "id": 44212,
+      "type": "money",
+      "amount": 2500,
+      "from": "brank",
+      "date": 1762163919551
+    },
+    {
+      "id": 11815,
+      "type": "material",
+      "name": "Gunpowder",
+      "key": "gunpowder",
+      "amount": 8,
+      "from": "brank",
+      "date": 1762163919551
+    },
+    {
+      "id": 36756,
+      "type": "exp",
+      "amount": 30,
+      "from": "brank",
+      "date": 1762170013573
+    },
+    {
+      "id": 43927,
+      "type": "money",
+      "amount": 2500,
+      "from": "brank",
+      "date": 1762170013573
+    },
+    {
+      "id": 41177,
+      "type": "material",
+      "name": "Metal",
+      "key": "metal",
+      "amount": 10,
+      "from": "brank",
+      "date": 1762170013574
+    },
+    {
+      "id": 2122,
+      "type": "money",
+      "amount": 100000,
+      "from": "system",
+      "date": 1762172468718,
+      "source": "Otsutsuki Victory"
+    },
+    {
+      "id": 1165,
+      "type": "scroll",
+      "name": "Tenseigan Scroll",
+      "from": "system",
+      "date": 1762172468718,
+      "source": "Otsutsuki Victory"
+    },
+    {
+      "id": 3667,
+      "type": "exp",
+      "amount": 450,
+      "from": "Otsutsuki",
+      "date": 1762172468718,
+      "source": "Otsutsuki Victory"
     }
   ],
   "799979545046155284": [
@@ -749,5 +1246,49 @@
       "date": 1759684840663
     }
   ],
-  "1424401734167433389": []
+  "1424401734167433389": [],
+  "1303128250079383583": [
+    {
+      "id": 40479,
+      "type": "exp",
+      "amount": 19.338363875933887,
+      "from": "brank",
+      "date": 1761674513393
+    },
+    {
+      "id": 287,
+      "type": "money",
+      "amount": 520,
+      "from": "brank",
+      "date": 1761674513393
+    },
+    {
+      "id": 18457,
+      "type": "exp",
+      "amount": 26.669976343070903,
+      "from": "brank",
+      "date": 1761674624611
+    },
+    {
+      "id": 21438,
+      "type": "money",
+      "amount": 520,
+      "from": "brank",
+      "date": 1761674624611
+    },
+    {
+      "id": 21910,
+      "type": "exp",
+      "amount": 13.23118734520062,
+      "from": "brank",
+      "date": 1761675003030
+    },
+    {
+      "id": 38741,
+      "type": "money",
+      "amount": 520,
+      "from": "brank",
+      "date": 1761675003030
+    }
+  ]
 }

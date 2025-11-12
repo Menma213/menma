@@ -12,7 +12,15 @@ function getExpRequirement(currentLevel) {
     if (currentLevel < 50) return (1 + currentLevel) * 2;
     if (currentLevel < 100) return (1 + currentLevel) * 3;
     if (currentLevel < 200) return (1 + currentLevel) * 4;
-    return (1 + currentLevel) * 5;
+    if (currentLevel < 300) return (1 + currentLevel) * 5;
+    if (currentLevel < 400) return (1 + currentLevel) * 6;
+    if (currentLevel < 500) return (1 + currentLevel) * 7;
+    if (currentLevel < 600) return (1 + currentLevel) * 8;
+    if (currentLevel < 700) return (1 + currentLevel) * 9;
+    if (currentLevel < 800) return (1 + currentLevel) * 10;
+    if (currentLevel < 900) return (1 + currentLevel) * 11;
+    if (currentLevel < 1000) return (1 + currentLevel) * 12;
+    return (1 + currentLevel) * 13;
 }
 
 module.exports = {
@@ -147,7 +155,7 @@ module.exports = {
         const levelUpEmbed = new EmbedBuilder()
             .setColor('#FF9800') // Orange color for level up
             .setTitle(`⬆️ Level Up! Ninja ${interaction.user.username} Reached Level ${players[userId].level}!`)
-            .setDescription(`Congratulations, **${interaction.user.username}**! You've become stronger by reaching a new level${levelsGained > 1 ? `s!` : `!`}`)
+            .setDescription(`Congratulations, **${interaction.user.username}**! You've become stronger by reaching a new level!`)
             .setThumbnail(interaction.user.displayAvatarURL({ dynamic: true, size: 256 }))
             .addFields(
                 {

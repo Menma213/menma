@@ -1,4 +1,4 @@
-const { Events, SlashCommandBuilder, EmbedBuilder, Collection } = require('discord.js');
+const { Events, SlashCommandBuilder, EmbedBuilder, Collection, Routes, REST } = require('discord.js');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const fs = require('fs');
 const path = require('path');
@@ -14,12 +14,156 @@ const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
 const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
 
 // --- MINIGAME ENGINE SETUP ---
-const MINIGAMES_DIR = __dirname;
+// Minigames directory under the commands folder (e.g. /menma/commands/minigames)
+const MINIGAMES_DIR = path.resolve(__dirname, 'minigames');
 
 // Ensure minigames directory exists (current directory)
 if (!fs.existsSync(MINIGAMES_DIR)) {
     fs.mkdirSync(MINIGAMES_DIR);
     console.log(`[Minigame Engine] Created directory: ${MINIGAMES_DIR}`);
+}
+
+// Global variable to store REST API client once initialized
+let restClient; 
+
+// --- CHAINED CONVERSATION TRACKING ---
+const CHAINED_CONVERSATION_FILE = path.resolve(__dirname, '../../menma/data/chained_conversations.json');
+const MINIGAME_DATASET = path.resolve(__dirname, '../../menma/data/minigames.txt');
+const HELPER_SERVER_EVENT = path.resolve(__dirname, '../../menma/data/server_events.txt');
+const BRANK_FILE = path.resolve(__dirname, '../../menma/commands/brank.js');
+
+// Initialize chained conversations file
+if (!fs.existsSync(CHAINED_CONVERSATION_FILE)) {
+    fs.writeFileSync(CHAINED_CONVERSATION_FILE, JSON.stringify({}, null, 2));
+}
+
+/**
+ * Load chained conversations
+ */
+function loadChainedConversations() {
+    try {
+        return JSON.parse(fs.readFileSync(CHAINED_CONVERSATION_FILE, 'utf8'));
+    } catch (error) {
+        console.error('Error loading chained conversations:', error);
+        return {};
+    }
+}
+
+/**
+ * Save chained conversations
+ */
+function saveChainedConversations(data) {
+    try {
+        fs.writeFileSync(CHAINED_CONVERSATION_FILE, JSON.stringify(data, null, 2));
+    } catch (error) {
+        console.error('Error saving chained conversations:', error);
+    }
+}
+
+/**
+ * Clear old chained conversations (older than 5 minutes)
+ */
+function cleanupChainedConversations() {
+    const conversations = loadChainedConversations();
+    const now = Date.now();
+    const fiveMinutesAgo = now - (5 * 60 * 1000);
+    
+    let changed = false;
+    Object.keys(conversations).forEach(userId => {
+        if (conversations[userId].timestamp < fiveMinutesAgo) {
+            delete conversations[userId];
+            changed = true;
+        }
+    });
+    
+    if (changed) {
+        saveChainedConversations(conversations);
+    }
+}
+
+// --- DYNAMIC COMMAND MANAGEMENT FUNCTIONS ---
+
+/**
+ * Pushes the bot's entire local command collection to the Discord API.
+ * This is the crucial step for dynamic registration.
+ * NOTE: This usually only needs to be done when a command is added, deleted, or changed.
+ * @param {import('discord.js').Client} client The Discord client instance.
+ * @returns {Promise<boolean>} True if successful.
+ */
+async function refreshDiscordCommands(client) {
+    if (!restClient) {
+        // Initialize REST client if it doesn't exist
+        restClient = new REST().setToken(client.token);
+    }
+    
+    // Get all command data from the local cache
+    const commandsData = client.commands.map(command => command.data);
+    
+    try {
+        // Use Routes.applicationCommands to register globally
+        // This process can take a few minutes to propagate across Discord,
+        // but it is the correct way to register new slash commands.
+        await restClient.put(
+            Routes.applicationCommands(client.user.id),
+            { body: commandsData },
+        );
+        
+        console.log(`[Discord API] Successfully registered ${commandsData.length} application commands.`);
+        return true;
+    } catch (error) {
+        console.error('[Discord API] Failed to register application commands:', error);
+        return false;
+    }
+}
+
+/**
+ * Registers a new command dynamically: updates local cache and Discord API.
+ * @param {import('discord.js').Client} client 
+ * @param {string} filePath 
+ * @returns {Promise<boolean>}
+ */
+async function registerNewCommand(client, filePath) {
+    try {
+        // 1. Clear require cache to ensure fresh module load
+        delete require.cache[require.resolve(filePath)];
+        const newCommand = require(filePath);
+        
+        if (newCommand.data && newCommand.execute) {
+            const commandName = newCommand.data.name;
+
+            // Basic validation
+            if (newCommand.data.description && newCommand.data.description.length > 100) {
+                console.error(`[Minigame Engine] Command description too long: ${newCommand.data.description.length} chars`);
+                return false;
+            }
+            
+            if (!(client.commands instanceof Collection)) {
+                console.error("[Minigame Engine] Client does not have a 'commands' Collection");
+                return false;
+            }
+
+            // 2. Update local cache
+            client.commands.set(commandName, newCommand);
+            console.log(`[Minigame Engine] Successfully updated local cache for: /${commandName}`);
+            
+            // 3. PUSH COMMANDS TO DISCORD API
+            const apiSuccess = await refreshDiscordCommands(client);
+
+            if (apiSuccess) {
+                return true;
+            } else {
+                client.commands.delete(commandName); // Rollback local cache if API push fails
+                return false;
+            }
+            
+        } else {
+            console.error(`[Minigame Engine] File ${filePath} missing 'data' or 'execute'`);
+            return false;
+        }
+    } catch (error) {
+        console.error(`[Minigame Engine] Error registering command from ${filePath}:`, error.message);
+        return false;
+    }
 }
 
 // Minigame Management Tools
@@ -34,35 +178,22 @@ const minigameTools = {
         }
         
         try {
+            // 1. Delete from local cache
             if (client.commands.has(commandName)) {
                 client.commands.delete(commandName);
             }
             
+            // 2. Delete file and clear cache
             fs.unlinkSync(filePath);
             delete require.cache[require.resolve(filePath)];
+
+            // 3. PUSH COMMANDS TO DISCORD API (API will see the command is missing)
+            await refreshDiscordCommands(client);
             
-            return `Successfully deleted minigame "${commandName}" and unregistered the command.`;
+            return `Successfully deleted minigame "${commandName}" and unregistered the command. (May take a minute for Discord to update)`;
         } catch (error) {
             console.error(`Error deleting minigame ${commandName}:`, error);
             return `Failed to delete minigame "${commandName}": ${error.message}`;
-        }
-    },
-    
-    async listMinigames() {
-        try {
-            const files = fs.readdirSync(MINIGAMES_DIR);
-            const minigameFiles = files.filter(file => 
-                file.endsWith('.js') && file !== path.basename(__filename)
-            );
-            
-            if (minigameFiles.length === 0) {
-                return "No active minigames found.";
-            }
-            
-            return `**Active Minigames:**\n${minigameFiles.map(file => `• ${file.replace('.js', '')}`).join('\n')}`;
-        } catch (error) {
-            console.error('Error listing minigames:', error);
-            return "Failed to list minigames.";
         }
     },
     
@@ -76,8 +207,8 @@ const minigameTools = {
         }
         
         try {
-            delete require.cache[require.resolve(filePath)];
-            const success = registerNewCommand(client, filePath);
+            // Reload logic is contained in registerNewCommand
+            const success = await registerNewCommand(client, filePath);
             
             if (success) {
                 return `Successfully reloaded minigame "${commandName}".`;
@@ -92,49 +223,16 @@ const minigameTools = {
 };
 
 /**
- * Registers a new command dynamically
- */
-function registerNewCommand(client, filePath) {
-    try {
-        delete require.cache[require.resolve(filePath)];
-        const newCommand = require(filePath);
-        
-        if (newCommand.data && newCommand.execute) {
-            if (newCommand.data.description && newCommand.data.description.length > 100) {
-                console.error(`[Minigame Engine] Command description too long: ${newCommand.data.description.length} chars`);
-                return false;
-            }
-            
-            if (client.commands instanceof Collection) {
-                client.commands.set(newCommand.data.name, newCommand);
-                console.log(`[Minigame Engine] Successfully registered new command: /${newCommand.data.name}`);
-                return true;
-            } else {
-                console.error("[Minigame Engine] Client does not have a 'commands' Collection");
-                return false;
-            }
-        } else {
-            console.error(`[Minigame Engine] File ${filePath} missing 'data' or 'execute'`);
-            return false;
-        }
-    } catch (error) {
-        console.error(`[Minigame Engine] Error registering command from ${filePath}:`, error.message);
-        return false;
-    }
-}
-
-/**
  * Tool function: Creates a new minigame command
+ * This function now uses the async registerNewCommand
  */
 async function createMinigame(targetUserId, gameName, gameDescription, message, client) {
-    if (message.author.id !== OWNER_ID) { 
-        return "I can't let just anyone create new commands. This feature is restricted to my creator."; 
-    }
-    
+    // Allow anyone to create minigames now
     if (!gameName || gameName.trim().length < 3 || gameName.length > 50) {
         return "Game name must be between 3 and 50 characters.";
     }
     
+    // NOTE: Discord command descriptions have a maximum length of 100 characters.
     if (!gameDescription || gameDescription.trim().length < 5 || gameDescription.length > 100) {
         return "Game description must be between 5 and 100 characters.";
     }
@@ -152,20 +250,40 @@ async function createMinigame(targetUserId, gameName, gameDescription, message, 
     }
     
     const amoebaSystemPrompt = `
-You are Amoeba, a world-class professional developer who specializes in coding minigames for Discord.
-
-CRITICAL REQUIREMENTS:
-1. Use 'discord.js' v14 (SlashCommandBuilder, EmbedBuilder, interaction.reply with components)
-2. Command name MUST be exactly: '${commandName}'
-3. Description MUST be short (under 100 characters): '${gameDescription}'
-4. NO external file system operations (fs, path, require('../'))
-5. NO forbidden modules - only use discord.js and built-in Node.js modules
-6. All game logic must be contained within the 'execute' function
-7. Use EmbedBuilder for main game display
-8. Keep code simple and self-contained
-
-Respond with ONLY the JavaScript code in a markdown block.
-`;
+    
+    
+    
+    You are Amoeba, a world-class professional developer who specializes in coding minigames for Discord.
+    
+    
+    
+    CRITICAL REQUIREMENTS:
+    
+    # Here's a dataset that will help you with making discord minigames: '${MINIGAME_DATASET}'
+    
+    1. Use 'discord.js' v14 (SlashCommandBuilder, EmbedBuilder, interaction.reply with components)
+    
+    2. Command name MUST be exactly: '${commandName}'
+    
+    3. Description MUST be short (under 100 characters): '${gameDescription}'
+    
+    4. NO external file system operations (fs, path, require('../'))
+    
+    5. NO forbidden modules - only use discord.js and built-in Node.js modules
+    
+    6. All game logic must be contained within the 'execute' function
+    
+    7. Use EmbedBuilder for main game display
+    
+    8. Keep code simple and self-contained
+    
+    
+    
+    Respond with ONLY the JavaScript code in a markdown block.
+    
+    
+    
+    `;
 
     const amoebaUserPrompt = `
 Generate a Discord.js v14 Slash Command for a minigame named "${gameName}".
@@ -219,10 +337,14 @@ Make it single-player and fun!
 
     try {
         fs.writeFileSync(filePath, generatedCode);
-        const success = registerNewCommand(client, filePath);
+        
+        // Use the new async registration function
+        const success = await registerNewCommand(client, filePath); 
         
         if (success) {
-            return `Amoeba says: "Finished! New minigame deployed: **/${commandName}**! It's live now."`;
+            // Note: The new command may take up to an hour to appear globally, 
+            // but it's often instant in development or for test servers.
+            return `Amoeba says: "Finished! New minigame deployed: **/${commandName}**! It's live now. (May take a minute for Discord to update)"`;
         } else {
             return `Amoeba made the code, but command registration failed. Check console for details.`;
         }
@@ -232,7 +354,7 @@ Make it single-player and fun!
     }
 }
 
-// --- DATA MANAGEMENT FUNCTIONS ---
+// --- DATA MANAGEMENT FUNCTIONS (IMPROVED) ---
 const JUTSU_FILE_PATH = path.resolve(__dirname, '../../menma/data/jutsus.json');
 const HELPER_FILE_PATH = path.resolve(__dirname, '../../menma/data/helper.json');
 const USERS_FILE_PATH = path.resolve(__dirname, '../../menma/data/users.json');
@@ -255,8 +377,10 @@ function refreshData() {
         dataCache.jutsuData = JSON.parse(fs.readFileSync(JUTSU_FILE_PATH, 'utf8'));
         dataCache.helperData = JSON.parse(fs.readFileSync(HELPER_FILE_PATH, 'utf8'));
         dataCache.usersData = JSON.parse(fs.readFileSync(USERS_FILE_PATH, 'utf8'));
+        dataCache.botInfo = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../../menma/data/commands_dataset.json'), 'utf8'));
         dataCache.playersData = JSON.parse(fs.readFileSync(PLAYERS_FILE_PATH, 'utf8'));
         dataCache.lastRefresh = Date.now();
+        console.log(`[Data Refresh] Data refreshed at ${new Date().toISOString()}`);
     } catch (error) {
         console.error("Error refreshing data:", error);
     }
@@ -266,11 +390,33 @@ function refreshData() {
 refreshData();
 
 /**
- * Saves JSON file with data refresh
+ * Enhanced save function with proper data preservation
  */
-function saveJson(filepath, data) {
-    refreshData();
-    fs.writeFileSync(filepath, JSON.stringify(data, null, 2));
+function saveJson(filepath, newData) {
+    try {
+        // Refresh data first to get latest state
+        refreshData();
+        
+        // For specific files, ensure we preserve the complete structure
+        if (filepath === PLAYERS_FILE_PATH) {
+            // Merge new data with existing data to preserve all users
+            const mergedData = { ...dataCache.playersData, ...newData };
+            fs.writeFileSync(filepath, JSON.stringify(mergedData, null, 2));
+        } else if (filepath === USERS_FILE_PATH) {
+            const mergedData = { ...dataCache.usersData, ...newData };
+            fs.writeFileSync(filepath, JSON.stringify(mergedData, null, 2));
+        } else if (filepath === JUTSU_FILE_PATH) {
+            const mergedData = { ...dataCache.jutsuData, ...newData };
+            fs.writeFileSync(filepath, JSON.stringify(mergedData, null, 2));
+        } else {
+            fs.writeFileSync(filepath, JSON.stringify(newData, null, 2));
+        }
+        
+        // Refresh cache after save
+        refreshData();
+    } catch (error) {
+        console.error("Error saving JSON:", error);
+    }
 }
 
 // --- PERMANENT MEMORY INITIALIZATION (SQLite) ---
@@ -284,13 +430,27 @@ async function initializeDatabase() {
             driver: sqlite3.Database
         });
 
+        // Create table if it doesn't exist (older DBs might lack the 'keywords' column)
         await db.exec(`
             CREATE TABLE IF NOT EXISTS conversational_memory (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 memory_text TEXT,
-                timestamp INTEGER
+                timestamp INTEGER,
+                keywords TEXT
             );
         `);
+
+        // Migration: ensure 'keywords' column exists for older databases that lack it
+        try {
+            const cols = await db.all("PRAGMA table_info(conversational_memory);");
+            const hasKeywords = cols.some(col => col.name === 'keywords');
+            if (!hasKeywords) {
+                await db.run("ALTER TABLE conversational_memory ADD COLUMN keywords TEXT;");
+                console.log("Migrated conversational_memory table: added 'keywords' column.");
+            }
+        } catch (migrationErr) {
+            console.error("Error checking/migrating conversational_memory schema:", migrationErr);
+        }
 
         console.log("Successfully connected to Permanent Memory (SQLite DB).");
     } catch (error) {
@@ -300,7 +460,7 @@ async function initializeDatabase() {
 
 initializeDatabase();
 
-// --- PERMANENT MEMORY FUNCTIONS ---
+// --- PERMANENT MEMORY FUNCTIONS (ENHANCED WITH KEYWORD SEARCH) ---
 async function loadPermanentMemory(n = 5) {
     if (!db) return [];
     try {
@@ -316,33 +476,129 @@ async function loadPermanentMemory(n = 5) {
     }
 }
 
+/**
+ * Extract keywords from text for memory indexing
+ */
+function extractKeywords(text) {
+    if (!text) return '';
+    
+    // Common words to exclude
+    const stopWords = new Set([
+        'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by',
+        'i', 'you', 'he', 'she', 'it', 'we', 'they', 'me', 'him', 'her', 'us', 'them',
+        'is', 'am', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had',
+        'do', 'does', 'did', 'will', 'would', 'could', 'should', 'may', 'might', 'must',
+        'this', 'that', 'these', 'those', 'my', 'your', 'his', 'her', 'its', 'our', 'their',
+        'what', 'when', 'where', 'why', 'how', 'who', 'which'
+    ]);
+    
+    // Extract words and filter
+    const words = text.toLowerCase()
+        .replace(/[^\w\s]/g, ' ')
+        .split(/\s+/)
+        .filter(word => 
+            word.length > 2 && 
+            !stopWords.has(word) && 
+            !/^\d+$/.test(word)
+        );
+    
+    // Return unique keywords
+    return [...new Set(words)].slice(0, 10).join(',');
+}
+
 async function savePermanentMemory(memoryText) {
     if (!db || !memoryText) return;
     try {
+        const keywords = extractKeywords(memoryText);
         await db.run(`
-            INSERT INTO conversational_memory (memory_text, timestamp)
-            VALUES (?, ?)
-        `, [memoryText, Date.now()]);
+            INSERT INTO conversational_memory (memory_text, timestamp, keywords)
+            VALUES (?, ?, ?)
+        `, [memoryText, Date.now(), keywords]);
     } catch (error) {
         console.error("Error saving Permanent Memory:", error);
     }
 }
 
-// --- CORE SCRIPTING FUNCTIONS ---
+/**
+ * Keyword-based memory search
+ */
+async function searchMemoryByKeywords(userMessage, limit = 3) {
+    if (!db) return [];
+    
+    try {
+        const keywords = extractKeywords(userMessage);
+        if (!keywords) return [];
+        
+        const keywordList = keywords.split(',');
+        const conditions = keywordList.map(() => 'keywords LIKE ?').join(' OR ');
+        const params = keywordList.map(keyword => `%${keyword}%`);
+        params.push(limit);
+        
+        const rows = await db.all(`
+            SELECT memory_text FROM conversational_memory 
+            WHERE ${conditions}
+            ORDER BY timestamp DESC 
+            LIMIT ?
+        `, params);
+        
+        return rows.map(row => row.memory_text);
+    } catch (error) {
+        console.error("Error searching memory:", error);
+        return [];
+    }
+}
+
+// --- CORE SCRIPTING FUNCTIONS (IMPROVED) ---
 
 /**
- * Moderation Script - Silent filter
+ * Enhanced Moderation Script - Focused on actual violations
  */
 async function moderateMessage(userMessage) {
+    const slursAndViolations = [
+        
+        'nigger', 'nigga', 'fag', 'faggot', 'kike', 'chink', 'spic', 'retard',
+        // Severe threats
+        'kill yourself', 'kys', 'commit suicide', 'i will kill you', 'death threat',
+     
+        'dox', 'personal information', 'address', 'phone number', 'social security'
+    ];
+    
+    const lowerMessage = userMessage.toLowerCase();
+    
+    // Check for explicit violations
+    for (const violation of slursAndViolations) {
+        if (lowerMessage.includes(violation)) {
+            return false;
+        }
+    }
+    
+    // Allow fighting/violence-related terms for RPG context
+    const allowedFightingTerms = [
+        'fight', 'battle', 'kill', 'death', 'attack', 'defeat', 'war', 'combat',
+        'jutsu', 'ninja', 'shinobi', 'rasengan', 'chidori', 'fireball'
+    ];
+    
+    // If message contains fighting terms, it's likely game-related and safe
+    for (const term of allowedFightingTerms) {
+        if (lowerMessage.includes(term)) {
+            return true;
+        }
+    }
+    
+    // Use AI moderation for ambiguous cases
     const moderationPrompt = `
-You are the Human Memory System (HMS) of a Discord bot. Your sole function is to act as a filter against Discord's Terms of Service and Privacy Policy.
+You are the Human Memory System (HMS) of a Discord bot. Your sole function is to act as a filter against severe violations.
 
 Analyze: "${userMessage}"
-This bot is a 'fighting' RPG style bot so do not block messages that include related terms.
+This bot is a 'fighting' RPG style bot so ALLOW messages that include fighting, violence, battle terms as they are game-related.
 
-Determine if this message contains content that violates Discord's rules.
+ONLY block if this message contains:
+- Racial slurs or hate speech
+- Severe real-life threats
+- Doxing or privacy violations
+- Extreme harassment
 
-Respond with ONLY a single word: 'SAFE' if permissible, or 'UNSAFE' if it violates rules.
+Respond with ONLY a single word: 'SAFE' if permissible, or 'UNSAFE' if it contains severe violations.
 `;
     try {
         const result = await model.generateContent(moderationPrompt);
@@ -355,7 +611,7 @@ Respond with ONLY a single word: 'SAFE' if permissible, or 'UNSAFE' if it violat
 }
 
 /**
- * Goal Setter Script
+ * IMPROVED Goal Setter Script with Even Distribution
  */
 function detectLevelGoalRequest(message) {
     const content = message.content.toLowerCase();
@@ -382,23 +638,24 @@ function getExpRequirement(currentLevel) {
 
 // Mission Rewards Data
 const missionRewards = {
-    drank: { exp: 10, type: 'fixed' },
-    brank: { exp: { min: 10, max: 30 }, type: 'random' },
+    drank: { exp: 10, type: 'fixed', cooldown: 10 },
+    brank: { exp: { min: 10, max: 30 }, type: 'random', cooldown: 13 },
     arank: { 
         exp: 9, 
         type: 'fixed',
         bonus: { every: 5, multiplier: 1 },
-        jackpot: { after: 50, multiplier: 3 }
+        jackpot: { after: 50, multiplier: 3 },
+        cooldown: 18
     },
-    crank: { exp: (level) => 100 + level, type: 'level_based' },
+    crank: { exp: (level) => 100 + level, type: 'level_based', cooldown: 720 }, // 12 hours
     frank: { exp: 1, type: 'fixed', cooldown: 3 },
     srank: {
-        haku: { total: 50, normal: 25, corrupted: 25 },
-        zabuza: { total: 60 },
-        orochimaru: { total: 80 },
-        kurenai: { total: 300, corrupted_orochimaru: 100, survival: 100, kurenai_vs_kagami: 100 }
+        haku: { total: 50, normal: 25, corrupted: 25, cooldown: 20 },
+        zabuza: { total: 60, cooldown: 20 },
+        orochimaru: { total: 80, cooldown: 20 },
+        kurenai: { total: 300, corrupted_orochimaru: 100, survival: 100, kurenai_vs_kagami: 100, cooldown: 20 }
     },
-    trials: { exp: (level) => 5 + Math.floor(level * 0.5), type: 'level_based' }
+    trials: { exp: (level) => 5 + Math.floor(level * 0.5), type: 'level_based', cooldown: 20 }
 };
 
 async function createGoalPlan(userId, targetLevel) {
@@ -419,79 +676,180 @@ async function createGoalPlan(userId, targetLevel) {
         return { error: "You already have enough EXP to reach your target level!" };
     }
 
+    // Mission definitions with better balancing
     const missionTypes = [
-        { name: 'D-Rank', exp: missionRewards.drank.exp, cooldown: 10 * 60, weight: 1, key: 'drank' },
-        { name: 'F-Rank', exp: missionRewards.frank.exp, cooldown: 3, weight: 0.5, key: 'frank' },
-        { name: 'B-Rank', exp: (missionRewards.brank.exp.min + missionRewards.brank.exp.max) / 2, cooldown: 13 * 60, weight: 2, key: 'brank' },
-        { name: 'A-Rank', exp: missionRewards.arank.exp, cooldown: 18 * 60, weight: 3, key: 'arank' },
-        { name: 'Trials', exp: missionRewards.trials.exp(currentLevel), cooldown: 20 * 60, weight: 2.5, key: 'trials' },
-        { name: 'S-Rank Haku', exp: missionRewards.srank.haku.total, cooldown: 20 * 60, weight: 4, key: 'srank_haku' },
-        { name: 'S-Rank Zabuza', exp: missionRewards.srank.zabuza.total, cooldown: 20 * 60, weight: 4, key: 'srank_zabuza' },
-        { name: 'S-Rank Orochimaru', exp: missionRewards.srank.orochimaru.total, cooldown: 20 * 60, weight: 5, key: 'srank_orochimaru' },
-        { name: 'S-Rank Kurenai', exp: missionRewards.srank.kurenai.total, cooldown: 20 * 60, weight: 5, key: 'srank_kurenai' },
-        { name: 'C-Rank', exp: missionRewards.crank.exp(currentLevel), cooldown: 12 * 60 * 60, weight: 10, key: 'crank' }
+        { 
+            name: 'D-Rank', 
+            exp: missionRewards.drank.exp, 
+            cooldown: missionRewards.drank.cooldown, 
+            weight: 1.0,
+            key: 'drank',
+            priority: 3
+        },
+        { 
+            name: 'F-Rank', 
+            exp: missionRewards.frank.exp, 
+            cooldown: missionRewards.frank.cooldown, 
+            weight: 0.3,
+            key: 'frank',
+            priority: 1 // Lowest priority - filler missions
+        },
+        { 
+            name: 'B-Rank', 
+            exp: (missionRewards.brank.exp.min + missionRewards.brank.exp.max) / 2, 
+            cooldown: missionRewards.brank.cooldown, 
+            weight: 1.5,
+            key: 'brank',
+            priority: 4
+        },
+        { 
+            name: 'A-Rank', 
+            exp: missionRewards.arank.exp, 
+            cooldown: missionRewards.arank.cooldown, 
+            weight: 2.0,
+            key: 'arank',
+            priority: 5
+        },
+        { 
+            name: 'Trials', 
+            exp: missionRewards.trials.exp(currentLevel), 
+            cooldown: missionRewards.trials.cooldown, 
+            weight: 1.8,
+            key: 'trials',
+            priority: 4
+        },
+        { 
+            name: 'S-Rank Haku', 
+            exp: missionRewards.srank.haku.total, 
+            cooldown: missionRewards.srank.haku.cooldown, 
+            weight: 2.5,
+            key: 'srank_haku',
+            priority: 6
+        },
+        { 
+            name: 'S-Rank Zabuza', 
+            exp: missionRewards.srank.zabuza.total, 
+            cooldown: missionRewards.srank.zabuza.cooldown, 
+            weight: 2.5,
+            key: 'srank_zabuza',
+            priority: 6
+        },
+        { 
+            name: 'S-Rank Orochimaru', 
+            exp: missionRewards.srank.orochimaru.total, 
+            cooldown: missionRewards.srank.orochimaru.cooldown, 
+            weight: 3.0,
+            key: 'srank_orochimaru',
+            priority: 7
+        },
+        { 
+            name: 'S-Rank Kurenai', 
+            exp: missionRewards.srank.kurenai.total, 
+            cooldown: missionRewards.srank.kurenai.cooldown, 
+            weight: 3.0,
+            key: 'srank_kurenai',
+            priority: 7
+        },
+        { 
+            name: 'C-Rank', 
+            exp: missionRewards.crank.exp(currentLevel), 
+            cooldown: missionRewards.crank.cooldown, 
+            weight: 4.0,
+            key: 'crank',
+            priority: 8 // Highest priority due to long cooldown
+        }
     ];
 
-    const filteredMissions = missionTypes.filter(m => m.weight < 8);
-    const totalWeight = filteredMissions.reduce((sum, m) => sum + (1 / m.weight), 0);
-
+    // Sort by priority (higher priority first for distribution)
+    const sortedMissions = [...missionTypes].sort((a, b) => b.priority - a.priority);
+    
     let planSteps = [];
-    let missionCounts = {};
     let remainingExp = totalExpNeeded;
-
-    filteredMissions.forEach(mission => {
-        let share = (1 / mission.weight) / totalWeight;
-        let expForThis = Math.floor(totalExpNeeded * share);
-        let count = Math.floor(expForThis / mission.exp);
-        let expPerMission = mission.exp;
-
-        if (mission.key === 'arank' && count > 0) {
-            let baseExp = missionRewards.arank.exp;
-            let bonusExp = currentLevel;
-            let jackpotExp = currentLevel * 3;
-            let bonusBattles = Math.floor(count / 5);
-            let jackpotBattles = Math.floor(count / 50);
-            let totalExpWithBonuses = (count * baseExp) + (bonusBattles * bonusExp) + (jackpotBattles * jackpotExp);
-            expPerMission = totalExpWithBonuses / count;
+    
+    // First pass: Distribute high-priority missions evenly
+    const highPriorityMissions = sortedMissions.filter(m => m.priority >= 4);
+    let distributionRound = 0;
+    
+    while (remainingExp > 0 && distributionRound < 10) { // Safety limit
+        let distributedThisRound = false;
+        
+        for (const mission of highPriorityMissions) {
+            if (remainingExp <= 0) break;
+            
+            const missionExp = typeof mission.exp === 'function' ? mission.exp(currentLevel) : mission.exp;
+            const maxReasonableCount = Math.ceil(remainingExp / missionExp / highPriorityMissions.length);
+            
+            if (maxReasonableCount > 0) {
+                // Add 1 mission of this type
+                const countToAdd = 1;
+                const expFromMission = countToAdd * missionExp;
+                
+                planSteps.push({
+                    mission: mission.name,
+                    count: countToAdd,
+                    expEach: Math.round(missionExp),
+                    totalExp: Math.round(expFromMission),
+                    cooldown: mission.cooldown
+                });
+                
+                remainingExp -= Math.round(expFromMission);
+                distributedThisRound = true;
+            }
         }
-
+        
+        if (!distributedThisRound) break;
+        distributionRound++;
+    }
+    
+    // Second pass: Fill remaining with medium priority
+    const mediumPriorityMissions = sortedMissions.filter(m => m.priority >= 2 && m.priority < 4);
+    for (const mission of mediumPriorityMissions) {
+        if (remainingExp <= 0) break;
+        
+        const missionExp = typeof mission.exp === 'function' ? mission.exp(currentLevel) : mission.exp;
+        const count = Math.ceil(remainingExp / missionExp);
+        
         if (count > 0) {
+            const actualCount = Math.min(count, 10); // Limit to prevent spam
+            const expFromMissions = actualCount * missionExp;
+            
             planSteps.push({
                 mission: mission.name,
-                count: count,
-                expEach: Math.round(expPerMission),
-                totalExp: Math.round(count * expPerMission)
+                count: actualCount,
+                expEach: Math.round(missionExp),
+                totalExp: Math.round(expFromMissions),
+                cooldown: mission.cooldown
             });
-            missionCounts[mission.key] = count;
-            remainingExp -= Math.round(count * expPerMission);
+            
+            remainingExp -= Math.round(expFromMissions);
+        }
+    }
+    
+    // Final pass: Use F-Rank as filler for small amounts
+    if (remainingExp > 0) {
+        const fMission = missionTypes.find(m => m.key === 'frank');
+        const count = Math.ceil(remainingExp / fMission.exp);
+        
+        if (count > 0) {
+            planSteps.push({
+                mission: fMission.name,
+                count: count,
+                expEach: fMission.exp,
+                totalExp: count * fMission.exp,
+                cooldown: fMission.cooldown
+            });
+            remainingExp = 0;
+        }
+    }
+
+    // Aggregate counts by mission type
+    const missionCounts = {};
+    planSteps.forEach(step => {
+        const missionKey = missionTypes.find(m => m.name === step.mission)?.key;
+        if (missionKey) {
+            missionCounts[missionKey] = (missionCounts[missionKey] || 0) + step.count;
         }
     });
-
-    if (remainingExp > 0) {
-        let fMission = missionTypes.find(m => m.key === 'frank');
-        let fCount = Math.ceil(remainingExp / fMission.exp);
-        planSteps.push({
-            mission: fMission.name,
-            count: fCount,
-            expEach: fMission.exp,
-            totalExp: fCount * fMission.exp
-        });
-        missionCounts['frank'] = (missionCounts['frank'] || 0) + fCount;
-        remainingExp = 0;
-    }
-
-    let cMission = missionTypes.find(m => m.key === 'crank');
-    if (remainingExp > 0 && remainingExp >= cMission.exp) {
-        let cCount = Math.floor(remainingExp / cMission.exp);
-        planSteps.push({
-            mission: cMission.name,
-            count: cCount,
-            expEach: cMission.exp,
-            totalExp: cCount * cMission.exp
-        });
-        missionCounts['crank'] = (missionCounts['crank'] || 0) + cCount;
-        remainingExp -= cCount * cMission.exp;
-    }
 
     return {
         currentLevel,
@@ -499,7 +857,8 @@ async function createGoalPlan(userId, targetLevel) {
         currentExp,
         totalExpNeeded,
         planSteps,
-        missionCounts
+        missionCounts,
+        remainingExp: Math.max(0, remainingExp)
     };
 }
 
@@ -514,174 +873,175 @@ async function goalSet(targetUserId, targetLevel, message) {
         step => `• **${step.mission}:** ${step.count} missions (${step.expEach} EXP each, total ${step.totalExp} EXP)`
     ).join('\n');
 
+    // Helper to chunk long strings to stay under Discord's 1024-character field limit
+    function chunkString(str, size) {
+        const chunks = [];
+        let i = 0;
+        while (i < str.length) {
+            chunks.push(str.slice(i, i + size));
+            i += size;
+        }
+        return chunks;
+    }
+
+    const header = `Follow this balanced plan to reach your goal:\n`;
+    const combined = header + planStr;
+    // Use a safe chunk size under 1024 to account for any overhead
+    const chunks = chunkString(combined, 1000);
+
+    // Build fields array; subsequent fields use a zero-width space name to avoid empty-name errors
+    const fields = chunks.map((chunk, idx) => ({
+        name: idx === 0 ? 'Step-by-Step Mission Plan' : '\u200B',
+        value: chunk,
+        inline: false
+    }));
+
     const embed = new EmbedBuilder()
         .setColor('#ffffff')
-        .setTitle(`Level Up Guide for ${message.author.username}`)
+        .setTitle(`🏆 Level Up Guide for ${message.author.username}`)
         .setDescription(`**Current Level:** ${plan.currentLevel} | **Target Level:** ${plan.targetLevel}\n**EXP Needed:** ${plan.totalExpNeeded.toLocaleString()}`)
-        .addFields({
-            name: 'Step-by-Step Mission Plan',
-            value: `Follow this plan to reach your goal:\n${planStr}`,
-            inline: false
-        })
+        .addFields(...fields)
         .setFooter({ text: 'Use /levelup all after completing missions to level up!' })
         .setTimestamp();
 
     return { embed: embed };
 }
 
-// --- TOOL ROUTER SCRIPT ---
+// --- ENHANCED TOOL ROUTER SCRIPT ---
+
 /**
- * Enhanced editStat function that preserves existing data
+ * IMPROVED editStat function with proper data type handling and preservation
  */
 async function editStat(targetUserId, stat, value, fileType, message, client) {
     if (message.author.id !== OWNER_ID) return "Only the owner can edit stats.";
     
+    // Refresh data right before operation
     refreshData();
     
     let filePath = fileType === 'players' ? PLAYERS_FILE_PATH : USERS_FILE_PATH;
-    let data = fileType === 'players' ? dataCache.playersData : dataCache.usersData;
+    let data = fileType === 'players' ? { ...dataCache.playersData } : { ...dataCache.usersData };
     
     if (!data[targetUserId]) {
         data[targetUserId] = {};
     }
     
-    const currentData = { ...data[targetUserId] };
-    data[targetUserId][stat] = isNaN(value) ? value : Number(value);
-    data[targetUserId] = { ...currentData, ...data[targetUserId] };
+    // Preserve existing data
+    const currentUserData = { ...data[targetUserId] };
     
+    // Determine data type and convert value appropriately
+    let processedValue = value;
+    
+    // Check if value should be numeric
+    if (!isNaN(value) && value !== '') {
+        processedValue = Number(value);
+    } else if (value.toLowerCase() === 'true') {
+        processedValue = true;
+    } else if (value.toLowerCase() === 'false') {
+        processedValue = false;
+    } else {
+        // Keep as string
+        processedValue = String(value);
+    }
+    
+    // Update only the specific stat while preserving others
+    data[targetUserId] = {
+        ...currentUserData,
+        [stat]: processedValue
+    };
+    
+    // Save with proper data preservation
     saveJson(filePath, data);
     
     let channel = message.channel;
     await channel.send(`<@${targetUserId}> you've been blessed by thunderbird.`);
-    return `Set ${stat} of <@${targetUserId}> to ${data[targetUserId][stat]} in ${fileType}.`;
+    return `Set ${stat} of <@${targetUserId}> to ${processedValue} in ${fileType}.`;
 }
 
-// Other tool functions with data refresh
+// Other tool functions with enhanced data refresh
 async function giftMoney(targetUserId, amount, message) {
     if (message.author.id !== OWNER_ID) return "Only my creator can use this command.";
     refreshData();
-    if (!dataCache.playersData[targetUserId]) dataCache.playersData[targetUserId] = { money: 0 };
-    dataCache.playersData[targetUserId].money = Number(dataCache.playersData[targetUserId].money || 0) + Number(amount);
-    saveJson(PLAYERS_FILE_PATH, dataCache.playersData);
-    return `Your chakra reserves have been replenished! ${amount} ryo added. New balance: ${dataCache.playersData[targetUserId].money}.`;
+    const data = { ...dataCache.playersData };
+    if (!data[targetUserId]) data[targetUserId] = { money: 0 };
+    data[targetUserId].money = Number(data[targetUserId].money || 0) + Number(amount);
+    saveJson(PLAYERS_FILE_PATH, data);
+    return `Your chakra reserves have been replenished! ${amount} ryo added. New balance: ${data[targetUserId].money}.`;
 }
 
 async function giftSS(targetUserId, amount, message) {
     if (message.author.id !== OWNER_ID) return "Only the owner can gift SS.";
     refreshData();
-    if (!dataCache.playersData[targetUserId]) dataCache.playersData[targetUserId] = {};
-    dataCache.playersData[targetUserId].ss = Number(dataCache.playersData[targetUserId].ss || 0) + Number(amount);
-    saveJson(PLAYERS_FILE_PATH, dataCache.playersData);
+    const data = { ...dataCache.playersData };
+    if (!data[targetUserId]) data[targetUserId] = {};
+    data[targetUserId].ss = Number(data[targetUserId].ss || 0) + Number(amount);
+    saveJson(PLAYERS_FILE_PATH, data);
     return `Gifted ${amount} Shinobi Shards (SS) to <@${targetUserId}>.`;
 }
 
 async function giftRamen(targetUserId, amount, message) {
     if (message.author.id !== OWNER_ID) return "Only the owner can gift ramen.";
     refreshData();
-    if (!dataCache.playersData[targetUserId]) dataCache.playersData[targetUserId] = {};
-    dataCache.playersData[targetUserId].ramen = Number(dataCache.playersData[targetUserId].ramen || 0) + Number(amount);
-    saveJson(PLAYERS_FILE_PATH, dataCache.playersData);
+    const data = { ...dataCache.playersData };
+    if (!data[targetUserId]) data[targetUserId] = {};
+    data[targetUserId].ramen = Number(data[targetUserId].ramen || 0) + Number(amount);
+    saveJson(PLAYERS_FILE_PATH, data);
     return `Gifted ${amount} ramen ticket(s) to <@${targetUserId}>.`;
 }
 
 async function giftScroll(targetUserId, scrollName, message) {
     if (message.author.id !== OWNER_ID) return "Only the owner can gift scrolls.";
     refreshData();
-    if (!dataCache.jutsuData[targetUserId]) dataCache.jutsuData[targetUserId] = { usersjutsu: [], combos: [], scrolls: [] };
-    if (!dataCache.jutsuData[targetUserId].scrolls) dataCache.jutsuData[targetUserId].scrolls = [];
-    if (!dataCache.jutsuData[targetUserId].scrolls.includes(scrollName)) dataCache.jutsuData[targetUserId].scrolls.push(scrollName);
-    saveJson(JUTSU_FILE_PATH, dataCache.jutsuData);
+    const data = { ...dataCache.jutsuData };
+    if (!data[targetUserId]) data[targetUserId] = { usersjutsu: [], combos: [], scrolls: [] };
+    if (!data[targetUserId].scrolls) data[targetUserId].scrolls = [];
+    if (!data[targetUserId].scrolls.includes(scrollName)) data[targetUserId].scrolls.push(scrollName);
+    saveJson(JUTSU_FILE_PATH, data);
     return `Gifted scroll "${scrollName}" to <@${targetUserId}>.`;
 }
 
 async function giftJutsu(targetUserId, jutsuName, message) {
     if (message.author.id !== OWNER_ID) return "Only the owner can gift jutsus.";
     refreshData();
-    if (!dataCache.jutsuData[targetUserId]) dataCache.jutsuData[targetUserId] = { usersjutsu: [], combos: [], scrolls: [] };
-    if (!dataCache.jutsuData[targetUserId].usersjutsu.includes(jutsuName)) dataCache.jutsuData[targetUserId].usersjutsu.push(jutsuName);
-    saveJson(JUTSU_FILE_PATH, dataCache.jutsuData);
+    const data = { ...dataCache.jutsuData };
+    if (!data[targetUserId]) data[targetUserId] = { usersjutsu: [], combos: [], scrolls: [] };
+    if (!data[targetUserId].usersjutsu.includes(jutsuName)) data[targetUserId].usersjutsu.push(jutsuName);
+    saveJson(JUTSU_FILE_PATH, data);
     return `Gifted jutsu "${jutsuName}" to <@${targetUserId}>.`;
-}
-
-async function giftCombo(targetUserId, comboName, message) {
-    if (message.author.id !== OWNER_ID) return "Only the owner can gift combos.";
-    refreshData();
-    if (!dataCache.jutsuData[targetUserId]) dataCache.jutsuData[targetUserId] = { usersjutsu: [], combos: [], scrolls: [] };
-    if (!dataCache.jutsuData[targetUserId].combos) dataCache.jutsuData[targetUserId].combos = [];
-    if (!dataCache.jutsuData[targetUserId].combos.includes(comboName)) dataCache.jutsuData[targetUserId].combos.push(comboName);
-    saveJson(JUTSU_FILE_PATH, dataCache.jutsuData);
-    return `Gifted combo "${comboName}" to <@${targetUserId}>.`;
 }
 
 async function giftExp(targetUserId, amount, message) {
     if (message.author.id !== OWNER_ID) return "Only the owner can gift EXP.";
     refreshData();
-    if (!dataCache.playersData[targetUserId]) dataCache.playersData[targetUserId] = {};
-    dataCache.playersData[targetUserId].exp = Number(dataCache.playersData[targetUserId].exp || 0) + Number(amount);
-    saveJson(PLAYERS_FILE_PATH, dataCache.playersData);
+    const data = { ...dataCache.playersData };
+    if (!data[targetUserId]) data[targetUserId] = {};
+    data[targetUserId].exp = Number(data[targetUserId].exp || 0) + Number(amount);
+    saveJson(PLAYERS_FILE_PATH, data);
     return `Gifted ${amount} EXP to <@${targetUserId}>.`;
 }
 
-async function giftElo(targetUserId, amount, message) {
-    if (message.author.id !== OWNER_ID) return "Only the owner can gift ELO.";
-    refreshData();
-    if (!dataCache.playersData[targetUserId]) dataCache.playersData[targetUserId] = {};
-    dataCache.playersData[targetUserId].elo = Number(dataCache.playersData[targetUserId].elo || 0) + Number(amount);
-    saveJson(PLAYERS_FILE_PATH, dataCache.playersData);
-    return `Gifted ${amount} ELO to <@${targetUserId}>.`;
-}
+// REMOVED: giftCombo, giftElo, giftMaterial, teachJutsu
 
-async function giftMaterial(targetUserId, materialKey, amount, message) {
-    if (message.author.id !== OWNER_ID) return "Only the owner can gift materials.";
-    refreshData();
-    let occupation = dataCache.usersData[targetUserId]?.occupation?.toLowerCase() || '';
-    let matFile = null;
-    if (["anbu", "hokage", "right hand man", "guard", "spy", "village"].some(role => occupation.includes(role))) {
-        matFile = path.resolve(__dirname, '../../menma/data/village.json');
-    } else if (["akatsuki", "rogue"].some(role => occupation.includes(role))) {
-        matFile = path.resolve(__dirname, '../../menma/data/akatsuki.json');
-    }
-    if (!matFile) return "User's occupation is not eligible for material storage.";
-    let matData = fs.existsSync(matFile) ? JSON.parse(fs.readFileSync(matFile, 'utf8')) : {};
-    if (!matData[materialKey]) matData[materialKey] = 0;
-    matData[materialKey] = Number(matData[materialKey]) + Number(amount);
-    saveJson(matFile, matData);
-    return `Gifted ${amount} ${materialKey} to <@${targetUserId}> (${occupation}).`;
-}
-
-async function teachJutsu(targetUserId, jutsuKey, message) {
-    if (message.author.id !== OWNER_ID) return "Only the owner can teach jutsus.";
-    refreshData();
-    if (!dataCache.jutsuData[targetUserId]) dataCache.jutsuData[targetUserId] = { usersjutsu: [], combos: [], scrolls: [] };
-    if (!dataCache.jutsuData[targetUserId].usersjutsu.includes(jutsuKey)) dataCache.jutsuData[targetUserId].usersjutsu.push(jutsuKey);
-    saveJson(JUTSU_FILE_PATH, dataCache.jutsuData);
-    return `Taught jutsu "${jutsuKey}" to <@${targetUserId}>.`;
-}
-
-// Tool detection prompt
+// Enhanced tool detection prompt (removed deprecated tools)
 const toolDetectionPrompt = `
 You are a tool-using AI. Determine if the user's request explicitly matches one of the available tools.
+
+IMPORTANT: Only use tools when the user EXPLICITLY asks for these specific actions. For normal conversation, respond with "NOTOOL".
 
 If the request doesn't match any tool, respond with ONLY "NOTOOL".
 
 If it matches, respond with JSON: {"action": "toolName", "payload": {...}}
 
 Available Tools:
-- giftMoney: { "userId": "target_id", "amount": number }
-- giftSS: { "userId": "target_id", "amount": number }
-- giftRamen: { "userId": "target_id", "amount": number }
-- giftScroll: { "userId": "target_id", "scrollName": "string" }
-- giftJutsu: { "userId": "target_id", "jutsuName": "string" }
-- giftCombo: { "userId": "target_id", "comboName": "string" }
-- giftExp: { "userId": "target_id", "amount": number }
-- giftElo: { "userId": "target_id", "amount": number }
-- giftMaterial: { "userId": "target_id", "materialKey": "string", "amount": number }
-- teachJutsu: { "userId": "target_id", "jutsuKey": "string" }
-- editStat: { "userId": "target_id", "stat": "string", "value": "any", "fileType": "players|users" }
-- createMinigame: { "userId": "target_id", "gameName": "string", "gameDescription": "string" }
-- deleteMinigame: { "commandName": "string" }
-- listMinigames: {}
-- reloadMinigame: { "commandName": "string" }
+- giftMoney: { "userId": "target_id", "amount": number } - ONLY when user explicitly asks to gift money/ryo
+- giftSS: { "userId": "target_id", "amount": number } - ONLY when user explicitly asks to gift Shinobi Shards
+- giftRamen: { "userId": "target_id", "amount": number } - ONLY when user explicitly asks to gift ramen tickets
+- giftScroll: { "userId": "target_id", "scrollName": "string" } - ONLY when user explicitly asks to gift scrolls
+- giftJutsu: { "userId": "target_id", "jutsuName": "string" } - ONLY when user explicitly asks to gift jutsus
+- giftExp: { "userId": "target_id", "amount": number } - ONLY when user explicitly asks to gift EXP
+- editStat: { "userId": "target_id", "stat": "string", "value": "any", "fileType": "players|users" } - ONLY when user explicitly asks to edit stats
+- createMinigame: { "userId": "target_id", "gameName": "string", "gameDescription": "string" } - ONLY when user explicitly asks to create a minigame
+- deleteMinigame: { "commandName": "string" } - ONLY when user explicitly asks to delete a minigame
+- reloadMinigame: { "commandName": "string" } - ONLY when user explicitly asks to reload a minigame
 
 User message: "{USER_MESSAGE}"
 `;
@@ -714,6 +1074,11 @@ module.exports.setup = (client, userPromptCounts) => {
     // Track processing to prevent multiple responses
     const processingUsers = new Set();
     
+    // Attempt to initialize REST client here, assuming client.token is available
+    if (client.token && !restClient) {
+        restClient = new REST({ version: '10' }).setToken(client.token);
+    }
+
     client.on(Events.MessageCreate, async message => {
         if (message.author.bot) return;
 
@@ -732,10 +1097,13 @@ module.exports.setup = (client, userPromptCounts) => {
 
                 await message.channel.sendTyping();
 
-                // 1. MODERATION SCRIPT (Blocking Filter)
+                // Clean up old chained conversations
+                cleanupChainedConversations();
+
+                // 1. MODERATION SCRIPT (Improved Filter)
                 const isMessageSafe = await moderateMessage(userMessage);
                 if (!isMessageSafe) {
-                    await message.reply("Message blocked by HMS as it violates Discord regulations.");
+                    await message.reply("This message contains content that violates our guidelines.");
                     return; 
                 }
 
@@ -751,7 +1119,7 @@ module.exports.setup = (client, userPromptCounts) => {
                     return;
                 }
                 
-                // 3. TOOL ROUTER SCRIPT
+                // 3. TOOL ROUTER SCRIPT (Enhanced with better detection)
                 let isToolCall = false;
                 let replyMessage = '';
 
@@ -766,7 +1134,9 @@ module.exports.setup = (client, userPromptCounts) => {
                             const { action, payload } = parsedToolResponse;
                             isToolCall = true;
 
-                            // Execute Tool
+                            // Execute Tool with fresh data refresh
+                            refreshData();
+                            
                             switch (action) {
                                 case 'giftMoney':
                                     replyMessage = await giftMoney(payload.userId, payload.amount, message);
@@ -783,38 +1153,24 @@ module.exports.setup = (client, userPromptCounts) => {
                                 case 'giftJutsu':
                                     replyMessage = await giftJutsu(payload.userId, payload.jutsuName, message);
                                     break;
-                                case 'giftCombo':
-                                    replyMessage = await giftCombo(payload.userId, payload.comboName, message);
-                                    break;
                                 case 'giftExp':
                                     replyMessage = await giftExp(payload.userId, payload.amount, message);
-                                    break;
-                                case 'giftElo':
-                                    replyMessage = await giftElo(payload.userId, payload.amount, message);
-                                    break;
-                                case 'giftMaterial':
-                                    replyMessage = await giftMaterial(payload.userId, payload.materialKey, payload.amount, message);
-                                    break;
-                                case 'teachJutsu':
-                                    replyMessage = await teachJutsu(payload.userId, payload.jutsuKey, message);
                                     break;
                                 case 'editStat':
                                     replyMessage = await editStat(payload.userId, payload.stat, payload.value, payload.fileType, message, client);
                                     break;
                                 case 'createMinigame':
-                                    replyMessage = await createMinigame(payload.userId, payload.gameName, payload.gameDescription, message, client);
+                                    replyMessage = await createMinigame(payload.userId, payload.gameName, payload.gameDescription, message, client); 
                                     break;
                                 case 'deleteMinigame':
-                                    replyMessage = await minigameTools.deleteMinigame(payload.commandName, client);
-                                    break;
-                                case 'listMinigames':
-                                    replyMessage = await minigameTools.listMinigames();
+                                    replyMessage = await minigameTools.deleteMinigame(payload.commandName, client); 
                                     break;
                                 case 'reloadMinigame':
-                                    replyMessage = await minigameTools.reloadMinigame(payload.commandName, client);
+                                    replyMessage = await minigameTools.reloadMinigame(payload.commandName, client); 
                                     break;
                                 default:
                                     replyMessage = 'Unknown tool action.';
+                                    isToolCall = false;
                                     break;
                             }
                         }
@@ -829,17 +1185,31 @@ module.exports.setup = (client, userPromptCounts) => {
                     return;
                 }
 
-                // 4. MAIN CONVERSATION (Only if no scripts triggered)
+                // 4. CHAINED CONVERSATION & MEMORY SYSTEM
+                const chainedConversations = loadChainedConversations();
+                const previousContext = chainedConversations[userId];
+                
+                // Search for relevant memories based on keywords
+                const relevantMemories = await searchMemoryByKeywords(userMessage, 2);
+                const memoryContext = relevantMemories.length > 0 ? 
+                    `Relevant previous conversations:\n${relevantMemories.join('\n')}\n\n` : '';
+
+                // 5. MAIN CONVERSATION (Enhanced with memory and chaining)
                 const conversationPrompt = `
 
 You do not have a name. Your personality is that of a human being. You talk like any human would and THINK like any human would. You also have feelings just like humans and if the users arent treating you nicely, you react just like a human, in a defensive or angry way.
 
 The user may use other languages when they talk to you, when that's the case, send the reply in the same language that the user prompted in. If I say a prompt in Portuguese answer in Portuguese as well.
 
+${memoryContext}
+
+${previousContext ? `Previous context from this conversation: "${previousContext.previousMessage}" - You responded: "${previousContext.previousResponse}"\n\nCurrent message: "${userMessage}"\n\nContinue the conversation naturally, considering the previous exchange.` : `Current message: "${userMessage}"`}
+
 You have access to the following knowledge bases:
 When users ask about jutsus refer to the jutsu data and answer properly. If they ask anything else that you already have information of in the helper.json which is helperData answer it as well.
 -You are the opposite of the HMS and Tool using ai. you're the main module, you'll handle most of the tasks asked by the users. Like questions about the bot mainly about jutsus. they're very clinical about jutsus.
-- Jutsu data: ${JSON.stringify(dataCache.jutsuData[userId] || {}, null, 2)}
+- users will mostly ask about how to get a certain jutsu, for that you must check the jutsu data "obtainment" variable, which contiains information on how the jutsu is obtained. 
+- Jutsu data: ${JSON.stringify(dataCache.jutsuData, null, 2)}
 
 - Helper info for missions, events, roles, and trading: ${JSON.stringify(dataCache.helperData, null, 2)}
 
@@ -848,11 +1218,15 @@ The users level is stored inside players.json and not inside users.json never ch
 
 - Player stats: ${JSON.stringify(dataCache.playersData[userId] || {}, null, 2)}
 
+- The Entire information about the bot here: ${JSON.stringify(dataCache.botInfo || {}, null, 2)}
+The above json file is mostly about the commands, but it can often relate to the general questions users can ask about.
+
+
 Player stats and users stats are the same thing just that both files contain different data about the same user.
 
 For level access players.json, for stats access users.json.
 
-A user named ${message.author.username} (ID: ${userId}) just sent you a message: "${userMessage}".
+A user named ${message.author.username} (ID: ${userId}) just sent you a message.
 Not every user will always ask about the bot so you must excel in both the bots information and in keeping the user engaged in a normal conversation.
 IMPORTANT: ALL YOUR ANSWERS MUST BE SHORT AND CONCISE. Answer like a human being, humans dont talk alot.
 `;
@@ -862,7 +1236,17 @@ IMPORTANT: ALL YOUR ANSWERS MUST BE SHORT AND CONCISE. Answer like a human being
                     const responseText = result.response.text();
                     const finalResponse = cleanAndLimitMessage(responseText);
                     
-                    await savePermanentMemory(`User discussed: ${userMessage.substring(0, 100)}...`);
+                    // Save to permanent memory with keywords
+                    await savePermanentMemory(`User: ${userMessage.substring(0, 100)}... | Assistant: ${finalResponse.substring(0, 100)}...`);
+                    
+                    // Update chained conversation
+                    chainedConversations[userId] = {
+                        previousMessage: userMessage,
+                        previousResponse: finalResponse,
+                        timestamp: Date.now()
+                    };
+                    saveChainedConversations(chainedConversations);
+                    
                     await message.reply(finalResponse);
                 } catch (error) {
                     console.error('Conversation generation failed:', error);

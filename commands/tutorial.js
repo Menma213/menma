@@ -728,7 +728,7 @@ module.exports = {
                         return;
                     }
                     
-                    const usersNow = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
+                    const usersNow = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../../menma/data/players.json'), 'utf8'));
                     leveledUp = usersNow[userId] && usersNow[userId].level > 1;
                     
                     if (leveledUp) {
@@ -860,7 +860,7 @@ module.exports = {
 
         // 4. Ask user to do /brank and explain combo
         await safeWebhookSend(interaction.channel, asumaWebhook, {
-            content: `Good job, now start a brank. Brank Ninjas are fairly weak, but since you're new too, I'd recommend using the basic combo: Attack then Transform.`,
+            content: `Before everything! Remember that every mission except for drank sends the rewards to your /gift inventory.\n Good job, now start a brank. Brank Ninjas are fairly weak, but since you're new too, I'd recommend using the basic combo: Attack then Transform.`,
             components: [createContinueRow()]
         });
         

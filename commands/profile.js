@@ -175,7 +175,7 @@ module.exports = {
             // --- ENROLL CHECK ---
             if (!userProfileData) {
                 await interaction.editReply({
-                    content: "You are not enrolled. Please use `/enroll` to create your ninja profile.",
+                    content: "Not enrolled. Please use `/enroll` to create your ninja profile.",
                     files: [],
                     components: []
                 });

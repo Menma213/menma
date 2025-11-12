@@ -1,0 +1,20 @@
+{
+    "rewards": {
+        "money": {
+            "min": 100,
+            "max": 500
+        },
+        "exp": {
+            "min": 10,
+            "max": 50
+        },
+        "ramen": {
+            "chance": 0.1,
+            "amount": 1
+        },
+        "ss": {
+            "chance": 0.01,
+            "amount": 1
+        }
+    }
+}

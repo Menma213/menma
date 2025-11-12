@@ -1,0 +1,610 @@
+[
+  {
+    "command_name": "anbu",
+    "description": "Appoint a user as an Anbu and initiate the oath ceremony.",
+    "options": [
+      {
+        "name": "user",
+        "description": "User to appoint as Anbu",
+        "type": "User",
+        "required": true
+      }
+    ],
+    "permissions": "HOKAGE_ROLE_ID (1381606285577031772)",
+    "logic_summary": "Allows the Hokage to appoint a user to the Anbu. The user must then complete an oath ceremony to finalize the appointment."
+  },
+  {
+    "command_name": "arank",
+    "description": "Engage in 50 A-Rank NPC battles for rewards and materials.",
+    "options": [],
+    "permissions": "None, but has role-based cooldowns.",
+    "logic_summary": "Initiates a series of up to 50 battles against A-Rank NPCs. Users receive rewards after each battle and can choose to continue or end the mission."
+  },
+  {
+    "command_name": "autofrank",
+    "description": "Manage your automatic F-rank training missions.",
+    "options": [
+      {
+        "name": "start",
+        "description": "Start an automatic F-rank training session.",
+        "type": "Subcommand",
+        "options": [
+          {
+            "name": "duration",
+            "description": "The duration for auto-frank training.",
+            "type": "String",
+            "required": true,
+            "choices": ["3h", "6h", "12h"]
+          }
+        ]
+      },
+      {
+        "name": "claim",
+        "description": "Claim EXP from your completed auto-frank session.",
+        "type": "Subcommand"
+      },
+      {
+        "name": "cancel",
+        "description": "Cancel your active auto-frank session.",
+        "type": "Subcommand"
+      },
+      {
+        "name": "status",
+        "description": "Check the status of your auto-frank session.",
+        "type": "Subcommand"
+      }
+    ],
+    "permissions": "Requires purchased 'auto-frank sessions'.",
+    "logic_summary": "A system for users to manage automatic F-rank mission training sessions, including starting, claiming rewards from, canceling, and checking the status of sessions."
+  },
+  {
+    "command_name": "bloodline",
+    "description": "Manage your ninja bloodline abilities.",
+    "options": [
+      {
+        "name": "option",
+        "description": "Choose an action",
+        "type": "String",
+        "required": false,
+        "choices": ["awaken", "remove", "shrine"]
+      },
+      {
+        "name": "bloodline",
+        "description": "Bloodline to awaken",
+        "type": "String",
+        "required": false,
+        "choices": ["Uchiha", "Hyuga", "Uzumaki", "Senju", "Nara"]
+      }
+    ],
+    "permissions": "None",
+    "logic_summary": "Allows users to manage their bloodlines, including viewing available ones, starting the awakening process (which involves visiting a shrine multiple times), or removing their current bloodline."
+  },
+  {
+    "command_name": "blueprint",
+    "description": "View or create bomb blueprints (Akatsuki Leader only).",
+    "options": [
+      {
+        "name": "level",
+        "description": "Bomb level to create (1-10)",
+        "type": "Integer",
+        "required": false
+      }
+    ],
+    "permissions": "AKATSUKI_LEADER_ROLE_ID (1381606426908033136)",
+    "logic_summary": "Allows the Akatsuki Leader to view the status of bomb blueprints or create new ones by spending materials."
+  },
+  {
+    "command_name": "brank",
+    "description": "Single NPC battle.",
+    "options": [],
+    "permissions": "None, but has role-based cooldowns.",
+    "logic_summary": "Initiates a single battle against a B-Rank 'Bandit' NPC. Winning provides EXP, money, and potentially materials."
+  },
+  {
+    "command_name": "buy",
+    "description": "Purchase a combo or premium item from the shop.",
+    "options": [
+      {
+        "name": "combo",
+        "description": "The name of the combo to buy",
+        "type": "String",
+        "required": false
+      },
+      {
+        "name": "ss",
+        "description": "Buy various stuff using Shinobi Shards",
+        "type": "String",
+        "required": false
+      },
+      {
+        "name": "jutsu",
+        "description": "Buy a jutsu for money",
+        "type": "String",
+        "required": false
+      },
+      {
+        "name": "event",
+        "description": "Buy an event item using Ay Tokens",
+        "type": "String",
+        "required": false
+      },
+      {
+        "name": "misc",
+        "description": "Buy miscellaneous items",
+        "type": "String",
+        "required": false
+      }
+    ],
+    "permissions": "None",
+    "logic_summary": "Allows users to purchase items from various shops, including combos, premium items with Shinobi Shards, jutsus with money, event items with Ay Tokens, and miscellaneous items."
+  },
+  {
+    "command_name": "cooldowns",
+    "description": "View your cooldowns for drank, brank, arank, srank, and trials.",
+    "options": [],
+    "permissions": "None",
+    "logic_summary": "Displays a user's current cooldowns for various mission types in a dynamically generated image."
+  },
+  {
+    "command_name": "council",
+    "description": "View the council information.",
+    "options": [],
+    "permissions": "HOKAGE_ROLE_ID, AKATSUKI_LEADER_ROLE_ID, or SANNIN_ROLE_ID",
+    "logic_summary": "Displays a council information embed for either the Hokage or the Akatsuki leader, showing faction-specific stats, materials, and commands."
+  },
+  {
+    "command_name": "crank",
+    "description": "Claim your rewards for voting on Top.gg!",
+    "options": [],
+    "permissions": "None",
+    "logic_summary": "Allows a user to claim rewards for voting for the bot on Top.gg. Includes a streak system for bonus rewards."
+  },
+  {
+    "command_name": "defense",
+    "description": "Build or view village defenses (Hokage only).",
+    "options": [
+      {
+        "name": "level",
+        "description": "Defense level to build/repair (1-10)",
+        "type": "Integer",
+        "required": false
+      }
+    ],
+    "permissions": "HOKAGE_ROLE_ID",
+    "logic_summary": "Allows the Hokage to view the status of village defenses or to build/repair turrets by spending materials."
+  },
+  {
+    "command_name": "drank",
+    "description": "Complete a simple D-Rank mission.",
+    "options": [],
+    "permissions": "None, but has role-based cooldowns.",
+    "logic_summary": "Allows a user to complete a simple D-Rank mission to earn a small amount of EXP and money."
+  },
+  {
+    "command_name": "eat",
+    "description": "Buy bowls using your Ramen Coupons.",
+    "options": [
+      {
+        "name": "bowl",
+        "description": "Type of bowl: beef, fish, or veggie",
+        "type": "String",
+        "required": true
+      },
+      {
+        "name": "quantity",
+        "description": "Quantity to buy",
+        "type": "Integer",
+        "required": false
+      }
+    ],
+    "permissions": "Can only be used in ICHIRAKU_RAMEN_CHANNEL_ID.",
+    "logic_summary": "Allows users to spend Ramen Coupons to buy bowls of ramen that increase their stats (Power, Defense, or Health)."
+  },
+  {
+    "command_name": "enroll",
+    "description": "Enroll in the ninja world and face your first trial.",
+    "options": [],
+    "permissions": "None",
+    "logic_summary": "The first command for new users. It presents a trial battle against a rogue ninja. Winning the battle enrolls the user in the game and creates their initial data."
+  },
+  {
+    "command_name": "equip",
+    "description": "Equip a jutsu or combo.",
+    "options": [
+      {
+        "name": "type",
+        "description": "Type to equip: jutsu or combo",
+        "type": "String",
+        "required": true
+      },
+      {
+        "name": "name",
+        "description": "Name of the jutsu or combo",
+        "type": "String",
+        "required": true
+      },
+      {
+        "name": "slot",
+        "description": "Jutsu slot (required for jutsu)",
+        "type": "String",
+        "required": true
+      }
+    ],
+    "permissions": "None",
+    "logic_summary": "Allows a user to equip a jutsu they have learned into a specific slot, or to equip a combo they own."
+  },
+  {
+    "command_name": "event",
+    "description": "Raikage: A Summon Event!",
+    "options": [],
+    "permissions": "None",
+    "logic_summary": "A gacha-style event command where users can spend Shinobi Shards (SS) to 'summon' for a chance to win various rewards like jutsus, EXP, money, and ramen."
+  },
+  {
+    "command_name": "fight",
+    "description": "Challenge another user to a PvP fight.",
+    "options": [
+      {
+        "name": "user",
+        "description": "User to challenge",
+        "type": "User",
+        "required": true
+      }
+    ],
+    "permissions": "None",
+    "logic_summary": "Allows a user to challenge another enrolled user to a PvP battle. The challenged user must accept for the fight to begin."
+  },
+  {
+    "command_name": "fod",
+    "description": "Start the Forest of Death! (Admin only).",
+    "options": [],
+    "permissions": "ADMIN_USER_ID",
+    "logic_summary": "An admin-only command to start the 'Forest of Death' event, which is a team-based quiz game."
+  },
+  {
+    "command_name": "frank",
+    "description": "Do a micro training mission for quick EXP.",
+    "options": [
+      {
+        "name": "action",
+        "description": "Optional action (e.g., 'unlock' to unban a user)",
+        "type": "String",
+        "required": false
+      },
+      {
+        "name": "user",
+        "description": "User for the 'unlock' action (Admin only)",
+        "type": "User",
+        "required": false
+      }
+    ],
+    "permissions": "None, but has a short cooldown and a CAPTCHA system. Admins can unban users.",
+    "logic_summary": "A command for users to do a quick 'F-rank' mission to gain a small amount of EXP. It includes anti-farming measures."
+  },
+  {
+    "command_name": "gift",
+    "description": "Gift items or view/claim your gifts.",
+    "options": "Subcommands for 'money', 'ss', 'ss_global', 'combo', 'combo_global', 'ramen', 'ramen_global', and 'inventory'.",
+    "permissions": "Gifting 'ss', 'combo', and 'ramen' (and their global variants) is admin-only.",
+    "logic_summary": "A multi-functional command for gifting items to other users or for a user to view and claim gifts from their own inventory."
+  },
+  {
+    "command_name": "guard",
+    "description": "Safeguard the Hokage's office for 6 hours (Guard only).",
+    "options": [],
+    "permissions": "User must have the 'Guard' role.",
+    "logic_summary": "A command for users with the 'Guard' role. It has a 6-hour cooldown and gives the user a random cooldown reset on another command."
+  },
+  {
+    "command_name": "help",
+    "description": "📜 View all available commands!",
+    "options": [],
+    "permissions": "None",
+    "logic_summary": "Displays a paginated list of all available slash commands, dynamically read from the commands directory."
+  },
+  {
+    "command_name": "imbored",
+    "description": "Sends a random post from popular anime subreddits.",
+    "options": [],
+    "permissions": "None",
+    "logic_summary": "Fetches and sends a random image post from the r/naruto, r/narutomemes, or r/anime subreddits."
+  },
+  {
+    "command_name": "invite",
+    "description": "Invite a rogue ninja to the Akatsuki and initiate their induction.",
+    "options": [
+      {
+        "name": "user",
+        "description": "User to invite to the Akatsuki",
+        "type": "User",
+        "required": true
+      }
+    ],
+    "permissions": "AKATSUKI_LEADER_ROLE_ID",
+    "logic_summary": "Allows the Akatsuki Leader to invite a rogue ninja to join the Akatsuki. The invited user must accept and pay a fee to join."
+  },
+  {
+    "command_name": "jutsuinfo",
+    "description": "Get detailed info about a jutsu.",
+    "options": [
+      {
+        "name": "name",
+        "description": "Name of the jutsu",
+        "type": "String",
+        "required": true
+      }
+    ],
+    "permissions": "None",
+    "logic_summary": "Provides detailed information about a specific jutsu, including its description, chakra cost, and effects."
+  },
+  {
+    "command_name": "leaderboard",
+    "description": "Displays the top 10 strongest ninjas on a custom leaderboard.",
+    "options": [],
+    "permissions": "None",
+    "logic_summary": "Generates and displays a custom image leaderboard of the top 10 users sorted by level."
+  },
+  {
+    "command_name": "learnjutsu",
+    "description": "Attempt to learn jutsu from your current scroll.",
+    "options": [],
+    "permissions": "None",
+    "logic_summary": "Allows a user to learn the jutsu associated with their currently equipped scroll, provided they have enough 'Crystalline Shards'."
+  },
+  {
+    "command_name": "levelup",
+    "description": "Attempt to level up your ninja skills with accumulated EXP.",
+    "options": "Subcommands 'one' and 'all'.",
+    "permissions": "None",
+    "logic_summary": "Allows a user to spend their accumulated EXP to level up, either one level at a time or all at once. Leveling up increases their stats."
+  },
+  {
+    "command_name": "meme",
+    "description": "Sends a random meme from r/memes.",
+    "options": [],
+    "permissions": "None",
+    "logic_summary": "Fetches and sends a random image post from the r/memes subreddit."
+  },
+  {
+    "command_name": "mentor",
+    "description": "Mentor system.",
+    "options": [
+      {
+        "name": "action",
+        "description": "What do you want to do?",
+        "type": "String",
+        "required": true,
+        "choices": ["list", "select", "learn"]
+      },
+      {
+        "name": "mentor",
+        "description": "Mentor name (required for select)",
+        "type": "String",
+        "required": false,
+        "autocomplete": true
+      }
+    ],
+    "permissions": "None",
+    "logic_summary": "A system where users can select a mentor based on their rank, complete a storyline/minigame for that mentor, and then learn jutsus from them by spending 'Mentor EXP'."
+  },
+  {
+    "command_name": "myjutsu",
+    "description": "Display your learned jutsu and current loadout.",
+    "options": [],
+    "permissions": "None",
+    "logic_summary": "Displays a user's equipped jutsus and their full list of learned jutsus in paginated, dynamically generated images."
+  },
+  {
+    "command_name": "otsutsuki",
+    "description": "Challenge the otsutsuki.",
+    "options": [],
+    "permissions": "None, but has a cooldown.",
+    "logic_summary": "A command to challenge a powerful 'Toneri Otsutsuki' boss NPC. Winning yields significant rewards."
+  },
+  {
+    "command_name": "profile",
+    "description": "View your ninja profile card.",
+    "options": [
+      {
+        "name": "user",
+        "description": "View another player's profile",
+        "type": "User",
+        "required": false
+      }
+    ],
+    "permissions": "None, but has a cooldown.",
+    "logic_summary": "Generates and displays a detailed, themed profile card image for a user, showing their stats, rank, bloodline, and other information."
+  },
+  {
+    "command_name": "quiz",
+    "description": "Start a Ramen Quiz!",
+    "options": [],
+    "permissions": "QUIZ_ROLE_ID",
+    "logic_summary": "An admin-only command to start a multiplayer 'Ramen Quiz'. Participants join, answer questions, and the winner gets a prize."
+  },
+  {
+    "command_name": "ranksetter",
+    "description": "Temporarily set your rank to Genin, Chuunin, or Jounin.",
+    "options": [
+      {
+        "name": "rank",
+        "description": "Choose your rank",
+        "type": "String",
+        "required": true,
+        "choices": ["Genin", "Chuunin", "Jounin"]
+      }
+    ],
+    "permissions": "None",
+    "logic_summary": "A command that allows a user to temporarily set their own rank for testing purposes."
+  },
+  {
+    "command_name": "rankup",
+    "description": "Rank up to the next ninja rank if you have enough wins!",
+    "options": [],
+    "permissions": "None",
+    "logic_summary": "Allows a user to rank up to the next ninja rank if they have met the required number of wins."
+  },
+  {
+    "command_name": "refund",
+    "description": "Refund your invested stat points to reallocate them.",
+    "options": [],
+    "permissions": "Requires a 'Stat Refund' item.",
+    "logic_summary": "Allows a user to refund their invested stat points (Health, Power, Defense) and reallocate them."
+  },
+  {
+    "command_name": "resetcd",
+    "description": "Reset all cooldowns for a user.",
+    "options": [
+      {
+        "name": "user",
+        "description": "User to reset cooldowns for",
+        "type": "User",
+        "required": true
+      }
+    ],
+    "permissions": "Administrator",
+    "logic_summary": "An admin command to reset all of a user's command cooldowns."
+  },
+  {
+    "command_name": "rob",
+    "description": "Bruisers rob for ramen tickets (3h cooldown).",
+    "options": [],
+    "permissions": "User must be an 'Akatsuki' 'Bruiser'.",
+    "logic_summary": "A command for Akatsuki Bruisers to rob a random ramen store for a chance to get a ramen ticket."
+  },
+  {
+    "command_name": "rogue",
+    "description": "Leave the village and become a rogue ninja.",
+    "options": [],
+    "permissions": "None",
+    "logic_summary": "Allows a user to leave their village and become a rogue ninja."
+  },
+  {
+    "command_name": "scroll",
+    "description": "Manage your ninja scrolls.",
+    "options": "Subcommands 'dungeon', 'mission', 'info', 'set'.",
+    "permissions": "None",
+    "logic_summary": "A multi-faceted command for managing scrolls. Users can enter dungeons to earn shards and scrolls, start a special mission after completing enough dungeons, view their current scroll info, or set an active scroll to work on."
+  },
+  {
+    "command_name": "serverevent",
+    "description": "Start a server event.",
+    "options": [
+      {
+        "name": "type",
+        "description": "Type of event",
+        "type": "String",
+        "required": true,
+        "choices": ["hokage", "war"]
+      }
+    ],
+    "permissions": "OWNER_IDS",
+    "logic_summary": "An owner-only command to start server-wide events, specifically a Hokage election."
+  },
+  {
+    "command_name": "command",
+    "description": "Command an Akatsuki member to a specific role.",
+    "options": [
+      {
+        "name": "user",
+        "description": "Akatsuki member to assign a role",
+        "type": "User",
+        "required": true
+      },
+      {
+        "name": "role",
+        "description": "Role to assign",
+        "type": "String",
+        "required": true,
+        "choices": ["Co-Leader", "Bruiser", "Scientist"]
+      }
+    ],
+    "permissions": "AKATSUKI_LEADER_ROLE_ID",
+    "logic_summary": "Allows the Akatsuki Leader to assign specific roles (Co-Leader, Bruiser, Scientist) to members of the Akatsuki."
+  },
+  {
+    "command_name": "shardshop",
+    "description": "Manually triggers the secret shop and starts its cooldown.",
+    "options": [],
+    "permissions": "Administrator",
+    "logic_summary": "An admin command to manually trigger the appearance of the 'Thunderbird' secret shop."
+  },
+  {
+    "command_name": "shop",
+    "description": "View the available combos in the shop.",
+    "options": [],
+    "permissions": "None",
+    "logic_summary": "Displays a multi-page shop where users can view available combos, jutsus, event items, miscellaneous items, and premium items (Shinobi Shards)."
+  },
+  {
+    "command_name": "srank",
+    "description": "Embark on a dangerous S-Rank mission.",
+    "options": [],
+    "permissions": "None, but has role-based cooldowns.",
+    "logic_summary": "A command for users to take on challenging S-Rank missions, which are story-driven battles against powerful bosses like Haku, Zabuza, and Orochimaru."
+  },
+  {
+    "command_name": "teach",
+    "description": "[ADMIN] Teach a jutsu to a user.",
+    "options": [
+      {
+        "name": "student",
+        "description": "User to teach the jutsu to",
+        "type": "User",
+        "required": true
+      },
+      {
+        "name": "jutsu",
+        "description": "Jutsu to teach",
+        "type": "String",
+        "required": true,
+        "autocomplete": true
+      }
+    ],
+    "permissions": "allowedTeacherIds",
+    "logic_summary": "An admin command to directly teach any jutsu to a user."
+  },
+  {
+    "command_name": "trade",
+    "description": "Trade Shinobi Shards or Money with another user.",
+    "options": [],
+    "permissions": "None",
+    "logic_summary": "Initiates a trade with another user. It includes a system for a special 'Thunderbird' NPC to appear and sell Shinobi Shards, as well as a player-to-player trading system for money and shards."
+  },
+  {
+    "command_name": "trials",
+    "description": "Embark on the Hokage Trials!",
+    "options": [],
+    "permissions": "None, but has role-based cooldowns.",
+    "logic_summary": "A command that starts the 'Hokage Trials,' a series of battles against past Hokages (Kakashi, Tsunade, etc.)."
+  },
+  {
+    "command_name": "tutorial",
+    "description": "Start the interactive tutorial with Asuma!",
+    "options": [],
+    "permissions": "None",
+    "logic_summary": "A comprehensive, interactive tutorial for new players, guided by the NPC Asuma. It walks them through basic commands and game mechanics."
+  },
+  {
+    "command_name": "vote",
+    "description": "Vote for the Hokage candidate.",
+    "options": [
+      {
+        "name": "candidate",
+        "description": "Name of the candidate",
+        "type": "String",
+        "required": true,
+        "autocomplete": true
+      }
+    ],
+    "permissions": "None",
+    "logic_summary": "Allows users to vote for a candidate during a Hokage election."
+  },
+  {
+    "command_name": "war",
+    "description": "Akatsuki war commands.",
+    "options": "Subcommands 'target', 'weapon', 'start', 'send', 'status', 'villagebank'.",
+    "permissions": "Varies by subcommand. 'start', 'target', and 'weapon' are for the Akatsuki leader. 'send' is for the Hokage or Akatsuki leader. 'villagebank' is for the Hokage.",
+    "logic_summary": "A complex command for managing the server-wide war event between the Akatsuki and the village. It includes setting targets, starting the war, sending fighters into battle, and managing resources."
+  }
+]

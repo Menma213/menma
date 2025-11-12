@@ -66,26 +66,26 @@
     "ramen": 1
   },
   "835408109899219004": {
-    "level": 500,
+    "level": 9,
     "exp": 203172.53603996677,
-    "wins": 2430,
-    "losses": 32,
+    "wins": 2443,
+    "losses": 47,
     "rankedPoints": 0,
     "clan": "Thundie's clan",
     "bloodline": "Nara",
-    "mentor": "Kakashi",
+    "mentor": "Sakura",
     "rank": "Chuunin",
-    "health": 158592,
-    "power": "1",
-    "defense": 96242,
+    "health": 11000,
+    "power": 100,
+    "defense": 11,
     "chakra": 15,
     "jutsu": {
       "slot_0": "Attack",
-      "slot_1": "Analysis",
-      "slot_2": "Carnage",
-      "slot_3": "Amaterasu",
-      "slot_4": "Last Resort",
-      "slot_5": "Needle Assault"
+      "slot_1": "Set Your Face Ablaze",
+      "slot_2": "Perfect Susano",
+      "slot_3": "Meteoric Burst",
+      "slot_4": "Carnage",
+      "slot_5": "Heaven's Supremacy"
     },
     "money": 68510,
     "ramen": 119,
@@ -101,7 +101,7 @@
     "lastguard": 1750175065990,
     "lastdrank": null,
     "lastbrank": null,
-    "lastsrank": null,
+    "lastsrank": 1762436439641,
     "role": "Bruiser",
     "lastrob": 1757615299049,
     "elo": 80,
@@ -109,7 +109,7 @@
     "completedMentorStories": {
       "Kakashi": true
     },
-    "mentorExp": 167,
+    "mentorExp": 191,
     "ranked": {
       "totalElo": 50,
       "rank": "Genin",
@@ -132,7 +132,7 @@
     "srankResult": "loss",
     "brankWon": true,
     "drankCompleted": true,
-    "LastTrials": 1760981863800,
+    "LastTrials": null,
     "tutorialStoryComplete": true,
     "tutorialScrollsComplete": true,
     "trialsResult": "lose",
@@ -190,7 +190,8 @@
       "Tenseigan Scroll",
       "Tenseigan Scroll"
     ],
-    "profileColor": "grey"
+    "profileColor": "grey",
+    "availableStatPoints": 0
   },
   "741142009670271010": {
     "level": 1,
@@ -421,67 +422,6 @@
     "corruptHakuDefeats": 0,
     "firstusescroll": true,
     "lastDungeon": 1755625280069,
-    "current_dungeon": null,
-    "dungeonscompleted": 1
-  },
-  "799979545046155284": {
-    "level": 101,
-    "exp": 28965,
-    "wins": 13,
-    "losses": 0,
-    "rankedPoints": 0,
-    "clan": "None",
-    "bloodline": "Unknown",
-    "mentor": "Hinata Hyuga",
-    "rank": "Genin",
-    "health": 4034.7999999999993,
-    "power": 353,
-    "defense": 349,
-    "chakra": 15,
-    "jutsu": {
-      "slot_0": "Attack",
-      "slot_1": "Transformation Jutsu",
-      "slot_2": "asura",
-      "slot_3": "Sexy Jutsu",
-      "slot_4": "Smoke Bomb",
-      "slot_5": "Analysis"
-    },
-    "money": 100000144235,
-    "ramen": 1,
-    "Combo": "Intermediate Combo",
-    "lastbrank": 1750611079225,
-    "lastdrank": 1750608209149,
-    "mentorExp": 6,
-    "lastsrank": 1759588153766,
-    "firstusescroll": true,
-    "current_scroll": null,
-    "scroll_attempts": 1,
-    "lastArank": 1750607949970,
-    "ss": 9500,
-    "roles": [
-      "1385641469507010640"
-    ],
-    "premiumRoles": [
-      {
-        "roleId": "1385641469507010640",
-        "expiresAt": 1753026936304
-      }
-    ],
-    "completedMentorStories": {
-      "Kakashi": true,
-      "Naruto": true,
-      "Shikamaru": true,
-      "Sasuke": true,
-      "Sakura": true,
-      "Hinata Hyuga": true
-    },
-    "ranked": {
-      "totalElo": 0,
-      "rank": "Genin",
-      "division": 5,
-      "elo": 0
-    },
-    "lastDungeon": 1758547372747,
     "current_dungeon": null,
     "dungeonscompleted": 1
   },
@@ -1179,30 +1119,6 @@
     "lastbrank": 1757434887810,
     "elo": 0
   },
-  "1132693590066331828": {
-    "wins": 1,
-    "losses": 0,
-    "rankedPoints": 0,
-    "clan": "None",
-    "bloodline": "Unknown",
-    "mentor": "None",
-    "rank": "Genin",
-    "occupation": "Village",
-    "health": 1000,
-    "power": 100,
-    "defense": 50,
-    "chakra": 10,
-    "jutsu": {
-      "slot_0": "Attack",
-      "slot_1": "Transformation Jutsu",
-      "slot_2": "None",
-      "slot_3": "None",
-      "slot_4": "None",
-      "slot_5": "Infused Chakra Blade"
-    },
-    "Combo": "Basic Combo",
-    "elo": 0
-  },
   "1407794200518459464": {
     "wins": 0,
     "losses": 0,
@@ -1261,5 +1177,62 @@
     "drankCompleted": true,
     "lastbrank": 1759685561663,
     "elo": 0
+  },
+  "me": {
+    "level": 1000000000
+  },
+  "1303128250079383583": {
+    "wins": 1,
+    "losses": 0,
+    "rankedPoints": 0,
+    "clan": "None",
+    "bloodline": "Uchiha",
+    "mentor": "None",
+    "rank": "Academy Student",
+    "occupation": "Village",
+    "health": 500,
+    "power": 100,
+    "defense": 50,
+    "chakra": 10,
+    "jutsu": {
+      "slot_0": "Attack",
+      "slot_1": "Transformation Jutsu",
+      "slot_2": "None",
+      "slot_3": "None",
+      "slot_4": "None",
+      "slot_5": "None"
+    },
+    "Combo": "Basic Combo",
+    "bloodlineTuto": true,
+    "lastbrank": 1761674925259,
+    "brankWon": true,
+    "lastdrank": null,
+    "lastsrank": null,
+    "LastTrials": null,
+    "lastDungeon": null,
+    "lastArank": null
+  },
+  "1132693590066331828": {
+    "wins": 1,
+    "losses": 0,
+    "rankedPoints": 0,
+    "clan": "None",
+    "bloodline": "Unknown",
+    "mentor": "None",
+    "rank": "Academy Student",
+    "occupation": "Village",
+    "health": 1000,
+    "power": 100,
+    "defense": 50,
+    "chakra": 10,
+    "jutsu": {
+      "slot_0": "Attack",
+      "slot_1": "Transformation Jutsu",
+      "slot_2": "None",
+      "slot_3": "None",
+      "slot_4": "None",
+      "slot_5": "None"
+    },
+    "Combo": "Basic Combo"
   }
 }

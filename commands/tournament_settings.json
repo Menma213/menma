@@ -1,0 +1,35 @@
+{
+    "status": "running",
+    "tournamentName": "gigi",
+    "bo_type": 3,
+    "date": "2025-11-10",
+    "time": "17:00",
+    "bracketType": "Single Elimination",
+    "maxParticipants": 2,
+    "rewards": "To be announced",
+    "participants": [
+        {
+            "id": "835408109899219004",
+            "username": "thunderbird."
+        },
+        {
+            "id": "1132693590066331828",
+            "username": "draacaaris"
+        }
+    ],
+    "matches": [
+        {
+            "round": 1,
+            "p1": "1132693590066331828",
+            "p2": "835408109899219004",
+            "winner": null,
+            "played": false,
+            "p1_score": 0,
+            "p2_score": 0,
+            "bo_type": 3,
+            "next_initiator": "1132693590066331828"
+        }
+    ],
+    "currentRound": 1,
+    "registrationMessageId": "1437486635360063648"
+}

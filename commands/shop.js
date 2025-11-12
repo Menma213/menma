@@ -28,27 +28,52 @@ const premiumItems = [
         description: "Unlocks the exclusive Donator role.",
         price: 100, // Example price in Shinobi Shards
         roleId: "1385640728130097182", // Placeholder
-        duration: 30 * 24 * 60 * 60 * 1000 // 1 month in ms, use 15000 for 15 seconds
+        duration: 30 * 24 * 60 * 60 * 1000, // 1 month in ms, use 15000 for 15 seconds
+        type: 'role'
     },
     {
         name: "Legendary Ninja",
         description: "Grants the Legendary Ninja role.",
         price: 200,
         roleId: "1385640798581952714", // Placeholder
-        duration: 30 * 24 * 60 * 60 * 1000 // 1 month in ms, use 15000 for 15 seconds
+        duration: 30 * 24 * 60 * 60 * 1000, // 1 month in ms, use 15000 for 15 seconds
+        type: 'role'
     },
     {
         name: "Jinchuriki",
         description: "Become a Jinchuriki and receive the Jinchuriki role.",
         price: 500,
         roleId: "1385641469507010640", // Placeholder
-        duration: 30 * 24 * 60 * 60 * 1000 // 1 month in ms, use 15000 for 15 seconds
+        duration: 30 * 24 * 60 * 60 * 1000, // 1 month in ms, use 15000 for 15 seconds
+        type: 'role'
     },
     {
         name: "Custom Jutsu",
-        description: "Create your own custom jutsu! (single effect)",
-        price: 500,
+        description: "Create your own custom jutsu! (3 effects)",
+        price: 1000,
+        type: 'custom_jutsu'
         // No roleId, no duration, handled in real time
+    },
+    {
+        name: "Auto-Frank (3 Hours)",
+        description: "Automatically run F-rank missions for 3 hours. Grants 21,600 EXP.\n To buy use: auto frank 3h",
+        price: 600, // Example price
+        type: 'autofrank',
+        durationKey: '3h'
+    },
+    {
+        name: "Auto-Frank (6 Hours)",
+        description: "Automatically run F-rank missions for 6 hours. Grants 43,200 EXP.\n To buy use: auto frank 6h",
+        price: 1400, // Example price
+        type: 'autofrank',
+        durationKey: '6h'
+    },
+    {
+        name: "Auto-Frank (12 Hours)",
+        description: "Automatically run F-rank missions for 12 hours. Grants 86,400 EXP.\n To buy use: auto frank 12h",
+        price: 2000, // Example price
+        type: 'autofrank',
+        durationKey: '12h'
     }
 ];
 
@@ -108,6 +133,15 @@ const eventShopItems = [
     }
 ];
 
+const miscShopItems = [
+    {
+        name: "Stat Refund",
+        description: "Refunds all your invested stat points, allowing you to reallocate them.",
+        price: 500, // Example price in Shinobi Shards
+        key: "stat_refund"
+    }
+];
+
 const MAIN_GUILD_ID = '1381268582595297321'; // Main server ID
 const UPGRADE_CHAT_LINK = 'https://upgrade.chat/1381268582595297321/upgrades'; // Replace with your actual link
 
@@ -153,13 +187,28 @@ module.exports = {
 
         // Add Event Shop embed
         // Get user's Ay tokens from jutsu.json
-        const jutsuDataPath = path.join(__dirname, '../menma/data/jutsu.json');
+        // Use a reliable path to the data folder and support multiple possible key names for Ay tokens
+        const jutsuDataPath = path.resolve(__dirname, '../data/jutsu.json');
         let ayTokens = 0;
         try {
-            const jutsuData = JSON.parse(fs.readFileSync(jutsuDataPath, 'utf8'));
-            const userData = jutsuData[interaction.user.id];
-            if (userData && userData.items && typeof userData.items["Ay Token"] === "number") {
-            ayTokens = userData.items["Ay Token"];
+            if (fs.existsSync(jutsuDataPath)) {
+                const jutsuData = JSON.parse(fs.readFileSync(jutsuDataPath, 'utf8'));
+                // Support two common layouts: top-level user entries or nested under "users"
+                const userData = jutsuData[interaction.user.id] || (jutsuData.users ? jutsuData.users[interaction.user.id] : undefined);
+                if (userData && userData.items) {
+                    // Accept several possible key names to be tolerant of variations
+                    const possibleKeys = ["Ay Token", "Ay Tokens", "Ay_Token", "ayTokens", "ay token", "ay_token"];
+                    for (const key of possibleKeys) {
+                        if (typeof userData.items[key] === "number") {
+                            ayTokens = userData.items[key];
+                            break;
+                        }
+                    }
+                    // Fallback: if items itself is a number (older format)
+                    if (ayTokens === 0 && typeof userData.items === "number") {
+                        ayTokens = userData.items;
+                    }
+                }
             }
         } catch (err) {
             ayTokens = 0;
@@ -176,7 +225,21 @@ module.exports = {
                 inline: false
             }))
             )
-            .setFooter({ text: 'Page 3/3' });
+            .setFooter({ text: 'Page 3/4' });
+
+        // Add Misc Shop embed
+        const miscEmbed = new EmbedBuilder()
+            .setColor(0x800080) // Purple color
+            .setTitle('MISC SHOP')
+            .setDescription('Miscellaneous items for your ninja journey!')
+            .addFields(
+                ...miscShopItems.map(item => ({
+                    name: item.name,
+                    value: `${item.description}\nCost: ${item.price} Shinobi Shards`,
+                    inline: false
+                }))
+            )
+            .setFooter({ text: 'Page 4/4' });
 
         // Add navigation buttons
         const row = new ActionRowBuilder().addComponents(
@@ -192,6 +255,10 @@ module.exports = {
                 .setCustomId('event_shop')
                 .setLabel('Event')
                 .setStyle(ButtonStyle.Success),
+            new ButtonBuilder()
+                .setCustomId('misc_shop')
+                .setLabel('Misc')
+                .setStyle(ButtonStyle.Danger),
             new ButtonBuilder()
                 .setCustomId('shinobi_shards')
                 .setLabel('Shinobi Shards')
@@ -212,6 +279,8 @@ module.exports = {
                 await i.update({ embeds: [jutsuEmbed], components: [row] });
             } else if (i.customId === 'event_shop') {
                 await i.update({ embeds: [eventEmbed], components: [row] });
+            } else if (i.customId === 'misc_shop') {
+                await i.update({ embeds: [miscEmbed], components: [row] });
             } else if (i.customId === 'shinobi_shards') {
                 // Only allow in main server
                 if (i.guildId !== MAIN_GUILD_ID) {
@@ -227,26 +296,17 @@ module.exports = {
                     .setTitle('Shinobi Shard Corner')
                     .setDescription('Spend your Shinobi Shards on exclusive perks!')
                     .addFields(
-                        {
-                            name: `1) ${premiumItems[0].name}`,
-                            value: `${premiumItems[0].description}\nPrice: ${premiumItems[0].price} Shinobi Shards\nRole: <@&${premiumItems[0].roleId}>`,
-                            inline: false
-                        },
-                        {
-                            name: `2) ${premiumItems[1].name}`,
-                            value: `${premiumItems[1].description}\nPrice: ${premiumItems[1].price} Shinobi Shards\nRole: <@&${premiumItems[1].roleId}>`,
-                            inline: false
-                        },
-                        {
-                            name: `3) ${premiumItems[2].name}`,
-                            value: `${premiumItems[2].description}\nPrice: ${premiumItems[2].price} Shinobi Shards\nRole: <@&${premiumItems[2].roleId}>`,
-                            inline: false
-                        },
-                        {
-                            name: `4) ${premiumItems[3].name}`,
-                            value: `${premiumItems[3].description}\nPrice: ${premiumItems[3].price} Shinobi Shards`,
-                            inline: false
-                        }
+                        ...premiumItems.map((item, index) => {
+                            let value = `${item.description}\nPrice: ${item.price} Shinobi Shards`;
+                            if (item.type === 'role' && item.roleId) {
+                                value += `\nRole: <@&${item.roleId}>`;
+                            }
+                            return {
+                                name: `${index + 1}) ${item.name}`,
+                                value: value,
+                                inline: false
+                            };
+                        })
                     )
                     .setFooter({ text: 'To buy, use `/buy option: ss itemname:`' });
 

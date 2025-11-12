@@ -99,23 +99,26 @@ const effectHandlers = {
      */
     buff: (user, statsDefinition) => {
         const changes = {};
-        const context = { 
-            user: { ...user },
-            max: Math.max,
-            min: Math.min
-        };
-        
+        const context = { user: { ...user }, max: Math.max, min: Math.min };
         if (!statsDefinition || typeof statsDefinition !== 'object') return changes;
-        
+
         for (const [stat, formulaOrValue] of Object.entries(statsDefinition)) {
             try {
-                const value = typeof formulaOrValue === 'number' ? 
-                    formulaOrValue : 
-                    Math.floor(math.evaluate(formulaOrValue, context));
-                changes[stat] = Math.max(0, value); // Buffs can't be negative
+                let value = formulaOrValue;
+                // evaluate string formulas like "user.power * 2"
+                if (typeof formulaOrValue === 'string') {
+                    // use mathjs to evaluate in the context
+                    value = math.evaluate(formulaOrValue, context);
+                }
+                value = Number(value);
+                if (!Number.isFinite(value)) {
+                    // skip non-numeric results
+                    continue;
+                }
+                // store as a numeric delta to be added onto base stat
+                changes[stat] = value;
             } catch (err) {
-                console.error(`Buff formula error for ${stat}: ${formulaOrValue}`, err);
-                changes[stat] = 0;
+                console.error('Error evaluating buff stat:', stat, formulaOrValue, err);
             }
         }
         return changes;
@@ -349,24 +352,6 @@ const effectHandlers = {
                 result.specialEffects.push(`${combatant.name} is ${effect.status}, taking ${dotDamage} damage.`);
             }
 
-            // Handle persistent buff removal
-            if (effect.removeBuffsPerRound) {
-                const buffsRemoved = combatant.activeEffects.filter(e => e.type === 'buff');
-                combatant.activeEffects = combatant.activeEffects.filter(e => e.type !== 'buff');
-                if (buffsRemoved.length > 0) {
-                    result.specialEffects.push(`${combatant.name}'s buffs were removed by ${effect.status}!`);
-                }
-            }
-
-            // Handle persistent buff removal
-            if (effect.removeBuffsPerRound) {
-                const buffsRemoved = combatant.activeEffects.filter(e => e.type === 'buff');
-                combatant.activeEffects = combatant.activeEffects.filter(e => e.type !== 'buff');
-                if (buffsRemoved.length > 0) {
-                    result.specialEffects.push(`${combatant.name}'s buffs were removed by ${effect.status}!`);
-                }
-            }
-
             // Handle healing over time
             if (effect.healPerTurn) {
                 const healAmount = Math.floor(math.evaluate(effect.healPerTurn, {
@@ -421,17 +406,6 @@ if (effect.health_per_round) {
                 remainingEffects.push(effect);
             } else {
                 result.specialEffects.push(`${combatant.name}'s ${effect.status || effect.type} effect has worn off.`);
-                // Apply cooldown status if defined
-                if (effect.cooldownStatus) {
-                    combatant.activeEffects.push({
-                        type: 'status',
-                        status: effect.cooldownStatus.status,
-                        duration: effect.cooldownStatus.duration,
-                        source: `${effect.source}-cooldown`,
-                        // Cooldowns typically don't stack or replace, just apply
-                    });
-                    result.specialEffects.push(`${combatant.name} is now on cooldown for ${effect.cooldownStatus.status} for ${effect.cooldownStatus.duration} rounds.`);
-                }
                 if (effect.status === 'revive') {
                     combatant.specialStatuses = combatant.specialStatuses?.filter(s => s !== 'revive') || [];
                 }
@@ -514,21 +488,27 @@ function getEffectiveStats(entity) {
     const effectiveStats = { ...baseStats };
 
     (entity.activeEffects || []).forEach(effect => {
-        if (effect.type === 'buff' || effect.type === 'debuff') {
-            Object.entries(effect.stats || {}).forEach(([stat, value]) => {
-                if (effectiveStats[stat] !== undefined) {
-                    effectiveStats[stat] += Number(value) || 0;
+        // Apply buff/debuff numeric deltas produced by effectHandlers.buff/debuff
+        if ((effect.type === 'buff' || effect.type === 'debuff') && effect.stats && typeof effect.stats === 'object') {
+            for (const [stat, value] of Object.entries(effect.stats)) {
+                const numeric = Number(value);
+                if (Number.isFinite(numeric)) {
+                    // Additive application (this matches how executeJutsu stores buff changes)
+                    effectiveStats[stat] = (effectiveStats[stat] || 0) + numeric;
                 }
-            });
-        }
-        
-        // Status effect modifiers
-        if (effect.type === 'status') {
-            switch (effect.status) {
-                case 'mist':
-                    effectiveStats.dodge += 15; // Hidden mist grants dodge bonus
-                    break;
             }
+        }
+
+        // Status effect modifiers (keep existing behavior)
+        if (effect.type === 'status') {
+            // example: status might add dodge or prevent attack etc.
+            if (effect.dodge) {
+                effectiveStats.dodge = (effectiveStats.dodge || 0) + Number(effect.dodge);
+            }
+            if (effect.accuracyModifier) {
+                effectiveStats.accuracy = (effectiveStats.accuracy || 0) + Number(effect.accuracyModifier);
+            }
+            // other status-driven adjustments kept as before...
         }
     });
 
@@ -540,8 +520,6 @@ function getEffectiveStats(entity) {
 
     return effectiveStats;
 }
-
-// ...existing code...
 /* ---------- NEW: Bloodline helpers ---------- */
 function bloodlineCanActivate(player, state, opponent) {
     if (!player || !player.bloodline) return false;
@@ -892,12 +870,6 @@ function createMovesEmbed(player, roundNum) {
     
             }
 
-            // Disable Perfect Susanoo if on cooldown
-            if (name === 'Perfect Susanoo' && player.activeEffects?.some(e => e.type === 'status' && e.status === 'Perfect Susanoo Cooldown')) {
-                isDisabled = true;
-    
-            }
-
             const chakraCost = data?.chakraCost || 0;
             if ((typeof player.chakra === "number" ? player.chakra : 0) < chakraCost) {
                 isDisabled = true;
@@ -1100,7 +1072,6 @@ function executeJutsu(baseUser, baseTarget, effectiveUser, effectiveTarget, juts
     }
 
     // NEW: Handle debuff removal for Perfect Susanoo activation
-    // NEW: Handle debuff removal for Perfect Susanoo activation
     if (jutsuName === 'Perfect Susano' && round === 1) {
         baseTarget.activeEffects = baseTarget.activeEffects || [];
         const debuffsRemoved = baseTarget.activeEffects.filter(e => e.type === 'debuff');
@@ -1124,30 +1095,17 @@ function executeJutsu(baseUser, baseTarget, effectiveUser, effectiveTarget, juts
         roundBasedEffects: []
     };
 
-    // NEW: Handle immediate 'remove_buffs' effect for target if present in jutsu.effects
+    // --- NEW: Handle immediate 'remove_buffs' effect for target if present in jutsu.effects ---
+
     if (jutsu.effects?.some(e => e.type === 'remove_buffs')) {
         baseTarget.activeEffects = baseTarget.activeEffects || [];
         const buffsRemoved = baseTarget.activeEffects.filter(e => e.type === 'buff');
-        baseTarget.activeEffects = baseTarget.activeEffects.filter(e => e.type !== 'buff'); // Remove buffs from target
-
+        baseTarget.activeEffects = baseTarget.activeEffects.filter(e => e.type !== 'buff');
         if (buffsRemoved.length > 0) {
-            let stolenBuffsInfo = [];
-            buffsRemoved.forEach(removedBuff => {
-                if (removedBuff.stats) {
-                    // Apply the removed buff's stats to the user
-                    const buffChanges = effectHandlers.buff(baseUser, removedBuff.stats);
-                    baseUser.activeEffects = baseUser.activeEffects || [];
-                    baseUser.activeEffects.push({
-                        type: 'buff',
-                        stats: buffChanges,
-                        duration: removedBuff.duration || 1, // Keep original duration if applicable, or default to 1
-                        source: `${jutsuName}-stolen`
-                    });
-                    stolenBuffsInfo.push(`stole ${Object.keys(buffChanges).join(', ')} from ${removedBuff.source || 'a buff'}`);
-                }
-            });
-            result.specialEffects.push(`${baseTarget.name}'s buffs were removed! ${stolenBuffsInfo.length > 0 ? `Stole: ${stolenBuffsInfo.join('; ')}.` : ''}`);
+            result.specialEffects.push(`${baseTarget.name}'s buffs were removed!`);
         }
+
+
     }
 
     // Process active effects at turn start
@@ -1171,13 +1129,6 @@ function executeJutsu(baseUser, baseTarget, effectiveUser, effectiveTarget, juts
         case 'chakra':
             actualCost = Number(cost) || 0;
 
-            // Apply 50% cost reduction for 'Gyakuten no Horu' if 'Perfect Susanoo' is active
-            if (jutsuName === 'Gyakuten no Horu' && baseUser.activeEffects?.some(e => e.type === 'status' && e.status === 'Perfect Susanoo Active')) {
-
-                actualCost = Math.floor(actualCost * 0.5);
-                result.specialEffects.push(`Perfect Susanoo reduces Gyakuten no Horu chakra cost by 50%!`);
-
-            }
             // Apply 50% cost reduction for 'Gyakuten no Horu' if 'Perfect Susanoo' is active
             if (jutsuName === 'Gyakuten no Horu' && baseUser.activeEffects?.some(e => e.type === 'status' && e.status === 'Perfect Susanoo Active')) {
 
@@ -1712,21 +1663,12 @@ function createBattleSummary(
         });
     });
 
-    // Add reflected damage messages to ongoing effects
     if (player1Action.reflectedDamageMessage) {
         activeStatusEffects.push(player1Action.reflectedDamageMessage);
     }
     if (player2Action.reflectedDamageMessage) {
         activeStatusEffects.push(player2Action.reflectedDamageMessage);
     }
-
-    if (player1Action.specialEffects && player1Action.specialEffects.length > 0) {
-        activeStatusEffects.push(...player1Action.specialEffects.filter(e => typeof e === 'string'));
-    }
-    if (player2Action.specialEffects && player2Action.specialEffects.length > 0) {
-        activeStatusEffects.push(...player2Action.specialEffects.filter(e => typeof e === 'string'));
-    }
-
     if (activeStatusEffects.length > 0) {
         embed.addFields({
             name: 'Ongoing Effects',
@@ -1948,11 +1890,28 @@ function applyDamageWithReflection(attacker, defender, damageAmount, actionResul
     );
 
     if (reflectEffectIndex !== -1) {
-        // Reflection active: defender takes no damage, attacker takes damage, and defender heals
-        actionResult.specialEffects.push(`${defender.name}'s Punisher Shield reflects ${damageAmount} damage back to ${attacker.name} and heals ${defender.name} for the same amount!`);
-        actionResult.reflectedDamageMessage = `${defender.name}'s Punisher Shield reflects ${damageAmount} damage back to ${attacker.name} and heals ${defender.name} for the same amount!`;
-        attacker.currentHealth = Math.max(0, attacker.currentHealth - damageAmount);
-        defender.currentHealth = Math.min(defender.maxHealth, defender.currentHealth + damageAmount); // Heal defender
+        const initialDefenderHealth = defender.currentHealth;
+        let tookOverwhelmingDamage = false;
+
+        // Attacker takes reflected damage
+        attacker.currentHealth = Math.max(attacker.currentHealth - damageAmount);
+
+        // Defender takes damage only if it's overwhelming
+        if (damageAmount > initialDefenderHealth) {
+            defender.currentHealth = Math.max(defender.currentHealth - damageAmount);
+            tookOverwhelmingDamage = true;
+        }
+
+        if (tookOverwhelmingDamage) {
+            actionResult.specialEffects.push(`${defender.name}'s Punisher Shield reflects ${damageAmount} damage back to ${attacker.name}, but the force is overwhelming and they also take ${damageAmount} damage!`);
+            actionResult.reflectedDamageMessage = `${defender.name}'s Punisher Shield reflects ${damageAmount} damage back to ${attacker.name}, but the force is overwhelming and they also take ${damageAmount} damage!`;
+        } else {
+            // If not overwhelming, the shield absorbs it and heals.
+            defender.currentHealth = Math.min(defender.maxHealth, defender.currentHealth + damageAmount);
+            actionResult.specialEffects.push(`${defender.name}'s Punisher Shield reflects ${damageAmount} damage back to ${attacker.name} and heals them for the same amount!`);
+            actionResult.reflectedDamageMessage = `${defender.name}'s Punisher Shield reflects ${damageAmount} damage back to ${attacker.name} and heals them for the same amount!`;
+        }
+
         // Remove the reflect effect
         defender.activeEffects.splice(reflectEffectIndex, 1);
     } else {
@@ -1961,8 +1920,17 @@ function applyDamageWithReflection(attacker, defender, damageAmount, actionResul
     }
 }
 
+function createVictoryEmbed(winner, loser) {
+    const embed = new EmbedBuilder()
+        .setColor('#00FF00')
+        .setTitle('Victory!')
+        .setDescription(`**${winner.name}** has defeated **${loser.name}**!`)
+        .setThumbnail(winner.avatar ? `https://cdn.discordapp.com/avatars/${winner.userId}/${winner.avatar}.png` : 'https://i.imgur.com/NoBwK3h.png');
+    return embed;
+}
+
 // Accept npcTemplate as an optional parameter for custom NPCs (like Hokage Trials)
-async function runBattle(interaction, player1Id, player2Id, battleType, npcTemplate = null) {
+async function runBattle(interaction, player1Id, player2Id, battleType, npcTemplate = null, mode = 'friendly') {
     const users = JSON.parse(fs.readFileSync(usersPath, 'utf8')); 
     // Load players.json (levels and persistent player stats)
     const PLAYERS_FILE_PATH = path.resolve(__dirname, '../../menma/data/players.json');
@@ -1971,15 +1939,16 @@ async function runBattle(interaction, player1Id, player2Id, battleType, npcTempl
     const client = interaction.client; // Get client from interaction
     // Initialize player1 (always a user)
     const player1User = await client.users.fetch(player1Id);
+    const player1Data = users[player1Id] || {};
     let player1 = {
-        ...users[player1Id],
+        ...player1Data,
         userId: player1Id,
         name: player1User.username,
         avatar: player1User.avatar,
         discriminator: player1User.discriminator,
         // CRITICAL FIX: Ensure health, power, defense, etc. are initialized as numbers
-        health: Number(users[player1Id].health) || 0,
-        currentHealth: Number(users[player1Id].health) || 0,
+        health: Number(player1Data.health) || 100,
+        currentHealth: Number(player1Data.health) || 100,
         power: Number(users[player1Id].power) || 0,
         defense: Number(users[player1Id].defense) || 0,
         chakra: Number(users[player1Id].chakra) || 10,
@@ -2006,7 +1975,18 @@ async function runBattle(interaction, player1Id, player2Id, battleType, npcTempl
             npcData = BRANK_NPCS.find(npc => npc.name === npcName) || BRANK_NPCS[0];
         } else if (battleType === 'arank') {
             npcData = ARANK_NPCS.find(npc => npc.name === npcName) || ARANK_NPCS[Math.floor(Math.random() * ARANK_NPCS.length)];
-        } else 
+        } else {
+            npcData = { // Fallback NPC
+                name: "Rogue Ninja",
+                image: "https://static.wikia.nocookie.net/naruto/images/3/3f/Thug.png/revision/latest?cb=20181118072602",
+                health: 100,
+                power: 50,
+                defense: 30,
+                accuracy: 80,
+                dodge: 10,
+                jutsu: ["Attack"]
+            };
+        }
         if (!npcData) {
             console.error(`NPC data not found for ${npcName}. Using fallback.`);
             npcData = { // Fallback NPC
@@ -2117,6 +2097,7 @@ async function runBattle(interaction, player1Id, player2Id, battleType, npcTempl
     let battleResult = null;
     // Passive chakra regen at the start of each round
     while (battleActive) {
+
 
 
 
@@ -3201,19 +3182,46 @@ async function runBattle(interaction, player1Id, player2Id, battleType, npcTempl
             }
 
             if(winner) {
-                await battleChannel.send(`**${winner.name}** has defeated **${loser.name}**!`);
+                if (battleType !== 'otsutsuki' && battleType !== 'brank' && battleType !== 'arank' && battleType !== 'trials') {
+                    const victoryEmbed = createVictoryEmbed(winner, loser);
+                    await battleChannel.send({ embeds: [victoryEmbed] });
+                }
+
+                if (mode === 'challenger') {
+                    const giftPath = path.resolve(__dirname, '../../menma/data/gift.json');
+                    const giftData = fs.existsSync(giftPath) ? JSON.parse(fs.readFileSync(giftPath, 'utf8')) : {};
+
+                    if (!giftData[winner.userId]) {
+                        giftData[winner.userId] = [];
+                    }
+
+                    giftData[winner.userId].push('elo');
+                    fs.writeFileSync(giftPath, JSON.stringify(giftData, null, 2));
+
+                    await battleChannel.send(`${winner.name} has received 1 elo for winning the challenger match!`);
+                }
             } else {
                 await battleChannel.send(`It's a draw!`);
             }
 
             if (battleType === 'trials' || battleType === 'otsutsuki') {
-                if (winner === player1) {
-                    return 'win';
+                if (winner && winner.userId === player1.userId) {
+                    return { winner: player1, loser: player2 };
+                } else if (winner && winner.userId === player2.userId) {
+                    return { winner: player2, loser: player1 };
                 } else {
-                    return 'lose';
+                    return { winner: null, loser: null };
                 }
             }
-            return winner;
+
+            if (users[player1Id]) {
+                users[player1Id].eightGatesLevel = 0;
+            }
+            if (users[player2Id] && !isPlayer2NPC) {
+                users[player2Id].eightGatesLevel = 0;
+            }
+            
+            return { winner, loser };
         }
     }
 }

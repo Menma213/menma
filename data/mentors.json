@@ -26,7 +26,7 @@
         },
         "Hinata Hyuga": {
             "jutsu": [
-                { "name": "Parry", "required_exp": 10 }
+                { "name": "Thirty Two Palms", "required_exp": 10 }
             ],
             "clan": "Any"
         },
@@ -71,7 +71,7 @@
         },
         "Shikamaru": {
             "jutsu": [
-                { "name": "Shadow Possession", "required_exp": 30 }
+                { "name": "Shadow Strangle", "required_exp": 30 }
             ],
             "clan": "Any"
         },

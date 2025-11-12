@@ -58,7 +58,7 @@ const HAKU_AVATAR = 'https://www.giantbomb.com/a/uploads/scale_medium/9/95613/22
 const KAGAMI_AVATAR = 'https://i.postimg.cc/Jzr9bXRx/image.png';
 const HAKU_CORRUPT_AVATAR = 'https://i.postimg.cc/c1kJqHXq/image.png';
 const ZABUZA_AVATAR = 'https://i.postimg.cc/6pn0FP6j/image.png';
-const OROCHIMARU_AVATAR = 'https://static.wikia.nocookie.net/naruto/images/1/14/Orochimaru_Infobox.png/revision/latest/scale-to-width-down/1200?cb=20150925223113';
+const OROCHIMARU_AVATAR = 'https://cdn.staticneo.com/w/naruto/thumb/Orochimaru_1.jpg/250px-Orochimaru_1.jpg';
 const HAKU_BG = 'https://i.pinimg.com/474x/a6/e4/b6/a6e4b61fd616f4452c7f52f814477bc0.jpg';
 const HAKU_CORRUPT_BG = 'https://i.postimg.cc/SxKGdrVF/image.png';
 const CORRUPTED_OROCHIMARU = 'https://i.postimg.cc/qRHPX9dV/image.png'
@@ -66,7 +66,7 @@ const ZABUZA_BG = 'https://i.postimg.cc/SxKGdrVF/image.png';
 const KURENAI_MEMORY_1 = 'https://i.postimg.cc/8kqtMCvG/image.png';
 const KURENAI_MEMORY_2 = 'https://i.postimg.cc/gksLdSGP/image.png';
 const KURENAI_MEMORY_3 = 'https://i.postimg.cc/6pGKzqjT/image3.jpg';
-const OROCHIMARU_BG = 'https://static.wikia.nocookie.net/naruto/images/6/67/Kusagakure_Hideout.png/revision/latest?cb=20150419140238';
+const OROCHIMARU_BG = 'https://i.postimg.cc/wj29bZQG/image.png';
 const KURENAI_AVATAR = 'https://static.wikia.nocookie.net/naruto/images/6/67/Kurenai_Part_I.png/revision/latest?cb=20150207094753'; // Add Kurenai avatar
 const VILLAGE_BG = 'https://i.ytimg.com/vi/pRV3lo7eJkM/maxresdefault.jpg?sqp=-oaymwEmCIAKENAF8quKqQMa8AEB-AHUBoAC4AOKAgwIABABGDsgYChlMA8=&rs=AOn4CLB7pjqRrgA4Facq_yOjd_bg_X3VgQ'
 // Define S-rank bosses with progression requirements
@@ -83,7 +83,7 @@ const srankBosses = {
         rewardScroll: "Needle Assault Scroll",
         accuracy: 90,
         dodge: 15,
-        exp: 25,
+        baseExp: 100,
         money: 10000,
         lore: [
             "Haku was once a child with a tragic past, orphaned by the very powers he possessed. He wandered the snowy lands, shunned and alone, until Zabuza found him. Under Zabuza's wing, Haku found purpose, becoming his loyal protector.",
@@ -104,7 +104,7 @@ const srankBosses = {
         rewardScroll: "Silent Assassination Scroll",
         accuracy: 95,
         dodge: 60,
-        exp: 60,
+        baseExp: 250,
         money: 25000,
         lore: [
             "Zabuza Momochi, the Demon of the Hidden Mist, is a legendary swordsman feared for his ruthless tactics. He seeks power above all, and his only bond is with Haku.",
@@ -126,7 +126,7 @@ const srankBosses = {
         rewardScroll: "Serpents Wrath Scroll",
         accuracy: 95,
         dodge: 25,
-        exp: 80,
+        baseExp: 600,
         money: 50000,
         lore: [
             "Orochimaru, once a Leaf Sannin, now walks a dark path in pursuit of forbidden jutsu and immortality. His experiments have left a trail of terror.",
@@ -146,7 +146,7 @@ const srankBosses = {
         reward: null,
         accuracy: 100,
         dodge: 0,
-        exp: 0,
+        baseExp: 0,
         money: 0,
         lore: ["A mysterious Ten Tails appears!"]
     },
@@ -156,11 +156,11 @@ const srankBosses = {
         health: 600,
         power: 2500,
         defense: 150,
-        jutsu: ["Attack", "Serpents Wrath", "Poison Mist", "Cursed Seal"],
+        jutsu: ["Attack", "Serpents Wrath", "Poison Mist"],
         reward: null,
         accuracy: 95,
-        dodge: 30,
-        exp: 100,
+        dodge: 35,
+        baseExp: 700,
         money: 75000,
         lore: ["Orochimaru corrupted by Kagami's power"]
     },
@@ -174,7 +174,7 @@ const srankBosses = {
         reward: null,
         accuracy: 90,
         dodge: 25,
-        exp: 0,
+        baseExp: 0,
         money: 60000,
         lore: ["Kurenai possessed by Kagami"],
         survivalRounds: 5 // Special objective
@@ -185,15 +185,24 @@ const srankBosses = {
         health: 800,
         power: 3000,
         defense: 200,
-        jutsu: ["Attack", "Possession Jutsu", "Dark Chakra Blast", "Ultimate Spell"],
+        jutsu: ["Attack", "Rasengan"],
         reward: null,
         accuracy: 98,
         dodge: 40,
-        exp: 100,
+        baseExp: 1100,
         money: 100000,
         lore: ["The mysterious witch Kagami"]
     }
 };
+
+// Function to calculate scaled EXP for S-rank bosses
+function getSrankExpReward(playerLevel, baseExp) {
+    // Base EXP + (playerLevel * a multiplier)
+    // Adjust the multiplier as needed for desired difficulty/grind
+    return Math.floor(baseExp + (Number(playerLevel) * 2)); 
+}
+
+// Define S-rank bosses with progression requirements
 
 // Effect handlers (updated from brank.js)
 const effectHandlers = {
@@ -1107,7 +1116,8 @@ async function runSrankBattle(interaction, users, userId, players, jutsuList, bo
                 } while (userGifts && userGifts.some(g => g.id === id));
                 return id;
             }
-            const expReward = bossConfig.exp;
+            const playerLevel = player.level || 1; // Get player's current level
+            const expReward = getSrankExpReward(playerLevel, bossConfig.baseExp);
             const moneyReward = bossConfig.money;
             giftData[userId].push({
                 id: generateGiftId(giftData[userId]),
@@ -1644,26 +1654,31 @@ async function runOrochimaruBattle(interaction, users, userId, players, jutsuLis
                 } while (userGifts && userGifts.some(g => g.id === id));
                 return id;
             }
+            const playerLevel = player.level || 1; // Get player's current level
+            const expReward = getSrankExpReward(playerLevel, srankBosses.orochimaru.baseExp); // Use Orochimaru's baseExp
+            const moneyReward = srankBosses.orochimaru.money; // Use Orochimaru's money
+
             giftData[userId].push({
                 id: generateGiftId(giftData[userId]),
                 type: 'exp',
-                amount: 150,
+                amount: expReward,
                 from: 'srank',
                 date: Date.now()
             });
             giftData[userId].push({
                 id: generateGiftId(giftData[userId]),
                 type: 'money',
-                amount: 25000,
+                amount: moneyReward,
                 from: 'srank',
                 date: Date.now()
             });
             fs.writeFileSync(giftPath, JSON.stringify(giftData, null, 2));
+
             await interaction.followUp({
                 embeds: [new EmbedBuilder()
-                    .setDescription(`**VICTORY!** You defeated Kagami.`)
+                    .setDescription(`**VICTORY!** You defeated Orochimaru.`)
                     .addFields(
-                        { name: "Reward", value: `+150 EXP, $25,000 Money`, inline: true }
+                        { name: "Reward", value: `+${expReward} EXP, $${moneyReward.toLocaleString()} Money`, inline: true }
                     )
                     .setColor(0x00FF00)
                 ]
@@ -1683,6 +1698,172 @@ async function runOrochimaruBattle(interaction, users, userId, players, jutsuLis
     }
     return "unknown";
 }
+
+async function runCorruptedOrochimaruBattle(interaction, users, userId, players, jutsuList) {
+    let npc = {
+        ...srankBosses.corrupted_orochimaru,
+        activeEffects: [],
+        jutsu: Array.isArray(srankBosses.corrupted_orochimaru.jutsu) ? 
+            srankBosses.corrupted_orochimaru.jutsu.map(j => jutsuList[j] ? j : 'Attack') : 
+            ['Attack'],
+        currentHealth: srankBosses.corrupted_orochimaru.health,
+        power: srankBosses.corrupted_orochimaru.power,
+        defense: srankBosses.corrupted_orochimaru.defense,
+        chakra: 999,
+        accuracy: srankBosses.corrupted_orochimaru.accuracy || 85,
+        dodge: srankBosses.corrupted_orochimaru.dodge || 15
+    };
+    let player = players.find(p => p.id === userId);
+    player.maxHealth = player.maxHealth || player.health;
+    player.chakra = player.chakra || 10;
+    player.activeEffects = player.activeEffects || [];
+    let roundNum = 1;
+    let comboState = null;
+    if (users[userId].Combo && COMBOS[users[userId].Combo]) {
+        comboState = {
+            combo: COMBOS[users[userId].Combo],
+            usedJutsus: new Set()
+        };
+    }
+    let executeAvailable = false;
+
+    while (player.health > 0 && npc.currentHealth > 0) {
+        const effectivePlayer = BattleUtils.getEffectiveStats(player);
+        const effectiveNpc = BattleUtils.getEffectiveStats(npc);
+        // Check if Execute should be available (when Orochimaru is below 30% health)
+        if (npc.currentHealth / npc.health <= 0.3) {
+            executeAvailable = true;
+        }
+
+        const { embed, components } = createMovesEmbed(player, roundNum, userId, jutsuList);
+        // Add Execute option if available
+        if (executeAvailable) {
+            const executeRow = new ActionRowBuilder().addComponents(
+                new ButtonBuilder()
+                    .setCustomId(`execute-${userId}-${roundNum}`)
+                    .setLabel('EXECUTE')
+                    .setStyle(ButtonStyle.Danger)
+            );
+            components.push(executeRow);
+        }
+        const moveMsg = await interaction.followUp({
+            content: `${player.username}, it's your turn!${executeAvailable ? "\n**EXECUTE option available!**" : ""}`,
+            embeds: [embed],
+            components: components,
+            fetchReply: true
+        });
+        // Pass the current player health (after any damage taken)
+        const battleImage = new AttachmentBuilder(await BattleUtils.generateBattleImage(interaction, player, player.health, npc, VILLAGE_BG, CORRUPTED_OROCHIMARU));
+        await interaction.followUp({ files: [battleImage] });
+        const playerAction = await new Promise(resolve => {
+            const collector = moveMsg.createMessageComponentCollector({
+                filter: ii => ii.user.id === userId,
+                time: 60000
+            });
+            collector.on('collect', async ii => {
+                await ii.deferUpdate();
+                if (ii.customId.startsWith('execute')) {
+                    // Instant kill if Execute is used at the right time
+                    if (executeAvailable) {
+                        resolve({
+                            damage: npc.currentHealth,
+                            heal: 0,
+                            description: `${player.username} executes a perfectly timed finishing blow!`,
+                            specialEffects: ["FATAL STRIKE!"],
+                            hit: true,
+                            isExecute: true
+                        });
+                    } else {
+                        resolve({
+                            damage: 0,
+                            heal: 0,
+                            description: `${player.username} attempts an execution but misses the timing!`,
+                            specialEffects: ["Poor timing!"],
+                            hit: false
+                        });
+                    }
+                } else {
+                    const actionResult = await processPlayerMove(ii.customId, player, npc, effectivePlayer, effectiveNpc);
+                    if (comboState && actionResult.jutsuUsed && comboState.combo.requiredJutsus.includes(actionResult.jutsuUsed)) {
+                        comboState.usedJutsus.add(actionResult.jutsuUsed);
+                    }
+                    resolve(actionResult);
+                }
+                collector.stop();
+            });
+            collector.on('end', (collected, reason) => {
+                if (reason === 'time') resolve({ fled: true });
+            });
+        });
+        if (playerAction.fled) {
+            await interaction.followUp(`${player.username} fled from the battle!`);
+            return "loss";
+        }
+        npc.currentHealth -= playerAction.damage || 0;
+        if (playerAction.heal) {
+            player.health = Math.min(player.health + playerAction.heal, player.maxHealth);
+        }
+        // If player used Execute successfully, end battle
+        if (playerAction.isExecute && playerAction.hit) {
+            npc.currentHealth = 0;
+        }
+        const processCombo = () => {
+            if (!comboState) return { completed: false, damageText: "" };
+            if (comboState.combo.requiredJutsus.every(jutsu => comboState.usedJutsus.has(jutsu))) {
+                npc.currentHealth -= comboState.combo.damage;
+                comboState.usedJutsus.clear();
+                return {
+                    completed: true,
+                    damageText: `\n${player.username} lands a ${comboState.combo.name}! Dealt ${comboState.combo.damage} true damage!`
+                };
+            }
+            return { completed: false, damageText: "" };
+        };
+        const comboResult = processCombo();
+        let npcAction = { damage: 0, heal: 0, description: `${npc.name} is defeated`, specialEffects: [], hit: false, image_url: null };
+        if (npc.currentHealth > 0) {
+            npcAction = npcChooseMove(npc, player, effectiveNpc, effectivePlayer);
+            player.health -= npcAction.damage || 0;
+            if (npcAction.heal) {
+                npc.currentHealth = Math.min(npc.currentHealth + npcAction.heal, npc.health);
+            }
+        }
+        player.health = Math.max(0, player.health);
+        npc.currentHealth = Math.max(0, npc.currentHealth);
+        const summaryEmbed = createBattleSummary(player, npc, playerAction, npcAction, roundNum, comboState);
+        if (comboResult.completed) {
+            summaryEmbed.setDescription(
+                summaryEmbed.data.description + comboResult.damageText
+            );
+        }
+        await interaction.followUp({ embeds: [summaryEmbed] });
+        if (player.health <= 0) {
+            users[userId].srankResult = "loss";
+            fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
+            await interaction.followUp(`**You have been defeated by Corrupted Orochimaru! Game Over.**`);
+            return "loss";
+        }
+        if (npc.currentHealth <= 0) {
+            // Update tutorial progress for /tutorial command
+            users[userId].srankResult = "win";
+            fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
+            await interaction.followUp(`**Corrupted Orochimaru has been defeated! You win!**`);
+            return "win";
+        }
+        player.chakra += CHAKRA_REGEN[player.rank] || 1;
+        npc.chakra += 2;
+        [player, npc].forEach(entity => {
+            entity.activeEffects.forEach(effect => {
+                if (effect.duration > 0) effect.duration--;
+            });
+            entity.activeEffects = entity.activeEffects.filter(e => e.duration > 0);
+        });
+        roundNum++;
+        if (player.health > 0 && npc.currentHealth > 0) await new Promise(resolve => setTimeout(resolve, 3000));
+    }
+    return "unknown";
+}
+
 async function waitForContinue(interaction, userId, content = "\u200b") { 
     // This function must handle sending a message with a "Continue" button
     // and use a collector to await the click, then delete the button.
@@ -2013,9 +2194,8 @@ module.exports = {
                                 c.on('end', (_, reason) => { if (reason === 'time') resolve(); });
                             });
 
-                            const orochimaruResult = await runSrankBattle(
-                                interaction, users, userId, players, jutsuList,
-                                srankBosses.corrupted_orochimaru, VILLAGE_BG, CORRUPTED_OROCHIMARU, "Corrupted Orochimaru"
+                            const orochimaruResult = await runCorruptedOrochimaruBattle(
+                                interaction, users, userId, players, jutsuList
                             );
 
                             if (orochimaruResult === "win") {
@@ -2195,17 +2375,21 @@ module.exports = {
                                             } while (userGifts && userGifts.some(g => g.id === id));
                                             return id;
                                         }
+                                        const playerLevel = players[0].level || 1; // Get player's current level
+                                        const expReward = getSrankExpReward(playerLevel, srankBosses.kagami.baseExp); // Use Kagami's baseExp
+                                        const moneyReward = srankBosses.kagami.money; // Use Kagami's money
+
                                         giftData[userId].push({
                                             id: generateGiftId(giftData[userId]),
                                             type: 'exp',
-                                            amount: 150,
+                                            amount: expReward,
                                             from: 'srank',
                                             date: Date.now()
                                         });
                                         giftData[userId].push({
                                             id: generateGiftId(giftData[userId]),
                                             type: 'money',
-                                            amount: 25000,
+                                            amount: moneyReward,
                                             from: 'srank',
                                             date: Date.now()
                                         });
@@ -2215,7 +2399,7 @@ module.exports = {
                                             embeds: [new EmbedBuilder()
                                                 .setDescription(`**VICTORY!** You defeated Kagami.`)
                                                 .addFields(
-                                                    { name: "Reward", value: `+150 EXP, $25,000 Money`, inline: true }
+                                                    { name: "Reward", value: `+${expReward} EXP, $${moneyReward.toLocaleString()} Money`, inline: true }
                                                 )
                                                 .setColor(0x00FF00)
                                             ]

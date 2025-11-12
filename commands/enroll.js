@@ -114,7 +114,7 @@ module.exports = {
                     mentor: 'None',
                     rank: 'Academy Student',
                     occupation: 'Village',
-                    health: 100,
+                    health: 1000, // Starting health for the player
                     power: 100,
                     defense: 50,
                     chakra: 10,
@@ -279,6 +279,7 @@ module.exports = {
             );
 
             // Transformation Jutsu button if available and has chakra
+            // Note: The player starts with 10 Chakra (max) and Transformation costs 5
             if (Object.values(userData.jutsu).includes('Transformation Jutsu') && userData.chakra >= 5) {
                 row.addComponents(
                     new ButtonBuilder()
@@ -286,13 +287,22 @@ module.exports = {
                         .setLabel('Transform (5 Chakra)')
                         .setStyle(ButtonStyle.Primary)
                 );
+            } else if (Object.values(userData.jutsu).includes('Transformation Jutsu')) {
+                 // Add disabled button if not enough chakra
+                row.addComponents(
+                    new ButtonBuilder()
+                        .setCustomId(`transform-${userId}-${roundNum}`)
+                        .setLabel('Transform (5 Chakra)')
+                        .setStyle(ButtonStyle.Primary)
+                        .setDisabled(true)
+                );
             }
 
             // Rest button
             row.addComponents(
                 new ButtonBuilder()
                     .setCustomId(`rest-${userId}-${roundNum}`)
-                    .setLabel('Rest (+1 Chakra)')
+                    .setLabel('Rest (+2 Chakra)') // Changed to +2 chakra passive regen to match checkBattleStatus
                     .setStyle(ButtonStyle.Success)
             );
 
@@ -321,6 +331,7 @@ module.exports = {
         let roundNum = 1;
         let transformationActive = false;
         let transformationRounds = 0;
+        const playerMaxHealth = users[userId].health; // Max health is set on initial enrollment to 1000
 
         // --- Damage tracking ---
         let totalDamageDealt = 0;
@@ -365,21 +376,46 @@ module.exports = {
             if (enemy.currentHealth <= 0) {
                 // Update user stats on victory
                 userData.wins += 1;
-                playerData.exp += 1;
-                playerData.money += 500;
+                playerData.exp += 10; // Updated to 10 to match embed text
+                playerData.money += 5000; // Updated to 5000 to match embed text
                 // Restore player health and chakra to max after enrollment battle
-                userData.health = 1000;
+                userData.health = playerMaxHealth;
                 userData.chakra = 10;
                 fs.writeFileSync(playersPath, JSON.stringify(players, null, 2));
                 fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
+
+                // --- START NEW DM LOGIC ---
+                try {
+                    const dmEmbed = new EmbedBuilder()
+                        .setColor('#00ff00')
+                        .setTitle('🎉 Welcome to the Shinobi World! 🎉')
+                        .setDescription(
+                            `Congratulations, **${interaction.user.username}**! You successfully passed the Academy Trial and are now an **Academy Student**.\n\n` +
+                            `**Next Steps:**\n` +
+                            `1. Use \`/profile\` to view your new stats. You can also ping the bot to ask any question!\n` +
+                            `2. Use \`/help\` to explore more commands and features.\n` +
+                            `3. Use \`/tutorial\` to earn your starter money and learn more commands!\n` +
+                            `4. Join the [ShinobiRPG Official Server](https://discord.gg/GPPVnydZ8m) to meet other players!`
+                        )
+                        .setThumbnail(interaction.user.displayAvatarURL({ format: 'png', size: 128 }))
+                        .setFooter({ text: 'Your journey begins now!' });
+
+                    await interaction.user.send({ embeds: [dmEmbed] });
+                } catch (error) {
+                    console.error(`Could not send DM to ${interaction.user.tag}.\n`, error);
+                    // Optionally, inform the user in the channel if DM fails
+                    // This message is ephemeral so only the user sees it
+                    await interaction.followUp({ content: "I couldn't send you a welcome DM, please check your privacy settings!", ephemeral: true });
+                }
+                // --- END NEW DM LOGIC ---
                 
                 return { 
-                    content: `Victory! You defeated the rogue ninja!\nRewards:\n+100 EXP\n+5000 Money`, 
+                    content: `Victory! You defeated the rogue ninja!\nRewards:\n+10 EXP\n+5000 Money`, 
                     components: [] 
                 };
             }
             
-            // Passive chakra regeneration
+            // Passive chakra regeneration (occurs at the end of the opponent's turn, before the next round)
             userData.chakra = Math.min(userData.chakra + 2, 10);
             
             // Update transformation status
@@ -566,7 +602,7 @@ module.exports = {
             userAvatar,
             enemyImage,
             playerHealth: userData.health,
-            playerMaxHealth: 1000,
+            playerMaxHealth: playerMaxHealth,
             enemyHealth: enemy.currentHealth,
             enemyMaxHealth: enemy.health,
             roundNum
@@ -614,9 +650,16 @@ module.exports = {
                 playerMove = processPlayerMove('transform');
                 if (comboState.combo.requiredJutsus.includes('Transformation Jutsu')) comboState.usedJutsus.add('Transformation Jutsu');
                 if (playerMove.description.includes('failed')) {
-                    await interaction.editReply({ content: playerMove.description, embeds: [], components: [] });
-                    battleCollector.stop();
-                    return;
+                    // Send error message as a follow-up and stop
+                    await interaction.followUp({ content: `**${interaction.user.username}** ${playerMove.description}. Select your move again.`, ephemeral: true });
+                    // Re-send the move selection buttons
+                    const nextMoves = createMovesEmbed();
+                    lastBattleMsg = await interaction.followUp({ 
+                        embeds: [nextMoves.embed], 
+                        components: nextMoves.components 
+                    });
+                    // Skip the rest of the round logic and enemy move
+                    return; 
                 }
                 enemyMove = processEnemyMove();
                 userData.health -= enemyMove.damage;
@@ -657,8 +700,8 @@ module.exports = {
                 comboCompletedThisRound = true;
                 comboDamageText = `\n${interaction.user.username} lands a ${combo.name}! Massive damage!`;
                 comboState.usedJutsus.clear();
-                // Apply combo damage immediately
-                enemy.currentHealth -= combo.damage || 0;
+                // Apply combo damage immediately (it was added to playerMove.damage, so it is applied to the enemy health here)
+                // enemy.currentHealth -= combo.damage || 0; // The damage is already included in playerMove.damage which subtracted from enemy.currentHealth above
                 totalDamageDealt += combo.damage || 0;
             }
 
@@ -668,7 +711,7 @@ module.exports = {
                 userAvatar,
                 enemyImage,
                 playerHealth: userData.health,
-                playerMaxHealth: 1000,
+                playerMaxHealth: playerMaxHealth,
                 enemyHealth: enemy.currentHealth,
                 enemyMaxHealth: enemy.health,
                 roundNum
@@ -691,7 +734,6 @@ module.exports = {
                     components: [], 
                 });
                 
-
                 // Show final stats in the win/lose screen
                 if (enemy.currentHealth <= 0) {
                     const victoryEmbed = new EmbedBuilder()

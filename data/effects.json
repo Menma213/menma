@@ -1,0 +1,201 @@
+{
+  "effectTypes": {
+    "damage": {
+      "description": "Deals damage to target",
+      "parameters": {
+        "formula": "string (math.js formula)",
+        "accuracyBonus": "number (optional)",
+        "lifesteal_percent": "number (optional)"
+      }
+    },
+    "buff": {
+      "description": "Applies stat buffs to user",
+      "parameters": {
+        "stats": "object (stat: formula pairs)",
+        "duration": "number"
+      }
+    },
+    "debuff": {
+      "description": "Applies stat debuffs to target",
+      "parameters": {
+        "stats": "object (stat: formula pairs)",
+        "duration": "number"
+      }
+    },
+    "heal": {
+      "description": "Heals user or target",
+      "parameters": {
+        "formula": "string (math.js formula)",
+        "target": "string (user/target)"
+      }
+    },
+    "chakra_gain": {
+      "description": "Gains chakra",
+      "parameters": {
+        "formula": "string (math.js formula)"
+      }
+    },
+    "chakra_drain": {
+      "description": "Drains chakra from target",
+      "parameters": {
+        "amount": "number",
+        "duration": "number"
+      }
+    },
+    "status": {
+      "description": "Applies status effect",
+      "parameters": {
+        "status": "string (stun/flinch/bleed/poison/burn/drown/curse/possessed/mist/flying_raijin)",
+        "chance": "number",
+        "duration": "number",
+        "damagePerTurn": "number|string (optional)",
+        "healPerTurn": "number|string (optional)",
+        "is_broken_on_attack": "boolean (optional)"
+      }
+    },
+    "auto_kill": {
+      "description": "Instant kill under conditions",
+      "parameters": {
+        "onRound": "number (optional)",
+        "healthThreshold": "string (optional formula)"
+      }
+    },
+    "revive": {
+      "description": "Sets up revival when defeated",
+      "parameters": {
+        "duration": "number",
+        "heal_amount": "number|string",
+        "once_per_battle": "boolean"
+      }
+    },
+    "lifesteal": {
+      "description": "Steals health from damage dealt",
+      "parameters": {
+        "percentage": "number"
+      }
+    }
+  },
+  
+  "statusEffects": {
+    "stun": {
+      "description": "Target cannot act",
+      "emoji": "<:stun:1368243608695738399>",
+      "canAttack": false,
+      "is_broken_on_attack": false,
+      "can_stack": false
+    },
+    "flinch": {
+      "description": "Target flinches and misses turn",
+      "emoji": "<:flinch:1368243647711023124>",
+      "canAttack": false,
+      "is_broken_on_attack": true,
+      "can_stack": false
+    },
+    "bleed": {
+      "description": "Target takes damage over time",
+      "emoji": "<:bleed:1368243924346605608>",
+      "canAttack": true,
+      "isDoT": true,
+      "defaultDamage": "target.health * 0.03",
+      "can_stack": true
+    },
+    "poison": {
+      "description": "Target takes poison damage over time",
+      "emoji": "<:poison:1432367626566238229>",
+      "canAttack": true,
+      "isDoT": true,
+      "defaultDamage": "target.health * 0.02",
+      "can_stack": true
+    },
+    "burn": {
+      "description": "Target takes fire damage over time",
+      "emoji": "<:status:1368243589498540092>",
+      "canAttack": true,
+      "isDoT": true,
+      "defaultDamage": "target.health * 0.025",
+      "can_stack": true
+    },
+    "drown": {
+      "description": "Target cannot act and takes damage",
+      "emoji": "<:status:1368243589498540092>",
+      "canAttack": false,
+      "isDoT": true,
+      "defaultDamage": "target.health * 0.20",
+      "can_stack": false
+    },
+    "curse": {
+      "description": "Target takes curse damage over time",
+      "emoji": "<:curse:1368243540978827294>",
+      "canAttack": true,
+      "isDoT": true,
+      "defaultDamage": "target.health * 0.035",
+      "can_stack": true
+    },
+    "possessed": {
+      "description": "Target loses control and cannot act",
+      "emoji": "<:status:1368243589498540092>",
+      "canAttack": false,
+      "is_broken_on_attack": false,
+      "can_stack": false
+    },
+    "mist": {
+      "description": "Creates hidden mist, reducing accuracy",
+      "emoji": "<:status:1368243589498540092>",
+      "canAttack": true,
+      "affectsAccuracy": true,
+      "can_stack": false
+    },
+    "flying_raijin": {
+      "description": "Marks target for guaranteed dodge",
+      "emoji": "<:status:1368243589498540092>",
+      "canAttack": true,
+      "grantsDodge": true,
+      "can_stack": false
+    },
+    "revive": {
+      "description": "Will revive when defeated",
+      "emoji": "<:heal:1368243632045297766>",
+      "canAttack": true,
+      "isSpecial": true,
+      "can_stack": false
+    }
+  },
+  
+  "costTypes": {
+    "chakra": "Fixed chakra cost",
+    "percent_chakra": "Percentage of current chakra",
+    "all_chakra": "All remaining chakra",
+    "health": "Fixed health cost",
+    "percent_health": "Percentage of max health",
+    "chakra_per_round": "Recurring chakra cost per round while an effect/jutsu is active",
+    "health_per_round": "Recurring health cost per round while an effect/jutsu is active"
+  },
+  
+  "formulaContext": {
+    "user": {
+      "power": "User's power stat",
+      "defense": "User's defense stat",
+      "health": "User's max health",
+      "currentHealth": "User's current health",
+      "chakra": "User's current chakra",
+      "accuracy": "User's accuracy stat",
+      "dodge": "User's dodge stat"
+    },
+    "target": {
+      "power": "Target's power stat",
+      "defense": "Target's defense stat",
+      "health": "Target's max health",
+      "currentHealth": "Target's current health",
+      "chakra": "Target's current chakra",
+      "accuracy": "Target's accuracy stat",
+      "dodge": "Target's dodge stat"
+    },
+    "hasHiddenMist": "Boolean if target has hidden mist",
+    "isTargetIncapacitated": "Boolean if target is stunned/flinched"
+  },
+  
+  "npcFields": {
+    "statsType": "'fixed' or 'scalable' - if 'fixed' use NPC's provided health/power/defense directly, if 'scalable' use baseHealth/basePower/baseDefense multipliers relative to the player",
+    "immunities": "array of status strings (e.g. [\"stun\",\"bleed\"]) - statuses the NPC is immune to"
+  }
+}

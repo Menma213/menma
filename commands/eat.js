@@ -97,6 +97,16 @@ module.exports = {
             quantity = args[1] ? parseInt(args[1]) : 1;
         }
 
+        // Validate quantity: must be an integer >= 1
+        if (!Number.isInteger(quantity) || quantity <= 0) {
+            const invalidQuantityMessage = 'Quantity must be a positive integer (1 or greater).';
+            if (isSlashCommand) {
+                return interactionOrMessage.reply({ content: invalidQuantityMessage, ephemeral: true });
+            } else {
+                return interactionOrMessage.channel.send(invalidQuantityMessage);
+            }
+        }
+
         // Check if the bowl type is valid
         const bowls = {
             beef: { power: 15, cost: 1 },
@@ -117,6 +127,16 @@ module.exports = {
 
         // Calculate total cost
         const totalCost = bowls[bowlType].cost * quantity;
+
+        // Extra safety: prevent non-positive totalCost (shouldn't happen with current config)
+        if (totalCost <= 0) {
+            const invalidCostMessage = 'Invalid purchase amount.';
+            if (isSlashCommand) {
+                return interactionOrMessage.reply({ content: invalidCostMessage, ephemeral: true });
+            } else {
+                return interactionOrMessage.channel.send(invalidCostMessage);
+            }
+        }
 
         // Check if the user has enough Ramen Coupons
         if (ramenCoupons < totalCost) {

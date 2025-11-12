@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shinobi RPG - The Future of Discord Bots</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-main: #0d0d1a;
+            --bg-card: #1a1a2e;
+            --text-primary: #e0e0ff;
+            --text-secondary: #a0a0c0;
+            --accent-primary: #00ffdd;
+            --accent-secondary: #ff00ff;
+            --shadow-light: rgba(0, 255, 221, 0.2);
+            --shadow-dark: rgba(0, 0, 0, 0.7);
+            --transition-fast: all 0.3s ease;
+        }
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-primary);
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        .hero {
+            text-align: center;
+            padding: 6rem 2rem;
+            background: radial-gradient(ellipse at bottom, var(--bg-card) 0%, var(--bg-main) 100%);
+        }
+        .hero-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 4.5rem;
+            font-weight: 900;
+            color: #fff;
+            text-shadow: 0 0 10px var(--accent-primary), 0 0 20px var(--accent-primary), 0 0 40px var(--accent-secondary);
+            margin: 0;
+            letter-spacing: 2px;
+        }
+        .hero-subtitle {
+            font-size: 1.5rem;
+            color: var(--text-secondary);
+            margin: 1rem 0 2rem;
+        }
+        .cta-button {
+            display: inline-block;
+            background: linear-gradient(45deg, var(--accent-primary), var(--accent-secondary));
+            color: var(--bg-main);
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            padding: 1rem 3rem;
+            border-radius: 50px;
+            text-decoration: none;
+            font-size: 1.2rem;
+            text-transform: uppercase;
+            transition: var(--transition-fast);
+            box-shadow: 0 0 20px var(--shadow-light);
+        }
+        .cta-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 30px var(--shadow-light);
+        }
+        .section {
+            padding: 4rem 0;
+        }
+        .section-title {
+            text-align: center;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 3rem;
+            color: #fff;
+        }
+        .glaze-section {
+            background-color: var(--bg-card);
+            border-radius: 20px;
+            padding: 3rem;
+            margin-bottom: 4rem;
+            box-shadow: 0 10px 30px var(--shadow-dark);
+        }
+        .glaze-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+        }
+        .glaze-card {
+            background: var(--bg-main);
+            padding: 2rem;
+            border-radius: 15px;
+            border: 1px solid var(--accent-primary);
+            transition: var(--transition-fast);
+        }
+        .glaze-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 0 20px var(--shadow-light);
+        }
+        .glaze-card h3 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.5rem;
+            color: var(--accent-primary);
+            margin-top: 0;
+        }
+        .commands-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+        .command-card {
+            background: var(--bg-card);
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px var(--shadow-dark);
+        }
+        .command-card h4 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.2rem;
+            color: var(--accent-primary);
+            margin: 0 0 0.5rem;
+        }
+        .footer {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-top: 4rem;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="hero">
+        <h1 class="hero-title">SHINOBI RPG</h1>
+        <p class="hero-subtitle">The only Discord bot that remembers, learns, and creates with you.</p>
+        <a href="https://discord.gg/gCcEksvubb" target="_blank" class="cta-button">Join the Revolution</a>
+    </div>
+
+    <div class="container">
+        <section class="section">
+            <h2 class="section-title">A Bot That's Truly Alive</h2>
+            <div class="glaze-section">
+                <div class="glaze-grid">
+                    <div class="glaze-card">
+                        <h3>Instant Minigame Engine</h3>
+                        <p>Describe a game, and our AI builds it on the spot. No restarts, no waiting. Your imagination is the only limit.</p>
+                    </div>
+                    <div class="glaze-card">
+                        <h3>Permanent Memory</h3>
+                        <p>Shinobi RPG remembers your conversations. It learns your style, references past interactions, and provides a truly personal experience.</p>
+                    </div>
+                    <div class="glaze-card">
+                        <h3>Multi-Layered Intelligence</h3>
+                        <p>An AI that does more than just talk. It manages the game, sets goals, and even moderates, all with contextual understanding.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2 class="section-title">Endless Possibilities</h2>
+            <div class="commands-grid">
+                <div class="command-card">
+                    <h4>Dynamic RPG System</h4>
+                    <p>Climb the ranks, from Genin to Hokage. Engage in intense PvP, or take on challenging S-Rank missions and story-driven boss battles.</p>
+                </div>
+                <div class="command-card">
+                    <h4>Deep Customization</h4>
+                    <p>Awaken powerful bloodlines like the Uchiha or Senju. Craft your own unique jutsus and create powerful combos to dominate your foes.</p>
+                </div>
+                <div class="command-card">
+                    <h4>Massive Server Events</h4>
+                    <p>Participate in server-wide wars, Hokage elections, and the thrilling Forest of Death event. The world of Shinobi RPG is always evolving.</p>
+                </div>
+                <div class="command-card">
+                    <h4>Player-Driven Economy</h4>
+                    <p>Trade with other players, find rare items in the secret shop, and manage your resources to become the wealthiest ninja in the village.</p>
+                </div>
+                <div class="command-card">
+                    <h4>Interactive Mentorship</h4>
+                    <p>Learn from legendary mentors, complete their unique storylines, and unlock powerful jutsus to aid you on your journey.</p>
+                </div>
+                 <div class="command-card">
+                    <h4>And So Much More...</h4>
+                    <p>With over 50 commands, the adventure never ends. Explore a rich, ever-expanding world of possibilities.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="section" style="text-align: center;">
+            <h2 class="section-title">What are you waiting for?</h2>
+            <a href="https://discord.gg/gCcEksvubb" target="_blank" class="cta-button">Forge Your Legend</a>
+        </section>
+    </div>
+
+    <footer class="footer">
+        <p>&copy; 2025 Shinobi RPG. All Rights Reserved.</p>
+    </footer>
+
+</body>
+</html>
