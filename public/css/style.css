@@ -1,0 +1,80 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap');
+
+:root {
+    --background-color: #1a1a1a;
+    --surface-color: #2a2a2a;
+    --primary-color: #00aaff;
+    --text-color: #f0f0f0;
+    --border-color: #444;
+}
+
+body {
+    font-family: 'Roboto', sans-serif;
+    background-color: var(--background-color);
+    color: var(--text-color);
+    margin: 0;
+    padding: 2rem;
+    display: flex;
+    justify-content: center;
+}
+
+.container {
+    width: 100%;
+    max-width: 800px;
+}
+
+h1 {
+    color: var(--primary-color);
+    text-align: center;
+    margin-bottom: 0.5rem;
+}
+
+p {
+    text-align: center;
+    color: #aaa;
+    margin-top: 0;
+    margin-bottom: 2rem;
+}
+
+#prompt-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+#prompt-input {
+    background-color: var(--surface-color);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 0.75rem;
+    font-size: 1rem;
+    min-height: 100px;
+    resize: vertical;
+}
+
+#prompt-form button {
+    background-color: var(--primary-color);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 0.75rem;
+    font-size: 1.1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+#prompt-form button:hover {
+    background-color: #0088cc;
+}
+
+#response-container {
+    margin-top: 2rem;
+    background-color: var(--surface-color);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 1.5rem;
+    min-height: 100px;
+    white-space: pre-wrap; /* Preserve whitespace and newlines */
+}

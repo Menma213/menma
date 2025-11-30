@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Second Brain</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>🧠 Second Brain</h1>
+        <p>Your personal AI assistant for this project.</p>
+        
+        <form id="prompt-form">
+            <textarea id="prompt-input" name="prompt" placeholder="Ask a question or give a creative prompt..." required></textarea>
+            <button type="submit">Ask</button>
+        </form>
+        
+        <div id="response-container">
+            <!-- AI responses will be displayed here -->
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('prompt-form');
+        const input = document.getElementById('prompt-input');
+        const responseContainer = document.getElementById('response-container');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const prompt = input.value;
+
+            if (!prompt) return;
+
+            responseContainer.style.color = '#aaa';
+            responseContainer.innerText = 'Thinking...';
+
+            try {
+                const response = await fetch('/ask', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ prompt }),
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                
+                responseContainer.style.color = 'var(--text-color)';
+                responseContainer.innerText = data.message;
+
+            } catch (error) {
+                console.error('Error fetching response:', error);
+                responseContainer.style.color = '#ff6666';
+                responseContainer.innerText = 'An error occurred while fetching the response. Check the console for details.';
+            }
+        });
+    </script>
+</body>
+</html>

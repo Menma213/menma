@@ -1,0 +1,26 @@
+{
+    "dayOfYear": 324,
+    "combo": {
+        "name": "Silent Forest Assault",
+        "requiredJutsus": [
+            "Silent Assassination",
+            "Great Forest Crumbling"
+        ],
+        "damage": 6000,
+        "damageType": "true",
+        "effects": [
+            {
+                "type": "debuff",
+                "stats": {
+                    "defense": -20
+                },
+                "duration": 3
+            },
+            {
+                "type": "status",
+                "status": "stun",
+                "duration": 1
+            }
+        ]
+    }
+}
