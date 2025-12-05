@@ -1,4 +1,5 @@
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, SlashCommandBuilder } = require('discord.js');
+const { runBattle } = require('./combinedcommands.js');
 const fs = require('fs');
 const path = require('path');
 
@@ -21,7 +22,7 @@ async function startQuiz(channel) {
   const quizEmbed = new EmbedBuilder()
     .setTitle('Ramen Quiz! 🍜')
     .setDescription('Click the button below to join the quiz!')
-    .setImage('https://media.proprofs.com/images/QM/user_images/2169923/1519695752.jpg')
+    .setImage('https://i.postimg.cc/MZjPTd7g/image.png')
     .setColor('#006400'); // Dark green color
 
   // Create the "Join Quiz" button
@@ -171,21 +172,68 @@ async function startQuiz(channel) {
 
     // Declare the winner
     const sortedWinnerLeaderboard = Array.from(leaderboard.entries()).sort((a, b) => b[1] - a[1]);
-    const winnerId = sortedWinnerLeaderboard[0][0];
 
-    // Add 50 Ramen Coupons to the winner
-    const usersPath = path.resolve(__dirname, '../../menma/data/players.json');
-    const users = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
-    users[winnerId].ramen = (users[winnerId].ramen || 0) + 50;
-    fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
+    // Check for tie
+    if (sortedWinnerLeaderboard.length >= 2 && sortedWinnerLeaderboard[0][1] === sortedWinnerLeaderboard[1][1]) {
+      const player1Id = sortedWinnerLeaderboard[0][0];
+      const player2Id = sortedWinnerLeaderboard[1][0];
 
-    // Create the winner embed
-    const winnerEmbed = new EmbedBuilder()
-      .setTitle('Quiz Winner!')
-      .setDescription(`<@${winnerId}> has won the quiz and earned **50 Ramen Coupons**! 🎉`)
-      .setColor('#006400');
+      await channel.send(`It's a tie between <@${player1Id}> and <@${player2Id}>! Starting a tie-breaker battle!`);
 
-    await channel.send({ embeds: [winnerEmbed] });
+      // Create fake interaction for runBattle
+      const fakeInteraction = {
+        client: channel.client,
+        channel: channel,
+        reply: async (msg) => channel.send(msg),
+        editReply: async (msg) => channel.send(msg),
+        followUp: async (msg) => channel.send(msg),
+        user: { id: 'bot' } // Dummy user
+      };
+
+      try {
+        // Run battle
+        const result = await runBattle(fakeInteraction, player1Id, player2Id, 'fight', null, 'friendly');
+
+        if (result && result.winner) {
+          const winnerId = result.winner.userId;
+          // Add 50 Ramen Coupons to the winner
+          const usersPath = path.resolve(__dirname, '../../menma/data/players.json');
+          const users = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
+          users[winnerId].ramen = (users[winnerId].ramen || 0) + 50;
+          fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
+
+          // Create the winner embed
+          const winnerEmbed = new EmbedBuilder()
+            .setTitle('Quiz Winner!')
+            .setDescription(`<@${winnerId}> has won the tie-breaker battle and earned **50 Ramen Coupons**! 🎉`)
+            .setColor('#006400');
+
+          await channel.send({ embeds: [winnerEmbed] });
+        } else {
+          await channel.send("The battle ended in a draw or was cancelled. No winner declared.");
+        }
+      } catch (error) {
+        console.error("Error running tie-breaker battle:", error);
+        await channel.send("An error occurred during the tie-breaker battle.");
+      }
+
+    } else {
+      const winnerId = sortedWinnerLeaderboard[0][0];
+
+      // Add 50 Ramen Coupons to the winner
+      const usersPath = path.resolve(__dirname, '../../menma/data/players.json');
+      const users = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
+      users[winnerId].ramen = (users[winnerId].ramen || 0) + 50;
+      fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
+
+      // Create the winner embed
+      const winnerEmbed = new EmbedBuilder()
+        .setTitle('Quiz Winner!')
+        .setDescription(`<@${winnerId}> has won the quiz and earned **50 Ramen Coupons**! 🎉`)
+        .setColor('#006400');
+
+      await channel.send({ embeds: [winnerEmbed] });
+    }
 
     // Reset the leaderboard
     leaderboard.clear();

@@ -1,0 +1,168 @@
+{
+    "guardians": {
+        "land_of_fire": {
+            "name": "Guardian I: The Will of Fire",
+            "image": "https://static.wikia.nocookie.net/liberproeliis/images/d/df/Hiruzen_(Render).png/revision/latest?cb=20180921141106&path-prefix=pt-br",
+            "tier": 1,
+            "statsType": "fixed",
+            "stats": {
+                "health": 50000,
+                "power": 5000,
+                "defense": 30000,
+                "accuracy": 85,
+                "dodge": 10,
+                "chakra": 100
+            },
+            "jutsu": [
+                "Attack",
+                "Fire Ball Jutsu",
+                "Shadow Clone Jutsu"
+            ]
+        },
+        "village_of_sound": {
+            "name": "Guardian II: Sound Ninja Leader",
+            "image": "https://static.wikia.nocookie.net/naruto/images/b/b0/Dosu_Kinuta.png/revision/latest?cb=20210421154038",
+            "tier": 2,
+            "statsType": "fixed",
+            "stats": {
+                "health": 150000,
+                "power": 15000,
+                "defense": 15000,
+                "accuracy": 90,
+                "dodge": 20,
+                "chakra": 30
+            },
+            "jutsu": [
+                "Rasengan",
+                "Sound Wave",
+                "Air Bullet"
+            ]
+        },
+        "country_of_rain": {
+            "name": "Guardian III: Rain Walker",
+            "image": "https://static0.gamerantimages.com/wordpress/wp-content/uploads/2022/12/pasted-image-0.png?q=50&fit=crop&w=825&dpr=1.5",
+            "tier": 3,
+            "statsType": "fixed",
+            "stats": {
+                "health": 500000,
+                "power": 40000,
+                "defense": 40000,
+                "accuracy": 95,
+                "dodge": 30,
+                "chakra": 800
+            },
+            "jutsu": [
+                "Water Dragon Jutsu",
+                "Last Resort"
+            ]
+        },
+        "land_of_wind": {
+            "name": "Guardian IV: Desert Storm",
+            "image": "https://static.wikia.nocookie.net/naruto/images/0/0f/Gaara_Part_II.png/revision/latest/scale-to-width-down/300?cb=20170914045727",
+            "tier": 4,
+            "statsType": "fixed",
+            "stats": {
+                "health": 150000,
+                "power": 120000,
+                "defense": 12000,
+                "accuracy": 100,
+                "dodge": 40,
+                "chakra": 2000
+            },
+            "jutsu": [
+                "Last Resort",
+                "Wind Scythe Jutsu"
+            ]
+        },
+        "village_of_sand": {
+            "name": "Guardian V: Puppet Master",
+            "image": "https://preview.redd.it/szkhfmq8zcx11.jpg?width=283&format=pjpg&auto=webp&s=c6f3bf6ffa36be664335e51c832a10b0887b859b",
+            "tier": 5,
+            "statsType": "fixed",
+            "stats": {
+                "health": 300000,
+                "power": 150000,
+                "defense": 150000,
+                "accuracy": 110,
+                "dodge": 50,
+                "chakra": 5000
+            },
+            "jutsu": [
+                "Last Resort",
+                "Mystic Palm"
+            ]
+        },
+        "land_of_water": {
+            "name": "Guardian VI: Mist Demon",
+            "image": "https://static.wikia.nocookie.net/naruto/images/3/37/Zabuza_Momochi.png/revision/latest/scale-to-width-down/284?cb=20240922021336",
+            "tier": 6,
+            "statsType": "fixed",
+            "stats": {
+                "health": 250000,
+                "power": 250000,
+                "defense": 250000,
+                "accuracy": 120,
+                "dodge": 60,
+                "chakra": 10000
+            },
+            "jutsu": [
+                "Last Resort",
+                "Silent Assassination"
+            ]
+        },
+        "land_of_earth": {
+            "name": "Guardian VII: Stone Golem",
+            "image": "https://static.wikia.nocookie.net/naruto/images/6/67/%C5%8Cnoki.png/revision/latest/scale-to-width-down/1200?cb=20181203071043",
+            "tier": 7,
+            "statsType": "fixed",
+            "stats": {
+                "health": 800000,
+                "power": 100000,
+                "defense": 800000,
+                "accuracy": 130,
+                "dodge": 30,
+                "chakra": 20000
+            },
+            "jutsu": [
+                "Last Resort",
+                "Tank x1000"
+            ]
+        },
+        "land_of_lightning": {
+            "name": "Guardian VIII: Lightning Beast",
+            "image": "https://i1.sndcdn.com/avatars-AkZAI8buEDmdBzBz-rxYRfg-t1080x1080.jpg",
+            "tier": 8,
+            "statsType": "fixed",
+            "stats": {
+                "health": 1200000,
+                "power": 200000,
+                "defense": 200000,
+                "accuracy": 150,
+                "dodge": 80,
+                "chakra": 50000
+            },
+            "jutsu": [
+                "Eight Point Strike",
+                "Last Resort"
+            ]
+        },
+        "valley_of_the_end": {
+            "name": "Guardian IX: The Legend",
+            "image": "https://static.wikia.nocookie.net/c27a8661-e6ce-4b42-acba-b82c47e31a66/scale-to-width/755",
+            "tier": 9,
+            "statsType": "fixed",
+            "stats": {
+                "health": 2000000,
+                "power": 550000,
+                "defense": 450000,
+                "accuracy": 200,
+                "dodge": 100,
+                "chakra": 100000
+            },
+            "jutsu": [
+                "Meteoric Burst",
+                "Last Resort"
+            ]
+        }
+    }
+}

@@ -572,6 +572,80 @@
       "from": "Otsutsuki",
       "date": 1762172468718,
       "source": "Otsutsuki Victory"
+    },
+    {
+      "id": 7373,
+      "type": "exp",
+      "amount": 30,
+      "from": "brank",
+      "date": 1764515279371
+    },
+    {
+      "id": 18856,
+      "type": "money",
+      "amount": 2500,
+      "from": "brank",
+      "date": 1764515279371
+    },
+    {
+      "id": 4804,
+      "type": "material",
+      "name": "Copper",
+      "key": "copper",
+      "amount": 8,
+      "from": "brank",
+      "date": 1764515279372
+    },
+    {
+      "id": 32306,
+      "type": "exp",
+      "amount": 30,
+      "from": "brank",
+      "date": 1764516497793
+    },
+    {
+      "id": 24440,
+      "type": "money",
+      "amount": 2500,
+      "from": "brank",
+      "date": 1764516497793
+    },
+    {
+      "id": 13391,
+      "type": "material",
+      "name": "Gunpowder",
+      "key": "gunpowder",
+      "amount": 9,
+      "from": "brank",
+      "date": 1764516497794
+    },
+    {
+      "id": 9636,
+      "type": "exp",
+      "amount": 11,
+      "from": "brank",
+      "date": 1764516572471
+    },
+    {
+      "id": 1918,
+      "type": "money",
+      "amount": 1000,
+      "from": "brank",
+      "date": 1764516572471
+    },
+    {
+      "id": 19903,
+      "type": "exp",
+      "amount": 118,
+      "from": "srank",
+      "date": 1764751184343
+    },
+    {
+      "id": 17910,
+      "type": "money",
+      "amount": 10000,
+      "from": "srank",
+      "date": 1764751184343
     }
   ],
   "799979545046155284": [
@@ -625,78 +699,7 @@
       "date": 1758547372746
     }
   ],
-  "1132693590066331828": [
-    {
-      "id": 48260,
-      "type": "exp",
-      "amount": 3.4542105058596775,
-      "from": "brank",
-      "date": 1757429874004
-    },
-    {
-      "id": 5016,
-      "type": "money",
-      "amount": 600,
-      "from": "brank",
-      "date": 1757429874004
-    },
-    {
-      "id": 36534,
-      "type": "elo",
-      "amount": -50,
-      "from": "ranked",
-      "date": 1757435973953
-    },
-    {
-      "id": 35123,
-      "type": "elo",
-      "amount": -50,
-      "from": "ranked",
-      "date": 1757435973954
-    },
-    {
-      "id": 25705,
-      "type": "elo",
-      "amount": -50,
-      "from": "ranked",
-      "date": 1757436837707
-    },
-    {
-      "id": 46944,
-      "type": "elo",
-      "amount": -50,
-      "from": "ranked",
-      "date": 1757436837708
-    },
-    {
-      "id": 33792,
-      "type": "elo",
-      "amount": -50,
-      "from": "ranked",
-      "date": 1757437028762
-    },
-    {
-      "id": 38849,
-      "type": "elo",
-      "amount": -50,
-      "from": "ranked",
-      "date": 1757437028763
-    },
-    {
-      "id": 13244,
-      "type": "elo",
-      "amount": -50,
-      "from": "ranked",
-      "date": 1757437104424
-    },
-    {
-      "id": 33751,
-      "type": "elo",
-      "amount": -50,
-      "from": "ranked",
-      "date": 1757437104425
-    }
-  ],
+  "1132693590066331828": [],
   "737913304214667345": [],
   "1355490065899585737": [
     {

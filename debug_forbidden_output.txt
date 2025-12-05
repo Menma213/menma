@@ -1,0 +1,3 @@
+Fetching via proxy: https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fcomicvine.gamespot.com%2Fa%2Fuploads%2Fsquare_small%2F11156%2F111564182%2F9531170-zaku.jpg...
+Status: 200 OK
+Success! Buffer length: 36826

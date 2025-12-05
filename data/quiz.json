@@ -1,164 +1,354 @@
 [
-    {
-      "question": "Who is the new member of team 7?",
-      "image_url": "https://static.wikia.nocookie.net/naruto/images/0/0e/Squad_Seven.png/revision/latest?cb=20140511121915",
-      "answer": "D. Sai",
-      "options": [
-        "A. Rocklee",
-        "B. Hinata",
-        "C. Hanzo",
-        "D. Sai"
-      ]
-    },
-    {
-      "question": "How many gates did the Might Guy open while fighting Kisame for the second time?",
-      "image_url": "https://static.wikia.nocookie.net/naruto/images/2/26/Guy%27s_Eight_Inner_Gates.png/revision/latest?cb=20150709142413",
-      "answer": "C. 6",
-      "options": [
-        "A. 8",
-        "B. 5",
-        "C. 6",
-        "D. 3"
-      ]
-    },
-    {
-      "question": "Who has the original cursed mark?",
-      "image_url": "https://static.wikia.nocookie.net/naruto/images/8/86/Orochimaru%27s_Juinjutsu.png/revision/latest?cb=202408170450531",
-      "answer": "C. Jugo",
-      "options": [
-        "A. Sasuke",
-        "B. Kimmimaru",
-        "C. Jugo",
-        "D. Sakon"
-      ]
-    },
-    {
-      "question": "Who took the cursed mark off Sauske?",
-      "image_url": "https://static.wikia.nocookie.net/naruto/images/b/bc/Sasuke%27s_Cursed_Seal_Level_1.PNG/revision/latest?cb=20150508021641",
-      "answer": "B. Itachi",
-      "options": [
-        "A. Naruto",
-        "B. Itachi",
-        "C. Sakura",
-        "D. Kakashi"
-      ]
-    },
-    {
-      "question": "What is the real name of Pain that Naruto fought in the leaf village?",
-      "image_url": "https://beebom.com/wp-content/uploads/2023/02/who-is-pain-in-naruto.jpg?w=750&quality=75",
-      "answer": "B. Nagato",
-      "options": [
-        "A. Kakuzu",
-        "B. Nagato",
-        "C. Kabuto",
-        "D. Hiraku"
-      ]
-    },
-    {
-      "question": "What is summoned when Itachi Mangekyo and Amaratsu are awakened?",
-      "image_url": "https://staticg.sportskeeda.com/editor/2022/08/9f03a-16615254950122.png",
-      "answer": "C. A susano",
-      "options": [
-        "A. A snake",
-        "B. A toad",
-        "C. A susano",
-        "D. A fox"
-      ]
-    },
-    {
-      "question": "Who is the creator of Akatsuki?",
-      "image_url": "https://static.wikia.nocookie.net/universeconquest/images/e/e2/Akatsuki.jpg/revision/latest?cb=20180926185014",
-      "answer": "D. Yahiko",
-      "options": [
-        "A. Itachi",
-        "B. Kisame",
-        "C. Madara",
-        "D. Yahiko"
-      ]
-    },
-    {
-      "question": "Who created that poison the Kankuro puppets use?",
-      "image_url": "https://static.wikia.nocookie.net/naruto/images/7/7d/Kankur%C5%8D1.png/revision/latest?cb=20150125171209",
-      "answer": "D. Sasori",
-      "options": [
-        "A. Kankuro",
-        "B. Chiyo",
-        "C. Naruto",
-        "D. Sasori"
-      ]
-    },
-    {
-      "question": "Which position did Gaara become after he was the Kazekage?",
-      "image_url": "https://static.wikia.nocookie.net/naruto/images/2/20/Gaara_in_Part_I.png/revision/latest/scale-to-width-down/1200?cb=20221010023824",
-      "answer": "B. 5th kazekage",
-      "options": [
-        "A. 2nd kazekage",
-        "B. 5th kazekage",
-        "C. 4th kazekage",
-        "D. 3rd kazekage"
-      ]
-    },
-    {
-      "question": "Who was the strongest Kazekage of the sand village?",
-      "image_url": "https://static0.gamerantimages.com/wordpress/wp-content/uploads/2024/03/naruto-the-fates-of-every-kazekage-gaara-rasa-featured.jpg",
-      "answer": "D. 3rd",
-      "options": [
-        "A. 2nd",
-        "B. 1st",
-        "C. 4th",
-        "D. 3rd"
-      ]
-    },
-    {
-      "question": "Can Kakashi perform Rasengan?",
-      "image_url": "https://upload.wikimedia.org/wikipedia/en/thumb/4/4b/KakashiLightningBlade.jpg/220px-KakashiLightningBlade.jpg",
-      "answer": "A. Yes",
-      "options": [
-        "A. Yes",
-        "B. No"
-      ]
-    },
-    {
-      "question": "Who gave Yamato his element of wood?",
-      "image_url": "https://static.wikia.nocookie.net/p__/images/2/2d/Capitan_yamato_by_elninja75-d4890yn.png/revision/latest/scale-to-width-down/1200?cb=20140227175919&path-prefix=protagonist",
-      "answer": "B. Orochimaru",
-      "options": [
-        "A. Kabuto",
-        "B. Orochimaru",
-        "C. Zabuza"
-      ]
-    },
-    {
-      "question": "Who stopped Naruto from going to all nine tails while fighting Pain?",
-      "image_url": "https://static.wikia.nocookie.net/naruto/images/4/43/8_tails.PNG/revision/latest?cb=20150125204555",
-      "answer": "C. 4th Hokage",
-      "options": [
-        "A. Kakashi",
-        "B. Jiraya",
-        "C. 4th Hokage",
-        "D. Sasuke"
-      ]
-    },
-    {
-      "question": "How many elements are there in Naruto Shippuden?",
-      "image_url": "https://static.wikia.nocookie.net/naruto/images/5/5a/Advanced_Elemental_Relationships_Diagram.png/revision/latest/scale-to-width-down/1050?cb=20160531193500",
-      "answer": "A. 5",
-      "options": [
-        "A. 5",
-        "B. 4",
-        "C. 8",
-        "D. 9"
-      ]
-    },
-    {
-      "question": "How many Uchiha survived their clan's downfall?",
-      "image_url": "https://static.wikia.nocookie.net/naruto/images/a/a3/Uchiha_Clan.png/revision/latest?cb=20150127175957",
-      "answer": "C. 3",
-      "options": [
-        "A. 5",
-        "B. 2",
-        "C. 3",
-        "D. 1"
-      ]
-    }
-  ]
+  {
+    "question": "Alright, so who is the current holder of the title 'Strongest Man in the World' in One Piece?",
+    "image_url": "https://static.wikia.nocookie.net/onepiece/images/8/87/One_Piece_Anime_Logo.png/revision/latest?cb=20250813015436",
+    "answer": "B. Blackbeard",
+    "options": [
+      "A. Shanks",
+      "B. Blackbeard",
+      "C. Kaido",
+      "D. Monkey D. Garp"
+    ]
+  },
+  {
+    "question": "What's the name of the original ninja who created the *Wood Release* jutsu?",
+    "image_url": "https://static0.cbrimages.com/wordpress/wp-content/uploads/2020/08/Wood-Release-Users.jpg",
+    "answer": "A. Hashirama Senju",
+    "options": [
+      "A. Hashirama Senju",
+      "B. Tobirama Senju",
+      "C. Madara Uchiha",
+      "D. Yamato"
+    ]
+  },
+  {
+    "question": "Speaking of jutsu, what's the official name for the technique Boruto learned that allows him to absorb ninjutsu?",
+    "image_url": "https://static0.dualshockersimages.com/wordpress/wp-content/uploads/2021/12/Boruto-Chapter-65-Spoilers-Release-Date-Time-Revealed.jpg",
+    "answer": "C. Kāma (Karma)",
+    "options": [
+      "A. Jōgan",
+      "B. Rasengan: Vanishing",
+      "C. Kāma (Karma)",
+      "D. Scientific Ninja Tool"
+    ]
+  },
+  {
+    "question": "Which member of the original Team 7 did *not* actually inherit any of the Six Paths powers during the war?",
+    "image_url": "https://media.proprofs.com/images/QM/user_images/2503852/New%20Project%20(71)(6).jpg",
+    "answer": "A. Sakura Haruno",
+    "options": [
+      "A. Sakura Haruno",
+      "B. Kakashi Hatake",
+      "C. Naruto Uzumaki",
+      "D. Sasuke Uchiha"
+    ]
+  },
+  {
+    "question": "In *Attack on Titan*, what was the real identity of the Titan that ate Eren's mother, Carla?",
+    "image_url": "https://pbs.twimg.com/media/EptmGNRXMAQMbMP.jpg",
+    "answer": "D. Dina Fritz",
+    "options": [
+      "A. Rod Reiss",
+      "B. Grisha Yeager",
+      "C. Keith Shadis",
+      "D. Dina Fritz"
+    ]
+  },
+  {
+    "question": "Who was the first character Naruto accidentally kissed in the series?",
+    "image_url": "https://static0.cbrimages.com/wordpress/wp-content/uploads/2020/05/naruto-sasuke-kiss.jpg?q=50&fit=crop&w=825&dpr=1.5",
+    "answer": "C. Sasuke Uchiha",
+    "options": [
+      "A. Sakura Haruno",
+      "B. Hinata Hyūga",
+      "C. Sasuke Uchiha",
+      "D. Jiraiya"
+    ]
+  },
+  {
+    "question": "Okay, anime crossover time: What major sport is featured in the main plot of *Haikyuu!!*?",
+    "image_url": "https://cdn.mos.cms.futurecdn.net/iaJYsc2ixhjBv89mueDPRH-1920-80.jpg",
+    "answer": "A. Volleyball",
+    "options": [
+      "A. Volleyball",
+      "B. Basketball",
+      "C. Baseball",
+      "D. Soccer"
+    ]
+  },
+  {
+    "question": "Out of the main *Boruto* characters, who is the direct descendant of the Hyūga clan (meaning they have the *full* lineage)?",
+    "image_url": "https://static.wikia.nocookie.net/naruto/images/f/f7/Himawari_Part_I.png/revision/latest/scale-to-width-down/300?cb=20231018143215",
+    "answer": "B. Himawari Uzumaki",
+    "options": [
+      "A. Boruto Uzumaki",
+      "B. Himawari Uzumaki",
+      "C. Kawaki",
+      "D. Sarada Uchiha"
+    ]
+  },
+  {
+    "question": "Before he became the Sixth Hokage, what was the first jutsu Kakashi Hatake *created* himself?",
+    "image_url": "https://static.wikia.nocookie.net/naruto/images/2/27/Kakashi_Hatake.png/revision/latest/scale-to-width-down/300?cb=20251019002845",
+    "answer": "A. Chidori",
+    "options": [
+      "A. Chidori",
+      "B. Lightning Cable",
+      "C. Lightning Beast Tracking Fang",
+      "D. Purple Lightning"
+    ]
+  },
+  {
+    "question": "If you're talking about the Akatsuki, how many members were originally supposed to be in the organization at any given time?",
+    "image_url": "https://static0.colliderimages.com/wordpress/wp-content/uploads/2023/11/akatsuki-members-strength.jpg?w=1200&h=628&fit=crop",
+    "answer": "B. 10",
+    "options": [
+      "A. 8",
+      "B. 10",
+      "C. 12",
+      "D. 7"
+    ]
+  },
+  {
+    "question": "In *Jujutsu Kaisen*, what is the name of Satoru Gojo's ultimate technique that traps his targets in a void?",
+    "image_url": "https://static.wikia.nocookie.net/jujutsu-kaisen/images/5/5a/Satoru_Gojo_arrives_on_the_battlefield_%28Anime%29.png/revision/latest?cb=20210226205256",
+    "answer": "C. Unlimited Void",
+    "options": [
+      "A. Blue (Cursed Technique)",
+      "B. Red (Reversal Technique)",
+      "C. Unlimited Void",
+      "D. Hollow Purple"
+    ]
+  },
+  {
+    "question": "Alright, which of the Nine-Tails Jinchūriki was *not* from the Uzumaki clan?",
+    "image_url": "https://static.wikia.nocookie.net/naruto/images/0/08/Kurama_teams_up.png/revision/latest/scale-to-width-down/985?cb=20130905155937",
+    "answer": "D. Yugito Ni'i (Two-Tails)",
+    "options": [
+      "A. Kushina Uzumaki (Nine-Tails)",
+      "B. Mito Uzumaki (Nine-Tails)",
+      "C. Naruto Uzumaki (Nine-Tails)",
+      "D. Yugito Ni'i (Two-Tails)"
+    ]
+  },
+  {
+    "question": "You know how Naruto has that massive orange toad, Gamabunta? Who is Gamabunta's *son* that Naruto mostly hangs out with?",
+    "image_url": "https://static.wikia.nocookie.net/naruto/images/c/ce/Toads_Summoned.png/revision/latest?cb=20150517044603",
+    "answer": "C. Gamakichi",
+    "options": [
+      "A. Gamatatsu",
+      "B. Fukasaku",
+      "C. Gamakichi",
+      "D. Gamaken"
+    ]
+  },
+  {
+    "question": "What's the name of the special barrier-ninjutsu team that guarded the Fourth Hokage during the Nine-Tails attack?",
+    "image_url": "https://static.wikia.nocookie.net/naruto/images/b/b1/The_interception_division.PNG/revision/latest/scale-to-width-down/985?cb=20210915193000",
+    "answer": "B. Konoha Barrier Team",
+    "options": [
+      "A. Konoha Guard Squad",
+      "B. Konoha Barrier Team",
+      "C. Anbu Black Ops",
+      "D. Cipher Division"
+    ]
+  },
+  {
+    "question": "Okay, Boruto question: What's the name of the organization that Kawaki and Jigen are part of, who are trying to achieve their goal through the Karma seal?",
+    "image_url": "https://static.wikia.nocookie.net/naruto/images/5/50/Kara.png/revision/latest?cb=20241006095523",
+    "answer": "D. Kara",
+    "options": [
+      "A. The Otsutsuki Clan",
+      "B. The Path of Pain",
+      "C. The Organization",
+      "D. Kara"
+    ]
+  },
+  {
+    "question": "Which of the Seven Ninja Swordsmen of the Mist was famously known as the 'Demon of the Hidden Mist'?",
+    "image_url": "https://static.wikia.nocookie.net/naruto/images/3/37/Zabuza_Momochi.png/revision/latest/scale-to-width-down/284?cb=20240922021336",
+    "answer": "A. Zabuza Momochi",
+    "options": [
+      "A. Zabuza Momochi",
+      "B. Kisame Hoshigaki",
+      "C. Mangetsu Hōzuki",
+      "D. Fuguki Suikazan"
+    ]
+  },
+  {
+    "question": "In the Naruto series, what animal is often associated with Jiraiya, the Toad Sage?",
+    "image_url": "https://static.wikia.nocookie.net/naruto/images/2/21/Profile_Jiraiya.PNG/revision/latest/scale-to-width-down/300?cb=20160115173538",
+    "answer": "B. Toads",
+    "options": [
+      "A. Snakes",
+      "B. Toads",
+      "C. Slugs",
+      "D. Monkeys"
+    ]
+  },
+  {
+    "question": "Which character from *My Hero Academia* has the Quirk called 'One For All' and passes it on?",
+    "image_url": "https://static.wikitide.net/deathbattlewiki/5/5e/Portrait.allmight.png",
+    "answer": "A. All Might",
+    "options": [
+      "A. All Might",
+      "B. Endeavor",
+      "C. Shoto Todoroki",
+      "D. Izuku Midoriya (Deku)"
+    ]
+  },
+  {
+    "question": "What's the name of Gaara's younger sister who uses a massive fan and wind-based jutsu in combat?",
+    "image_url": "https://static.wikia.nocookie.net/naruto/images/b/b2/Temari_Part_II.png/revision/latest/scale-to-width-down/300?cb=20180131102417",
+    "answer": "C. Temari",
+    "options": [
+      "A. Matsuri",
+      "B. Kankuro",
+      "C. Temari",
+      "D. Shira"
+    ]
+  },
+  {
+    "question": "In *Dragon Ball Z*, who was the *first* Saiyan antagonist to arrive on Earth?",
+    "image_url": "https://static.wikia.nocookie.net/toonami/images/1/18/Dbz.jpg/revision/latest?cb=20130319231152",
+    "answer": "D. Raditz",
+    "options": [
+      "A. Vegeta",
+      "B. Nappa",
+      "C. Frieza",
+      "D. Raditz"
+    ]
+  },
+  {
+    "question": "What's the name of the special, super-healing technique Sakura Haruno mastered, which requires immense chakra control and a diamond mark?",
+    "image_url": "https://static.wikia.nocookie.net/naruto/images/b/ba/Sakurap2.png/revision/latest/scale-to-width-down/300?cb=20170726101516",
+    "answer": "B. The Strength of a Hundred Seal (Byakugou)",
+    "options": [
+      "A. Creation Rebirth",
+      "B. The Strength of a Hundred Seal (Byakugou)",
+      "C. Chakra Scalpel",
+      "D. Katsuyu: Immense Network Healing"
+    ]
+  },
+  {
+    "question": "You know how Naruto and Sasuke have their 'rival' status? Which Uchiha ancestor is the historical rival to Hashirama Senju?",
+    "image_url": "https://preview.redd.it/what-makes-madara-uchiha-such-a-good-character-when-it-v0-316dlixm4tgc1.jpeg?auto=webp&s=b7df787f155166613508760fc26ed8544a4c35aa",
+    "answer": "A. Madara Uchiha",
+    "options": [
+      "A. Madara Uchiha",
+      "B. Izuna Uchiha",
+      "C. Obito Uchiha",
+      "D. Shisui Uchiha"
+    ]
+  },
+  {
+    "question": "In *Boruto*, what is the name of the scientific ninja tool creator who invented a lot of the modern equipment, like those chakra blades?",
+    "image_url": "https://static.wikia.nocookie.net/naruto/images/6/6d/Katasuke.png/revision/latest/scale-to-width-down/1200?cb=20220124115847",
+    "answer": "C. Katasuke Tono",
+    "options": [
+      "A. Amado",
+      "B. Sumire Kakei",
+      "C. Katasuke Tono",
+      "D. Ao"
+    ]
+  },
+  {
+    "question": "According to the Five Nature Transformations cycle, which elemental style is *strongest* against Lightning Style?",
+    "image_url": "https://static.wikia.nocookie.net/naruto/images/4/49/Elemental_Relationships_Diagram.svg/revision/latest?cb=20091021202844",
+    "answer": "A. Wind Style",
+    "options": [
+      "A. Wind Style",
+      "B. Fire Style",
+      "C. Earth Style",
+      "D. Water Style"
+    ]
+  },
+  {
+    "question": "What's the name of the sword used by Kisame Hoshigaki, which can absorb chakra and has a shark-like appearance?",
+    "image_url": "https://static.wikia.nocookie.net/animated/images/2/25/Kisame.png/revision/latest/scale-to-width-down/400?cb=20130801235829",
+    "answer": "C. Samehada",
+    "options": [
+      "A. Kiba",
+      "B. Kubikiribōchō",
+      "C. Samehada",
+      "D. Nuibari"
+    ]
+  },
+  {
+    "question": "In *Death Note*, what kind of item does a Shinigami drop to cause a human's death?",
+    "image_url": "https://static.wikia.nocookie.net/evil/images/6/62/Death_Note.png/revision/latest/thumbnail/width/360/height/450?cb=20240617162446",
+    "answer": "D. A Death Note notebook",
+    "options": [
+      "A. A feather",
+      "B. A scythe",
+      "C. A magical pen",
+      "D. A Death Note notebook"
+    ]
+  },
+  {
+    "question": "Who was the sensei (teacher) of the legendary Sannin (Jiraiya, Orochimaru, and Tsunade)?",
+    "image_url": "https://i.redd.it/q1shfp23reyb1.jpg",
+    "answer": "B. Hiruzen Sarutobi (The Third Hokage)",
+    "options": [
+      "A. Tobirama Senju (The Second Hokage)",
+      "B. Hiruzen Sarutobi (The Third Hokage)",
+      "C. Minato Namikaze (The Fourth Hokage)",
+      "D. Danzō Shimura"
+    ]
+  },
+  {
+    "question": "What is the official title for the leader of the Hidden Cloud Village (Kumogakure)?",
+    "image_url": "https://static.wikia.nocookie.net/naruto/images/4/45/Darui.png/revision/latest/scale-to-width-down/1200?cb=20170913102716",
+    "answer": "A. Raikage",
+    "options": [
+      "A. Raikage",
+      "B. Kazekage",
+      "C. Mizukage",
+      "D. Tsuchikage"
+    ]
+  },
+  {
+    "question": "You know the whole 'Eye of the Moon Plan' by Madara? What was the ultimate *effect* the plan was supposed to have on the world?",
+    "image_url": "https://static.wikia.nocookie.net/naruto/images/d/da/Infinite_Tsukuyomi_Activated.png/revision/latest/scale-to-width-down/1912?cb=20251002180135",
+    "answer": "D. Place everyone under a single, powerful Genjutsu",
+    "options": [
+      "A. Destroy all of the Tailed Beasts",
+      "B. Establish a democratic world government",
+      "C. Summon the original Ten-Tails",
+      "D. Place everyone under a single, powerful Genjutsu"
+    ]
+  },
+  {
+    "question": "Which Hokage was famously known as 'The Professor' for his mastery over all five elemental nature transformations?",
+    "image_url": "https://i.redd.it/respect-to-hiruzen-for-participating-in-every-great-ninja-v0-i1y99wz2fmbd1.png?width=1362&format=png&auto=webp&s=92ccc2dc45f49e7ab6da064626cc8071f9b93776",
+    "answer": "A. Hiruzen Sarutobi",
+    "options": [
+      "A. Hiruzen Sarutobi",
+      "B. Tsunade",
+      "C. Kakashi Hatake",
+      "D. Tobirama Senju"
+    ]
+  },
+  {
+    "question": "What's the name of the *One Punch Man* hero who is known for breaking the 'limiter' on his strength, making him ridiculously strong?",
+    "image_url": "https://assetsio.gnwcdn.com/Saitama-OK--169.jpg?width=1200&height=1200&fit=crop&quality=100&format=png&enable=upscale&auto=webp",
+    "answer": "B. Saitama",
+    "options": [
+      "A. Genos",
+      "B. Saitama",
+      "C. Mumen Rider",
+      "D. King"
+    ]
+  },
+  {
+    "question": "Who is the original, true vessel for Isshiki Ōtsutsuki in the *Boruto* series?",
+    "image_url": "https://static.wikia.nocookie.net/naruto/images/1/12/Jigen%27s_k%C4%81ma.png/revision/latest?cb=20210620160332",
+    "answer": "C. Jigen",
+    "options": [
+      "A. Kawaki",
+      "B. Kashin Koji",
+      "C. Jigen",
+      "D. Code"
+    ]
+  }
+]

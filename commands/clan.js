@@ -19,6 +19,8 @@ const USERS_FILE = path.join(__dirname, '../data/users.json');
 const PLAYERS_FILE = path.join(__dirname, '../data/players.json');
 const TERRITORIES_FILE = path.join(__dirname, '../data/territories.json');
 const BLUEPRINTS_FILE = path.join(__dirname, '../data/blueprints.json');
+const CLAN_TOKENS_FILE = path.join(__dirname, '../data/clantokens.json');
+const CLAN_CONTRIBUTIONS_FILE = path.join(__dirname, '../data/clancontributions.json');
 
 // Helper to load JSON
 async function loadJson(filePath) {
@@ -117,22 +119,11 @@ module.exports = {
                 .setName('capture')
                 .setDescription('Attempt to capture a territory.')
                 .addStringOption(option => option.setName('territory').setDescription('The territory to capture.').setRequired(true)))
+
         .addSubcommand(subcommand =>
             subcommand
-                .setName('bank')
-                .setDescription('Manage clan bank.')
-                .addStringOption(option =>
-                    option.setName('action')
-                        .setDescription('Deposit or Withdraw.')
-                        .setRequired(true)
-                        .addChoices({ name: 'Deposit', value: 'deposit' }, { name: 'Withdraw', value: 'withdraw' }))
-                .addIntegerOption(option => option.setName('amount').setDescription('Amount of Ryo.').setRequired(true)))
-        .addSubcommand(subcommand =>
-            subcommand
-                .setName('contribute')
-                .setDescription('Contribute materials to the clan.')
-                .addStringOption(option => option.setName('material').setDescription('Material name.').setRequired(true))
-                .addIntegerOption(option => option.setName('amount').setDescription('Amount to contribute.').setRequired(true)))
+                .setName('buff')
+                .setDescription('Purchase Clan Buffs.'))
         .addSubcommand(subcommand =>
             subcommand
                 .setName('shop')
@@ -146,7 +137,16 @@ module.exports = {
             subcommand
                 .setName('war')
                 .setDescription('Declare war on a territory.')
-                .addStringOption(option => option.setName('territory').setDescription('The territory to attack.').setRequired(true))),
+                .addStringOption(option => option.setName('territory').setDescription('The territory to attack.').setRequired(true)))
+        .addSubcommand(subcommand =>
+            subcommand
+                .setName('distribute')
+                .setDescription('Distribute clan rewards (Leader only).'))
+        .addSubcommand(subcommand =>
+            subcommand
+                .setName('bank')
+                .setDescription('View clan bank or contribute money.')
+                .addIntegerOption(option => option.setName('add').setDescription('Amount of Ryo to contribute.').setMinValue(1))),
 
     async execute(interaction) {
         const subcommand = interaction.options.getSubcommand() || 'info';
@@ -158,6 +158,8 @@ module.exports = {
         let clans = await loadJson(CLANS_FILE);
         let territories = await loadJson(TERRITORIES_FILE);
         let blueprints = await loadJson(BLUEPRINTS_FILE);
+        let clanTokens = await loadJson(CLAN_TOKENS_FILE);
+        let clanContributions = await loadJson(CLAN_CONTRIBUTIONS_FILE);
 
         const userClanName = users[userId]?.clan === 'None' ? null : users[userId]?.clan;
         const userClan = userClanName ? clans[userClanName] : null;
@@ -168,6 +170,21 @@ module.exports = {
                 return interaction.reply({ content: 'You are not in a clan.', ephemeral: true });
             }
 
+            // Calculate clan power
+            let clanPower = 0;
+            if (userClan.weapons) {
+                for (const [wName, count] of Object.entries(userClan.weapons)) {
+                    const bp = blueprints.find(b => b.name === wName);
+                    if (bp) clanPower += bp.power * count;
+                }
+            }
+
+            // Calculate total materials
+            let totalMaterials = 0;
+            if (userClan.materials) {
+                totalMaterials = Object.values(userClan.materials).reduce((sum, val) => sum + val, 0);
+            }
+
             const materials = userClan.materials && Object.keys(userClan.materials).length > 0
                 ? Object.entries(userClan.materials).map(([k, v]) => `• ${formatName(k)}: ${v}`).join('\n')
                 : 'None';
@@ -176,13 +193,36 @@ module.exports = {
                 ? Object.entries(userClan.weapons).map(([k, v]) => `• ${formatName(k)}: ${v}`).join('\n')
                 : 'None';
 
+            // Tier requirements for next level
+            const TIER_REQUIREMENTS = {
+                2: { members: 3, materials: 500, power: 1000 },
+                3: { members: 5, materials: 2000, power: 5000 },
+                4: { members: 8, materials: 5000, power: 15000 },
+                5: { members: 12, materials: 10000, power: 30000 }
+            };
+
+            const currentTier = userClan.level || 1;
+            const nextTier = currentTier + 1;
+            let tierProgress = '';
+
+            if (TIER_REQUIREMENTS[nextTier]) {
+                const req = TIER_REQUIREMENTS[nextTier];
+                tierProgress = `**Next Tier (${nextTier}) Requirements:**\n` +
+                    `Members: ${userClan.members.length}/${req.members} ${userClan.members.length >= req.members ? '✅' : '❌'}\n` +
+                    `Materials: ${totalMaterials}/${req.materials} ${totalMaterials >= req.materials ? '✅' : '❌'}\n` +
+                    `Power: ${clanPower}/${req.power} ${clanPower >= req.power ? '✅' : '❌'}`;
+            } else {
+                tierProgress = '**Max Tier Reached!**';
+            }
+
             const embed = new EmbedBuilder()
                 .setTitle(`${userClan.name} [Tier ${userClan.level}]`)
-                .setDescription(`**Leader:** <@${userClan.leader}>\n**Members:** ${userClan.members.length}\n**Treasury:** ${userClan.treasury} Ryo`)
+                .setDescription(`**Leader:** <@${userClan.leader}>\n**Members:** ${userClan.members.length}\n**Treasury:** ${userClan.treasury.toLocaleString()} Ryo\n**Clan Power:** ${clanPower.toLocaleString()}`)
                 .addFields(
                     { name: 'Territories', value: userClan.controlledTerritories.length > 0 ? userClan.controlledTerritories.map(formatName).join(', ') : 'None', inline: true },
                     { name: 'Co-Leader', value: userClan.coLeader ? `<@${userClan.coLeader}>` : 'None', inline: true },
                     { name: 'Elders', value: userClan.elders.length > 0 ? userClan.elders.map(id => `<@${id}>`).join(', ') : 'None', inline: true },
+                    { name: 'Tier Progress', value: tierProgress, inline: false },
                     { name: 'Weapons', value: weapons, inline: false },
                     { name: 'Materials', value: materials, inline: false }
                 )
@@ -521,58 +561,63 @@ module.exports = {
             return interaction.reply({ content: 'Clan rules updated.' });
         }
 
-        // --- BANK ---
-        if (subcommand === 'bank') {
+        // --- BUFF ---
+        if (subcommand === 'buff') {
             if (!userClan) return interaction.reply({ content: 'Not in a clan.', ephemeral: true });
-            const action = interaction.options.getString('action');
-            const amount = interaction.options.getInteger('amount');
-            if (amount <= 0) return interaction.reply({ content: 'Invalid amount.', ephemeral: true });
 
-            if (action === 'deposit') {
-                if ((users[userId].money || 0) < amount) return interaction.reply({ content: 'Insufficient funds.', ephemeral: true });
-                users[userId].money -= amount;
-                userClan.treasury += amount;
-                await saveJson(USERS_FILE, users);
-                await saveJson(CLANS_FILE, clans);
-                return interaction.reply({ content: `Deposited ${amount} Ryo.` });
-            } else {
-                const isAuth = userClan.leader === userId || userClan.coLeader === userId;
-                if (!isAuth) return interaction.reply({ content: 'Only Leader/Co-Leader can withdraw.', ephemeral: true });
-                if (userClan.treasury < amount) return interaction.reply({ content: 'Insufficient clan funds.', ephemeral: true });
-                userClan.treasury -= amount;
-                users[userId].money = (users[userId].money || 0) + amount;
-                await saveJson(USERS_FILE, users);
-                await saveJson(CLANS_FILE, clans);
-                return interaction.reply({ content: `Withdrew ${amount} Ryo.` });
-            }
-        }
-
-        // --- CONTRIBUTE ---
-        if (subcommand === 'contribute') {
-            if (!userClan) return interaction.reply({ content: 'Not in a clan.', ephemeral: true });
-            const material = interaction.options.getString('material').toLowerCase();
-            const amount = interaction.options.getInteger('amount');
-            if (amount <= 0) return interaction.reply({ content: 'Invalid amount.', ephemeral: true });
-
-            const userInv = users[userId].inventory || [];
-            const count = userInv.filter(i => i.toLowerCase() === material).length;
-            if (count < amount) return interaction.reply({ content: `You only have ${count} ${material}.`, ephemeral: true });
-
-            for (let i = 0; i < amount; i++) {
-                const idx = users[userId].inventory.findIndex(item => item.toLowerCase() === material);
-                if (idx > -1) users[userId].inventory.splice(idx, 1);
+            // Check if buff is already active
+            if (userClan.buffs && userClan.buffs.active) {
+                return interaction.reply({ content: `Clan Buff Tier ${userClan.buffs.tier} is already active!`, ephemeral: true });
             }
 
-            if (!userClan.materials) userClan.materials = {};
-            userClan.materials[material] = (userClan.materials[material] || 0) + amount;
+            const cost = 20000000; // 20 Million Ryo
+            if ((userClan.treasury || 0) < cost) {
+                return interaction.reply({ content: `The Clan Bank needs ${cost.toLocaleString()} Ryo to purchase the Clan Buff. Current Balance: ${(userClan.treasury || 0).toLocaleString()} Ryo.`, ephemeral: true });
+            }
 
-            if (!userClan.contributions) userClan.contributions = {};
-            if (!userClan.contributions[userId]) userClan.contributions[userId] = {};
-            userClan.contributions[userId][material] = (userClan.contributions[userId][material] || 0) + amount;
+            // Confirm purchase
+            const row = new ActionRowBuilder()
+                .addComponents(
+                    new ButtonBuilder().setCustomId('buff_confirm').setLabel(`Buy Tier 1 Buff (${cost.toLocaleString()} Ryo)`).setStyle(ButtonStyle.Success),
+                    new ButtonBuilder().setCustomId('buff_cancel').setLabel('Cancel').setStyle(ButtonStyle.Danger)
+                );
 
-            await saveJson(USERS_FILE, users);
-            await saveJson(CLANS_FILE, clans);
-            return interaction.reply({ content: `Contributed ${amount} ${material} to the clan.` });
+            const msg = await interaction.reply({
+                content: `**Clan Buff Tier 1**\nEffects: 20x Power & Defense for all members in battle.\nDuration: Permanent (until deactivated/expired).\nCost: ${cost.toLocaleString()} Ryo (from Clan Bank).`,
+                components: [row],
+                fetchReply: true
+            });
+
+            const collector = msg.createMessageComponentCollector({ filter: i => i.user.id === userId, time: 60000 });
+
+            collector.on('collect', async i => {
+                if (i.customId === 'buff_confirm') {
+                    // Re-check funds (reload clans to be safe)
+                    let currentClans = await loadJson(CLANS_FILE);
+                    let currentClan = currentClans[userClan.name];
+
+                    if ((currentClan.treasury || 0) < cost) {
+                        return i.update({ content: 'Insufficient funds in Clan Bank.', components: [] });
+                    }
+
+                    // Deduct money from treasury
+                    currentClan.treasury -= cost;
+
+                    // Activate Buff
+                    currentClan.buffs = {
+                        tier: 1,
+                        active: true,
+                        multiplier: 20
+                    };
+
+                    await saveJson(CLANS_FILE, currentClans);
+
+                    await i.update({ content: `**Clan Buff Tier 1 Activated!**\nAll clan members now have 20x stats in battle!`, components: [] });
+                } else {
+                    await i.update({ content: 'Purchase cancelled.', components: [] });
+                }
+            });
+            return;
         }
 
         // --- LAB ---
@@ -642,19 +687,19 @@ module.exports = {
             if (!userClan) return interaction.reply({ content: 'Not in a clan.', ephemeral: true });
 
             const shopItems = [
-                { id: 'ramen_10', name: '10 Ramen', cost: 50000, type: 'item', item: 'ramen', amount: 10, desc: "Food for your clan." },
-                { id: 'ss_100', name: '100 SS', cost: 1000000, type: 'currency', currency: 'ss', amount: 100, desc: "Premium currency." },
-                { id: 'role_custom', name: 'Custom Clan Role', cost: 50000, type: 'role', desc: "Create a custom role for members." },
-                { id: 'channel_private', name: 'Private Clan Channel', cost: 100000, type: 'channel', desc: "A private channel for your clan." }
+                { id: 'ramen_10', name: '10 Ramen', cost: 2, type: 'item', item: 'ramen', amount: 10, desc: "Food for your clan." },
+                { id: 'ss_100', name: '100 SS', cost: 25, type: 'currency', currency: 'ss', amount: 100, desc: "Premium currency." },
+                { id: 'role_custom', name: 'Custom Clan Role', cost: 50, type: 'role', desc: "Create a custom role for members." },
+                { id: 'channel_private', name: 'Private Clan Channel', cost: 100, type: 'channel', desc: "A private channel for your clan." }
             ];
 
             const embed = new EmbedBuilder()
                 .setTitle('Clan Shop')
-                .setDescription('Buy items for your clan using Clan Treasury funds.\nUse `/clan buy item:<id>` to purchase.')
+                .setDescription(`Buy items using **Clan Tokens**.\nYour Balance: **${clanTokens[userId] || 0} Tokens**\nUse \`/clan buy item:<id>\` to purchase.`)
                 .setColor('#0099ff');
 
             shopItems.forEach(item => {
-                embed.addFields({ name: `${item.name} (ID: ${item.id})`, value: `Cost: ${item.cost} Ryo\n${item.desc}`, inline: false });
+                embed.addFields({ name: `${item.name} (ID: ${item.id})`, value: `Cost: ${item.cost} Tokens\n${item.desc}`, inline: false });
             });
 
             return interaction.reply({ embeds: [embed] });
@@ -663,59 +708,243 @@ module.exports = {
         // --- BUY ---
         if (subcommand === 'buy') {
             if (!userClan) return interaction.reply({ content: 'Not in a clan.', ephemeral: true });
-            const isAuth = userClan.leader === userId || userClan.coLeader === userId;
-            if (!isAuth) return interaction.reply({ content: 'Only Leader/Co-Leader can buy.', ephemeral: true });
+            if (!userClan) return interaction.reply({ content: 'Not in a clan.', ephemeral: true });
+            // Removed leader check, anyone with tokens can buy? Or still leader only?
+            // "So we need to change the clan shop currency from ryo to clan tokens" implies individual currency.
+            // Let's allow anyone to buy for themselves/clan.
 
             const itemId = interaction.options.getString('item');
             const shopItems = [
-                { id: 'ramen_10', name: '10 Ramen', cost: 50000, type: 'item', item: 'ramen', amount: 10 },
-                { id: 'ss_100', name: '100 SS', cost: 1000000, type: 'currency', currency: 'ss', amount: 100 },
-                { id: 'role_custom', name: 'Custom Clan Role', cost: 50000, type: 'role' },
-                { id: 'channel_private', name: 'Private Clan Channel', cost: 100000, type: 'channel' }
+                { id: 'ramen_10', name: '10 Ramen', cost: 2, type: 'item', item: 'ramen', amount: 10 },
+                { id: 'ss_100', name: '100 SS', cost: 25, type: 'currency', currency: 'ss', amount: 100 },
+                { id: 'role_custom', name: 'Custom Clan Role', cost: 50, type: 'role' },
+                { id: 'channel_private', name: 'Private Clan Channel', cost: 100, type: 'channel' }
             ];
 
             const item = shopItems.find(i => i.id === itemId);
             if (!item) return interaction.reply({ content: 'Item not found.', ephemeral: true });
 
-            if (userClan.treasury < item.cost) return interaction.reply({ content: 'Insufficient clan funds.', ephemeral: true });
+            const userTokens = clanTokens[userId] || 0;
+            if (userTokens < item.cost) return interaction.reply({ content: `Insufficient Clan Tokens. You have ${userTokens}, need ${item.cost}.`, ephemeral: true });
 
-            userClan.treasury -= item.cost;
+            clanTokens[userId] = userTokens - item.cost;
+            await saveJson(CLAN_TOKENS_FILE, clanTokens);
 
             // Effect logic
             if (item.type === 'item') {
                 // Add to clan inventory? Or distribute? For now, just say bought.
                 // Assuming clan has inventory for ramen?
                 // userClan.inventory...
-                return interaction.reply({ content: `Bought ${item.name}. (Item logic pending)` });
+                // Add to user inventory
+                if (!users[userId].inventory) users[userId].inventory = [];
+                for (let k = 0; k < item.amount; k++) users[userId].inventory.push(item.item);
+                await saveJson(USERS_FILE, users);
+                return interaction.reply({ content: `Bought ${item.name}. Added to your inventory.` });
             } else if (item.type === 'currency') {
                 // Add SS to leader? Or distribute?
                 players[userId].ss = (players[userId].ss || 0) + item.amount;
                 await saveJson(PLAYERS_FILE, players);
-                await saveJson(CLANS_FILE, clans);
                 return interaction.reply({ content: `Bought ${item.name}. Added to your balance.` });
             } else {
-                await saveJson(CLANS_FILE, clans);
                 return interaction.reply({ content: `Bought ${item.name}. Please contact admin to set up.` });
             }
+        }
+
+        // --- DISTRIBUTE ---
+        if (subcommand === 'distribute') {
+            if (!userClan) return interaction.reply({ content: 'Not in a clan.', ephemeral: true });
+            if (userClan.leader !== userId) return interaction.reply({ content: 'Only the clan leader can distribute rewards.', ephemeral: true });
+
+            // Check Cooldown (Monthly)
+            const now = Date.now();
+            const lastDist = userClan.lastDistribution || 0;
+            const cooldown = 30 * 24 * 60 * 60 * 1000; // 30 days
+            if (now - lastDist < cooldown) {
+                const remaining = Math.ceil((cooldown - (now - lastDist)) / (1000 * 60 * 60 * 24));
+                return interaction.reply({ content: `Rewards can only be distributed once a month. Please wait ${remaining} days.`, ephemeral: true });
+            }
+
+            // Calculate Tier and Rewards
+            const territoryCount = userClan.controlledTerritories.length;
+            const tier = Math.max(1, territoryCount); // Minimum Tier 1? Or 0 if no territories? User said "tier 1 rewards when only 1 territory is captured".
+            // Let's assume Tier = Territory Count. If 0 territories, maybe no rewards?
+            // "This is tier 1 rewards when only 1 territory is captured."
+            // If 0 territories, tier 0?
+
+            if (tier === 0 && territoryCount === 0) {
+                return interaction.reply({ content: 'Your clan needs to capture at least 1 territory to receive rewards.', ephemeral: true });
+            }
+
+            const rewardMoney = 1000000 * tier;
+            const rewardSS = 100 * tier;
+            const rewardRamen = 200 * tier;
+            const rewardTokens = 25 * tier;
+
+            let memberCount = 0;
+
+            // Distribute
+            for (const memberId of userClan.members) {
+                // Ensure players[memberId] and players[memberId].money exist
+                if (!players[memberId]) players[memberId] = {};
+                if (typeof players[memberId].money !== 'number') players[memberId].money = 0;
+                players[memberId].money = (players[memberId].money || 0) + rewardMoney;
+
+                // Add Ramen
+                if (users[memberId]) { // Check if user exists before accessing inventory
+                    if (!users[memberId].inventory) users[memberId].inventory = [];
+                    for (let i = 0; i < rewardRamen; i++) users[memberId].inventory.push('ramen');
+                }
+
+                if (players[memberId]) {
+                    players[memberId].ss = (players[memberId].ss || 0) + rewardSS;
+                }
+
+                clanTokens[memberId] = (clanTokens[memberId] || 0) + rewardTokens;
+                memberCount++;
+            }
+
+            // Update Clan Data
+            userClan.lastDistribution = now;
+
+            await saveJson(USERS_FILE, users);
+            await saveJson(PLAYERS_FILE, players);
+            await saveJson(CLAN_TOKENS_FILE, clanTokens);
+            await saveJson(CLANS_FILE, clans);
+
+            const embed = new EmbedBuilder()
+                .setTitle('Clan Rewards Distributed!')
+                .setDescription(`Distributed rewards to ${memberCount} members based on Tier ${tier} (${territoryCount} Territories).`)
+                .addFields(
+                    { name: 'Money', value: `${rewardMoney.toLocaleString()} Ryo`, inline: true },
+                    { name: 'Shinobi Shards', value: `${rewardSS} SS`, inline: true },
+                    { name: 'Ramen', value: `${rewardRamen} Bowls`, inline: true },
+                    { name: 'Clan Tokens', value: `${rewardTokens} Tokens`, inline: true }
+                )
+                .setColor('#00FF00');
+
+            return interaction.reply({ embeds: [embed] });
         }
 
         // --- LEADERBOARD ---
         if (subcommand === 'leaderboard') {
             if (!userClan) return interaction.reply({ content: 'Not in a clan.', ephemeral: true });
-            const contribs = userClan.contributions || {};
-            const sorted = Object.entries(contribs).sort(([, a], [, b]) => {
-                const totalA = Object.values(a).reduce((sum, val) => sum + val, 0);
-                const totalB = Object.values(b).reduce((sum, val) => sum + val, 0);
-                return totalB - totalA;
+
+            const clanContribs = clanContributions[userClan.name] || {};
+
+            const sorted = Object.entries(clanContribs).sort(([, a], [, b]) => {
+                // Calculate total score (money + sum of materials)
+                // Assuming 1 material = 1 point, 1 Ryo = 0.001 point? Or just display separately.
+                // Let's sort by money for now as it's the main contribution
+                const moneyA = a.money || 0;
+                const moneyB = b.money || 0;
+                return moneyB - moneyA;
             }).slice(0, 10);
 
-            const desc = sorted.map(([uid, mats], i) => {
-                const total = Object.values(mats).reduce((sum, val) => sum + val, 0);
-                return `${i + 1}. <@${uid}> - ${total} materials`;
+            const desc = sorted.map(([uid, data], i) => {
+                const money = data.money || 0;
+                // Count materials excluding money key
+                const materials = Object.entries(data).reduce((sum, [key, val]) => key !== 'money' ? sum + val : sum, 0);
+                return `${i + 1}. <@${uid}> - **${money.toLocaleString()} Ryo** | ${materials} Materials`;
             }).join('\n') || 'No contributions yet.';
 
-            const embed = new EmbedBuilder().setTitle(`${userClan.name} Contribution Leaderboard`).setDescription(desc);
+            const embed = new EmbedBuilder()
+                .setTitle(`${userClan.name} Contribution Leaderboard`)
+                .setDescription(desc)
+                .setColor(userClan.color || '#0099ff');
             return interaction.reply({ embeds: [embed] });
+        }
+
+        // --- BANK ---
+        if (subcommand === 'bank') {
+            if (!userClan) return interaction.reply({ content: 'Not in a clan.', ephemeral: true });
+
+            const amountToAdd = interaction.options.getInteger('add');
+
+            if (amountToAdd) {
+                // Contribute Money
+                // Ensure the 'money' field exists in players[userId]
+                if (!players[userId]) players[userId] = {};
+                if (typeof players[userId].money !== 'number') players[userId].money = 0;
+
+                if ((players[userId].money || 0) < amountToAdd) {
+                    return interaction.reply({ content: `You don't have enough Ryo. You have ${(players[userId].money || 0).toLocaleString()} Ryo.`, ephemeral: true });
+                }
+
+                // Deduct from user
+                players[userId].money -= amountToAdd;
+
+                // Add to clan treasury
+                userClan.treasury = (userClan.treasury || 0) + amountToAdd;
+
+                // Track contribution
+                if (!clanContributions[userClan.name]) clanContributions[userClan.name] = {};
+                if (!clanContributions[userClan.name][userId]) clanContributions[userClan.name][userId] = {};
+
+                clanContributions[userClan.name][userId].money = (clanContributions[userClan.name][userId].money || 0) + amountToAdd;
+
+                // Calculate Clan Power for tier requirements
+                let clanPower = 0;
+                if (userClan.weapons) {
+                    for (const [wName, count] of Object.entries(userClan.weapons)) {
+                        const bp = blueprints.find(b => b.name === wName);
+                        if (bp) clanPower += bp.power * count;
+                    }
+                }
+
+                // Calculate total materials gathered
+                let totalMaterials = 0;
+                if (userClan.materials) {
+                    totalMaterials = Object.values(userClan.materials).reduce((sum, val) => sum + val, 0);
+                }
+
+                // Check for Tier Upgrade with comprehensive requirements
+                // Tier requirements: members, materials gathered, clan power
+                const TIER_REQUIREMENTS = {
+                    2: { members: 3, materials: 500, power: 1000 },
+                    3: { members: 5, materials: 2000, power: 5000 },
+                    4: { members: 8, materials: 5000, power: 15000 },
+                    5: { members: 12, materials: 10000, power: 30000 }
+                };
+
+                let upgraded = false;
+                const currentTier = userClan.level || 1;
+                const nextTier = currentTier + 1;
+
+                if (TIER_REQUIREMENTS[nextTier]) {
+                    const req = TIER_REQUIREMENTS[nextTier];
+                    const memberCount = userClan.members.length;
+
+                    if (memberCount >= req.members && totalMaterials >= req.materials && clanPower >= req.power) {
+                        userClan.level = nextTier;
+                        upgraded = true;
+                    }
+                }
+
+                // Store clan power for leaderboard
+                userClan.power = clanPower;
+
+                await saveJson(PLAYERS_FILE, players);
+                await saveJson(USERS_FILE, users);
+                await saveJson(CLANS_FILE, clans);
+                await saveJson(CLAN_CONTRIBUTIONS_FILE, clanContributions);
+
+                let msg = `You contributed **${amountToAdd.toLocaleString()} Ryo** to the clan bank.\nNew Balance: **${userClan.treasury.toLocaleString()} Ryo**`;
+                if (upgraded) {
+                    msg += `\n\n🎉 **CLAN LEVEL UP!**\n${userClan.name} has reached **Tier ${userClan.level}**!`;
+                    // Optional: Announce to channel if not ephemeral? But we usually reply ephemeral or public. 
+                    // Let's make this reply public so everyone sees the upgrade.
+                }
+
+                return interaction.reply({ content: msg });
+
+            } else {
+                // View Balance
+                const embed = new EmbedBuilder()
+                    .setTitle(`${userClan.name} Bank`)
+                    .setDescription(`**Treasury Balance:** ${userClan.treasury.toLocaleString()} Ryo\n\nUse \`/clan bank add:<amount>\` to contribute.`)
+                    .setColor('#FFD700'); // Gold
+                return interaction.reply({ embeds: [embed] });
+            }
         }
 
         // --- WAR & CAPTURE ---

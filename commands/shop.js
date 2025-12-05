@@ -158,15 +158,15 @@ module.exports = {
             .setDescription('Here you can learn new combos for your arsenal.')
             .setThumbnail('https://static1.cbrimages.com/wordpress/wp-content/uploads/2020/03/Konohagakure.jpg')
             .addFields(
-                { 
+                {
                     name: '1) Basic Combo',
                     value: 'Attack + Transformation Jutsu\nCreates an "Empowered Attack" that deals 100 True Damage.\nCost: Free (0)',
-                    inline: false 
+                    inline: false
                 },
-                { 
+                {
                     name: '2) Intermediate Combo',
                     value: 'Analysis + Transformation Jutsu + Rasengan\nDeals 100,000 damage, stuns the opponent for 1 round, and applies bleed.\nCost: 10,000',
-                    inline: false 
+                    inline: false
                 }
             )
             .setFooter({ text: 'Page 1/3' });
@@ -219,11 +219,11 @@ module.exports = {
             .setTitle('EVENT SHOP')
             .setDescription(`Spend your Ay tokens on exclusive event jutsus!\nYour Ay tokens: **${ayTokens}**`)
             .addFields(
-            ...eventShopItems.map(item => ({
-                name: item.name,
-                value: `${item.description}\nCost: ${item.price} Ay tokens`,
-                inline: false
-            }))
+                ...eventShopItems.map(item => ({
+                    name: item.name,
+                    value: `${item.description}\nCost: ${item.price} Ay tokens`,
+                    inline: false
+                }))
             )
             .setFooter({ text: 'Page 3/4' });
 
@@ -242,11 +242,11 @@ module.exports = {
             .setFooter({ text: 'Page 4/4' });
 
         // Add navigation buttons
-        const row = new ActionRowBuilder().addComponents(
+        const row1 = new ActionRowBuilder().addComponents(
             new ButtonBuilder()
                 .setCustomId('main_shop')
                 .setLabel('Combos')
-                .setStyle(ButtonStyle.Primary),
+                .setStyle(ButtonStyle.Secondary),
             new ButtonBuilder()
                 .setCustomId('jutsu_shop')
                 .setLabel('Jutsus')
@@ -254,18 +254,29 @@ module.exports = {
             new ButtonBuilder()
                 .setCustomId('event_shop')
                 .setLabel('Event')
-                .setStyle(ButtonStyle.Success),
+                .setStyle(ButtonStyle.Secondary),
             new ButtonBuilder()
                 .setCustomId('misc_shop')
                 .setLabel('Misc')
-                .setStyle(ButtonStyle.Danger),
+                .setStyle(ButtonStyle.Secondary),
             new ButtonBuilder()
                 .setCustomId('shinobi_shards')
                 .setLabel('Shinobi Shards')
-                .setStyle(ButtonStyle.Primary)
+                .setStyle(ButtonStyle.Secondary)
         );
 
-        await interaction.reply({ embeds: [embed], components: [row] });
+        const row2 = new ActionRowBuilder().addComponents(
+            new ButtonBuilder()
+                .setCustomId('akatsuki_shop')
+                .setLabel('Akatsuki')
+                .setStyle(ButtonStyle.Secondary),
+            new ButtonBuilder()
+                .setCustomId('anbu_shop')
+                .setLabel('ANBU')
+                .setStyle(ButtonStyle.Secondary)
+        );
+
+        await interaction.reply({ embeds: [embed], components: [row1, row2] });
 
         const collector = interaction.channel.createMessageComponentCollector({
             filter: i => i.user.id === interaction.user.id,
@@ -274,13 +285,100 @@ module.exports = {
 
         collector.on('collect', async i => {
             if (i.customId === 'main_shop') {
-                await i.update({ embeds: [embed], components: [row] });
+                await i.update({ embeds: [embed], components: [row1, row2] });
             } else if (i.customId === 'jutsu_shop') {
-                await i.update({ embeds: [jutsuEmbed], components: [row] });
+                await i.update({ embeds: [jutsuEmbed], components: [row1, row2] });
             } else if (i.customId === 'event_shop') {
-                await i.update({ embeds: [eventEmbed], components: [row] });
+                await i.update({ embeds: [eventEmbed], components: [row1, row2] });
             } else if (i.customId === 'misc_shop') {
-                await i.update({ embeds: [miscEmbed], components: [row] });
+                await i.update({ embeds: [miscEmbed], components: [row1, row2] });
+            } else if (i.customId === 'akatsuki_shop') {
+                const akatsukiPath = path.resolve(__dirname, '../data/akatsuki.json');
+                const akatsukiData = JSON.parse(fs.readFileSync(akatsukiPath, 'utf8'));
+                const userId = i.user.id;
+
+                if (!akatsukiData.members || !akatsukiData.members[userId]) {
+                    await i.reply({ content: 'This shop is for Akatsuki members only.', ephemeral: true });
+                    return;
+                }
+
+                const dailyComboPath = path.resolve(__dirname, '../data/daily_combo.json');
+                const combosPath = path.resolve(__dirname, '../data/combos.json');
+                const combosData = JSON.parse(fs.readFileSync(combosPath, 'utf8'));
+
+                const today = new Date();
+                const dayOfYear = Math.floor((today - new Date(today.getFullYear(), 0, 0)) / (1000 * 60 * 60 * 24));
+
+                let dailyCombo;
+                let dailyComboData = {};
+                if (fs.existsSync(dailyComboPath)) {
+                    dailyComboData = JSON.parse(fs.readFileSync(dailyComboPath, 'utf8'));
+                }
+
+                if (dailyComboData.dayOfYear === dayOfYear && dailyComboData.combo) {
+                    dailyCombo = dailyComboData.combo;
+                } else {
+                    const availableCombos = Object.values(combosData).filter(combo => combo.name !== "Basic Combo" && combo.name !== "Intermediate Combo");
+                    const comboIndex = dayOfYear % availableCombos.length;
+                    dailyCombo = availableCombos[comboIndex];
+
+                    fs.writeFileSync(dailyComboPath, JSON.stringify({ dayOfYear, combo: dailyCombo }, null, 4));
+                }
+
+                const bountyPath = path.resolve(__dirname, '../data/bounty.json');
+                const bountyData = JSON.parse(fs.readFileSync(bountyPath, 'utf8'));
+                const userBounty = bountyData[userId] ? bountyData[userId].bounty : 0;
+
+                const akatsukiEmbed = new EmbedBuilder()
+                    .setColor(0xFF0000)
+                    .setTitle('Akatsuki Black Market')
+                    .setDescription('A special shop for Akatsuki members to acquire powerful and forbidden techniques.')
+                    .addFields(
+                        {
+                            name: `Daily Combo: ${dailyCombo.name}`,
+                            value: `**Required Jutsus:** ${dailyCombo.requiredJutsus.join(', ')}\n**Effect:** ${dailyCombo.effects.map(e => `${e.type}: ${e.status}`).join(', ') || 'Special combo attack.'}\n**Cost:** 1000 Bounty Points`,
+                            inline: false
+                        }
+                    )
+                    .setFooter({ text: `Your Bounty: ${userBounty}` });
+
+                await i.update({ embeds: [akatsukiEmbed], components: [row1, row2] });
+            } else if (i.customId === 'anbu_shop') {
+                const anbuPath = path.resolve(__dirname, '../data/anbu.json');
+                const anbuData = JSON.parse(fs.readFileSync(anbuPath, 'utf8'));
+                const userId = i.user.id;
+
+                if (!anbuData.members || !anbuData.members[userId]) {
+                    await i.reply({ content: 'This shop is for ANBU members only.', ephemeral: true });
+                    return;
+                }
+
+                const accessoriesPath = path.resolve(__dirname, '../data/accessories.json');
+                const accessories = JSON.parse(fs.readFileSync(accessoriesPath, 'utf8'));
+
+                const anbuShopItems = accessories.filter(acc => acc.rarity === 'Epic' || acc.rarity === 'Rare');
+                const legendaryItem = accessories.find(acc => acc.rarity === 'Legendary');
+                if (legendaryItem) {
+                    anbuShopItems.push(legendaryItem);
+                }
+
+                const userAnbuData = anbuData.members[userId];
+                const userHonor = userAnbuData && userAnbuData.honor ? userAnbuData.honor : 0;
+
+                const anbuEmbed = new EmbedBuilder()
+                    .setColor(0x808080)
+                    .setTitle('ANBU Black Ops Shop')
+                    .setDescription('A special shop for ANBU members to acquire powerful and exclusive equipment.')
+                    .addFields(
+                        ...anbuShopItems.map(item => ({
+                            name: item.name,
+                            value: `${item.description}\nCost: ${item.price || 1000} Honor`,
+                            inline: false
+                        }))
+                    )
+                    .setFooter({ text: `Your Honor: ${userHonor}` });
+
+                await i.update({ embeds: [anbuEmbed], components: [row1, row2] });
             } else if (i.customId === 'shinobi_shards') {
                 // Only allow in main server
                 if (i.guildId !== MAIN_GUILD_ID) {

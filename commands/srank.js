@@ -46,7 +46,7 @@ async function cleanupWebhooks(interaction) {
                 await webhook.delete();
             }
         }
-    } catch (error) {}
+    } catch (error) { }
 }
 const ASUMAANDKURENAI = 'https://i.postimg.cc/XvS9FdJv/image.png';
 const WAITWHAT = 'https://i.postimg.cc/ydfZKWTP/image.png';
@@ -154,7 +154,7 @@ const srankBosses = {
         name: "Corrupted Orochimaru",
         image: OROCHIMARU_AVATAR,
         health: 600,
-        power: 2500,
+        power: 20,
         defense: 150,
         jutsu: ["Attack", "Serpents Wrath", "Poison Mist"],
         reward: null,
@@ -185,7 +185,7 @@ const srankBosses = {
         health: 800,
         power: 3000,
         defense: 200,
-        jutsu: ["Attack", "Rasengan"],
+        jutsu: ["Attack"],
         reward: null,
         accuracy: 98,
         dodge: 40,
@@ -199,7 +199,7 @@ const srankBosses = {
 function getSrankExpReward(playerLevel, baseExp) {
     // Base EXP + (playerLevel * a multiplier)
     // Adjust the multiplier as needed for desired difficulty/grind
-    return Math.floor(baseExp + (Number(playerLevel) * 2)); 
+    return Math.floor(baseExp + (Number(playerLevel) * 2));
 }
 
 // Define S-rank bosses with progression requirements
@@ -226,14 +226,14 @@ const effectHandlers = {
                     accuracy: Number(target.accuracy) || 100
                 },
                 hasHiddenMist: target.activeEffects?.some(e => e.type === 'status' && e.status === 'mist'),
-                isTargetIncapacitated: target.activeEffects?.some(e => 
-                    e.type === 'status' && 
+                isTargetIncapacitated: target.activeEffects?.some(e =>
+                    e.type === 'status' &&
                     ['stun', 'flinch'].includes(e.status)
                 ),
                 max: Math.max
             };
-            const finalAccuracy = effect.accuracyBonus ? 
-                effectHandlers.getAccuracyBonus(effect, context.user.accuracy) : 
+            const finalAccuracy = effect.accuracyBonus ?
+                effectHandlers.getAccuracyBonus(effect, context.user.accuracy) :
                 context.user.accuracy;
             const hitChance = Math.max(0, Math.min(100, finalAccuracy - context.target.dodge));
             const hits = Math.random() * 100 <= hitChance;
@@ -257,8 +257,8 @@ const effectHandlers = {
         };
         for (const [stat, formulaOrValue] of Object.entries(statsDefinition)) {
             try {
-                changes[stat] = typeof formulaOrValue === 'number' 
-                    ? formulaOrValue 
+                changes[stat] = typeof formulaOrValue === 'number'
+                    ? formulaOrValue
                     : Math.floor(math.evaluate(formulaOrValue, context));
             } catch (err) {
                 changes[stat] = 0;
@@ -280,8 +280,8 @@ const effectHandlers = {
         };
         for (const [stat, formulaOrValue] of Object.entries(statsDefinition)) {
             try {
-                const value = typeof formulaOrValue === 'number' 
-                    ? formulaOrValue 
+                const value = typeof formulaOrValue === 'number'
+                    ? formulaOrValue
                     : math.evaluate(formulaOrValue, context);
                 changes[stat] = value < 0 ? value : -Math.abs(value);
             } catch (err) {
@@ -322,7 +322,7 @@ const CHAKRA_REGEN = {
 try {
     registerFont(path.join(__dirname, '../assets/Roboto-Bold.ttf'), { family: 'Roboto', weight: 'bold' });
     registerFont(path.join(__dirname, '../assets/Roboto-Regular.ttf'), { family: 'Roboto', weight: 'regular' });
-} catch (e) {}
+} catch (e) { }
 
 function getCooldownString(ms) {
     const totalSeconds = Math.floor(ms / 1000);
@@ -366,7 +366,7 @@ async function getCharacterWebhook(channel, name, avatar) {
 async function sendCharacterWebhook(channel, name, avatar, content) {
     if (!content || !content.trim()) return;
     const wh = await getCharacterWebhook(channel, name, avatar);
-    return wh.send({ content }).catch(() => {});
+    return wh.send({ content }).catch(() => { });
 }
 
 class BattleUtils {
@@ -393,7 +393,7 @@ class BattleUtils {
     static getRoundEffect(roundEffects, currentRound) {
         for (const [roundRange, effectData] of Object.entries(roundEffects)) {
             const [start, end] = roundRange.split('-').map(Number);
-            if ((end && currentRound >= start && currentRound <= end) || 
+            if ((end && currentRound >= start && currentRound <= end) ||
                 (!end && currentRound === start)) {
                 return effectData;
             }
@@ -776,7 +776,7 @@ function createBattleSummary(player, npc, playerAction, npcAction, roundNum, com
         if (!entity.activeEffects) return;
         entity.activeEffects.forEach(effect => {
             if (effect.type === 'status') {
-                switch(effect.status) {
+                switch (effect.status) {
                     case 'bleed': {
                         const bleedDamage = Math.floor(entity.health * 0.1);
                         statusEffects.push(`${entity.username || entity.name} is bleeding! (-${bleedDamage} HP)`);
@@ -807,12 +807,12 @@ function createBattleSummary(player, npc, playerAction, npcAction, roundNum, com
         .setColor('#006400')
         .setDescription(
             `${playerEffectEmojis}${player.username} ${playerDesc}` +
-            `${playerAction.damage ? ` for ${Math.round(playerAction.damage)}!` : 
-             playerAction.heal ? ` for ${Math.round(playerAction.heal)} HP!` : '!'}` +
+            `${playerAction.damage ? ` for ${Math.round(playerAction.damage)}!` :
+                playerAction.heal ? ` for ${Math.round(playerAction.heal)} HP!` : '!'}` +
             comboProgressText +
             `\n\n${npcEffectEmojis}${npc.name} ${npcDesc}` +
-            `${npcAction.damage ? ` for ${Math.round(npcAction.damage)}!` : 
-             npcAction.heal ? ` for ${Math.round(npcAction.heal)} HP!` : '!'}` +
+            `${npcAction.damage ? ` for ${Math.round(npcAction.damage)}!` :
+                npcAction.heal ? ` for ${Math.round(npcAction.heal)} HP!` : '!'}` +
             (statusEffects.length ? `\n\n${statusEffects.join('\n')}` : '')
         )
         .addFields({
@@ -849,12 +849,12 @@ async function runAnbuTenTailsBattle(interaction, users, userId, players) {
     };
 
     let roundNum = 1;
-    
+
     while (anbuTeam.currentHealth > 0 && tenTails.currentHealth > 0) {
         // Anbu always attacks first in this special battle
         const anbuDamage = Math.floor(anbuTeam.power * 0.1); // Massive damage
         tenTails.currentHealth -= anbuDamage;
-        
+
         // Create battle summary
         const summaryEmbed = new EmbedBuilder()
             .setTitle(`Round ${roundNum} - Anbu Team vs Ten Tails`)
@@ -907,7 +907,7 @@ async function runSurvivalBattle(interaction, users, userId, players, jutsuList,
         const effectiveNpc = BattleUtils.getEffectiveStats(npc);
 
         const { embed, components } = createMovesEmbed(player, roundNum, userId, jutsuList);
-        
+
         // Modify components to remove lethal options or add survival instructions
         const survivalEmbed = new EmbedBuilder()
             .setTitle(`SURVIVE! Round ${survivedRounds + 1}/${survivalRounds}`)
@@ -972,7 +972,7 @@ async function runSurvivalBattle(interaction, users, userId, players, jutsuList,
         }
 
         survivedRounds++;
-        
+
         if (survivedRounds >= survivalRounds) {
             await interaction.followUp(`**You survived ${survivalRounds} rounds! Objective complete!**`);
             return "win";
@@ -981,7 +981,7 @@ async function runSurvivalBattle(interaction, users, userId, players, jutsuList,
         // Regenerate chakra and process effects
         player.chakra += CHAKRA_REGEN[player.rank] || 1;
         npc.chakra += 2;
-        
+
         [player, npc].forEach(entity => {
             entity.activeEffects.forEach(effect => {
                 if (effect.duration > 0) effect.duration--;
@@ -1244,7 +1244,7 @@ async function runHakuStory(interaction, users, userId, players, jutsuList) {
         });
     }
     let phase1Result = await runSrankBattle(
-        interaction, users, userId, players, jutsuList, 
+        interaction, users, userId, players, jutsuList,
         srankBosses.haku, HAKU_BG, HAKU_AVATAR, "Haku"
     );
     if (phase1Result === "win") {
@@ -1338,7 +1338,7 @@ async function runZabuzaStory(interaction, users, userId, players, jutsuList) {
             await asumaWebhook.send({ content: loreLine });
             await new Promise(res => setTimeout(res, 2500));
         }
-        await kagamiWebhook.send({content: "Look who's back.. Get ready to face one of my special puppets. Come, Zabuza!"});
+        await kagamiWebhook.send({ content: "Look who's back.. Get ready to face one of my special puppets. Come, Zabuza!" });
         await new Promise(res => setTimeout(res, 2500));
         await zabuzaWebhook.send({ content: "Hehehe... another little bug to crush..." });
         await new Promise(res => setTimeout(res, 2500));
@@ -1358,7 +1358,7 @@ async function runZabuzaStory(interaction, users, userId, players, jutsuList) {
         c.on('end', (_, reason) => { if (reason === 'time') resolve(); });
     });
     let battleResult = await runSrankBattle(
-        interaction, users, userId, players, jutsuList, 
+        interaction, users, userId, players, jutsuList,
         srankBosses.zabuza, ZABUZA_BG, ZABUZA_AVATAR, "Zabuza"
     );
     if (battleResult === "win") {
@@ -1472,7 +1472,7 @@ async function runOrochimaruStory(interaction, users, userId, players, jutsuList
         c.on('end', (_, reason) => { if (reason === 'time') resolve(); });
     });
     let battleResult = await runSrankBattle(
-        interaction, users, userId, players, jutsuList, 
+        interaction, users, userId, players, jutsuList,
         srankBosses.orochimaru, OROCHIMARU_BG, OROCHIMARU_AVATAR, "Orochimaru"
     );
     if (battleResult === "win") {
@@ -1500,8 +1500,8 @@ async function runOrochimaruBattle(interaction, users, userId, players, jutsuLis
     let npc = {
         ...srankBosses.orochimaru,
         activeEffects: [],
-        jutsu: Array.isArray(srankBosses.orochimaru.jutsu) ? 
-            srankBosses.orochimaru.jutsu.map(j => jutsuList[j] ? j : 'Attack') : 
+        jutsu: Array.isArray(srankBosses.orochimaru.jutsu) ?
+            srankBosses.orochimaru.jutsu.map(j => jutsuList[j] ? j : 'Attack') :
             ['Attack'],
         currentHealth: srankBosses.orochimaru.health,
         power: srankBosses.orochimaru.power,
@@ -1703,8 +1703,8 @@ async function runCorruptedOrochimaruBattle(interaction, users, userId, players,
     let npc = {
         ...srankBosses.corrupted_orochimaru,
         activeEffects: [],
-        jutsu: Array.isArray(srankBosses.corrupted_orochimaru.jutsu) ? 
-            srankBosses.corrupted_orochimaru.jutsu.map(j => jutsuList[j] ? j : 'Attack') : 
+        jutsu: Array.isArray(srankBosses.corrupted_orochimaru.jutsu) ?
+            srankBosses.corrupted_orochimaru.jutsu.map(j => jutsuList[j] ? j : 'Attack') :
             ['Attack'],
         currentHealth: srankBosses.corrupted_orochimaru.health,
         power: srankBosses.corrupted_orochimaru.power,
@@ -1864,7 +1864,7 @@ async function runCorruptedOrochimaruBattle(interaction, users, userId, players,
     return "unknown";
 }
 
-async function waitForContinue(interaction, userId, content = "\u200b") { 
+async function waitForContinue(interaction, userId, content = "\u200b") {
     // This function must handle sending a message with a "Continue" button
     // and use a collector to await the click, then delete the button.
     const buttonId = 'story_continue_' + Date.now();
@@ -1879,11 +1879,11 @@ async function waitForContinue(interaction, userId, content = "\u200b") {
     return new Promise(resolve => {
         const c = message.createMessageComponentCollector({
             filter: (btn) => btn.user.id === userId && btn.customId === buttonId,
-            time: 600000, 
+            time: 600000,
             max: 1
         });
         c.on('collect', async (btn) => { await btn.update({ components: [] }); resolve(); });
-        c.on('end', async (_, reason) => { if (reason === 'time') await message.edit({ components: [] }).catch(() => {}); resolve(); });
+        c.on('end', async (_, reason) => { if (reason === 'time') await message.edit({ components: [] }).catch(() => { }); resolve(); });
     });
 }
 module.exports = {
@@ -1930,9 +1930,9 @@ module.exports = {
             fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
 
             let players = [
-                { 
-                    id: userId, 
-                    username: interaction.user.username, 
+                {
+                    id: userId,
+                    username: interaction.user.username,
                     ...users[userId],
                     activeEffects: [],
                     accuracy: 100,
@@ -2043,7 +2043,7 @@ module.exports = {
                                         max: 1
                                     });
                                     c.on('collect', async btn => { await btn.update({ components: [] }); resolve(); });
-                                    c.on('end', async (_, reason) => { if (reason === 'time') await msg.edit({ components: [] }).catch(() => {}); resolve(); });
+                                    c.on('end', async (_, reason) => { if (reason === 'time') await msg.edit({ components: [] }).catch(() => { }); resolve(); });
                                 });
                             }
 
@@ -2060,7 +2060,7 @@ module.exports = {
                                         max: 1
                                     });
                                     c.on('collect', async btn => { await btn.update({ components: [] }); resolve(); });
-                                    c.on('end', async (_, reason) => { if (reason === 'time') await msg.edit({ components: [] }).catch(() => {}); resolve(); });
+                                    c.on('end', async (_, reason) => { if (reason === 'time') await msg.edit({ components: [] }).catch(() => { }); resolve(); });
                                 });
                             }
 
@@ -2302,7 +2302,7 @@ module.exports = {
                                         });
                                         c.on('end', async (_, reason) => {
                                             if (reason === 'time' || currentImageIndex >= memoryEmbeds.length) {
-                                                await memoryMsg.edit({ components: [] }).catch(() => {});
+                                                await memoryMsg.edit({ components: [] }).catch(() => { });
                                                 resolve();
                                             }
                                         });
@@ -2414,7 +2414,7 @@ module.exports = {
                 } catch (error) {
                     await interaction.followUp("An error occurred during the battle!");
                 }
-});
+            });
 
             collector.on('end', async (collected, reason) => {
                 if (reason === 'time') {
@@ -2426,5 +2426,5 @@ module.exports = {
             await interaction.followUp({ content: "An error occurred while executing this command." });
         }
     }
-    
+
 };

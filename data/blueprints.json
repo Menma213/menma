@@ -1,0 +1,140 @@
+[
+  {
+    "name": "Chakra Blade",
+    "slug": "chakra_blade",
+    "materials": [
+      {"item": "rope", "qty": 10},
+      {"item": "wood", "qty": 10},
+      {"item": "copper", "qty": 10},
+      {"item": "iron", "qty": 10},
+      {"item": "gun_powder", "qty": 10},
+      {"item": "metal", "qty": 10}
+    ],
+    "power": 25,
+    "power_description": "+25 power per Chakra Blade added to clan strength",
+    "notes": "Basic clan weapon. Quantities are per-unit.",
+    "image_url": "https://static.wikia.nocookie.net/naruto/images/f/f4/Konoha_Chakra_Blade.png/revision/latest?cb=20160124145001"
+  },
+  {
+    "name": "Chakra Canon",
+    "slug": "chakra_canon",
+    "materials": [
+      {"item": "rope", "qty": 50},
+      {"item": "wood", "qty": 50},
+      {"item": "copper", "qty": 50},
+      {"item": "iron", "qty": 50},
+      {"item": "gun_powder", "qty": 50},
+      {"item": "metal", "qty": 50}
+    ],
+    "power": 75,
+    "power_description": "+75 power per Chakra Canon added to clan strength",
+    "notes": "Scaled-up heavy weapon, same material types as Chakra Blade but larger quantities.",
+    "image_url": "https://static.wikia.nocookie.net/vsbattles/images/e/ef/1488.png/revision/latest?cb=20181002151832"
+  },
+  {
+    "name": "Ninjutsu Drones",
+    "slug": "ninjutsu_drones",
+    "materials": [
+      {"item": "rope", "qty": 100},
+      {"item": "wood", "qty": 100},
+      {"item": "copper", "qty": 100},
+      {"item": "iron", "qty": 100},
+      {"item": "gun_powder", "qty": 100},
+      {"item": "metal", "qty": 100}
+    ],
+    "power": 125,
+    "power_description": "+125 power per unit",
+    "notes": "Automated drone units; uses the same base materials as Chakra Blade but at 100x each.",
+    "image_url": "https://static.wikia.nocookie.net/naruto/images/9/9e/Delta%27s_Spy_Drone.png/revision/latest?cb=20210502143555"
+  },
+  {
+    "name": "Jutsu Absorption Arm",
+    "slug": "jutsu_absorption_arm",
+    "materials": [
+      {"item": "rope", "qty": 50},
+      {"item": "wood", "qty": 50},
+      {"item": "copper", "qty": 50},
+      {"item": "iron", "qty": 50},
+      {"item": "gun_powder", "qty": 50},
+      {"item": "metal", "qty": 50},
+      {"item": "rare_resin", "qty": 10}
+    ],
+    "power": 250,
+    "power_description": "+250 power; rare resin is found in tier 4+ regions",
+    "notes": "Advanced prosthetic that absorbs jutsu; includes rare resin component.",
+    "image_url": "https://static.wikia.nocookie.net/naruto/images/5/5e/Jutsu_Absorption_Tool.png/revision/latest/scale-to-width-down/1200?cb=20210201064804"
+  },
+  {
+    "name": "Lightning Release Suit",
+    "slug": "lightning_release_suit",
+    "materials": [
+      {"item": "rare_resin", "qty": 20},
+      {"item": "iron", "qty": 250},
+      {"item": "lightning_resin", "qty": 5}
+    ],
+    "power": 400,
+    "power_description": "+400 power; lightning resin found in tier 5+ regions",
+    "notes": "High-end suit optimized for Lightning Release users.",
+    "image_url": "https://static.wikia.nocookie.net/naruto/images/c/c1/Lightning_Release_False_Darkness.png/revision/latest/thumbnail/width/360/height/360?cb=20150202075443"
+  },
+  {
+    "name": "Sand Mines",
+    "slug": "sand_mines",
+    "materials": [
+      {"item": "copper", "qty": 10},
+      {"item": "iron", "qty": 10},
+      {"item": "gun_powder", "qty": 25},
+      {"item": "mythical_sand", "qty": 1}
+    ],
+    "power": 200,
+    "power_description": "+200 power; Mythical Sand found in tier 6+ regions",
+    "notes": "Area-denial mines using rare sand. Mythical Sand is a tier-6+ resource.",
+    "image_url": "https://i.postimg.cc/sXtG0y9m/image.png"
+  },
+  {
+    "name": "Artificial Acid Rain Clouds",
+    "slug": "artificial_acid_rain",
+    "materials": [
+      {"item": "rare_resin", "qty": 10},
+      {"item": "lightning_resin", "qty": 10},
+      {"item": "holy_waters", "qty": 1}
+    ],
+    "power": 300,
+    "power_description": "+300 power; Holy Waters found in tier 7+ regions",
+    "notes": "Weather-control device that deploys corrosive clouds.",
+    "image_url": "https://i.postimg.cc/C5gLqK4R/image.png"
+  },
+  {
+    "name": "The Cosmic Trinity",
+    "slug": "cosmic_trinity",
+    "materials": [
+      {"item": "holy_waters", "qty": 3},
+      {"item": "mythical_sand", "qty": 3},
+      {"item": "a_piece_of_earth", "qty": 3}
+    ],
+    "power": 550,
+    "power_description": "+550 power; components are tier-8+ items",
+    "notes": "Extremely rare ritual device requiring three mythical components.",
+    "image_url": "https://fengshuinexus.com/wp-content/uploads/2017/12/Feng-Shui-Cosmic-Trinity-Heaven-Earth-and-Man-min.jpg"
+  },
+  {
+    "name": "Nuclear Chakra Bomb",
+    "slug": "nuclear_chakra_bomb",
+    "materials": [
+      {"item": "rope", "qty": 250},
+      {"item": "wood", "qty": 250},
+      {"item": "copper", "qty": 250},
+      {"item": "iron", "qty": 250},
+      {"item": "gun_powder", "qty": 250},
+      {"item": "metal", "qty": 250},
+      {"item": "holy_waters", "qty": 10},
+      {"item": "mythical_sand", "qty": 10},
+      {"item": "a_piece_of_earth", "qty": 10},
+      {"item": "phazal", "qty": 5}
+    ],
+    "power": 750,
+    "power_description": "+750 power; Phazal found in tier 9+ regions",
+    "notes": "Ultimate siege weapon — consumes huge quantities of base + cosmic materials.",
+    "image_url": "https://i.postimg.cc/cJhcjKv4/image.png"
+  }
+]

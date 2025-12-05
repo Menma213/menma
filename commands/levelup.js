@@ -6,6 +6,47 @@ const path = require('path');
 const usersPath = path.resolve(__dirname, '../../menma/data/users.json');
 const playersPath = path.resolve(__dirname, '../../menma/data/players.json');
 
+// Helper to get or create a webhook for The Akatsuki in the current channel
+async function getAkatsukiWebhook(channel) {
+    try {
+        const webhooks = await channel.fetchWebhooks();
+        let akatsukiWebhook = webhooks.find(wh => wh.name === 'The Akatsuki');
+        if (!akatsukiWebhook) {
+            akatsukiWebhook = await channel.createWebhook({
+                name: 'Mysterious Entity',
+                avatar: 'https://cdn.shopify.com/s/files/1/0568/2298/8958/files/image1_b48d6300-3717-4b53-846f-6ddef8f6acc1_480x480.png?v=1712888667', // Replace with a proper Akatsuki avatar URL
+            });
+        }
+        return akatsukiWebhook;
+    } catch (err) {
+        if (err.code === 50013) { // Missing Permissions
+            throw new Error('MISSING_WEBHOOK_PERMISSIONS');
+        }
+        throw err;
+    }
+}
+
+// Helper to send via webhook, auto-recreate if needed
+async function safeWebhookSend(channel, webhook, sendOptions) {
+    try {
+        return await webhook.send(sendOptions);
+    } catch (err) {
+        if (err.code === 10015) { // Unknown Webhook
+            // Recreate webhook and retry
+            try {
+                const newWebhook = await getAkatsukiWebhook(channel);
+                return await newWebhook.send(sendOptions);
+            } catch (err2) {
+                throw err2;
+            }
+        }
+        if (err.code === 50013) { // Missing Permissions
+            throw new Error('MISSING_WEBHOOK_PERMISSIONS');
+        }
+        throw err;
+    }
+}
+
 // Function to calculate EXP requirement for the next level
 function getExpRequirement(currentLevel) {
     if (currentLevel < 1) return 2;
@@ -66,7 +107,7 @@ module.exports = {
 
         // Initialize player stats if they don't exist (for new enrollments)
         const player = users[userId];
-        
+
         // TYPE COERCION: Force all stats to be numbers before any calculations
         player.health = Number(player.health) || 100;
         player.power = Number(player.power) || 10;
@@ -91,7 +132,7 @@ module.exports = {
             if (players[userId].exp < requiredExp) {
                 return interaction.editReply({
                     content: `You need **${requiredExp.toLocaleString()} EXP** to reach Level ${players[userId].level + 1}.\n` +
-                             `Current EXP: ${players[userId].exp.toLocaleString()}`,
+                        `Current EXP: ${players[userId].exp.toLocaleString()}`,
                     ephemeral: true
                 });
             }
@@ -129,11 +170,11 @@ module.exports = {
             if (levelsGained === 0) {
                 return interaction.editReply({
                     content: `You don't have enough EXP to level up even once. You need **${getExpRequirement(players[userId].level).toLocaleString()} EXP** to reach Level ${players[userId].level + 1}.\n` +
-                             `Current EXP: ${players[userId].exp.toLocaleString()}`,
+                        `Current EXP: ${players[userId].exp.toLocaleString()}`,
                     ephemeral: true
                 });
             }
-            
+
             // TYPE COERCION: Ensure numeric addition
             player.health = Number(player.health) + cumulativeHealthGain;
             player.power = Number(player.power) + cumulativePowerGain;
@@ -161,17 +202,17 @@ module.exports = {
                 {
                     name: '__EXP & Level Progress__',
                     value: `**Levels Gained:** ${originalStats.level} ➡️ ${players[userId].level} (Total: ${levelsGained})\n` +
-                           `**EXP Consumed:** ${totalExpConsumed.toLocaleString()} EXP\n` +
-                           `**Remaining EXP:** ${players[userId].exp.toLocaleString()} EXP`,
+                        `**EXP Consumed:** ${totalExpConsumed.toLocaleString()} EXP\n` +
+                        `**Remaining EXP:** ${players[userId].exp.toLocaleString()} EXP`,
                     inline: false
                 },
                 {
                     name: '__Stat Gains__',
                     value: `\`\`\`diff\n` +
-                           `+ Health: +${player.health - originalStats.health} (${originalStats.health} -> ${player.health})\n` +
-                           `+ Power:  +${player.power - originalStats.power} (${originalStats.power} -> ${player.power})\n` +
-                           `+ Defense: +${player.defense - originalStats.defense} (${originalStats.defense} -> ${player.defense})\n` +
-                           `\`\`\``,
+                        `+ Health: +${player.health - originalStats.health} (${originalStats.health} -> ${player.health})\n` +
+                        `+ Power:  +${player.power - originalStats.power} (${originalStats.power} -> ${player.power})\n` +
+                        `+ Defense: +${player.defense - originalStats.defense} (${originalStats.defense} -> ${player.defense})\n` +
+                        `\`\`\``,
                     inline: false
                 },
                 {
@@ -185,6 +226,24 @@ module.exports = {
             .setTimestamp();
 
         await interaction.editReply({ embeds: [levelUpEmbed] });
+
+        // Check if the new level is 250 to send a webhook message
+        if (players[userId].level === 250) {
+            try {
+                const akatsukiWebhook = await getAkatsukiWebhook(interaction.channel);
+                await safeWebhookSend(interaction.channel, akatsukiWebhook, {
+                    content: '||The Akatsuki are watching. It is about time you chose your path of power; noble or evil.||',
+                    username: 'Mysterious Entity',
+                    avatarURL: 'https://cdn.shopify.com/s/files/1/0568/2298/8958/files/image1_b48d6300-3717-4b53-846f-6ddef8f6acc1_480x480.png?v=1712888667',
+                });
+            } catch (err) {
+                console.error('Failed to send Akatsuki webhook:', err);
+                // Optionally, send a follow-up message to the user if webhook fails
+                if (err.message === 'MISSING_WEBHOOK_PERMISSIONS') {
+                    await interaction.followUp({ content: "I tried to send a special message, but I'm missing webhook permissions!", ephemeral: true });
+                }
+            }
+        }
 
         // If updateRequirements is still relevant for a 'levelup' event
         // await updateRequirements(userId, 'levelup');

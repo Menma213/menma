@@ -3,9 +3,42 @@ const fs = require('fs');
 const path = require('path');
 const { updateRequirements } = require('./scroll');
 
-const playersPath = path.resolve(__dirname, '../../menma/data/players.json');
-const usersPath = path.resolve(__dirname, '../../menma/data/users.json');
-const villagePath = path.resolve(__dirname, '../../menma/data/village.json');
+const playersPath = path.resolve(__dirname, '../data/players.json');
+const usersPath = path.resolve(__dirname, '../data/users.json');
+const villagePath = path.resolve(__dirname, '../data/village.json');
+
+const anbuPath = path.resolve(__dirname, '../data/anbu.json');
+const ANBU_ROLE_ID = '1382055740268744784';
+
+async function checkAnbuQuestCompletion(interaction, userId) {
+    const anbuData = JSON.parse(fs.readFileSync(anbuPath, 'utf8'));
+
+    // Check if the user is on the quest and has met the requirements
+    if (anbuData.quest && anbuData.quest[userId] && anbuData.quest[userId].brank >= 10 && anbuData.quest[userId].drank >= 10) {
+        // Add to members
+        if (!anbuData.members) {
+            anbuData.members = {};
+        }
+        anbuData.members[userId] = { status: 'Anbu', joinedAt: new Date().toISOString() };
+
+        // Remove from quest
+        delete anbuData.quest[userId];
+
+        // Save the updated data
+        fs.writeFileSync(anbuPath, JSON.stringify(anbuData, null, 2));
+
+        try {
+            // Assign the role
+            const member = await interaction.guild.members.fetch(userId);
+            await member.roles.add(ANBU_ROLE_ID);
+
+            // Send congratulatory message
+            await interaction.channel.send({ content: `Congratulations, <@${userId}>! You have completed the Anbu initiation quest and are now a member of the Anbu.` });
+        } catch (error) {
+            console.error(`Failed to assign Anbu role or send message for user ${userId}:`, error);
+        }
+    }
+}
 
 function getCooldownString(ms) {
     const totalSeconds = Math.floor(ms / 1000);
@@ -64,6 +97,12 @@ function roundExpSmart(exp) {
     }
 }
 
+const { userMutex } = require('../utils/locks');
+
+// ... existing imports ...
+
+// ... helper functions ...
+
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('drank')
@@ -74,121 +113,114 @@ module.exports = {
         const username = interaction.user.username;
         const userPfp = interaction.user.displayAvatarURL({ dynamic: true, size: 256 });
 
-        if (!fs.existsSync(playersPath)) fs.writeFileSync(playersPath, JSON.stringify({}, null, 2));
-        if (!fs.existsSync(usersPath)) fs.writeFileSync(usersPath, JSON.stringify({}, null, 2));
+        await interaction.deferReply({ ephemeral: false });
 
-        let players = JSON.parse(fs.readFileSync(playersPath, 'utf8'));
-        let users = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
+        await userMutex.runExclusive(async () => {
+            if (!fs.existsSync(playersPath)) fs.writeFileSync(playersPath, JSON.stringify({}, null, 2));
+            if (!fs.existsSync(usersPath)) fs.writeFileSync(usersPath, JSON.stringify({}, null, 2));
 
-        if (!players[userId] || !users[userId]) {
-            return interaction.reply({
-                content: "❌ **You haven't enrolled yet!** Use `/enroll` to start your journey.",
-                ephemeral: true
-            });
-        }
+            let players = JSON.parse(fs.readFileSync(playersPath, 'utf8'));
+            let users = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
 
-        let player = players[userId];
-        let user = users[userId];
-
-        const now = Date.now();
-
-        const JINCHURIKI_ROLE = "1385641469507010640";
-        const LEGENDARY_ROLE = "1385640798581952714";
-        const DONATOR_ROLE = "1385640728130097182";
-        let cooldownMs = 9 * 60 * 1000;
-
-        const memberRoles = interaction.member.roles.cache;
-        if (memberRoles.has(JINCHURIKI_ROLE)) {
-            cooldownMs = 4 * 60 * 1000;
-        } else if (memberRoles.has(LEGENDARY_ROLE)) {
-            cooldownMs = Math.round(4.9 * 60 * 1000);
-        } else if (memberRoles.has(DONATOR_ROLE)) {
-            cooldownMs = Math.round(5.5 * 60 * 1000);
-        }
-
-        if (user.lastdrank && now - user.lastdrank < cooldownMs) {
-            const left = cooldownMs - (now - user.lastdrank);
-            return interaction.reply({ content: `You can do this again in ${getCooldownString(left)}.`, ephemeral: false });
-        }
-        user.lastdrank = now;
-
-        const tasks = [
-            "washed all the windows in the Hokage’s office.",
-            "helped an elderly villager carry groceries across the market.",
-            "caught a runaway cat that had escaped from a shopkeeper.",
-            "delivered important messages between village officials.",
-            "watered the training grounds before a big Chunin exam test.",
-            "helped repair a broken fence in the village outskirts.",
-            "retrieved a lost kunai for a Genin in training.",
-            "assisted in the academy by sparring with students.",
-            "guided a lost child back home safely.",
-            "cleaned up the streets after a festival."
-        ];
-        let taskMessage = tasks[Math.floor(Math.random() * tasks.length)];
-
-        let expReward = 1 + (player.level * 0.1);
-        let moneyReward = 1000
-
-        player.exp += expReward;
-        player.exp = roundExpSmart(player.exp);
-        player.money += moneyReward;
-
-        let role = user.role || "";
-        if (interaction.member.roles.cache.has('1349278752944947240')) role = "Hokage";
-        const amount = getMaterialDrop(role);
-        const mat = getRandomMaterial();
-
-        let village = { iron: 0, wood: 0, rope: 0, defense: 0 };
-        if (fs.existsSync(villagePath)) {
-            village = JSON.parse(fs.readFileSync(villagePath, 'utf8'));
-        }
-        village[mat.key] = (village[mat.key] || 0) + amount;
-        fs.writeFileSync(villagePath, JSON.stringify(village, null, 2));
-
-        let akatsukiDropMsg = "";
-        if (user.occupation === "Akatsuki") {
-            let akatsukiRole = user.role || "";
-            let akatsukiAmount = getAkatsukiMaterialDrop(akatsukiRole);
-            if (akatsukiAmount > 0) {
-                const akatsukiMat = getRandomAkatsukiMaterial();
-                const akatsukiPath = path.resolve(__dirname, '../../menma/data/akatsuki.json');
-                let akatsuki = { metal: 0, gunpowder: 0, copper: 0, bombs: {} };
-                if (fs.existsSync(akatsukiPath)) {
-                    akatsuki = JSON.parse(fs.readFileSync(akatsukiPath, 'utf8'));
-                }
-                akatsuki[akatsukiMat.key] = (akatsuki[akatsukiMat.key] || 0) + akatsukiAmount;
-                fs.writeFileSync(akatsukiPath, JSON.stringify(akatsuki, null, 2));
-                akatsukiDropMsg = `You found ${akatsukiAmount} ${akatsukiMat.name} ${akatsukiMat.emoji} during the mission\n`;
+            if (!players[userId] || !users[userId]) {
+                return interaction.editReply({
+                    content: "❌ **You haven't enrolled yet!** Use `/enroll` to start your journey."
+                });
             }
-        }
-        
-        user.mentorExp = (user.mentorExp || 0) + 1;
-        user.drankCompleted = true;
 
-        fs.writeFileSync(playersPath, JSON.stringify(players, null, 2));
-        fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
+            // --- Anbu Quest Tracking ---
+            const anbuData = JSON.parse(fs.readFileSync(anbuPath, 'utf8'));
+            if (anbuData.quest && anbuData.quest[userId]) {
+                if (anbuData.quest[userId].drank < 10) {
+                    anbuData.quest[userId].drank++;
+                    fs.writeFileSync(anbuPath, JSON.stringify(anbuData, null, 2));
+                }
+                // Check for quest completion
+                await checkAnbuQuestCompletion(interaction, userId);
+            }
 
-        const embed = new EmbedBuilder()
-            .setTitle(" **D-Rank Mission Completed!**")
-            .setDescription(`**${username}** just completed a mission! 🎉\n`)
-            .addFields(
-                { name: " **Task Completed**", value: `> *${taskMessage}*`, inline: false },
-                { name: " **EXP Earned**", value: `+ **${expReward.toLocaleString()}** EXP`, inline: true },
-                { name: " **Ryo Earned**", value: `+ **$${moneyReward.toLocaleString()}**`, inline: true },
-            )
-            .setColor("Blue")
-            .setThumbnail(userPfp)
-            .setFooter({ text: "Shinobi RPG • D-Rank Mission", iconURL: "https://static.wikia.nocookie.net/naruto/images/3/34/Konohagakure.png/revision/latest?cb=20160728115517" })
-            .setTimestamp();
+            let player = players[userId];
+            let user = users[userId];
 
-        let dropMsg = "```";
-        if (user.occupation === "Akatsuki" && akatsukiDropMsg) {
-            dropMsg += `\n${akatsukiDropMsg}`;
-        } else if (amount > 0) {
-            dropMsg += `\nYou found ${amount} ${mat.name} ${mat.emoji} during the mission\n`;
-        }
-        dropMsg += "```";
+            const now = Date.now();
 
-        await interaction.reply({ embeds: [embed], content: dropMsg });
+            const JINCHURIKI_ROLE = "1385641469507010640";
+            const LEGENDARY_ROLE = "1385640798581952714";
+            const DONATOR_ROLE = "1385640728130097182";
+            let cooldownMs = 9 * 60 * 1000;
+
+            const memberRoles = interaction.member.roles.cache;
+            if (memberRoles.has(JINCHURIKI_ROLE)) {
+                cooldownMs = 4 * 60 * 1000;
+            } else if (memberRoles.has(LEGENDARY_ROLE)) {
+                cooldownMs = Math.round(4.9 * 60 * 1000);
+            } else if (memberRoles.has(DONATOR_ROLE)) {
+                cooldownMs = Math.round(5.5 * 60 * 1000);
+            }
+
+            if (user.lastdrank && now - user.lastdrank < cooldownMs) {
+                const left = cooldownMs - (now - user.lastdrank);
+                return interaction.editReply({ content: `You can do this again in ${getCooldownString(left)}.` });
+            }
+            user.lastdrank = now;
+
+            const tasks = [
+                "washed all the windows in the Hokage’s office.",
+                "helped an elderly villager carry groceries across the market.",
+                "caught a runaway cat that had escaped from a shopkeeper.",
+                "delivered important messages between village officials.",
+                "watered the training grounds before a big Chunin exam test.",
+                "helped repair a broken fence in the village outskirts.",
+                "retrieved a lost kunai for a Genin in training.",
+                "assisted in the academy by sparring with students.",
+                "guided a lost child back home safely.",
+                "cleaned up the streets after a festival."
+            ];
+            let taskMessage = tasks[Math.floor(Math.random() * tasks.length)];
+
+            const territoriesPath = path.resolve(__dirname, '../data/territories.json');
+            const territories = JSON.parse(fs.readFileSync(territoriesPath, 'utf8'));
+            const userLocation = user.location || 'land_of_fire';
+            const currentTier = territories.territories[userLocation]?.tier || 1;
+
+            let expReward = (1 + (player.level * 0.1)) * currentTier;
+            let moneyReward = 1000 * currentTier;
+
+            player.exp += expReward;
+            player.exp = roundExpSmart(player.exp);
+            player.money += moneyReward;
+
+            const { handleClanMaterialDrop } = require('../utils/materialUtils');
+            const drops = handleClanMaterialDrop(userId, currentTier);
+
+            let dropMsg = "```";
+            if (drops) {
+                dropMsg += "\nClan Materials Found:\n";
+                for (const [mat, qty] of Object.entries(drops)) {
+                    dropMsg += `${mat}: ${qty}\n`;
+                }
+            }
+            dropMsg += "```";
+
+            if (!drops) dropMsg = "";
+
+            const embed = new EmbedBuilder()
+                .setColor('#87CEEB') // Sky Blue for D-Rank
+                .setTitle('D-Rank Mission Completed!')
+                .setDescription(`**${username}** ${taskMessage}`)
+                .addFields(
+                    { name: 'Rewards', value: `Experience: +${expReward}\nMoney: +${moneyReward} Ryo`, inline: true }
+                )
+                .setThumbnail(userPfp)
+                .setTimestamp();
+
+            fs.writeFileSync(playersPath, JSON.stringify(players, null, 2));
+
+            // Update drankCompleted for tutorial
+            users[userId].drankCompleted = true;
+            fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
+
+            await interaction.editReply({ embeds: [embed], content: dropMsg ? dropMsg : null });
+        });
     }
 };

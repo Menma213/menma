@@ -1,0 +1,123 @@
+{
+    "territories": {
+        "land_of_fire": {
+            "name": "land_of_fire",
+            "displayName": "Land of Fire",
+            "tier": 1,
+            "guardian": "Guardian I",
+            "controlledBy": "ronaldo",
+            "position": {
+                "x": 360,
+                "y": 390
+            },
+            "radius": 110,
+            "color": "#FF4500"
+        },
+        "village_of_sound": {
+            "name": "village_of_sound",
+            "displayName": "Hidden Village of Sound",
+            "tier": 2,
+            "guardian": "Guardian II",
+            "controlledBy": null,
+            "position": {
+                "x": 330,
+                "y": 230
+            },
+            "radius": 60,
+            "color": "#800080"
+        },
+        "country_of_rain": {
+            "name": "country_of_rain",
+            "displayName": "Country of Rain",
+            "tier": 3,
+            "guardian": "Guardian III",
+            "controlledBy": null,
+            "position": {
+                "x": 200,
+                "y": 340
+            },
+            "radius": 70,
+            "color": "#4682B4"
+        },
+        "land_of_wind": {
+            "name": "land_of_wind",
+            "displayName": "Land of Wind",
+            "tier": 4,
+            "guardian": "Guardian IV",
+            "controlledBy": null,
+            "position": {
+                "x": 90,
+                "y": 420
+            },
+            "radius": 70,
+            "color": "#90EE90"
+        },
+        "village_of_sand": {
+            "name": "village_of_sand",
+            "displayName": "Hidden Village of Sand",
+            "tier": 5,
+            "guardian": "Guardian V",
+            "controlledBy": null,
+            "position": {
+                "x": 100,
+                "y": 520
+            },
+            "radius": 40,
+            "color": "#F4A460"
+        },
+        "land_of_water": {
+            "name": "land_of_water",
+            "displayName": "Land of Water",
+            "tier": 6,
+            "guardian": "Guardian VI",
+            "controlledBy": null,
+            "position": {
+                "x": 640,
+                "y": 360
+            },
+            "radius": 120,
+            "color": "#1E90FF"
+        },
+        "land_of_earth": {
+            "name": "land_of_earth",
+            "displayName": "Land of Earth",
+            "tier": 7,
+            "guardian": "Guardian VII",
+            "controlledBy": null,
+            "position": {
+                "x": 160,
+                "y": 180
+            },
+            "radius": 110,
+            "color": "#8B4513"
+        },
+        "land_of_lightning": {
+            "name": "land_of_lightning",
+            "displayName": "Land of Lightning",
+            "tier": 8,
+            "guardian": "Guardian VIII",
+            "controlledBy": null,
+            "position": {
+                "x": 570,
+                "y": 90
+            },
+            "radius": 120,
+            "color": "#FFD700"
+        },
+        "valley_of_the_end": {
+            "name": "valley_of_the_end",
+            "displayName": "Valley of the End",
+            "tier": 9,
+            "guardian": "Guardian IX",
+            "controlledBy": null,
+            "position": {
+                "x": 260,
+                "y": 470
+            },
+            "radius": 80,
+            "color": "#DC143C"
+        }
+    },
+    "history": [],
+    "lastUpdate": null
+}

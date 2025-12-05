@@ -1,0 +1,4 @@
+Attempt 1: Direct fetch of https://static.wikia.nocookie.net/naruto/images/6/60/Kyodaigumo.png/revision/latest/scale-to-width-down/1200?cb=20150826054336...
+Status: 200
+Buffer length: 101292
+loadImage failed: Unsupported image type

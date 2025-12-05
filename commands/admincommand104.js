@@ -3,8 +3,8 @@ const fs = require('fs');
 const path = require('path');
 
 const usersPath = path.resolve(__dirname, '../../menma/data/users.json');
-const ALLOWED_COLORS = ['default', 'grey', 'donator', 'legendary', 'jinchuriki', 'blue', 'cyan', 'green', 'orange'];
-const HOKAGE_ROLE_ID = '1381268854776529028'; // Replace with your actual Hokage role ID
+const ALLOWED_COLORS = ['default', 'grey', 'donator', 'legendary', 'jinchuriki', 'blue', 'cyan', 'green', 'orange', 'frost'];
+const ADMIN_ROLE_ID = '1381268854776529028'; // Replace with your actual admin role ID
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -17,12 +17,12 @@ module.exports = {
         )
         .addStringOption(opt =>
             opt.setName('color')
-                .setDescription('Color: default, grey, donator, legendary, jinchuriki, blue, cyan, green, orange')
+                .setDescription('Color: default, grey, donator, legendary, jinchuriki, blue, cyan, green, orange, frost')
                 .setRequired(true)
         ),
     async execute(interaction) {
-        // Only allow admins (Hokage role)
-        if (!interaction.member.roles.cache.has(HOKAGE_ROLE_ID)) {
+        // Only allow admins (admin role)
+        if (!interaction.member.roles.cache.has(ADMIN_ROLE_ID)) {
             return interaction.reply({ content: 'You do not have permission to use this command.', ephemeral: true });
         }
         const user = interaction.options.getUser('user');

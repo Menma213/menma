@@ -1,0 +1,13 @@
+{
+    "1132693590066331828": {
+        "inventory": [
+            "Uchiha Necklace"
+        ],
+        "equipped": "Uchiha Necklace",
+        "bonusStats": {
+            "power": 2500,
+            "defense": 1000,
+            "accuracy": 10
+        }
+    }
+}

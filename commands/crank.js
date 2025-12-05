@@ -19,10 +19,10 @@ const topggApi = TOPGG_TOKEN ? new Api(TOPGG_TOKEN) : { hasVoted: () => false };
 
 // Register a thematic font if available
 try {
-    registerFont(path.join(__dirname, '../fonts/ninjafont.ttf'), { family: 'NinjaFont' });
-    registerFont(path.join(__dirname, '../fonts/ninjafont-bold.ttf'), { family: 'NinjaFont', weight: 'bold' });
+    registerFont(path.join(__dirname, '../fonts/ninjafont.ttf'), { family: 'NinjaFont' });
+    registerFont(path.join(__dirname, '../fonts/ninjafont-bold.ttf'), { family: 'NinjaFont', weight: 'bold' });
 } catch (e) {
-    console.warn('Could not register custom "NinjaFont". Using "sans-serif" as fallback.');
+    console.warn('Could not register custom "NinjaFont". Using "sans-serif" as fallback.');
 }
 
 // --- CONSTANTS AND REWARDS LOGIC ---
@@ -78,7 +78,7 @@ function calculateBonusSSReward(streakDay) {
 
     const streakBonus = getStreakBonus(streakDay);
     const ssAmount = streakBonus.ss_amount;
-    
+
     const isBonus = Math.random() < dropChance;
 
     return {
@@ -93,23 +93,23 @@ function calculateBonusSSReward(streakDay) {
 
 // Load data utility
 function loadData(filePath, defaultData = {}) {
-    try {
-        if (fs.existsSync(filePath)) {
-            return JSON.parse(fs.readFileSync(filePath, 'utf8'));
-        }
-    } catch (error) {
-        console.error(`Error loading data from ${filePath}:`, error);
-    }
-    return defaultData;
+    try {
+        if (fs.existsSync(filePath)) {
+            return JSON.parse(fs.readFileSync(filePath, 'utf8'));
+        }
+    } catch (error) {
+        console.error(`Error loading data from ${filePath}:`, error);
+    }
+    return defaultData;
 }
 
 // Save data utility
 function saveData(filePath, data) {
-    try {
-        fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
-    } catch (error) {
-        console.error(`Error saving data to ${filePath}:`, error);
-    }
+    try {
+        fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
+    } catch (error) {
+        console.error(`Error saving data to ${filePath}:`, error);
+    }
 }
 
 function loadStreakData() {
@@ -133,190 +133,209 @@ let cooldowns = loadData(COOLDOWNS_FILE_PATH);
  * @returns {Promise<string>} The path to the generated image file.
  */
 async function generateRewardsImage(username, streakDay, rewards, ssInfo, streakBroken = false) {
-    // New portrait dimensions for a profile card style
-    const width = 400, height = 550;
-    const canvas = createCanvas(width, height);
-    const ctx = canvas.getContext('2d');
+    const width = 500, height = 650; // Increased size for more detail
+    const canvas = createCanvas(width, height);
+    const ctx = canvas.getContext('2d');
     const dayDisplay = streakDay % STREAK_BONUSES.length || STREAK_BONUSES.length;
 
-    // Solid dark background
-    ctx.fillStyle = '#0a0a0a';
-    ctx.fillRect(0, 0, width, height);
-    
-    // Draw a subtle background layer for depth with glowing lines
-    ctx.strokeStyle = 'rgba(0, 255, 255, 0.05)';
-    ctx.lineWidth = 1;
-    ctx.shadowColor = 'rgba(0, 255, 255, 0.2)';
-    ctx.shadowBlur = 5;
-    for (let i = 0; i < height; i += 25) {
-        ctx.beginPath();
-        ctx.moveTo(0, i);
-        ctx.lineTo(width, i);
-        ctx.stroke();
-    }
-    for (let i = 0; i < width; i += 25) {
-        ctx.beginPath();
-        ctx.moveTo(i, 0);
-        ctx.lineTo(i, height);
-        ctx.stroke();
-    }
-    ctx.shadowBlur = 0;
+    // --- Dynamic Winter Night Sky ---
+    const sky = ctx.createLinearGradient(0, 0, 0, height);
+    sky.addColorStop(0, '#0c1445'); // Deep indigo
+    sky.addColorStop(0.5, '#1e2a6d'); // Midnight blue
+    sky.addColorStop(1, '#3b4a8b'); // Faded purple/blue
+    ctx.fillStyle = sky;
+    ctx.fillRect(0, 0, width, height);
 
-    // Main card shape (Oblique edges for cyberpunk look)
-    const cardPadding = 25;
-    const cardWidth = width - cardPadding * 2;
-    const cardHeight = height - cardPadding * 2;
-    const offset = 20;
+    // --- Stars ---
+    ctx.shadowColor = 'rgba(200, 225, 255, 0.9)';
+    ctx.shadowBlur = 10;
+    for (let i = 0; i < 150; i++) {
+        ctx.beginPath();
+        const x = Math.random() * width;
+        const y = Math.random() * height * 0.8; // Concentrate stars in the upper part
+        const radius = Math.random() * 1.5;
+        const alpha = Math.random() * 0.8 + 0.2;
+        ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+        ctx.arc(x, y, radius, 0, Math.PI * 2);
+        ctx.fill();
+    }
+    ctx.shadowBlur = 0;
 
-    // Draw a subtle background layer for depth
-    ctx.fillStyle = 'rgba(15, 15, 15, 0.8)';
-    ctx.beginPath();
-    ctx.moveTo(cardPadding + offset, cardPadding);
-    ctx.lineTo(cardPadding + cardWidth, cardPadding);
-    ctx.lineTo(cardPadding + cardWidth - offset, cardPadding + cardHeight);
-    ctx.lineTo(cardPadding, cardPadding + cardHeight);
-    ctx.closePath();
-    ctx.fill();
+    // --- Complex Snowflake Function ---
+    function drawSnowflake(x, y, size, branches, alpha, rotation) {
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(rotation);
+        ctx.beginPath();
+        ctx.strokeStyle = `rgba(220, 235, 255, ${alpha})`;
+        ctx.lineWidth = size / 15;
 
-    // Draw the main card border with a gradient border
-    const gradient = ctx.createLinearGradient(0, 0, width, height);
-    gradient.addColorStop(0, '#00ffff'); // Cyan
-    gradient.addColorStop(1, '#ff00ff'); // Magenta
-    ctx.strokeStyle = gradient;
-    ctx.lineWidth = 2.5;
-    ctx.shadowColor = 'rgba(0, 255, 255, 0.7)';
-    ctx.shadowBlur = 10;
-    ctx.beginPath();
-    ctx.moveTo(cardPadding, cardPadding + offset);
-    ctx.lineTo(cardPadding + cardWidth - offset, cardPadding);
-    ctx.lineTo(cardPadding + cardWidth, cardPadding + cardHeight - offset);
-    ctx.lineTo(cardPadding + offset, cardPadding + cardHeight);
-    ctx.closePath();
-    ctx.stroke();
+        for (let i = 0; i < branches; i++) {
+            const angle = (Math.PI * 2 / branches) * i;
+            // Main branch
+            ctx.moveTo(0, 0);
+            ctx.lineTo(0, size);
 
-    // Reset shadow for inner fills and text
-    ctx.shadowBlur = 0;
+            // Sub-branches
+            for (let j = 0.4; j < 1; j += 0.2) {
+                ctx.moveTo(size * 0.2, size * j);
+                ctx.lineTo(0, size * j);
+                ctx.moveTo(-size * 0.2, size * j);
+                ctx.lineTo(0, size * j);
+            }
 
-    // Main Title/Header
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 32px "NinjaFont", sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('VOTE REWARD', width / 2, 80);
-
-    // Streak Day Display
-    ctx.fillStyle = '#00ffff';
-    ctx.font = '26px "NinjaFont", sans-serif';
-    ctx.fillText(`// STREAK_DAY ${dayDisplay} //`, width / 2, 120);
-
-    // Username line
-    ctx.font = '20px "Roboto", sans-serif';
-    ctx.fillStyle = '#b3e6b3';
-    ctx.fillText(`[USER: ${username.toUpperCase()}]`, width / 2, 155);
-
-    // Rewards section
-    const rewardsList = [
-        { label: 'Ryo', value: `${rewards.money.toLocaleString()}`, color: '#ff00ff' }, // Magenta
-        { label: 'Ramen', value: `${rewards.ramen}`, color: '#ff8c00' }, // Dark Orange
-        { label: 'EXP', value: `${rewards.exp}`, color: '#00ffff' }, // Cyan
-        { label: 'SS (Shards)', value: `${rewards.ss}`, color: ssInfo.isBonus ? '#ffcc00' : '#4a4a4a' }, // Gold for bonus, grey otherwise
-    ];
-
-    let y = 220;
-    const labelX = width * 0.15;
-    const valueX = width * 0.85;
-
-    for (const reward of rewardsList) {
-        // Draw the label
-        ctx.font = '18px "Roboto", sans-serif';
-        ctx.textAlign = 'left';
-        ctx.fillStyle = '#ccc';
-        ctx.fillText(`${reward.label}:`, labelX, y);
-
-        // Draw the value
-        ctx.font = 'bold 20px "Roboto", sans-serif';
-        ctx.textAlign = 'right';
-        ctx.fillStyle = reward.color;
-        ctx.fillText(`${reward.value}`, valueX, y);
-
-        y += 50; // Vertical spacing
-    }
-
-    // Footer/Status Line
-    ctx.fillStyle = streakBroken ? '#ff4d4d' : '#4CAF50'; // Red if broken, Green if maintained
-    ctx.font = '16px "Roboto", sans-serif';
-    ctx.textAlign = 'center';
-    
-    let footerMessage = `STREAK: +1 DAY (TOTAL: ${streakDay})`;
-    if (streakBroken) {
-        footerMessage = `STREAK_BROKEN: RESTARTING AT DAY 1`;
+            ctx.rotate(angle);
+        }
+        ctx.stroke();
+        ctx.restore();
     }
 
-    ctx.fillText(footerMessage, width / 2, 450);
-    
-    // SS Chance Info
-    ctx.fillStyle = '#999999';
-    ctx.font = '14px "Roboto", sans-serif';
-    ctx.fillText(`SS Drop Chance: ${ssInfo.ssChance.toFixed(0)}%`, width / 2, 475);
+    // --- Draw Falling Snow ---
+    for (let i = 0; i < 50; i++) {
+        const x = Math.random() * width;
+        const y = Math.random() * height;
+        const size = Math.random() * 20 + 5;
+        const alpha = Math.random() * 0.6 + 0.1;
+        const rotation = Math.random() * Math.PI * 2;
+        drawSnowflake(x, y, size, 6, alpha, rotation);
+    }
+
+    // --- Frosted Glass Card ---
+    const cardPadding = 40;
+    const cardX = cardPadding, cardY = cardPadding, cardWidth = width - cardPadding * 2, cardHeight = height - cardPadding * 2;
+
+    ctx.fillStyle = 'rgba(10, 15, 40, 0.6)';
+    ctx.strokeStyle = 'rgba(200, 225, 255, 0.8)';
+    ctx.lineWidth = 1.5;
+    ctx.shadowColor = 'rgba(173, 216, 230, 1)';
+    ctx.shadowBlur = 20;
+
+    ctx.strokeRect(cardX, cardY, cardWidth, cardHeight);
+    ctx.fillRect(cardX, cardY, cardWidth, cardHeight);
+
+    // --- Christmas Accents (Red/Green Glow) ---
+    ctx.save();
+    ctx.strokeStyle = 'rgba(255, 50, 50, 0.4)'; // Red glow
+    ctx.lineWidth = 3;
+    ctx.shadowColor = 'rgba(255, 0, 0, 0.5)';
+    ctx.shadowBlur = 15;
+    ctx.strokeRect(cardX + 5, cardY + 5, cardWidth - 10, cardHeight - 10);
+    ctx.restore();
+
+    ctx.shadowBlur = 0;
+
+    // --- Icicles ---
+    ctx.lineWidth = 2;
+    for (let i = 0; i < cardWidth / 10; i++) {
+        const x = cardX + Math.random() * cardWidth;
+        const length = Math.random() * 40 + 10;
+        const alpha = Math.random() * 0.5 + 0.3;
+        ctx.beginPath();
+        ctx.moveTo(x, cardY);
+        ctx.lineTo(x + (Math.random() - 0.5) * 5, cardY + length);
+        ctx.strokeStyle = `rgba(200, 230, 255, ${alpha})`;
+        ctx.stroke();
+    }
+
+    // --- Main Title ---
+    ctx.textAlign = 'center';
+    ctx.font = 'bold 42px "NinjaFont", sans-serif';
+    ctx.fillStyle = '#ffffff';
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.7)';
+    ctx.shadowBlur = 10;
+    ctx.fillText('VOTE REWARD', width / 2, 110);
+
+    // --- Streak Day Display ---
+    ctx.font = '30px "NinjaFont", sans-serif';
+    ctx.fillStyle = '#b0e0e6'; // Powder Blue
+    ctx.shadowColor = '#b0e0e6';
+    ctx.shadowBlur = 10;
+    ctx.fillText(`~ Streak Day ${dayDisplay} ~`, width / 2, 160);
+    ctx.shadowBlur = 0;
+
+    // --- Username ---
+    ctx.font = '24px "Roboto", sans-serif';
+    ctx.fillStyle = '#e0f7fa';
+    ctx.fillText(username.toUpperCase(), width / 2, 200);
+
+    // --- Rewards Section ---
+    const rewardsList = [
+        { label: 'Ryo', value: `+ ${rewards.money.toLocaleString()}`, color: '#87ceeb' },
+        { label: 'Ramen', value: `+ ${rewards.ramen}`, color: '#ffcc66' },
+        { label: 'EXP', value: `+ ${rewards.exp}`, color: '#b0e0e6' },
+        { label: 'SS (Shards)', value: `+ ${rewards.ss}`, color: ssInfo.isBonus ? '#fffacd' : '#8a98ac' },
+    ];
+
+    let y = 270;
+    const labelX = width * 0.18;
+    const valueX = width * 0.82;
+
+    for (const reward of rewardsList) {
+        ctx.font = '22px "Roboto", sans-serif';
+        ctx.textAlign = 'left';
+        ctx.fillStyle = '#cce7ff';
+        ctx.fillText(`${reward.label}:`, labelX, y);
+
+        ctx.font = 'bold 24px "Roboto", sans-serif';
+        ctx.textAlign = 'right';
+        ctx.fillStyle = reward.color;
+        ctx.fillText(`${reward.value}`, valueX, y);
+        y += 60;
+    }
+
+    // --- Separator ---
+    ctx.beginPath();
+    ctx.moveTo(labelX, y - 30);
+    ctx.lineTo(valueX, y - 30);
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    // --- Footer Status ---
+    const footerY = height - 80;
+    ctx.font = 'bold 20px "Roboto", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = streakBroken ? '#ff8b8b' : '#a0eec0';
+
+    let footerMessage = `Streak Maintained: Day ${streakDay}`;
+    if (streakBroken) {
+        footerMessage = `Streak Broken! New Streak: Day 1`;
+    }
+    ctx.fillText(footerMessage, width / 2, footerY);
+
+    ctx.font = '16px "Roboto", sans-serif';
+    ctx.fillStyle = '#a0b4c8';
+    ctx.fillText(`SS Drop Chance: ${ssInfo.ssChance.toFixed(0)}%`, width / 2, footerY + 25);
 
 
-    // Add decorative corner elements (kept from theme)
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
-    ctx.lineWidth = 1;
-    const cornerSize = 20;
-    // Top Left
-    ctx.beginPath();
-    ctx.moveTo(cardPadding + 5, cardPadding + 5 + cornerSize);
-    ctx.lineTo(cardPadding + 5, cardPadding + 5);
-    ctx.lineTo(cardPadding + 5 + cornerSize, cardPadding + 5);
-    ctx.stroke();
-    // Top Right
-    ctx.beginPath();
-    ctx.moveTo(width - cardPadding - 5 - cornerSize, cardPadding + 5);
-    ctx.lineTo(width - cardPadding - 5, cardPadding + 5);
-    ctx.lineTo(width - cardPadding - 5, cardPadding + 5 + cornerSize);
-    ctx.stroke();
-    // Bottom Left
-    ctx.beginPath();
-    ctx.moveTo(cardPadding + 5, height - cardPadding - 5 - cornerSize);
-    ctx.lineTo(cardPadding + 5, height - cardPadding - 5);
-    ctx.lineTo(cardPadding + 5 + cornerSize, height - cardPadding - 5);
-    ctx.stroke();
-    // Bottom Right
-    ctx.beginPath();
-    ctx.moveTo(width - cardPadding - 5 - cornerSize, height - cardPadding - 5);
-    ctx.lineTo(width - cardPadding - 5, height - cardPadding - 5);
-    ctx.lineTo(width - cardPadding - 5, height - cardPadding - 5 - cornerSize);
-    ctx.stroke();
+    const tempDir = path.join(__dirname, '../temp');
+    if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir, { recursive: true });
+    const imagePath = path.join(tempDir, `rewards_${Date.now()}.png`);
+    const out = fs.createWriteStream(imagePath);
+    const stream = canvas.createPNGStream();
 
-
-    const tempDir = path.join(__dirname, '../temp');
-    if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir, { recursive: true });
-    const imagePath = path.join(tempDir, `rewards_${Date.now()}.png`);
-    const out = fs.createWriteStream(imagePath);
-    const stream = canvas.createPNGStream();
-    
-    return new Promise((resolve, reject) => {
-        stream.pipe(out);
-        out.on('finish', () => resolve(imagePath));
-        out.on('error', reject);
-    });
+    return new Promise((resolve, reject) => {
+        stream.pipe(out);
+        out.on('finish', () => resolve(imagePath));
+        out.on('error', reject);
+    });
 }
 
 
 module.exports = {
-    data: new SlashCommandBuilder()
-        .setName('crank')
-        .setDescription('Claim your rewards for voting on Top.gg!'),
-    async execute(interaction) {
-        await interaction.deferReply();
+    data: new SlashCommandBuilder()
+        .setName('crank')
+        .setDescription('Claim your rewards for voting on Top.gg!'),
+    async execute(interaction) {
+        await interaction.deferReply();
 
-        const userId = interaction.user.id;
-        const now = Date.now();
+        const userId = interaction.user.id;
+        const now = Date.now();
 
         // --- LOAD ALL DATA ---
-        let playersData = loadData(PLAYERS_FILE_PATH, {});
+        let playersData = loadData(PLAYERS_FILE_PATH, {});
         let streakData = loadStreakData();
-        
+
         // Ensure user player data exists
         if (!playersData[userId]) {
             playersData[userId] = { level: 1, exp: 0, money: 0, ramen: 0, ss: 0 };
@@ -326,14 +345,14 @@ module.exports = {
         // Load streak tracker
         const trackerData = streakData[userId] || { lastVoteTime: 0, streak: 0 };
         const lastVoteTime = trackerData.lastVoteTime;
-        
+
         // --- COOLDOWN CHECK ---
-        if (cooldowns[userId] && now - cooldowns[userId] < COOLDOWN_DURATION) {
-            const timeLeft = COOLDOWN_DURATION - (now - cooldowns[userId]);
-            const hoursLeft = Math.floor(timeLeft / (1000 * 60 * 60));
-            const minutesLeft = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
-            return interaction.editReply(`You've recently claimed your rewards! Please wait **${hoursLeft} hours and ${minutesLeft} minutes** before claiming again.`);
-        }
+        if (cooldowns[userId] && now - cooldowns[userId] < COOLDOWN_DURATION) {
+            const timeLeft = COOLDOWN_DURATION - (now - cooldowns[userId]);
+            const hoursLeft = Math.floor(timeLeft / (1000 * 60 * 60));
+            const minutesLeft = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+            return interaction.editReply(`You've recently claimed your rewards! Please wait **${hoursLeft} hours and ${minutesLeft} minutes** before claiming again.`);
+        }
 
         // --- STREAK & REWARD CALCULATION (Potential/Claimed) ---
         let currentStreak = trackerData.streak;
@@ -355,68 +374,69 @@ module.exports = {
         const fullRewards = {
             money: BASE_REWARD.money + rewardBonus.money_bonus,
             ramen: BASE_REWARD.ramen + rewardBonus.ramen_bonus,
-            exp: BASE_REWARD.exp + playerLevel, 
+            exp: BASE_REWARD.exp + playerLevel,
             ss: ssRewardInfo.ss
         };
         const dayDisplay = nextStreakDay % STREAK_BONUSES.length || STREAK_BONUSES.length;
 
-        try {
-            const hasVoted = await topggApi.hasVoted(userId);
+        try {
+            const hasVoted = await topggApi.hasVoted(userId);
 
-            if (hasVoted) {
-                // --- APPLY REWARDS ---
-                playersData[userId].exp = (playersData[userId].exp || 0) + fullRewards.exp;
-                playersData[userId].money = (playersData[userId].money || 0) + fullRewards.money;
-                playersData[userId].ramen = (playersData[userId].ramen || 0) + fullRewards.ramen;
+            if (hasVoted) {
+                // --- APPLY REWARDS ---
+                playersData[userId].exp = (playersData[userId].exp || 0) + fullRewards.exp;
+                playersData[userId].money = (playersData[userId].money || 0) + fullRewards.money;
+                playersData[userId].ramen = (playersData[userId].ramen || 0) + fullRewards.ramen;
                 playersData[userId].ss = (playersData[userId].ss || 0) + fullRewards.ss;
 
-                // --- UPDATE DATA FILES ---
-                saveData(PLAYERS_FILE_PATH, playersData);
+                // --- UPDATE DATA FILES ---
+                saveData(PLAYERS_FILE_PATH, playersData);
 
-                // Update streak and cooldown
+                // Update streak and cooldown
                 streakData[userId] = {
                     lastVoteTime: now,
-                    streak: nextStreakDay 
+                    streak: nextStreakDay
                 };
                 saveStreakData(streakData);
-                cooldowns[userId] = now;
-                saveData(COOLDOWNS_FILE_PATH, cooldowns);
+                cooldowns[userId] = now;
+                saveData(COOLDOWNS_FILE_PATH, cooldowns);
 
-                // --- GENERATE IMAGE AND SEND ---
-                const imagePath = await generateRewardsImage(
-                    interaction.user.username, 
-                    nextStreakDay, 
-                    fullRewards, 
+                // --- GENERATE IMAGE AND SEND ---
+                const imagePath = await generateRewardsImage(
+                    interaction.user.username,
+                    nextStreakDay,
+                    fullRewards,
                     ssRewardInfo,
                     streakBroken
                 );
-                const rewardsAttachment = new AttachmentBuilder(imagePath);
+                const rewardsAttachment = new AttachmentBuilder(imagePath);
 
-                await interaction.editReply({
-                    content: `Vote successful! Rewards for **Streak Day ${dayDisplay}** have been transferred to your inventory.`,
-                    files: [rewardsAttachment]
-                });
-                
-                // Clean up the temporary file
-                fs.unlinkSync(imagePath);
+                await interaction.editReply({
+                    content: `Vote successful! Rewards for **Streak Day ${dayDisplay}** have been transferred to your inventory.`,
+                    files: [rewardsAttachment]
+                });
 
-            } else {
-                // --- SHOW PROMPT (Not Voted) ---
+                // Clean up the temporary file
+                fs.unlinkSync(imagePath);
+
+            } else {
+                // --- SHOW PROMPT (Not Voted) ---
                 const voteUrl = `https://top.gg/bot/${BOT_ID}/vote`;
-                let infoMessage = streakBroken 
+                let infoMessage = streakBroken
                     ? `Your streak of **${currentStreak}** days was broken. Vote now to start a new streak at **Day 1**!`
                     : `You are currently on a **${currentStreak}** day streak. Vote now to claim **Day ${dayDisplay}** rewards!`;
 
                 let rewardsSummary = `**Ryo**: ${fullRewards.money.toLocaleString()} | **Ramen**: ${fullRewards.ramen} | **EXP**: ${fullRewards.exp}\n` +
-                                     `**Bonus SS Chance**: ${ssRewardInfo.ssChance.toFixed(0)}%`;
+                    `**Bonus SS Chance**: ${ssRewardInfo.ssChance.toFixed(0)}%`;
 
                 await interaction.editReply({
                     content: `You haven't voted for me yet, Ninja!\n\n${infoMessage}\n\n**Potential Rewards for Day ${dayDisplay}**:\n${rewardsSummary}\n\n[CLICK HERE TO VOTE AND CLAIM REWARDS](${voteUrl})`,
                 });
-            }
-        } catch (error) {
-            console.error('Error during Top.gg vote check or reward process:', error);
-            await interaction.editReply('A critical error occurred while processing your vote. Please check bot logs.');
-        }
-    },
+            }
+        } catch (error) {
+            console.error('Error during Top.gg vote check or reward process:', error);
+            await interaction.editReply('A critical error occurred while processing your vote. Please check bot logs.');
+        }
+    },
+    generateRewardsImage
 };

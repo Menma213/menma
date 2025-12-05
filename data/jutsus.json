@@ -24,7 +24,7 @@
       {
         "type": "buff",
         "stats": {
-          "power": 5
+          "power": "user.power * 5"
         },
         "duration": 3
       }
@@ -45,8 +45,8 @@
       {
         "type": "buff",
         "stats": {
-          "power": "user.power * 2",
-          "defense": "user.defense * 2"
+          "power": "user.power * 20",
+          "defense": "user.defense * 20"
         },
         "duration": 1
       },
@@ -151,7 +151,7 @@
     "effects": [
       {
         "type": "damage",
-        "formula": "3200 * user.power / target.defense"
+        "formula": "1600 * user.power / target.defense"
       }
     ]
   },
@@ -181,7 +181,7 @@
     "effects": [
       {
         "type": "damage",
-        "formula": "3220 * user.power / target.defense"
+        "formula": "1610 * user.power / target.defense"
       }
     ]
   },
@@ -240,7 +240,7 @@
     "effects": [
       {
         "type": "damage",
-        "formula": "2000 * user.power / target.defense"
+        "formula": "1000 * user.power / target.defense"
       },
       {
         "type": "status",
@@ -282,7 +282,7 @@
     "effects": [
       {
         "type": "damage",
-        "formula": "3700 * user.power / target.defense"
+        "formula": "1850 * user.power / target.defense"
       },
       {
         "type": "status",
@@ -317,7 +317,7 @@
     "effects": [
       {
         "type": "damage",
-        "formula": "2500 * user.power / target.defense"
+        "formula": "1250 * user.power / target.defense"
       }
     ],
     "image_url": "https://example.com/water-dragon.gif"
@@ -332,7 +332,7 @@
     "effects": [
       {
         "type": "damage",
-        "formula": "4020 * user.power / target.defense"
+        "formula": "2010 * user.power / target.defense"
       }
     ],
     "image_url": "https://example.com/rasengan.gif"
@@ -352,7 +352,7 @@
       {
         "type": "buff",
         "stats": {
-          "dodge": 10000
+          "dodge": 6000
         },
         "duration": 1
       }
@@ -369,7 +369,7 @@
     "effects": [
       {
         "type": "damage",
-        "formula": "3200 * user.power / target.defense"
+        "formula": "1600 * user.power / target.defense"
       },
       {
         "type": "status",
@@ -390,7 +390,7 @@
     "effects": [
       {
         "type": "damage",
-        "formula": "user.power * 4000 / target.defense"
+        "formula": "user.power * 2000 / target.defense"
       },
       {
         "type": "status",
@@ -412,12 +412,12 @@
     "effects": [
       {
         "type": "damage",
-        "formula": "3200 * user.power / target.defense"
+        "formula": "1600 * user.power / target.defense"
       },
       {
         "type": "buff",
         "stats": {
-          "power": 40000
+          "power": "user.power * 25"
         },
         "duration": 2
       },
@@ -440,12 +440,12 @@
     "effects": [
       {
         "type": "damage",
-        "formula": "4000 * user.power / target.defense"
+        "formula": "2000 * user.power / target.defense"
       },
       {
         "type": "buff",
         "stats": {
-          "power": 25000
+          "power": "user.power * 25"
         },
         "duration": 3
       },
@@ -493,8 +493,8 @@
       }
     ]
   },
-  "Lightning Blade: All out": {
-    "name": "Lightning Blade: All out",
+  "Lightning Blade: All Out": {
+    "name": "Lightning Blade: All Out",
     "description": "performs the lightning blade jutsu but this time, with rage. Lightning engulfs the battlefield sending shocks through the ground and air and also deals damage",
     "info": "An Enhanced Version of the jutsu Lightning Blade",
     "obtainment": "from kakashi at jounin mentor rank",
@@ -503,13 +503,13 @@
     "effects": [
       {
         "type": "damage",
-        "formula": "3200 * user.power / target.defense"
+        "formula": "1600 * user.power / target.defense"
       },
       {
         "type": "debuff",
         "stats": {
-          "power": "-target.power * 0.5",
-          "defense": "-target.defense * 0.5"
+          "power": "-target.power * 0.15",
+          "defense": "-target.defense * 0.15"
         },
         "duration": 3
       },
@@ -532,7 +532,7 @@
     "effects": [
       {
         "type": "damage",
-        "formula": "3000 * user.power / target.defense"
+        "formula": "1500 * user.power / target.defense"
       },
       {
         "type": "status",
@@ -548,18 +548,18 @@
     "info": "An advanced version of Singularity Pulse that deals massive damage by crushing the target with gravitational force.",
     "obtainment": "unobtainable",
     "image_url": "https://c4.wallpaperflare.com/wallpaper/379/966/340/silver-surfer-space-stars-marvel-character-shiny-hd-wallpaper-preview.jpg",
-    "chakraCost": 15,
+    "chakraCost": 11,
     "category": "Custom",
     "effects": [
       {
         "type": "damage",
-        "formula": "5000 * user.power / target.defense"
+        "formula": "2500 * user.power / target.defense"
       },
       {
         "type": "buff",
         "stats": {
-          "power": 40000,
-          "defense": 40000
+          "power": "user.power * 20",
+          "defense": "user.power * 20"
         }
       },
       {
@@ -578,7 +578,7 @@
     "effects": [
       {
         "type": "damage",
-        "formula": "700 * user.power / target.defense"
+        "formula": "2500 * user.power / target.defense"
       }
     ]
   },
@@ -738,7 +738,7 @@
           {
             "type": "buff",
             "stats": {
-              "defense": 1000
+              "defense": "user.power * 1000"
             },
             "duration": 5
           }
@@ -769,7 +769,7 @@
           {
             "type": "buff",
             "stats": {
-              "dodge": 70
+              "dodge": "user.power * 70"
             },
             "duration": 5
           },
@@ -898,11 +898,7 @@
     "effects": [
       {
         "type": "damage",
-        "formula": "1000 * target.health"
-      },
-      {
-        "type": "chakra_gain",
-        "formula": "100"
+        "formula": "10000 * user.power / target.defense"
       }
     ]
   },
@@ -996,7 +992,7 @@
     "effects": [
       {
         "type": "damage",
-        "formula": "1.2 * user.power / target.defense"
+        "formula": "1200 * user.power / target.defense"
       }
     ]
   },
@@ -1009,7 +1005,7 @@
     "effects": [
       {
         "type": "damage",
-        "formula": "1.9 * user.power / target.defense"
+        "formula": "1900 * user.power / target.defense"
       }
     ]
   },
@@ -1022,7 +1018,7 @@
     "effects": [
       {
         "type": "damage",
-        "formula": "2.0 * user.power / target.defense"
+        "formula": "2000 * user.power / target.defense"
       }
     ]
   },
@@ -1035,7 +1031,7 @@
     "effects": [
       {
         "type": "damage",
-        "formula": "3.0 * user.power / target.defense"
+        "formula": "3000 * user.power / target.defense"
       }
     ]
   },
@@ -1066,7 +1062,7 @@
     "effects": [
       {
         "type": "damage",
-        "formula": "3290 * user.power / target.defense"
+        "formula": "1600 * user.power / target.defense"
       },
       {
         "type": "status",
@@ -1085,7 +1081,7 @@
     "effects": [
       {
         "type": "damage",
-        "formula": "3200 * user.power / target.defense"
+        "formula": "1600 * user.power / target.defense"
       }
     ]
   },
@@ -1099,7 +1095,7 @@
     "effects": [
       {
         "type": "damage",
-        "formula": "3200 * user.power / target.defense"
+        "formula": "1600 * user.power / target.defense"
       },
       {
         "type": "status",
@@ -1119,7 +1115,7 @@
     "effects": [
       {
         "type": "damage",
-        "formula": "3200 * user.power / target.defense"
+        "formula": "1600 * user.power / target.defense"
       },
       {
         "type": "chakra_gain",
@@ -1196,13 +1192,13 @@
     "effects": [
       {
         "type": "damage",
-        "formula": "4230 * user.power / target.defense"
+        "formula": "1600 * user.power / target.defense"
       },
       {
         "type": "buff",
         "stats": {
-          "power": 1000,
-          "defense": 100
+          "power": "user.power * 25",
+          "defense": "user.defense * 25"
         },
         "duration": 2
       }
@@ -1213,14 +1209,13 @@
     "obtainment": "unobtainable",
     "description": "user goes berserk, increasing power and defense.",
     "chakraCost": 0,
-
     "category": "Custom",
     "effects": [
       {
         "type": "buff",
         "stats": {
-          "power": 1000,
-          "defense": 1000
+          "power": "user.power * 29999995",
+          "defense": "user.defense * 2999995"
         },
         "duration": 2
       },
@@ -1275,7 +1270,7 @@
     "effects": [
       {
         "type": "damage",
-        "formula": "4900 * user.power / target.defense"
+        "formula": "2450 * user.power / target.defense"
       }
     ]
   },
@@ -1289,7 +1284,7 @@
     "effects": [
       {
         "type": "damage",
-        "formula": "3200 * user.power / target.defense"
+        "formula": "1600 * user.power / target.defense"
       }
     ]
   },
@@ -1303,7 +1298,7 @@
     "effects": [
       {
         "type": "damage",
-        "formula": "user.power * 6000 / (target.defense / 20)"
+        "formula": "user.power * 3000 / (target.defense / 5)"
       },
       {
         "type": "status",
@@ -1314,8 +1309,8 @@
       {
         "type": "buff",
         "stats": {
-          "power": 4000,
-          "defense": 4000
+          "power": "user.power * 20",
+          "defense": "user.defense * 20"
         },
         "duration": 4
       }
@@ -1331,7 +1326,7 @@
     "effects": [
       {
         "type": "damage",
-        "formula": "5000 * user.power / target.defense"
+        "formula": "2500 * user.power / target.defense"
       },
       {
         "type": "status",
@@ -1351,7 +1346,7 @@
     "effects": [
       {
         "type": "damage",
-        "formula": "3000 * user.power / target.defense"
+        "formula": "1600 * user.power / target.defense"
       },
       {
         "type": "status",
@@ -1371,7 +1366,7 @@
     "effects": [
       {
         "type": "damage",
-        "formula": "4580 * user.power / target.defense"
+        "formula": "2290 * user.power / target.defense"
       },
       {
         "type": "status",
@@ -1398,7 +1393,7 @@
     "effects": [
       {
         "type": "damage",
-        "formula": "2300 * user.power / target.defense"
+        "formula": "1600 * user.power / target.defense"
       },
       {
         "type": "status",
@@ -1425,7 +1420,7 @@
         "effects": [
           {
             "type": "damage",
-            "formula": "3200 * user.power / target.defense"
+            "formula": "1600 * user.power / target.defense"
           }
         ]
       }
@@ -1460,8 +1455,8 @@
           {
             "type": "buff",
             "stats": {
-              "power": 20000,
-              "defense": 20000
+              "power": "user.power * 20",
+              "defense": "user.defense * 20"
             },
             "duration": 5
           }
@@ -1469,14 +1464,14 @@
       },
       "6": {
         "description": "User exits tenseigan chakra mode, returning to normal state.",
-        "effects": [] 
+        "effects": []
       },
       "2-5": {
         "description": "Tenseigan Orbs attack target",
         "effects": [
           {
             "type": "damage",
-            "formula": "target.health * 0.1"
+            "formula": "target.health * 0.15"
           }
         ]
       }
@@ -1518,7 +1513,7 @@
     "effects": [
       {
         "type": "damage",
-        "formula": "user.power * 4000 / target.defense"
+        "formula": "user.power * 2000 / target.defense"
       },
       {
         "type": "status",
@@ -1540,13 +1535,13 @@
       {
         "type": "buff",
         "stats": {
-          "power": 40000
+          "power": "user.power * 20"
         },
         "duration": 3
       },
       {
         "type": "damage",
-        "formula": "4000 * user.power / target.defense"
+        "formula": "2000 * user.power / target.defense"
       },
       {
         "type": "status",
@@ -1568,8 +1563,8 @@
       {
         "type": "buff",
         "stats": {
-          "defense": 20000000000000,
-          "power": 20000000000000
+          "defense": "user.defense * 20000000000000",
+          "power": "user.power * 20000000000000"
         },
         "duration": 30
       }
@@ -1590,119 +1585,118 @@
       {
         "type": "buff",
         "stats": {
-          "power": 40000,
-          "defense": 40000
+          "power": "user.power * 20",
+          "defense": "user.defense * 20"
         },
         "duration": 4
       },
       {
         "type": "damage",
-        "formula": "user.power * 4000 / target.defense",
+        "formula": "user.power * 2000 / target.defense",
         "chance": 50
       }
     ]
   },
- "Reversal : Nil": {
-  "name": "Reversal : Nil",
-  "obtainment": "unobtainable",
-  "description": "The jutsu harnesses target's life force and energy, channeling it back to empower user’s very being. As the stolen power courses through their blood, user rises, fueled by the foe’s own vitality",
-  "chakraCostType": "percent_health",
-  "category": "Custom",
-  "image_url": "https://64.media.tumblr.com/0fbabb251e3f3e390e494712ac65b1ec/02af4bf62334eeed-ad/s500x750/10bd2b42cfe044e183da092d3e925bead3f214e1.gif",  
-  "effects": [
-    {
-      "type": "damage",
-      "formula": "4000 * user.power / target.defense"
-    },
-    {
-      "type": "status",
-      "status": "stun",
-      "duration": 2,
-      "chance": 100
-    },
-    {
-      "type": "buff",
-      "stats": {
-        "power": 1000,
-        "defense": 1000
+  "Reversal : Nil": {
+    "name": "Reversal : Nil",
+    "obtainment": "unobtainable",
+    "description": "The jutsu harnesses target's life force and energy, channeling it back to empower user’s very being. As the stolen power courses through their blood, user rises, fueled by the foe’s own vitality",
+    "chakraCostType": "percent_health",
+    "category": "Custom",
+    "image_url": "https://64.media.tumblr.com/0fbabb251e3f3e390e494712ac65b1ec/02af4bf62334eeed-ad/s500x750/10bd2b42cfe044e183da092d3e925bead3f214e1.gif",
+    "effects": [
+      {
+        "type": "damage",
+        "formula": "2000 * user.power / target.defense"
       },
-      "duration": 30
-    }
-  ]
- },
-"A Twins Sacrifice": {
-  "name": "A Twins Sacrifice",
-  "obtainment": "unobtainable",
-  "description": "**In a cursed world, power is only gained from loss.**\n user's twin sacrifices himself, unlocking user's full potential and sending them on a rampage",
-  "chakraCost": 15,
-  "category": "Custom",
-  "image_url": "https://i.makeagif.com/media/3-18-2024/A4WDDP.gif",
-  "scriptFile": "sacrifice.js",
-  "effects": [] 
-},
-"Demonic Transformation": {
-  "name": "Demonic Transformation",
-  "obtainment": "unobtainable",
-  "description": "Mark awakened...Transparent World opened...and behold my true form,**now you will die**...",
-  "chakraCostType": "percent_health",
-  "category": "Custom",
-  "image_url": "https://media1.tenor.com/m/91oNTJsUXOIAAAAd/kokushibou-kokushibo.gif",
-  "effects": [
-    {
-      "type": "buff",
-      "stats": {
-        "power": 40000,
-        "defense": 20000
+      {
+        "type": "status",
+        "status": "stun",
+        "duration": 2,
+        "chance": 100
       },
-      "duration": 5
-    },
-    {
-      "type": "chakra_gain",
-      "formula": "5"
-    },
-    {
-      "type": "status",
-      "status": "stun",
-      "duration": 2,
-      "chance": 100
-    }
+      {
+        "type": "buff",
+        "stats": {
+          "power": "user.power * 15",
+          "defense": "user.defense * 15"
+        },
+        "duration": 30
+      }
     ]
-},
-"Super Saiyan": {
-  "name": "Super Saiyan",
-  "obtainment": "unobtainable",
-  "description": "Light detonates around me as my power tears the heavens open, a single, blinding strike that ends the fight. I will shred any hand that reaches to undo my world — not today, not ever.. because , **I WILL NEVER LET YOU DESTROY MY WORLD.**",
-  "chakracostType": "percent_health",
-  "category": "Custom",
-  "image_url": "https://i.makeagif.com/media/10-17-2020/UWKo1g.gif",
-  "effects": [
-    {
-      "type": "buff",
-      "stats": {
-        "power": 30000,
-        "defense": 30000
+  },
+  "A Twins Sacrifice": {
+    "name": "A Twins Sacrifice",
+    "obtainment": "unobtainable",
+    "description": "**In a cursed world, power is only gained from loss.**\n user's twin sacrifices himself, unlocking user's full potential and sending them on a rampage",
+    "chakraCost": 15,
+    "category": "Custom",
+    "image_url": "https://i.makeagif.com/media/3-18-2024/A4WDDP.gif",
+    "scriptFile": "sacrifice.js",
+    "effects": []
+  },
+  "Demonic Transformation": {
+    "name": "Demonic Transformation",
+    "obtainment": "unobtainable",
+    "description": "Mark awakened...Transparent World opened...and behold my true form,**now you will die**...",
+    "chakraCostType": "percent_health",
+    "category": "Custom",
+    "image_url": "https://media1.tenor.com/m/91oNTJsUXOIAAAAd/kokushibou-kokushibo.gif",
+    "effects": [
+      {
+        "type": "buff",
+        "stats": {
+          "power": "user.power * 20",
+          "defense": "user.defense * 20"  
+        },
+        "duration": 5
       },
-      "duration": 5
-    },
-    {
-      "type": "status",
-      "status": "burn",
-      "duration": 3,
-      "chance": 100,
-      "damagePerTurn": "target.health * 0.1"
-    }
+      {
+        "type": "chakra_gain",
+        "formula": "5"
+      },
+      {
+        "type": "status",
+        "status": "stun",
+        "duration": 2,
+        "chance": 100
+      }
     ]
-},
-"Authentic Mutual Love": {
-  "name": "Authentic Mutual Love",
-  "obtainment": "unobtainable",
-  "description": "**Domain Expansion**… Yuta grips the hilt of his sword, cursed energy surging through the blade as he draws it. The air distorts — a random technique takes form, its nature unknown until the strike lands.\n",
-  "chakraCost": 10,
-  "category": "Custom",
-  "random": true,
-  "image_url": "https://i.makeagif.com/media/6-24-2024/M6MtrY.gif",
-  "randomeffects": 
-    [
+  },
+  "Super Saiyan": {
+    "name": "Super Saiyan",
+    "obtainment": "unobtainable",
+    "description": "Light detonates around me as my power tears the heavens open, a single, blinding strike that ends the fight. I will shred any hand that reaches to undo my world — not today, not ever.. because , **I WILL NEVER LET YOU DESTROY MY WORLD.**",
+    "chakracostType": "percent_health",
+    "category": "Custom",
+    "image_url": "https://i.makeagif.com/media/10-17-2020/UWKo1g.gif",
+    "effects": [
+      {
+        "type": "buff",
+        "stats": {
+          "power": "user.power * 15",
+          "defense": "user.defense * 15"
+        },
+        "duration": 5
+      },
+      {
+        "type": "status",
+        "status": "burn",
+        "duration": 3,
+        "chance": 100,
+        "damagePerTurn": "target.health * 0.1"
+      }
+    ]
+  },
+  "Authentic Mutual Love": {
+    "name": "Authentic Mutual Love",
+    "obtainment": "unobtainable",
+    "description": "**Domain Expansion**… Yuta grips the hilt of his sword, cursed energy surging through the blade as he draws it. The air distorts — a random technique takes form, its nature unknown until the strike lands.\n",
+    "chakraCost": 10,
+    "category": "Custom",
+    "random": true,
+    "image_url": "https://i.makeagif.com/media/6-24-2024/M6MtrY.gif",
+    "randomeffects": [
       {
         "type": "status",
         "status": "stun",
@@ -1739,48 +1733,48 @@
         "formula": "user.power * 6000 / target.defense"
       }
     ],
-  "effects": [
-    {
-      "type": "damage",
-      "formula": "user.power * 3000 / target.defense"
-    },
-    {
-      "type": "buff",
-      "stats": {
-        "power": 2000
+    "effects": [
+      {
+        "type": "damage",
+        "formula": "user.power * 3000 / target.defense"
+      },
+      {
+        "type": "buff",
+        "stats": {
+          "power": "user.power * 20"
+        }
       }
-    }
     ]
-},
-"Limit Ultra Kamehameha": {
-  "name": "Limit Ultra Kamehameha",
-  "obtainment": "unobtainable",
-  "description": "**This is the end! FULL FORCE KAMEHAMEHA!**\n user gathers a vast amount of ki between their palms, the air trembling under divine pressure, then firing it at target",
-  "chakraCost": 10,
-  "category": "Custom",
-  "image_url": "https://i.makeagif.com/media/5-05-2023/JjXH5b.gif",
-  "effects": [
-    {
-      "type": "damage",
-      "formula": "user.power * 4000 / target.defense"
-    },
-    {
-      "type": "buff",
-      "stats": {
-        "power": 40000
+  },
+  "Limit Ultra Kamehameha": {
+    "name": "Limit Ultra Kamehameha",
+    "obtainment": "unobtainable",
+    "description": "**This is the end! FULL FORCE KAMEHAMEHA!**\n user gathers a vast amount of ki between their palms, the air trembling under divine pressure, then firing it at target",
+    "chakraCost": 10,
+    "category": "Custom",
+    "image_url": "https://i.makeagif.com/media/5-05-2023/JjXH5b.gif",
+    "effects": [
+      {
+        "type": "damage",
+        "formula": "user.power * 2000 / target.defense"
       },
-      "duration": 3
-    },
-    {
-      "type": "debuff",
-      "stats": {
-        "defense": "target.defense * 0.4"
+      {
+        "type": "buff",
+        "stats": {
+          "power": "user.power * 20"
+        },
+        "duration": 3
       },
-      "duration": 3
-    }
+      {
+        "type": "debuff",
+        "stats": {
+          "defense": "target.defense * 0.4"
+        },
+        "duration": 3
+      }
     ]
-},
-    "Fire Style: Nuclear Armageddon": {
+  },
+  "Fire Style: Nuclear Armageddon": {
     "name": "Fire Style: Nuclear Armageddon",
     "obtainment": "unobtainable",
     "description": "**I don't knock...because freedom RINGS**\n decimates target",
@@ -1790,7 +1784,7 @@
     "effects": [
       {
         "type": "damage",
-        "formula": "5000 * user.power / target.defense"
+        "formula": "2000 * user.power / target.defense"
       },
       {
         "type": "status",
@@ -1799,22 +1793,22 @@
         "chance": 100,
         "damagePerTurn": "target.health * 0.15"
       },
-  {
-    "type": "status",
-    "status": "poison",
-    "duration": 3,
-    "chance": 100,
-    "damagePerTurn": "target.health * 0.15"
-  },
-  {
-    "type": "status",
-    "status": "bleed",
-    "duration": 3,
-    "chance": 100,
-    "damagePerTurn": "target.health * 0.15"
-  }
+      {
+        "type": "status",
+        "status": "poison",
+        "duration": 3,
+        "chance": 100,
+        "damagePerTurn": "target.health * 0.15"
+      },
+      {
+        "type": "status",
+        "status": "bleed",
+        "duration": 3,
+        "chance": 100,
+        "damagePerTurn": "target.health * 0.15"
+      }
     ]
-},
+  },
   "Punisher Shield": {
     "name": "Punisher Shield",
     "obtainment": "unobtainable",
@@ -1833,7 +1827,19 @@
     "image_url": "https://i.pinimg.com/originals/68/b2/c7/68b2c790e0f92b9f62fb870aa0ac7d56.gif",
     "category": "Custom",
     "scriptFile": "izanagi.js",
-    "effects": []
+    "effects": [
+      {
+        "type": "buff",
+        "stats": {
+          "power": "user.power * 20",
+          "defense": "user.defense * 20"
+        },
+        "duration": 3
+      },
+      {
+        "type": "remove_buffs"
+      }
+    ]
   },
   "Meteoric Burst": {
     "name": "Meteoric Burst",
@@ -1845,7 +1851,7 @@
     "effects": [
       {
         "type": "damage",
-        "formula": "6000 * user.power / target.defense"
+        "formula": "3000 * user.power / target.defense"
       },
       {
         "type": "status",
@@ -1862,7 +1868,7 @@
       }
     ]
   },
-    "Eight Gates": {
+  "Eight Gates": {
     "name": "Eight Gates",
     "description": "Opens one of the Eight Gates, boosting power at the cost of health.",
     "info": "Each use opens a new gate, up to the 7th gate. Each gate costs 20% of the user's max health.",
@@ -1872,5 +1878,334 @@
     "obtainment": "A special jutsu.",
     "scriptFile": "eightgates.js",
     "effects": []
-  }
+  },
+  "10%": {
+    "name": "10%",
+    "obtainment": "unobtainable",
+    "description": "user uses 10% of his power!",
+    "chakraCost": 10,
+    "category": "Custom",
+    "image_url": "https://i.pinimg.com/736x/d6/8c/16/d68c16cbe0f44805e637b14a42aa7b27.jpg",
+    "effects": [
+      {
+        "type": "buff",
+        "stats": {
+          "power": "user.power * 40",
+          "defense": "user.defense * 40"
+        },
+        "duration": 10
+      },
+      {
+        "type": "chakra_gain",
+        "formula": "10"
+      }
+    ]
+  },
+  "Bite": {
+    "name": "Bite",
+    "description": "Bites the target.",
+    "info": "A basic bite attack.",
+    "chakraCost": 0,
+    "category": "No Category",
+    "obtainment": "npc jutsu",
+    "npc_jutsu": true,
+    "obtainable": false,
+    "effects": [
+      {
+        "type": "damage",
+        "formula": "2000 * user.power / target.defense"
+      }
+    ]
+  },
+  "Sound Wave": {
+    "name": "Sound Wave",
+    "description": "Emits a damaging sound wave.",
+    "info": "A basic sound wave attack.",
+    "chakraCost": 2,
+    "category": "No Category",
+    "obtainment": "npc jutsu",
+    "npc_jutsu": true,
+    "obtainable": false,
+    "effects": [
+      {
+        "type": "damage",
+        "formula": "2500 * user.power / target.defense"
+      }
+    ]
+  },
+  "Web Trap": {
+    "name": "Web Trap",
+    "description": "Traps the target in a web.",
+    "info": "A basic web trap that may stun the opponent.",
+    "chakraCost": 3,
+    "category": "No Category",
+    "obtainment": "npc jutsu",
+    "npc_jutsu": true,
+    "obtainable": false,
+    "effects": [
+      {
+        "type": "status",
+        "status": "stun",
+        "duration": 1,
+        "chance": 20
+      }
+    ]
+  },
+  "Water Clone": {
+    "name": "Water Clone",
+    "description": "Creates a water clone to attack.",
+    "info": "A basic water clone.",
+    "chakraCost": 3,
+    "category": "No Category",
+    "obtainment": "npc jutsu",
+    "npc_jutsu": true,
+    "obtainable": false,
+    "effects": [
+      {
+        "type": "damage",
+        "formula": "2500 * user.power / target.defense"
+      }
+    ]
+  },
+  "Poison Spit": {
+    "name": "Poison Spit",
+    "description": "Spits poison at the target.",
+    "info": "A basic poison attack.",
+    "chakraCost": 2,
+    "category": "No Category",
+    "obtainment": "npc jutsu",
+    "npc_jutsu": true,
+    "obtainable": false,
+    "effects": [
+      {
+        "type": "status",
+        "status": "poison",
+        "duration": 2,
+        "chance": 50
+      }
+    ]
+  },
+  "Sand Bullet": {
+    "name": "Sand Bullet",
+    "description": "Shoots a bullet of sand.",
+    "info": "A basic sand attack.",
+    "chakraCost": 2,
+    "category": "No Category",
+    "obtainment": "npc jutsu",
+    "npc_jutsu": true,
+    "obtainable": false,
+    "effects": [
+      {
+        "type": "damage",
+        "formula": "2500 * user.power / target.defense"
+      }
+    ]
+  },
+  "Poison Needle": {
+    "name": "Poison Needle",
+    "description": "Throws a poisoned needle.",
+    "info": "A basic poison needle attack.",
+    "chakraCost": 1,
+    "category": "No Category",
+    "obtainment": "npc jutsu",
+    "npc_jutsu": true,
+    "obtainable": false,
+    "effects": [
+      {
+        "type": "damage",
+        "formula": "2500 * user.power / target.defense"
+      },
+      {
+        "type": "status",
+        "status": "poison",
+        "duration": 3,
+        "chance": 30
+      }
+    ]
+  },
+  "Tail Strike": {
+    "name": "Tail Strike",
+    "description": "Strikes with the tail.",
+    "info": "A basic tail strike.",
+    "chakraCost": 0,
+    "category": "No Category",
+    "obtainment": "npc jutsu",
+    "npc_jutsu": true,
+    "obtainable": false,
+    "effects": [
+      {
+        "type": "damage",
+        "formula": "2500 * user.power / target.defense"
+      }
+    ]
+  },
+  "Chain Attack": {
+    "name": "Chain Attack",
+    "description": "Attacks with a chain.",
+    "info": "A basic chain attack.",
+    "chakraCost": 2,
+    "category": "No Category",
+    "obtainment": "npc jutsu",
+    "npc_jutsu": true,
+    "obtainable": false,
+    "effects": [
+      {
+        "type": "damage",
+        "formula": "2500 * user.power / target.defense"
+      }
+    ]
+  },
+  "Rock Throw": {
+    "name": "Rock Throw",
+    "description": "Throws a rock at the target.",
+    "info": "A basic rock throw.",
+    "chakraCost": 1,
+    "category": "No Category",
+    "obtainment": "npc jutsu",
+    "npc_jutsu": true,
+    "obtainable": false,
+    "effects": [
+      {
+        "type": "damage",
+        "formula": "2500 * user.power / target.defense"
+      }
+    ]
+  },
+  "Explosive Clay": {
+    "name": "Explosive Clay",
+    "description": "Uses explosive clay.",
+    "info": "A basic explosive clay attack.",
+    "chakraCost": 4,
+    "category": "No Category",
+    "obtainment": "npc jutsu",
+    "npc_jutsu": true,
+    "obtainable": false,
+    "effects": [
+      {
+        "type": "damage",
+        "formula": "2500 * user.power / target.defense"
+      }
+    ]
+  },
+  "Thunder Shock": {
+    "name": "Thunder Shock",
+    "description": "Shocks the target with thunder.",
+    "info": "A basic thunder shock.",
+    "chakraCost": 3,
+    "category": "No Category",
+    "obtainment": "npc jutsu",
+    "npc_jutsu": true,
+    "obtainable": false,
+    "effects": [
+      {
+        "type": "damage",
+        "formula": "2500 * user.power / target.defense"
+      }
+    ]
+  },
+  "Iron Sand": {
+    "name": "Iron Sand",
+    "description": "Manipulates iron sand to attack.",
+    "info": "A basic iron sand attack.",
+    "chakraCost": 3,
+    "category": "No Category",
+    "obtainment": "npc jutsu",
+    "npc_jutsu": true,
+    "obtainable": false,
+    "effects": [
+      {
+        "type": "damage",
+        "formula": "2500 * user.power / target.defense"
+      }
+    ]
+  },
+  "Ice Mirrors": {
+    "name": "Ice Mirrors",
+    "description": "Creates mirrors of ice to attack from.",
+    "info": "A basic ice mirror attack.",
+    "chakraCost": 5,
+    "category": "No Category",
+    "obtainment": "npc jutsu",
+    "npc_jutsu": true,
+    "obtainable": false,
+    "effects": [
+      {
+        "type": "damage",
+        "formula": "2500 * user.power / target.defense"
+      }
+    ]
+  },
+  "Lariat": {
+    "name": "Lariat",
+    "description": "A powerful lariat attack.",
+    "info": "A powerful lariat.",
+    "chakraCost": 4,
+    "category": "No Category",
+    "obtainment": "npc jutsu",
+    "npc_jutsu": true,
+    "obtainable": false,
+    "effects": [
+      {
+        "type": "damage",
+        "formula": "2500 * user.power / target.defense"
+      }
+    ]
+  },
+  "Tsukuyomi": {
+    "name": "Tsukuyomi",
+    "description": "A powerful genjutsu.",
+    "info": "A powerful genjutsu that can stun the opponent.",
+    "chakraCost": 10,
+    "category": "No Category",
+    "obtainment": "npc jutsu",
+    "npc_jutsu": true,
+    "obtainable": false,
+    "effects": [
+      {
+        "type": "status",
+        "status": "stun",
+        "duration": 2,
+        "chance": 70
+      }
+    ]
+  },
+  "Tank x1000": {
+    "name": "Tank x1000",
+    "description": "Increases defense significantly.",
+    "info": "A jutsu that greatly boosts the user's defense.",
+    "chakraCost": 5,
+    "category": "No Category",
+    "obtainment": "npc jutsu",
+    "npc_jutsu": true,
+    "obtainable": false,
+    "effects": [
+      {
+        "type": "buff",
+        "stats": {
+          "defense": "user.defense * 1000"
+        },
+        "duration": 5
+      }
+    ]
+  },
+  "Demon Cloak": {
+    "name": "Demon Cloak",
+    "description": "Transforms the user into a demon form.",
+    "info": "A jutsu that transforms the user, boosting power and defense.",
+    "chakraCost": 15,
+    "category": "No Category",
+    "obtainment": "npc jutsu",
+    "npc_jutsu": true,
+    "obtainable": false,
+    "effects": [
+      {
+        "type": "buff",
+        "stats": {
+          "power": "user.power * 50",
+          "defense": "user.defense * 50"
+        },
+        "duration": 5
+      }
+    ] 
+}
 }

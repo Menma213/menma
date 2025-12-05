@@ -294,7 +294,18 @@ module.exports = {
 
 		let step = 1;
 		collector.on('collect', async i => {
-			await i.deferUpdate();
+			// Safely defer update — ignore "Unknown interaction" (10062) errors caused by stale interactions
+			try {
+				await i.deferUpdate();
+			} catch (err) {
+				// If it's the Discord "Unknown interaction" error, ignore it; otherwise log for investigation
+				if (err && err.code === 10062) {
+					// stale interaction, continue without failing
+				} else {
+					console.error('Error deferring interaction in bloodline tutorial collector:', err);
+				}
+			}
+
 			step++;
 			if (step === 2) {
 				await asumaWebhook.send({

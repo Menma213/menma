@@ -88,6 +88,15 @@ const THEMES = {
         accent: '#fdba74',
         background: ['#431407', '#f97316', '#9a3412'],
         isPremium: true
+    },
+    FROST_ROYAL: {
+        primary: '#e0f2fe',
+        secondary: '#0c4a6e',
+        accent: '#f0f9ff',
+        background: ['#082f49', '#0c4a6e', '#1e3a5f'],
+        flexText: '❄❄',
+        isPremium: true,
+        isWinter: true
     }
 };
 
@@ -118,7 +127,7 @@ module.exports = {
         ),
     async execute(interaction) {
         // --- Cooldown Logic Start ---
-        const COOLDOWN_SECONDS = 30;
+        const COOLDOWN_SECONDS = 3;
         const currentTime = Date.now();
         const commandInvokerId = interaction.user.id;
 
@@ -145,7 +154,7 @@ module.exports = {
                 interactionFinished = true;
                 try {
                     await interaction.editReply({ content: "Profile request expired (took too long).", files: [], components: [] });
-                } catch {}
+                } catch { }
             }
         }, 15000);
         // --- Timeout Logic End ---
@@ -305,6 +314,7 @@ function determineTheme(userProfileData) {
         if (color === 'default') return THEMES.DEFAULT;
         if (color === 'green') return THEMES.GREEN;
         if (color === 'orange') return THEMES.ORANGE;
+        if (color === 'frost') return THEMES.FROST_ROYAL;
     }
 
     // If no admin color, check gamepass roles
@@ -353,15 +363,102 @@ async function generateMainProfilePage(targetUser, userProfileData, playerStats,
 
     // --- Sparkling Effects (for premium themes) ---
     if (theme.isPremium) {
-        for (let i = 0; i < 150; i++) {
-            const x = Math.random() * canvas.width;
-            const y = Math.random() * canvas.height;
-            const radius = Math.random() * 1.5 + 0.5;
-            const alpha = Math.random() * 0.6 + 0.2;
-            ctx.beginPath();
-            ctx.arc(x, y, radius, 0, Math.PI * 2, false);
-            ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
-            ctx.fill();
+        if (theme.isWinter) {
+            // === WINTER FROST ROYAL EFFECTS ===
+            
+            // 1. Falling Snowflakes (animated look)
+            for (let i = 0; i < 200; i++) {
+                const x = Math.random() * canvas.width;
+                const y = Math.random() * canvas.height;
+                const size = Math.random() * 3 + 1;
+                const alpha = Math.random() * 0.8 + 0.2;
+                
+                ctx.save();
+                ctx.translate(x, y);
+                ctx.rotate(Math.random() * Math.PI * 2);
+                
+                // Draw 6-armed snowflake
+                for (let j = 0; j < 6; j++) {
+                    ctx.rotate(Math.PI / 3);
+                    ctx.beginPath();
+                    ctx.moveTo(0, 0);
+                    ctx.lineTo(0, -size * 2);
+                    ctx.strokeStyle = `rgba(224, 242, 254, ${alpha})`;
+                    ctx.lineWidth = 0.5;
+                    ctx.stroke();
+                    
+                    // Side branches
+                    ctx.beginPath();
+                    ctx.moveTo(0, -size);
+                    ctx.lineTo(-size * 0.5, -size * 1.5);
+                    ctx.moveTo(0, -size);
+                    ctx.lineTo(size * 0.5, -size * 1.5);
+                    ctx.stroke();
+                }
+                ctx.restore();
+            }
+            
+            // 2. Icy Diamond Crystals
+            for (let i = 0; i < 50; i++) {
+                const x = Math.random() * canvas.width;
+                const y = Math.random() * canvas.height;
+                const size = Math.random() * 4 + 2;
+                const alpha = Math.random() * 0.4 + 0.1;
+                
+                ctx.save();
+                ctx.translate(x, y);
+                ctx.rotate(Math.random() * Math.PI);
+                
+                // Diamond crystal shape
+                ctx.beginPath();
+                ctx.moveTo(0, -size);
+                ctx.lineTo(size * 0.6, 0);
+                ctx.lineTo(0, size);
+                ctx.lineTo(-size * 0.6, 0);
+                ctx.closePath();
+                
+                const crystalGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, size);
+                crystalGradient.addColorStop(0, `rgba(240, 249, 255, ${alpha * 1.5})`);
+                crystalGradient.addColorStop(1, `rgba(224, 242, 254, ${alpha * 0.3})`);
+                ctx.fillStyle = crystalGradient;
+                ctx.fill();
+                
+                ctx.strokeStyle = `rgba(240, 249, 255, ${alpha})`;
+                ctx.lineWidth = 0.5;
+                ctx.stroke();
+                ctx.restore();
+            }
+            
+            // 3. Frost Shimmer Effect (large glowing particles)
+            for (let i = 0; i < 30; i++) {
+                const x = Math.random() * canvas.width;
+                const y = Math.random() * canvas.height;
+                const radius = Math.random() * 3 + 2;
+                const alpha = Math.random() * 0.3 + 0.1;
+                
+                const shimmerGradient = ctx.createRadialGradient(x, y, 0, x, y, radius * 3);
+                shimmerGradient.addColorStop(0, `rgba(224, 242, 254, ${alpha * 2})`);
+                shimmerGradient.addColorStop(0.5, `rgba(224, 242, 254, ${alpha})`);
+                shimmerGradient.addColorStop(1, `rgba(224, 242, 254, 0)`);
+                
+                ctx.fillStyle = shimmerGradient;
+                ctx.beginPath();
+                ctx.arc(x, y, radius * 3, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            
+        } else {
+            // Regular sparkles for other premium themes
+            for (let i = 0; i < 150; i++) {
+                const x = Math.random() * canvas.width;
+                const y = Math.random() * canvas.height;
+                const radius = Math.random() * 1.5 + 0.5;
+                const alpha = Math.random() * 0.6 + 0.2;
+                ctx.beginPath();
+                ctx.arc(x, y, radius, 0, Math.PI * 2, false);
+                ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+                ctx.fill();
+            }
         }
     }
 
@@ -479,7 +576,7 @@ async function generateMainProfilePage(targetUser, userProfileData, playerStats,
         if (currentLevel < 200) return (1 + currentLevel) * 4;
         return (1 + currentLevel) * 5;
     }
-    
+
     const level = playerStats.level || 1;
     const exp = playerStats.exp || 0;
     const nextLevelExp = getExpRequirement(level);
@@ -600,13 +697,57 @@ function drawSection(ctx, x, y, width, height, borderColor) {
     ctx.beginPath();
     ctx.roundRect(x, y, width, height, 10);
     ctx.fill();
-
     ctx.strokeStyle = borderColor;
     ctx.lineWidth = 3;
     ctx.beginPath();
     ctx.moveTo(x, y + 5);
     ctx.lineTo(x, y + height - 5);
     ctx.stroke();
+    
+    // Add crystalline effect for frost theme
+    if (borderColor === '#e0f2fe') {  // Frost Royal primary color
+        // Inner glow
+        ctx.strokeStyle = 'rgba(240, 249, 255, 0.3)';
+        ctx.lineWidth = 6;
+        ctx.beginPath();
+        ctx.roundRect(x, y, width, height, 10);
+        ctx.stroke();
+        
+        // Outer glow
+        ctx.strokeStyle = 'rgba(224, 242, 254, 0.2)';
+        ctx.lineWidth = 8;
+        ctx.beginPath();
+        ctx.roundRect(x, y, width, height, 10);
+        ctx.stroke();
+        
+        // Add small ice crystals on corners
+        const corners = [
+            {x: x + 15, y: y + 15},
+            {x: x + width - 15, y: y + 15},
+            {x: x + 15, y: y + height - 15},
+            {x: x + width - 15, y: y + height - 15}
+        ];
+        
+        corners.forEach(corner => {
+            ctx.save();
+            ctx.translate(corner.x, corner.y);
+            ctx.rotate(Math.PI / 4);
+            
+            ctx.beginPath();
+            ctx.moveTo(0, -3);
+            ctx.lineTo(2, 0);
+            ctx.lineTo(0, 3);
+            ctx.lineTo(-2, 0);
+            ctx.closePath();
+            
+            ctx.fillStyle = 'rgba(224, 242, 254, 0.6)';
+            ctx.fill();
+            ctx.strokeStyle = 'rgba(240, 249, 255, 0.8)';
+            ctx.lineWidth = 0.5;
+            ctx.stroke();
+            ctx.restore();
+        });
+    }
 }
 
 function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
@@ -633,8 +774,8 @@ function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
             }
         } else {
             line = testLine;
-            }
         }
+    }
 
     ctx.fillText(line, x, y);
 }

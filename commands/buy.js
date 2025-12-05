@@ -195,9 +195,17 @@ module.exports = {
             option.setName('event')
                 .setDescription('Buy an event item using Ay Tokens')
                 .setRequired(false))
-        .addStringOption(option => // ✨ ADDED MISC OPTION
+        .addStringOption(option =>
             option.setName('misc')
                 .setDescription('Buy miscellaneous items')
+                .setRequired(false))
+        .addStringOption(option =>
+            option.setName('akatsuki')
+                .setDescription('Buy the daily Akatsuki combo')
+                .setRequired(false))
+        .addStringOption(option =>
+            option.setName('anbu')
+                .setDescription('Buy an item from the ANBU shop')
                 .setRequired(false)),
 
     async execute(interaction) {
@@ -206,9 +214,111 @@ module.exports = {
         const eventName = interaction.options.getString('event');
         const jutsuName = interaction.options.getString('jutsu');
         const miscName = interaction.options.getString('misc');
+        const akatsukiItem = interaction.options.getString('akatsuki');
+        const anbuItem = interaction.options.getString('anbu');
 
-        if (!comboName && !ssName && !eventName && !jutsuName && !miscName) {
+        if (!comboName && !ssName && !eventName && !jutsuName && !miscName && !akatsukiItem && !anbuItem) {
             return interaction.reply("Buy something...c'mon.");
+        }
+
+        if (anbuItem) {
+            const anbuPath = path.resolve(__dirname, '../data/anbu.json');
+            let anbuData = JSON.parse(fs.readFileSync(anbuPath, 'utf8'));
+            const userId = interaction.user.id;
+
+            if (!anbuData.members || !anbuData.members[userId]) {
+                return interaction.reply({ content: 'This shop is for ANBU members only.', ephemeral: true });
+            }
+
+            const accessoriesPath = path.resolve(__dirname, '../data/accessories.json');
+            const accessories = JSON.parse(fs.readFileSync(accessoriesPath, 'utf8'));
+            const itemToBuy = accessories.find(acc => acc.name.toLowerCase() === anbuItem.toLowerCase());
+
+            if (!itemToBuy) {
+                return interaction.reply({ content: 'That item does not exist in the ANBU shop.', ephemeral: true });
+            }
+
+            const userAnbuData = anbuData.members[userId];
+            const itemPrice = itemToBuy.price || 1000;
+            const userHonor = (userAnbuData && userAnbuData.honor) ? userAnbuData.honor : 0;
+
+            if (userHonor < itemPrice) {
+                return interaction.reply(`You need ${itemPrice} honor to buy this item. You only have ${userHonor}.`);
+            }
+
+            // Read and update userAccessory.json
+            const userAccessoryPath = path.join(__dirname, '../data/userAccessory.json');
+            let userAccessoryData = fs.existsSync(userAccessoryPath) ? JSON.parse(fs.readFileSync(userAccessoryPath, 'utf8')) : {};
+
+            if (!userAccessoryData[userId]) {
+                userAccessoryData[userId] = { inventory: [], equipped: null, bonusStats: {} };
+            }
+
+            if (userAccessoryData[userId].inventory.includes(itemToBuy.name)) {
+                return interaction.reply('You already have this item in your inventory.');
+            }
+
+            // Update honor in anbu.json
+            anbuData.members[userId].honor = (anbuData.members[userId].honor || 0) - itemPrice;
+            fs.writeFileSync(anbuPath, JSON.stringify(anbuData, null, 4));
+
+            // Update inventory in userAccessory.json
+            userAccessoryData[userId].inventory.push(itemToBuy.name);
+            fs.writeFileSync(userAccessoryPath, JSON.stringify(userAccessoryData, null, 4));
+
+            await logPurchase(interaction, ` <@${userId}> purchased **${itemToBuy.name}** for ${itemPrice} honor.`);
+            return interaction.reply(`Successfully purchased ${itemToBuy.name}!`);
+        }
+
+        if (akatsukiItem) {
+            const akatsukiPath = path.resolve(__dirname, '../data/akatsuki.json');
+            const akatsukiData = JSON.parse(fs.readFileSync(akatsukiPath, 'utf8'));
+            const userId = interaction.user.id;
+
+            if (!akatsukiData.members || !akatsukiData.members[userId]) {
+                return interaction.reply({ content: 'This shop is for Akatsuki members only.', ephemeral: true });
+            }
+
+            const dailyComboPath = path.resolve(__dirname, '../data/daily_combo.json');
+            if (!fs.existsSync(dailyComboPath)) {
+                return interaction.reply('The daily combo is not available at the moment. Please try again later.');
+            }
+            const dailyComboData = JSON.parse(fs.readFileSync(dailyComboPath, 'utf8'));
+            const dailyCombo = dailyComboData.combo;
+
+            if (akatsukiItem.toLowerCase() !== 'daily combo') {
+                return interaction.reply('You can only buy the "daily combo" from this shop.');
+            }
+
+            const bountyPath = path.resolve(__dirname, '../data/bounty.json');
+            const bountyData = JSON.parse(fs.readFileSync(bountyPath, 'utf8'));
+            const userBounty = bountyData[userId] ? bountyData[userId].bounty : 0;
+
+            const comboPrice = 1000;
+
+            if (userBounty < comboPrice) {
+                return interaction.reply(`You need ${comboPrice} bounty to buy this combo. You only have ${userBounty}.`);
+            }
+
+            const usersPath = path.join(__dirname, '../data', 'users.json');
+            const usersData = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
+
+            if (!usersData[userId]) {
+                usersData[userId] = {};
+            }
+
+            if (usersData[userId].Combo === dailyCombo.name) {
+                return interaction.reply('You already have this combo equipped!');
+            }
+
+            bountyData[userId].bounty -= comboPrice;
+            fs.writeFileSync(bountyPath, JSON.stringify(bountyData, null, 4));
+
+            usersData[userId].Combo = dailyCombo.name;
+            fs.writeFileSync(usersPath, JSON.stringify(usersData, null, 4));
+
+            await logPurchase(interaction, ` <@${userId}> purchased and equipped combo **${dailyCombo.name}** for ${comboPrice} bounty.`);
+            return interaction.reply(`Successfully equipped ${dailyCombo.name}!`);
         }
 
         if (ssName) {
@@ -297,7 +407,7 @@ module.exports = {
                 // Ignore errors
             }
 
-            await logPurchase(interaction, `<@${userId}> purchased **${premium.display}** for ${premium.price} Shinobi Shards. Expires <t:${Math.floor(expiresAt/1000)}:R>`);
+            await logPurchase(interaction, `<@${userId}> purchased **${premium.display}** for ${premium.price} Shinobi Shards. Expires <t:${Math.floor(expiresAt / 1000)}:R>`);
 
             scheduleRoleRemoval(interaction.guild, userId, premium.roleId, premium.duration, playersPath);
 
@@ -357,7 +467,7 @@ module.exports = {
             if (!players[userId] || players[userId].money < item.price) {
                 return interaction.reply(`You need $${item.price} to buy this jutsu!`);
             }
-            
+
             // Check if user already has the jutsu
             const jutsuJsonPath = path.join(__dirname, '../data', 'jutsu.json');
             const jutsuData = JSON.parse(fs.readFileSync(jutsuJsonPath, 'utf8'));
@@ -375,7 +485,7 @@ module.exports = {
             // Add jutsu to jutsu.json usersjutsu
             if (!jutsuData[userId]) jutsuData[userId] = { usersjutsu: [] };
             if (!jutsuData[userId].usersjutsu) jutsuData[userId].usersjutsu = []; // Ensure array exists
-            
+
             // Check again for redundancy (though logic above handles it, this is for safety)
             if (!jutsuData[userId].usersjutsu.includes(item.key)) {
                 jutsuData[userId].usersjutsu.push(item.key);
@@ -392,16 +502,16 @@ module.exports = {
             if (!item) {
                 return interaction.reply('That event item does not exist in the shop!');
             }
-            
+
             const jutsuJsonPath = path.join(__dirname, '../data', 'jutsu.json');
             const jutsuData = JSON.parse(fs.readFileSync(jutsuJsonPath, 'utf8'));
             const userId = interaction.user.id;
-            
+
             // Check if user is enrolled (since Ay tokens are in jutsu.json)
             if (!jutsuData[userId]) {
                 return interaction.reply('You need to be enrolled first!');
             }
-            
+
             let ayTokens = 0;
             if (jutsuData[userId].items && typeof jutsuData[userId].items["Ay Token"] === "number") {
                 ayTokens = jutsuData[userId].items["Ay Token"];
@@ -436,7 +546,7 @@ module.exports = {
                 if (!jutsuData[userId].usersjutsu.includes(item.key)) {
                     jutsuData[userId].usersjutsu.push(item.key);
                 }
-                
+
                 fs.writeFileSync(jutsuJsonPath, JSON.stringify(jutsuData, null, 4));
                 await logPurchase(interaction, `<@${userId}> purchased event jutsu **${item.name}** for ${item.price} Ay tokens.`);
                 return interaction.reply(`Successfully learned ${item.name}!`);
@@ -457,7 +567,7 @@ module.exports = {
             if (!players[userId]) {
                 return interaction.reply('You need to be enrolled first!');
             }
-            
+
             if (!players[userId].ss || players[userId].ss < item.price) {
                 return interaction.reply(`You need ${item.price} Shinobi Shards to buy this item!`);
             }

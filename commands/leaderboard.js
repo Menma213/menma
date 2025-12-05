@@ -15,12 +15,84 @@ try {
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('leaderboard')
-        .setDescription('Displays the top 10 strongest ninjas on a custom leaderboard.'),
+        .setDescription('Displays leaderboards for ninjas or clans.')
+        .addStringOption(option =>
+            option.setName('type')
+                .setDescription('Type of leaderboard to display')
+                .setRequired(false)
+                .addChoices(
+                    { name: 'Ninja Leaderboard', value: 'ninja' },
+                    { name: 'Clan Leaderboard', value: 'clan' }
+                )),
     async execute(interaction) {
         await interaction.deferReply();
 
+        const leaderboardType = interaction.options.getString('type') || 'ninja';
+
+        if (leaderboardType === 'clan') {
+            // Clan Leaderboard
+            try {
+                const clansPath = path.resolve(__dirname, '../data/clans.json');
+                const blueprintsPath = path.resolve(__dirname, '../data/blueprints.json');
+
+                if (!fs.existsSync(clansPath)) {
+                    return interaction.editReply({ content: 'Error: Clan data file not found.', ephemeral: true });
+                }
+
+                const clansData = JSON.parse(fs.readFileSync(clansPath, 'utf8'));
+                const blueprints = fs.existsSync(blueprintsPath) ? JSON.parse(fs.readFileSync(blueprintsPath, 'utf8')) : [];
+
+                // Calculate power for each clan and filter out example clans
+                const clanArray = [];
+                for (const [clanId, clan] of Object.entries(clansData)) {
+                    if (clanId.startsWith('_')) continue; // Skip metadata entries
+
+                    let clanPower = 0;
+                    if (clan.weapons) {
+                        for (const [wName, count] of Object.entries(clan.weapons)) {
+                            const bp = blueprints.find(b => b.name === wName);
+                            if (bp) clanPower += bp.power * count;
+                        }
+                    }
+
+                    clanArray.push({
+                        id: clanId,
+                        name: clan.name,
+                        power: clanPower,
+                        level: clan.level || 1,
+                        members: clan.members?.length || 0,
+                        territories: clan.controlledTerritories?.length || 0,
+                        image: clan.image,
+                        color: clan.color || '#0099ff'
+                    });
+                }
+
+                // Sort by power
+                clanArray.sort((a, b) => b.power - a.power);
+                const topClans = clanArray.slice(0, 5);
+
+                if (topClans.length === 0) {
+                    return interaction.editReply({ content: 'No clans found. Create a clan to get started!', ephemeral: true });
+                }
+
+                const imagePath = await generateClanLeaderboardImage(topClans);
+                const attachment = new AttachmentBuilder(imagePath);
+                await interaction.editReply({ files: [attachment] });
+
+                fs.unlink(imagePath, (err) => {
+                    if (err) console.error("Error deleting clan leaderboard image:", err);
+                });
+
+            } catch (error) {
+                console.error("Error in clan leaderboard:", error);
+                await interaction.editReply({ content: 'An unexpected error occurred while generating the clan leaderboard.', ephemeral: true });
+            }
+            return;
+        }
+
+        // Ninja Leaderboard (original code)
         try {
-            const usersPath = path.resolve(__dirname, '../../menma/data/users.json');
+            const usersPath = path.resolve(__dirname, '../../menma/data/players.json');
             if (!fs.existsSync(usersPath)) {
                 return interaction.editReply({ content: 'Error: User data file not found.', ephemeral: true });
             }
@@ -80,7 +152,7 @@ module.exports = {
                     };
                 }
             }));
-            
+
             // Pass the first 3 users with avatar info, and the full list for the rest of the table
             const imagePath = await generateNinjaLeaderboardImage(topUserAvatars, topUsers);
             const attachment = new AttachmentBuilder(imagePath);
@@ -146,7 +218,7 @@ async function generateNinjaLeaderboardImage(top3Avatars, leaderboardData) {
     for (let i = 0; i < top3Avatars.length && i < 3; i++) {
         const user = top3Avatars[i];
         const pos = topPositions[i];
-        
+
         // Draw rank number
         ctx.font = 'bold 36px NinjaFont, sans-serif';
         ctx.fillStyle = pos.color;
@@ -180,13 +252,13 @@ async function generateNinjaLeaderboardImage(top3Avatars, leaderboardData) {
             ctx.arc(pos.x, pos.y, pos.size / 2, 0, Math.PI * 2);
             ctx.fill();
         }
-        
+
         // Draw username and level
         ctx.font = '22px NinjaFont, sans-serif';
         ctx.fillStyle = '#fff';
         ctx.textAlign = 'center';
         ctx.fillText(user.username, pos.x, pos.y + pos.size / 2 + 30);
-        
+
         ctx.font = '18px NinjaFont, sans-serif';
         ctx.fillStyle = '#aaa';
         ctx.fillText(`Lvl ${user.level}`, pos.x, pos.y + pos.size / 2 + 55);
