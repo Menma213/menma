@@ -99,6 +99,11 @@ async function handleView(interaction, userId, territoriesData) {
 
     const currentLocationId = user.location;
     const currentLocation = territoriesData.territories[currentLocationId];
+
+    if (!currentLocation) {
+        return interaction.reply({ content: `Error: Your location '${currentLocationId}' is invalid. Please reset your location or contact an admin.`, ephemeral: true });
+    }
+
     const maxTier = user.maxTierUnlocked;
 
     const embed = new EmbedBuilder()
@@ -212,11 +217,28 @@ async function handleChallenge(interaction, userId, territoriesData) {
         return interaction.reply({ content: "Error: Guardian data not found for this location.", ephemeral: true });
     }
 
+    // Check guardian requirements
+    if (guardianData.requirements) {
+        const playersData = JSON.parse(fs.readFileSync(playersPath, 'utf8'));
+        const playerData = playersData[userId] || {};
+
+        const playerLevel = playerData.level || 1;
+
+        // Check level requirement
+        if (guardianData.requirements.level && playerLevel < guardianData.requirements.level) {
+            return interaction.reply({
+                content: `❌ **Level Requirement Not Met!**\n\nYou need to be **Level ${guardianData.requirements.level}** to challenge ${guardianData.name}.\nYour current level: **${playerLevel}**`,
+                ephemeral: true
+            });
+        }
+    }
+
     guardianStats = {
         ...guardianData.stats,
         statsType: guardianData.statsType || 'scalable',
         name: guardianData.name,
         image: guardianData.image,
+        immunities: guardianData.immunities || [],
         jutsu: guardianData.jutsu.reduce((acc, curr, idx) => ({ ...acc, [idx]: curr }), {}),
         userId: `NPC_${guardianData.name.replace(/\s+/g, '_')}`
     };

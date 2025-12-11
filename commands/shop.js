@@ -93,43 +93,49 @@ const jutsuShopItems = [
     }
 ];
 
-// Event shop items (Ay tokens)
+// Event shop items (Christmas Tokens)
 const eventShopItems = [
     {
-        name: "Guillotine Drop",
-        description: "Leaps high and slams down target, breaking defense.",
-        price: 250,
-        key: "Guillotine Drop"
+        name: "Ramen Bowl",
+        description: "A delicious bowl of ramen. Restores health or stashes for later.",
+        price: 1,
+        key: "Ramen Bowl"
     },
     {
-        name: "Kirin: Lightning Storm",
-        description: "Summons a lightning storm for massive damage.",
-        price: 150,
-        key: "Kirin: Lightning Storm"
-    },
-    {
-        name: "Shadow Clone Jutsu: 1000 clones",
-        description: "Creates 1000 clones to confuse and attack target.",
-        price: 100,
-        key: "Shadow Clone Jutsu: 1000 clones"
-    },
-    {
-        name: "Explosive Paper Clone",
-        description: "Tags target with an explosive tag.",
-        price: 100,
-        key: "Explosive Paper Clone"
-    },
-    {
-        name: "Lightning Hound",
-        description: "Summons a giant hound made of lightning.",
+        name: "Needle Assault",
+        description: "Jutsu: Launch sharp ice needles at your opponent.",
         price: 50,
-        key: "Lightning Hound"
+        key: "Needle Assault"
     },
     {
-        name: "Ramen Coupon",
-        description: "Redeem for 1 ramen ticket.",
-        price: 5,
-        key: "ramen"
+        name: "Ice Prison",
+        description: "Jutsu: Trap your opponent in a prison of ice.",
+        price: 50,
+        key: "Ice Prison"
+    },
+    {
+        name: "Crystal Palace",
+        description: "Ultimate Ice Jutsu. Ignores x Defense.",
+        price: 500,
+        key: "Crystal Palace"
+    },
+    {
+        name: "Profile Theme: Frost",
+        description: "Unlocks the 'Frost' profile theme. Auto-equipped on purchase.",
+        price: 2000,
+        key: "theme_frost"
+    },
+    {
+        name: "Twin Rising Dragons",
+        description: "Powerful Ninja Tool barrage.",
+        price: 150,
+        key: "Twin Rising Dragons"
+    },
+    {
+        name: "Primary Lotus",
+        description: "Taijutsu combo.",
+        price: 150,
+        key: "Primary Lotus"
     }
 ];
 
@@ -185,47 +191,34 @@ module.exports = {
             )
             .setFooter({ text: 'Page 2/3' });
 
-        // Add Event Shop embed
-        // Get user's Ay tokens from jutsu.json
-        // Use a reliable path to the data folder and support multiple possible key names for Ay tokens
+        // Add Event Shop embed (Christmas)
         const jutsuDataPath = path.resolve(__dirname, '../data/jutsu.json');
-        let ayTokens = 0;
+        let christmasTokens = 0;
         try {
             if (fs.existsSync(jutsuDataPath)) {
                 const jutsuData = JSON.parse(fs.readFileSync(jutsuDataPath, 'utf8'));
-                // Support two common layouts: top-level user entries or nested under "users"
+                // Check items for "Christmas Token"
                 const userData = jutsuData[interaction.user.id] || (jutsuData.users ? jutsuData.users[interaction.user.id] : undefined);
                 if (userData && userData.items) {
-                    // Accept several possible key names to be tolerant of variations
-                    const possibleKeys = ["Ay Token", "Ay Tokens", "Ay_Token", "ayTokens", "ay token", "ay_token"];
-                    for (const key of possibleKeys) {
-                        if (typeof userData.items[key] === "number") {
-                            ayTokens = userData.items[key];
-                            break;
-                        }
-                    }
-                    // Fallback: if items itself is a number (older format)
-                    if (ayTokens === 0 && typeof userData.items === "number") {
-                        ayTokens = userData.items;
-                    }
+                    christmasTokens = userData.items['Christmas Token'] || 0;
                 }
             }
         } catch (err) {
-            ayTokens = 0;
+            christmasTokens = 0;
         }
 
         const eventEmbed = new EmbedBuilder()
-            .setColor(0x00ff99)
-            .setTitle('EVENT SHOP')
-            .setDescription(`Spend your Ay tokens on exclusive event jutsus!\nYour Ay tokens: **${ayTokens}**`)
+            .setColor(0x00FFFF)
+            .setTitle('❄️ WINTER EVENT SHOP ❄️')
+            .setDescription(`Spend your Christmas Tokens on limited-time rewards!\nYour Tokens: **${christmasTokens}**`)
             .addFields(
                 ...eventShopItems.map(item => ({
                     name: item.name,
-                    value: `${item.description}\nCost: ${item.price} Ay tokens`,
+                    value: `${item.description}\nCost: ${item.price} Tokens`,
                     inline: false
                 }))
             )
-            .setFooter({ text: 'Page 3/4' });
+            .setFooter({ text: 'Page 3/4 | Event ends Dec 25th!' });
 
         // Add Misc Shop embed
         const miscEmbed = new EmbedBuilder()
@@ -302,28 +295,10 @@ module.exports = {
                     return;
                 }
 
-                const dailyComboPath = path.resolve(__dirname, '../data/daily_combo.json');
                 const combosPath = path.resolve(__dirname, '../data/combos.json');
                 const combosData = JSON.parse(fs.readFileSync(combosPath, 'utf8'));
-
-                const today = new Date();
-                const dayOfYear = Math.floor((today - new Date(today.getFullYear(), 0, 0)) / (1000 * 60 * 60 * 24));
-
-                let dailyCombo;
-                let dailyComboData = {};
-                if (fs.existsSync(dailyComboPath)) {
-                    dailyComboData = JSON.parse(fs.readFileSync(dailyComboPath, 'utf8'));
-                }
-
-                if (dailyComboData.dayOfYear === dayOfYear && dailyComboData.combo) {
-                    dailyCombo = dailyComboData.combo;
-                } else {
-                    const availableCombos = Object.values(combosData).filter(combo => combo.name !== "Basic Combo" && combo.name !== "Intermediate Combo");
-                    const comboIndex = dayOfYear % availableCombos.length;
-                    dailyCombo = availableCombos[comboIndex];
-
-                    fs.writeFileSync(dailyComboPath, JSON.stringify({ dayOfYear, combo: dailyCombo }, null, 4));
-                }
+                // Filter out basic/intermediate
+                const availableCombos = Object.values(combosData).filter(combo => combo.name !== "Basic Combo" && combo.name !== "Intermediate Combo");
 
                 const bountyPath = path.resolve(__dirname, '../data/bounty.json');
                 const bountyData = JSON.parse(fs.readFileSync(bountyPath, 'utf8'));
@@ -334,11 +309,11 @@ module.exports = {
                     .setTitle('Akatsuki Black Market')
                     .setDescription('A special shop for Akatsuki members to acquire powerful and forbidden techniques.')
                     .addFields(
-                        {
-                            name: `Daily Combo: ${dailyCombo.name}`,
-                            value: `**Required Jutsus:** ${dailyCombo.requiredJutsus.join(', ')}\n**Effect:** ${dailyCombo.effects.map(e => `${e.type}: ${e.status}`).join(', ') || 'Special combo attack.'}\n**Cost:** 1000 Bounty Points`,
+                        ...availableCombos.map(combo => ({
+                            name: `Combo: ${combo.name}`,
+                            value: `**Required Jutsus:** ${combo.requiredJutsus.join(', ')}\n**Effect:** ${combo.effects ? combo.effects.map(e => `${e.type}: ${e.status || e.stats}`).join(', ') : 'Special combo attack.'}\n**Cost:** 1000 Bounty Points`,
                             inline: false
-                        }
+                        }))
                     )
                     .setFooter({ text: `Your Bounty: ${userBounty}` });
 

@@ -14,37 +14,6 @@
         "specialization": null,
         "controlledTerritories": []
     },
-    "ronaldo": {
-        "name": "ronaldo",
-        "image": "https://images.unsplash.com/photo-1526779259212-939e64788e3c?fm=jpg&q=60&w=3000&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8ZnJlZSUyMGltYWdlc3xlbnwwfHwwfHx8MA%3D%3D",
-        "leader": "835408109899219004",
-        "coLeader": null,
-        "elders": [],
-        "members": [
-            "835408109899219004"
-        ],
-        "treasury": 0,
-        "level": 2,
-        "xp": 0,
-        "controlledTerritories": [
-            "land_of_fire"
-        ],
-        "rules": "No rules set.",
-        "materials": {
-            "rope": 8,
-            "iron": 516,
-            "gun_powder": 7916,
-            "copper": 1014,
-            "wood": 110,
-            "metal": 99113
-        },
-        "weapons": {
-            "Chakra Blade": 1,
-            "Ninjutsu Drones": 9
-        },
-        "contributions": {},
-        "lastDistribution": 1764752709698
-    },
     "e": {
         "name": "e",
         "image": "3",

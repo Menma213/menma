@@ -128,6 +128,11 @@ module.exports = {
                 });
             }
 
+            if (!players[userId].missions_completed) {
+                players[userId].missions_completed = 0;
+            }
+            players[userId].missions_completed += 1;
+
             // --- Anbu Quest Tracking ---
             const anbuData = JSON.parse(fs.readFileSync(anbuPath, 'utf8'));
             if (anbuData.quest && anbuData.quest[userId]) {

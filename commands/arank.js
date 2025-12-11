@@ -340,8 +340,10 @@ module.exports = {
             }
         }
 
-        users[userId].health = player.currentHealth;
-        users[userId].chakra = player.chakra;
+  
+        // Do NOT persist chakra changes caused by battles — chakra is a temporary resource.
+        // Persist only health so in-battle chakra/spend doesn't permanently reduce the user's stored chakra.
+        // If you want to restore chakra to a specific value after the run, set it explicitly here (e.g. users[userId].chakra = users[userId].chakra || 10)
         fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
 
         if (!playerLost && totalEnemiesDefeated >= 50) {

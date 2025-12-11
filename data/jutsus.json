@@ -1647,7 +1647,7 @@
         "type": "buff",
         "stats": {
           "power": "user.power * 20",
-          "defense": "user.defense * 20"  
+          "defense": "user.defense * 20"
         },
         "duration": 5
       },
@@ -1768,7 +1768,7 @@
       {
         "type": "debuff",
         "stats": {
-          "defense": "target.defense * 0.4"
+          "defense": "target.defense * 0.1"
         },
         "duration": 3
       }
@@ -1863,7 +1863,7 @@
       {
         "type": "debuff",
         "stats": {
-          "defense": "target.defense * 0.3"
+          "defense": "target.defense * 0.1"
         }
       }
     ]
@@ -2206,6 +2206,216 @@
         },
         "duration": 5
       }
-    ] 
-}
+    ]
+  },
+  "Seventh Form: Haze Dance": {
+    "name": "Seventh Form: Haze Dance",
+    "description": "**Mist Breathing: Haze Dance!!**\nuser envelops themselves in a nearly invisible mist that obscures their presence. In an instant, they move with blinding speed, delivering a flurry of precise, slashing strikes from multiple directions. The enemy struggles to predict or block the attacks, as each strike appears to come from thin air ",
+    "info": "e",
+    "image_url": "https://i.redd.it/eni5ihwoa4ib1.gif",
+    "chakraCost": 10,
+    "category": "No Category",
+    "obtainment": "Custom",
+    "obtainable": false,
+    "effects": [
+      {
+        "type": "status",
+        "status": "burn",
+        "damagePerTurn": "target.health * 0.10",
+        "duration": 5,
+        "chance": 100
+      },
+      {
+        "type": "damage",
+        "formula": "2500 * user.power / target.defense"
+      },
+      {
+        "type": "status",
+        "status": "stun",
+        "duration": 3,
+        "chance": 100
+      }
+    ]
+  },
+  "Crystal Palace": {
+    "name": "Crystal Palace",
+    "description": "**Crystal Palace**\nuser creates a massive palace of ice crystals that crashes down on the enemy with devastating force. The crystalline structure ignores armor, piercing through defenses ",
+    "info": "Ultimate ice jutsu with armor penetration",
+    "image_url": "https://i.postimg.cc/9FShg72N/image.png",
+    "chakraCost": 13,
+    "category": "Ice Release",
+    "obtainment": "Christmas Event Summon",
+    "obtainable": true,
+    "effects": [
+      {
+        "type": "damage",
+        "formula": "3000 * user.power / (target.defense * 0.25)"
+      },
+      {
+        "type": "status",
+        "status": "frost",
+        "duration": 2,
+        "chance": 90
+      },
+      {
+        "type": "debuff",
+        "stats": {
+          "defense": "target.defense * 0.25"
+        },
+        "duration": 2,
+        "chance": 100
+      }
+    ]
+  },
+  "Ice Prison": {
+    "name": "Ice Prison",
+    "description": "user traps target in a prison of Ice. Stunning and dealing damage to them",
+    "info": "tion",
+    "image_url": "https://i.postimg.cc/1tWTgk5g/image.png",
+    "chakraCost": 10,
+    "category": "No Category",
+    "obtainment": "Christmas Event Summon",
+    "obtainable": true,
+    "effects": [
+      {
+        "type": "damage",
+        "formula": "2500 * user.power / target.defense"
+      },
+      {
+        "type": "status",
+        "status": "stun",
+        "duration": 2,
+        "chance": 50
+      },
+      {
+        "type": "status",
+        "status": "bleed",
+        "damagePerTurn": "target.health * 0.10",
+        "duration": 5,
+        "chance": 100
+      }
+    ]
+  },
+  "Blizzard Strike": {
+    "name": "Blizzard Strike",
+    "description": "user creates a blizzard that damage target and has a chance to frost them ",
+    "info": "e",
+    "image_url": "https://i.postimg.cc/85CXVZBm/image.png",
+    "chakraCost": 10,
+    "category": "No Category",
+    "obtainment": "Christmas Event Summon",
+    "obtainable": true,
+    "effects": [
+      {
+        "type": "damage",
+        "formula": "2000 * user.power / target.defense"
+      },
+      {
+        "type": "status",
+        "status": "frost",
+        "duration": 2,
+        "chance": 50
+      }
+    ]
+  },
+  "Seventh Form: Flaming Thunder God": {
+    "name": "Seventh Form: Flaming Thunder God",
+    "description": "**Thunder Breathing, Seventh form: Flaming Thunder God**\n   user becomes wreathed in blazing crimson lightning and divine flame. Their speed multiplies to the point their body leaves fiery afterimages, and every strike hits with the force of a thunderstorm. The sword erupts with burning lightning, searing and shocking anything it touches ",
+    "info": "custom",
+    "image_url": "https://i.imgur.com/k7UVw2V.jpeg",
+    "chakraCost": 13,
+    "category": "No Category",
+    "obtainment": "Custom",
+    "obtainable": false,
+    "effects": [
+      {
+        "type": "damage",
+        "formula": "2500 * user.power / target.defense"
+      },
+      {
+        "type": "status",
+        "status": "stun",
+        "duration": 3,
+        "chance": 100
+      },
+      {
+        "type": "debuff",
+        "stats": {
+          "defense": "target.defense * 0.25"
+        }
+      }
+    ]
+  },
+  "Twin Rising Dragons": {
+    "name": "Twin Rising Dragons",
+    "description": "user soars into the air and barrages the enemy several ninja tools",
+    "info": "user soars into the air and barrages the enemy several ninja tools",
+    "image_url": "",
+    "chakraCost": 7,
+    "category": "No Category",
+    "obtainment": "event Jutsu",
+    "obtainable": true,
+    "effects": [
+      {
+        "type": "damage",
+        "formula": "1200 * user.power / target.defense"
+      },
+      {
+        "type": "status",
+        "status": "bleed",
+        "damagePerTurn": "target.health * 0.10",
+        "duration": 5,
+        "chance": 100
+      },
+      {
+        "type": "status",
+        "status": "burn",
+        "damagePerTurn": "target.health * 0.10",
+        "duration": 5,
+        "chance": 100
+      }
+    ]
+  },
+  "Primary Lotus": {
+    "name": "Primary Lotus",
+    "description": "user kicks their target into the air, using their momentum to take their back and spiral them back to the ground",
+    "info": "user kicks their target into the air, using their momentum to take their back and spiral them back to the ground",
+    "image_url": "",
+    "chakraCost": 5,
+    "category": "No Category",
+    "obtainment": "event Jutsu",
+    "obtainable": true,
+    "effects": [
+      {
+        "type": "damage",
+        "formula": "1200 * user.power / target.defense",
+        "chance": 100
+      }
+    ]
+  },
+  "Planetary Devastation": {
+    "name": "Planetary Devastation",
+    "description": "user traps target in a black sphere. It detonates in 10 rounds!",
+    "roundBased": true,
+    "image_url": "https://static.wikia.nocookie.net/naruto/images/f/fb/Chibaku_Tensei.png/revision/latest?cb=20150309054440",
+    "chakraCost": 15,
+    "category": "No Category",
+    "obtainment": "event Jutsu",
+    "obtainable": true,
+    "roundEffects": {
+      "1": {
+        "description": "The black Sphere starts to form."
+      },
+      "2-9": {
+        "description": "The black Sphere continues to form."
+      },
+      "10": {
+        "description": "The black Sphere traps target and kills them!",
+        "effects": {
+          "type": "damage",
+          "formula": "target.health * 10"
+        }
+      }
+    }
+  }
 }

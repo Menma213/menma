@@ -1,0 +1,637 @@
+/* Basic Styles from previous step, extended */
+:root {
+    --bg-dark: #050505;
+    --accent: #ff4757;
+    --text-primary: #ffffff;
+    --bubble-bg: rgba(255, 255, 255, 0.95);
+    --bubble-text: #000000;
+    --font-heading: 'Cinzel', serif;
+    --font-body: 'Lato', sans-serif;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    user-select: none;
+    /* Prevent text selection */
+}
+
+body,
+html {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background-color: var(--bg-dark);
+    font-family: var(--font-body);
+    color: var(--text-primary);
+}
+
+#story-container {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    cursor: pointer;
+}
+
+/* Panels */
+.panel {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.5s ease-in-out;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    background: #000;
+}
+
+.panel.active {
+    opacity: 1;
+    pointer-events: auto;
+    z-index: 10;
+}
+
+.background-layer {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.bg-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Split Backgrounds */
+.split-bg {
+    display: flex;
+    width: 100%;
+    height: 100%;
+}
+
+.split-img {
+    width: 50%;
+    height: 100%;
+    object-fit: contain;
+    /* Ensures full image visibility */
+    background: #000;
+}
+
+/* Info Interstitial Panels */
+.info-panel .background-layer {
+    background: #000;
+}
+
+.info-text {
+    color: #fff;
+    font-family: 'Cinzel', serif;
+    font-size: 2rem;
+    text-align: center;
+    max-width: 80%;
+    opacity: 0;
+    transform: translateY(20px);
+}
+
+.content-layer {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    z-index: 2;
+    pointer-events: none;
+    /* Let clicks pass through to container */
+}
+
+/* Text & Bubbles */
+.centered-text {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+}
+
+.centered-col {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.title {
+    font-family: var(--font-heading);
+    font-size: 3rem;
+    margin-bottom: 20px;
+    background: linear-gradient(to right, #ffffff, #a8a8a8);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.subtitle {
+    font-size: 1.2rem;
+    color: #ccc;
+    max-width: 600px;
+}
+
+.instruction {
+    margin-top: 50px;
+    font-size: 0.9rem;
+    opacity: 0.7;
+    animation: blink 2s infinite;
+}
+
+@keyframes blink {
+
+    0%,
+    100% {
+        opacity: 0.4;
+    }
+
+    50% {
+        opacity: 1;
+    }
+}
+
+/* Status Text Refinement */
+.status-text {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: 'Cinzel', serif;
+    font-size: 1.5rem;
+    color: #fff;
+    text-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
+    opacity: 0.8;
+}
+
+/* NPC Encounter */
+.npc-img {
+    opacity: 0.75;
+    transition: opacity 0.5s;
+}
+
+.interaction-container {
+    display: flex;
+    gap: 2rem;
+    margin-top: 2rem;
+    pointer-events: auto;
+    /* Enable clicking on buttons */
+}
+
+.action-btn {
+    padding: 1rem 3rem;
+    font-size: 1.5rem;
+    font-family: 'Bangers', cursive;
+    background: transparent;
+    color: #fff;
+    border: 3px solid #fff;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+}
+
+.action-btn:hover {
+    background: #fff;
+    color: #000;
+    transform: scale(1.1);
+}
+
+.action-btn.flee {
+    border-color: #ff4444;
+    color: #ff4444;
+}
+
+.action-btn.flee:hover {
+    background: #ff4444;
+    color: #fff;
+}
+
+.speech-bubble {
+    position: absolute;
+    background: var(--bubble-bg);
+    color: var(--bubble-text);
+    padding: 1rem 1.5rem;
+    border-radius: 20px;
+    font-size: 1.1rem;
+    max-width: 60%;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+    border: 2px solid #000;
+
+    /* Defaults */
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+#panel-5 .speech-bubble:first-of-type {
+    top: 25%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+#panel-5 .speech-bubble:last-of-type {
+    top: 75%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.speech-bubble.top-left {
+    top: 20%;
+    left: 20%;
+    transform: translate(-50%, -50%);
+    border-bottom-right-radius: 0;
+}
+
+.speech-bubble.bottom-right {
+    top: 80%;
+    left: 80%;
+    transform: translate(-50%, -50%);
+    border-top-left-radius: 0;
+}
+
+.speech-bubble.left {
+    top: 50%;
+    left: 25%;
+    transform: translate(-50%, -50%);
+    border-right: 5px solid transparent;
+}
+
+.speech-bubble.right {
+    top: 50%;
+    left: 75%;
+    transform: translate(-50%, -50%);
+}
+
+.speech-bubble.bottom-center {
+    top: 80%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.impact-text {
+    font-weight: bold;
+    color: #d63031;
+    font-size: 1.3rem;
+}
+
+/* Choices */
+.choice-title {
+    color: white;
+    font-family: var(--font-heading);
+    margin-bottom: 30px;
+    text-shadow: 2px 2px 4px black;
+    background: rgba(0, 0, 0, 0.5);
+    padding: 10px 20px;
+    border-radius: 5px;
+}
+
+.choices-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    pointer-events: auto;
+    /* Enable clicking */
+}
+
+.choice-btn {
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    border: 2px solid #fff;
+    padding: 15px 30px;
+    font-family: var(--font-heading);
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-transform: uppercase;
+}
+
+.choice-btn:hover {
+    background: white;
+    color: black;
+    transform: scale(1.05);
+}
+
+/* Minigame Styles */
+#minigame-container {
+    width: 60%;
+    height: 60%;
+    border: 5px solid white;
+    box-shadow: 0 0 50px rgba(255, 255, 255, 0.2);
+    position: relative;
+    background: #000;
+}
+
+.game-ui {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+
+.instruction-overlay,
+#game-over-screen {
+    background: rgba(0, 0, 0, 0.9);
+    padding: 40px;
+    border: 2px solid white;
+    text-align: center;
+    color: white;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 20;
+}
+
+.instruction-overlay button,
+#game-over-screen button {
+    margin-top: 20px;
+    padding: 10px 30px;
+    font-size: 1.2rem;
+    cursor: pointer;
+    background: white;
+    border: none;
+    font-family: var(--font-heading);
+}
+
+/* Utilities */
+.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.visible {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.ui-overlay {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    height: 5px;
+    background: #333;
+    z-index: 100;
+}
+
+.progress-fill {
+    height: 100%;
+    background: var(--accent);
+    width: 0%;
+    transition: width 0.3s;
+}
+
+.restart-btn {
+    margin-top: 2rem;
+    padding: 1rem 2rem;
+    background: transparent;
+    border: 1px solid white;
+    color: white;
+    cursor: pointer;
+    pointer-events: auto;
+}
+
+.restart-btn:hover {
+    background: white;
+    color: black;
+}
+
+/* Global Watermark */
+.panel::after {
+    content: '🍥';
+    position: absolute;
+    bottom: 30px;
+    right: 30px;
+    font-size: 3rem;
+    opacity: 0.6;
+    z-index: 5;
+    pointer-events: none;
+    filter: drop-shadow(0 0 5px rgba(0, 0, 0, 0.8));
+    animation: floatWatermark 3s ease-in-out infinite;
+}
+
+@keyframes floatWatermark {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-5px);
+    }
+}
+
+/* Specific Fixes */
+.zoomed-out-img {
+    max-width: 80% !important;
+    /* Force it smaller */
+    max-height: 80% !important;
+    border: 1px solid #333;
+    /* Optional stylistic border */
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.8);
+}
+
+#panel-5 .bg-img,
+#panel-8 .bg-img,
+#panel-14 .bg-img {
+    object-fit: contain;
+}
+
+/* Fix Kakashi image (panel-4) */
+#panel-4 .bg-img {
+    object-fit: contain !important;
+    max-width: 90%;
+    max-height: 90%;
+}
+
+/* Fix panel-20 image (Kakashi convo) */
+#panel-20 .bg-img {
+    object-fit: contain !important;
+    max-width: 85%;
+    max-height: 85%;
+}
+
+#panel-6 .split-img {
+    object-fit: contain;
+    /* Changed from cover to contain */
+    object-position: center center;
+    /* Center both images */
+}
+
+/* this will be the comment xd */
+
+/* --- Mobile / Responsive Fixes --- */
+
+/* Global Image Fix for Mobile */
+@media (max-width: 768px) {
+    .bg-img {
+        object-fit: contain !important;
+        /* Force full image visibility */
+        background: #000;
+        /* Letterboxing */
+    }
+
+    /* Adjust Text Sizes */
+    .title {
+        font-size: 2rem;
+    }
+
+    .subtitle {
+        font-size: 1rem;
+    }
+
+    .speech-bubble {
+        width: 90%;
+        max-width: 90%;
+        font-size: 1rem;
+        padding: 0.8rem;
+    }
+
+    /* Reposition Bubbles for Mobile */
+    .speech-bubble.top-left,
+    .speech-bubble.bottom-right,
+    .speech-bubble.left,
+    .speech-bubble.right,
+    .speech-bubble.bottom-center {
+        /* Reset positioning to be safer */
+        top: auto !important;
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+        bottom: 10% !important;
+    }
+
+    /* Except maybe top ones */
+    .speech-bubble.top-left {
+        top: 15% !important;
+        bottom: auto !important;
+    }
+
+    /* Minigame Container Size */
+    #minigame-container {
+        width: 95%;
+        height: 50%;
+    }
+
+    /* Touch Controls Visibility */
+    #touch-controls {
+        display: flex !important;
+    }
+
+    /* Fix split-screen images on mobile */
+    #panel-6 .split-img {
+        width: 100% !important;
+        height: 50% !important;
+        object-fit: contain !important;
+    }
+
+    #panel-6 .split-bg {
+        flex-direction: column !important;
+    }
+
+    /* Fix minigame start button on mobile */
+    #start-game-btn {
+        z-index: 200 !important;
+        position: relative !important;
+        pointer-events: auto !important;
+        touch-action: manipulation !important;
+    }
+}
+
+/* Touch Controls (Hidden on Desktop) */
+#touch-controls {
+    display: none;
+    position: absolute;
+    bottom: 20px;
+    left: 0;
+    width: 100%;
+    height: 150px;
+    z-index: 100;
+    pointer-events: none;
+    /* Let clicks pass, but buttons catch them */
+    justify-content: space-between;
+    padding: 0 20px;
+}
+
+.d-pad {
+    position: relative;
+    width: 120px;
+    height: 120px;
+    pointer-events: auto;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+}
+
+.d-btn {
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    background: rgba(255, 255, 255, 0.3);
+    border: 1px solid white;
+    border-radius: 5px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.2rem;
+    user-select: none;
+}
+
+.d-btn:active {
+    background: rgba(255, 255, 255, 0.8);
+    color: black;
+}
+
+.d-up {
+    top: 0;
+    left: 40px;
+}
+
+.d-down {
+    bottom: 0;
+    left: 40px;
+}
+
+.d-left {
+    top: 40px;
+    left: 0;
+}
+
+.d-right {
+    top: 40px;
+    right: 0;
+}
+
+.action-pad {
+    pointer-events: auto;
+    display: flex;
+    gap: 15px;
+    align-items: flex-end;
+}
+
+.control-btn {
+    width: 60px;
+    height: 60px;
+    background: rgba(255, 40, 40, 0.4);
+    border: 2px solid white;
+    border-radius: 50%;
+    color: white;
+    font-weight: bold;
+    font-size: 1rem;
+}
+
+.control-btn:active {
+    background: white;
+    color: red;
+}
+
+/*hello*/

@@ -13,12 +13,12 @@
             "radius": 110,
             "color": "#FF4500"
         },
-        "village_of_sound": {
-            "name": "village_of_sound",
+        "hidden_village_of_sound": {
+            "name": "hidden_village_of_sound",
             "displayName": "Hidden Village of Sound",
             "tier": 2,
             "guardian": "Guardian II",
-            "controlledBy": null,
+            "controlledBy": "ronaldo",
             "position": {
                 "x": 330,
                 "y": 230
@@ -52,12 +52,12 @@
             "radius": 70,
             "color": "#90EE90"
         },
-        "village_of_sand": {
-            "name": "village_of_sand",
+        "hidden_village_of_sand": {
+            "name": "hidden_village_of_sand",
             "displayName": "Hidden Village of Sand",
             "tier": 5,
             "guardian": "Guardian V",
-            "controlledBy": null,
+            "controlledBy": "ronaldo",
             "position": {
                 "x": 100,
                 "y": 520

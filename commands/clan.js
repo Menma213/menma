@@ -178,6 +178,8 @@ module.exports = {
                     if (bp) clanPower += bp.power * count;
                 }
             }
+            // Apply Penalty
+            clanPower = Math.max(0, clanPower - (userClan.power_penalty || 0));
 
             // Calculate total materials
             let totalMaterials = 0;
@@ -890,6 +892,8 @@ module.exports = {
                         if (bp) clanPower += bp.power * count;
                     }
                 }
+                // Apply Penalty
+                clanPower = Math.max(0, clanPower - (userClan.power_penalty || 0));
 
                 // Calculate total materials gathered
                 let totalMaterials = 0;
@@ -975,6 +979,8 @@ module.exports = {
                     if (bp) myPower += bp.power * count;
                 }
             }
+            // Apply Penalty to Attacker
+            myPower = Math.max(0, myPower - (userClan.power_penalty || 0));
 
             let enemyPower = 0;
             if (enemyClan && enemyClan.weapons) {
@@ -982,6 +988,8 @@ module.exports = {
                     const bp = blueprints.find(b => b.name === wName);
                     if (bp) enemyPower += bp.power * count;
                 }
+                // Apply Penalty to Enemy
+                enemyPower = Math.max(0, enemyPower - (enemyClan.power_penalty || 0));
             } else {
                 // Neutral territory base defense
                 enemyPower = 500;
@@ -1008,18 +1016,26 @@ module.exports = {
                     }
                     if (enemyClan) {
                         enemyClan.controlledTerritories = enemyClan.controlledTerritories.filter(t => t !== territory.name);
+
+                        // Apply Power Penalty to Defender (Defender Power = Defender Power - Attacker Power)
+                        // This means Penalty increases by Attacker Power
+                        enemyClan.power_penalty = (enemyClan.power_penalty || 0) + myPower;
                     }
 
                     await saveJson(TERRITORIES_FILE, territories);
                     await saveJson(CLANS_FILE, clans);
 
-                    await interaction.followUp({ content: `**Victory!** ${userClan.name} has captured ${territory.displayName}!` });
+                    await interaction.followUp({ content: `**Victory!** ${userClan.name} has captured ${territory.displayName}!\nThe **${enemyClanName || 'Neutral'}** forces have suffered a crushing defeat!` });
                 } else {
                     // Lose
+                    // Apply Power Penalty to Attacker? (Attacker Power = Attacker Power - Defender Power)
+                    // If the user wants symmetric penalties:
+                    // userClan.power_penalty = (userClan.power_penalty || 0) + enemyPower;
+
                     await interaction.followUp({ content: `**Defeat!** ${userClan.name} failed to capture ${territory.displayName}.` });
                 }
             }, 5000);
             return;
         }
     }
-};
+}

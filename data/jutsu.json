@@ -62,7 +62,9 @@
       "Izanagi",
       "Carnage",
       "Set Your Face Ablaze",
-      "Heaven's Supremacy"
+      "Heaven's Supremacy",
+      "Primary Lotus",
+      "Planetary Devastation"
     ],
     "combos": [
       "Basic Combo",
@@ -84,7 +86,10 @@
       "Zoro's Locket": 4,
       "Secret Uchiha Scroll": 1,
       "Ramen Ticket": 10,
-      "Ay Token": 92
+      "Ay Token": 92,
+      "Christmas Token": 41,
+      "iron_ore": 11,
+      "wood": 10
     },
     "exp": 25
   },
@@ -101,14 +106,6 @@
     ],
     "scrolls": [
       "Serpents Wrath Scroll"
-    ],
-    "rankeditems": []
-  },
-  "961918563382362122": {
-    "usersjutsu": [
-      "Transformation Jutsu",
-      "Hidden Mist",
-      "asura"
     ],
     "rankeditems": []
   },
@@ -331,6 +328,11 @@
     ]
   },
   "1132693590066331828": {
+    "usersjutsu": [
+      "Transformation Jutsu"
+    ]
+  },
+  "961918563382362122": {
     "usersjutsu": [
       "Transformation Jutsu"
     ]

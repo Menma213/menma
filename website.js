@@ -3,17 +3,70 @@ const { fetch } = require('undici');
 const path = require('path');
 const fs = require('fs').promises;
 // Important: Replace these with your actual Client ID and Secret
-const CLIENT_ID = '1351258977018839041'; 
+const CLIENT_ID = '1351258977018839041';
 const CLIENT_SECRET = '4ybhv8q9wQPjZUiVW2kASinNvtL69gVU';
-const REDIRECT_URI = 'http://localhost:3000/oauth/callback';
+const REDIRECT_URI = 'http://shinobirpg.online/oauth/callback';
 
 const app = express();
 const PORT = 3000;
 
-// Explicitly serve the main HTML file for the root URL
+// Middleware to parse JSON bodies
+app.use(express.json());
+
+// [CHANGED] Serve static files from the 'website/story' directory (The new Interactive Story)
+app.use(express.static(path.join(__dirname, 'website', 'story')));
+
+// [BACKUP] Old configuration for the 3D Game
+// app.use(express.static(path.join(__dirname, 'website')));
+
+// Explicitly serve the story HTML file for the root URL
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'));
+    res.sendFile(path.join(__dirname, 'website', 'story', 'index.html'));
 });
+
+// API: Complete Story
+app.post('/api/complete-story', async (req, res) => {
+    console.log("Received complete-story request:", req.body);
+    const { userId, storyId, jutsuChosen } = req.body;
+
+    if (!userId) {
+        return res.status(400).json({ error: 'Missing userId' });
+    }
+
+    const userStatsPath = path.join(__dirname, 'data', 'users.json');
+
+    try {
+        const data = await fs.readFile(userStatsPath, 'utf8');
+        let usersDB = JSON.parse(data);
+
+        if (!usersDB[userId]) {
+            // Optional: Create user if not exists? Or error.
+            // For now, assume user exists if logged in, or create stub.
+            usersDB[userId] = { id: userId, money: 0 }; // stub
+        }
+
+        // Update User Data
+        usersDB[userId].completedRaidStory = true;
+        if (jutsuChosen) {
+            usersDB[userId].storyJutsu = jutsuChosen;
+        }
+
+        await fs.writeFile(userStatsPath, JSON.stringify(usersDB, null, 4));
+        console.log(`Updated story completion for user ${userId}`);
+
+        res.json({ success: true, message: "Story progress saved." });
+
+    } catch (error) {
+        console.error('Error updating users.json:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+/* [BACKUP] Old root route
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'website', 'index.html'));
+}); 
+*/
 
 // The route that initiates the Discord OAuth2 flow
 app.get('/login/discord', (req, res) => {
@@ -73,7 +126,7 @@ app.get('/oauth/callback', async (req, res) => {
         const userId = userData.id;
 
         // Step 3: Read the users.json file from the specified path
-        const userStatsPath = 'C:\\Users\\HI\\Downloads\\menma\\data\\users.json';
+        const userStatsPath = path.join(__dirname, 'data', 'users.json');
         let usersDB;
 
         try {
@@ -113,7 +166,7 @@ app.get('/oauth/callback', async (req, res) => {
 
 app.get('/api/user/:userId', async (req, res) => {
     const { userId } = req.params;
-    const userStatsPath = 'C:\\Users\\HI\\Downloads\\menma\\data\\users.json';
+    const userStatsPath = path.join(__dirname, 'data', 'users.json');
 
     try {
         const data = await fs.readFile(userStatsPath, 'utf8');

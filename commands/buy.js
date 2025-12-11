@@ -89,35 +89,47 @@ const premiumItems = [
 ];
 
 const eventShopItems = {
-    "guillotine drop": {
-        name: "Guillotine Drop",
-        price: 250,
-        key: "Guillotine Drop"
-    },
-    "kirin: lightning storm": {
-        name: "Kirin: Lightning Storm",
-        price: 150,
-        key: "Kirin: Lightning Storm"
-    },
-    "shadow clone jutsu: 1000 clones": {
-        name: "Shadow Clone Jutsu: 1000 clones",
-        price: 100,
-        key: "Shadow Clone Jutsu: 1000 clones"
-    },
-    "explosive paper clone": {
-        name: "Explosive Paper Clone",
-        price: 100,
-        key: "Explosive Paper Clone"
-    },
-    "lightning hound": {
-        name: "Lightning Hound",
-        price: 50,
-        key: "Lightning Hound"
-    },
-    "ramen coupon": {
-        name: "ramen",
+    "ramen bowl": {
+        name: "Ramen Bowl",
         price: 5,
-        key: "ramen"
+        key: "Ramen Bowl",
+        type: "ramen"
+    },
+    "frozen needles": {
+        name: "Frozen Needles",
+        price: 50,
+        key: "Frozen Needles",
+        type: "jutsu"
+    },
+    "ice prison": {
+        name: "Ice Prison",
+        price: 50,
+        key: "Ice Prison",
+        type: "jutsu"
+    },
+    "crystal palace": {
+        name: "Crystal Palace",
+        price: 500,
+        key: "Crystal Palace",
+        type: "jutsu"
+    },
+    "profile theme: frost": {
+        name: "Profile Theme: Frost",
+        price: 2000,
+        key: "theme_frost",
+        type: "theme"
+    },
+    "twin rising dragons": {
+        name: "Twin Rising Dragons",
+        price: 150,
+        key: "Twin Rising Dragons",
+        type: "jutsu"
+    },
+    "primary lotus": {
+        name: "Primary Lotus",
+        price: 150,
+        key: "Primary Lotus",
+        type: "jutsu"
     }
 };
 
@@ -279,15 +291,14 @@ module.exports = {
                 return interaction.reply({ content: 'This shop is for Akatsuki members only.', ephemeral: true });
             }
 
-            const dailyComboPath = path.resolve(__dirname, '../data/daily_combo.json');
-            if (!fs.existsSync(dailyComboPath)) {
-                return interaction.reply('The daily combo is not available at the moment. Please try again later.');
-            }
-            const dailyComboData = JSON.parse(fs.readFileSync(dailyComboPath, 'utf8'));
-            const dailyCombo = dailyComboData.combo;
+            const combosPath = path.resolve(__dirname, '../data/combos.json');
+            const combosData = JSON.parse(fs.readFileSync(combosPath, 'utf8'));
+            // Find combo case-insensitive
+            const targetComboName = akatsukiItem.toLowerCase();
+            const comboEntry = Object.values(combosData).find(c => c.name.toLowerCase() === targetComboName);
 
-            if (akatsukiItem.toLowerCase() !== 'daily combo') {
-                return interaction.reply('You can only buy the "daily combo" from this shop.');
+            if (!comboEntry) {
+                return interaction.reply(`That combo does not exist in the Akatsuki records.`);
             }
 
             const bountyPath = path.resolve(__dirname, '../data/bounty.json');
@@ -307,18 +318,20 @@ module.exports = {
                 usersData[userId] = {};
             }
 
-            if (usersData[userId].Combo === dailyCombo.name) {
+            if (usersData[userId].Combo === comboEntry.name) {
                 return interaction.reply('You already have this combo equipped!');
             }
 
+            // Deduct Bounty
             bountyData[userId].bounty -= comboPrice;
             fs.writeFileSync(bountyPath, JSON.stringify(bountyData, null, 4));
 
-            usersData[userId].Combo = dailyCombo.name;
+            // Equip Combo
+            usersData[userId].Combo = comboEntry.name;
             fs.writeFileSync(usersPath, JSON.stringify(usersData, null, 4));
 
-            await logPurchase(interaction, ` <@${userId}> purchased and equipped combo **${dailyCombo.name}** for ${comboPrice} bounty.`);
-            return interaction.reply(`Successfully equipped ${dailyCombo.name}!`);
+            await logPurchase(interaction, ` <@${userId}> purchased and equipped combo **${comboEntry.name}** for ${comboPrice} bounty.`);
+            return interaction.reply(`Successfully equipped ${comboEntry.name}!`);
         }
 
         if (ssName) {
@@ -496,6 +509,7 @@ module.exports = {
         }
 
         // --- BUY EVENT SHOP ---
+        // --- BUY EVENT SHOP (Christmas) ---
         if (eventName) {
             const eventKey = eventName.toLowerCase();
             const item = eventShopItems[eventKey];
@@ -506,51 +520,68 @@ module.exports = {
             const jutsuJsonPath = path.join(__dirname, '../data', 'jutsu.json');
             const jutsuData = JSON.parse(fs.readFileSync(jutsuJsonPath, 'utf8'));
             const userId = interaction.user.id;
+            const usersJsonPath = path.join(__dirname, '../data', 'users.json'); // For themes
 
-            // Check if user is enrolled (since Ay tokens are in jutsu.json)
+            // Check if user is enrolled
             if (!jutsuData[userId]) {
                 return interaction.reply('You need to be enrolled first!');
             }
 
-            let ayTokens = 0;
-            if (jutsuData[userId].items && typeof jutsuData[userId].items["Ay Token"] === "number") {
-                ayTokens = jutsuData[userId].items["Ay Token"];
+            let christmasTokens = 0;
+            if (jutsuData[userId].items && typeof jutsuData[userId].items["Christmas Token"] === "number") {
+                christmasTokens = jutsuData[userId].items["Christmas Token"];
             }
 
-            if (ayTokens < item.price) {
-                return interaction.reply(`You need ${item.price} Ay tokens to buy this item!`);
+            if (christmasTokens < item.price) {
+                return interaction.reply(`You need ${item.price} Christmas Tokens to buy this item!`);
             }
 
-            // Check if already learned (if it's a jutsu)
-            if (item.key !== "ramen" && jutsuData[userId].usersjutsu && jutsuData[userId].usersjutsu.includes(item.key)) {
-                return interaction.reply(`You already know the jutsu **${item.name}**!`);
-            }
+            // Handle specific item types
+            if (item.type === 'jutsu') {
+                if (jutsuData[userId].usersjutsu && jutsuData[userId].usersjutsu.includes(item.key)) {
+                    return interaction.reply(`You already know the jutsu **${item.name}**!`);
+                }
+                // Add Jutsu
+                if (!jutsuData[userId].usersjutsu) jutsuData[userId].usersjutsu = [];
+                jutsuData[userId].usersjutsu.push(item.key);
 
-            // Deduct tokens
-            if (!jutsuData[userId].items) jutsuData[userId].items = {}; // Ensure items object exists
-            jutsuData[userId].items["Ay Token"] = ayTokens - item.price;
+            } else if (item.type === 'item') {
+                // Add Item
+                if (!jutsuData[userId].items) jutsuData[userId].items = {};
+                // Allow multiple? Scroll of Truth seems unique. Let's act like unique for now or just stack.
+                // Actually story items should be unique mostly, but stacking is safer code.
+                jutsuData[userId].items[item.key] = (jutsuData[userId].items[item.key] || 0) + 1;
 
-            // If buying ramen coupon, add to players.json ramen
-            if (item.key === "ramen") {
+            } else if (item.type === 'theme') {
+                // Load Users Data for theme
+                const usersData = JSON.parse(fs.readFileSync(usersJsonPath, 'utf8'));
+                if (!usersData[userId]) usersData[userId] = {};
+
+                // Check already owned
+                if (usersData[userId].themes && usersData[userId].themes.includes(item.key)) {
+                    return interaction.reply('You already own this profile theme!');
+                }
+
+                if (!usersData[userId].themes) usersData[userId].themes = [];
+                usersData[userId].themes.push(item.key);
+                usersData[userId].profileTheme = item.key; // Auto-equip
+
+                fs.writeFileSync(usersJsonPath, JSON.stringify(usersData, null, 4));
+
+            } else if (item.type === 'ramen') {
                 const players = JSON.parse(fs.readFileSync(playersPath, 'utf8'));
                 if (!players[userId]) players[userId] = {};
                 players[userId].ramen = (players[userId].ramen || 0) + 1;
                 fs.writeFileSync(playersPath, JSON.stringify(players, null, 4));
-                fs.writeFileSync(jutsuJsonPath, JSON.stringify(jutsuData, null, 4));
-                await logPurchase(interaction, `<@${userId}> purchased 1 ramen coupon for ${item.price} Ay tokens.`);
-                return interaction.reply(`Successfully bought 1 ramen coupon!`);
-            } else {
-                // Add jutsu to usersjutsu
-                if (!jutsuData[userId].usersjutsu) jutsuData[userId].usersjutsu = [];
-                // Redundancy check added earlier, so we can just push if it wasn't a ramen coupon and we passed the check
-                if (!jutsuData[userId].usersjutsu.includes(item.key)) {
-                    jutsuData[userId].usersjutsu.push(item.key);
-                }
-
-                fs.writeFileSync(jutsuJsonPath, JSON.stringify(jutsuData, null, 4));
-                await logPurchase(interaction, `<@${userId}> purchased event jutsu **${item.name}** for ${item.price} Ay tokens.`);
-                return interaction.reply(`Successfully learned ${item.name}!`);
             }
+
+            // Deduct tokens
+            if (!jutsuData[userId].items) jutsuData[userId].items = {};
+            jutsuData[userId].items["Christmas Token"] = christmasTokens - item.price;
+
+            fs.writeFileSync(jutsuJsonPath, JSON.stringify(jutsuData, null, 4));
+            await logPurchase(interaction, `<@${userId}> purchased event item **${item.name}** for ${item.price} Christmas Tokens.`);
+            return interaction.reply(`Successfully purchased **${item.name}**!`);
         }
 
         // --- BUY MISC SHOP ---

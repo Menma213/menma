@@ -24,7 +24,7 @@ if (!fs.existsSync(MINIGAMES_DIR)) {
 }
 
 // Global variable to store REST API client once initialized
-let restClient; 
+let restClient;
 
 // --- CHAINED CONVERSATION TRACKING ---
 const CHAINED_CONVERSATION_FILE = path.resolve(__dirname, '../../menma/data/chained_conversations.json');
@@ -67,7 +67,7 @@ function cleanupChainedConversations() {
     const conversations = loadChainedConversations();
     const now = Date.now();
     const fiveMinutesAgo = now - (5 * 60 * 1000);
-    
+
     let changed = false;
     Object.keys(conversations).forEach(userId => {
         if (conversations[userId].timestamp < fiveMinutesAgo) {
@@ -75,7 +75,7 @@ function cleanupChainedConversations() {
             changed = true;
         }
     });
-    
+
     if (changed) {
         saveChainedConversations(conversations);
     }
@@ -95,10 +95,10 @@ async function refreshDiscordCommands(client) {
         // Initialize REST client if it doesn't exist
         restClient = new REST().setToken(client.token);
     }
-    
+
     // Get all command data from the local cache
     const commandsData = client.commands.map(command => command.data);
-    
+
     try {
         // Use Routes.applicationCommands to register globally
         // This process can take a few minutes to propagate across Discord,
@@ -107,7 +107,7 @@ async function refreshDiscordCommands(client) {
             Routes.applicationCommands(client.user.id),
             { body: commandsData },
         );
-        
+
         console.log(`[Discord API] Successfully registered ${commandsData.length} application commands.`);
         return true;
     } catch (error) {
@@ -127,7 +127,7 @@ async function registerNewCommand(client, filePath) {
         // 1. Clear require cache to ensure fresh module load
         delete require.cache[require.resolve(filePath)];
         const newCommand = require(filePath);
-        
+
         if (newCommand.data && newCommand.execute) {
             const commandName = newCommand.data.name;
 
@@ -136,7 +136,7 @@ async function registerNewCommand(client, filePath) {
                 console.error(`[Minigame Engine] Command description too long: ${newCommand.data.description.length} chars`);
                 return false;
             }
-            
+
             if (!(client.commands instanceof Collection)) {
                 console.error("[Minigame Engine] Client does not have a 'commands' Collection");
                 return false;
@@ -145,7 +145,7 @@ async function registerNewCommand(client, filePath) {
             // 2. Update local cache
             client.commands.set(commandName, newCommand);
             console.log(`[Minigame Engine] Successfully updated local cache for: /${commandName}`);
-            
+
             // 3. PUSH COMMANDS TO DISCORD API
             const apiSuccess = await refreshDiscordCommands(client);
 
@@ -155,7 +155,7 @@ async function registerNewCommand(client, filePath) {
                 client.commands.delete(commandName); // Rollback local cache if API push fails
                 return false;
             }
-            
+
         } else {
             console.error(`[Minigame Engine] File ${filePath} missing 'data' or 'execute'`);
             return false;
@@ -170,46 +170,46 @@ async function registerNewCommand(client, filePath) {
 const minigameTools = {
     async deleteMinigame(commandName, client) {
         if (!commandName) return "Please specify a command name to delete.";
-        
+
         const filePath = path.join(MINIGAMES_DIR, `${commandName}.js`);
-        
+
         if (!fs.existsSync(filePath)) {
             return `Minigame "${commandName}" not found.`;
         }
-        
+
         try {
             // 1. Delete from local cache
             if (client.commands.has(commandName)) {
                 client.commands.delete(commandName);
             }
-            
+
             // 2. Delete file and clear cache
             fs.unlinkSync(filePath);
             delete require.cache[require.resolve(filePath)];
 
             // 3. PUSH COMMANDS TO DISCORD API (API will see the command is missing)
             await refreshDiscordCommands(client);
-            
+
             return `Successfully deleted minigame "${commandName}" and unregistered the command. (May take a minute for Discord to update)`;
         } catch (error) {
             console.error(`Error deleting minigame ${commandName}:`, error);
             return `Failed to delete minigame "${commandName}": ${error.message}`;
         }
     },
-    
+
     async reloadMinigame(commandName, client) {
         if (!commandName) return "Please specify a command name to reload.";
-        
+
         const filePath = path.join(MINIGAMES_DIR, `${commandName}.js`);
-        
+
         if (!fs.existsSync(filePath)) {
             return `Minigame "${commandName}" not found.`;
         }
-        
+
         try {
             // Reload logic is contained in registerNewCommand
             const success = await registerNewCommand(client, filePath);
-            
+
             if (success) {
                 return `Successfully reloaded minigame "${commandName}".`;
             } else {
@@ -231,24 +231,24 @@ async function createMinigame(targetUserId, gameName, gameDescription, message, 
     if (!gameName || gameName.trim().length < 3 || gameName.length > 50) {
         return "Game name must be between 3 and 50 characters.";
     }
-    
+
     // NOTE: Discord command descriptions have a maximum length of 100 characters.
     if (!gameDescription || gameDescription.trim().length < 5 || gameDescription.length > 100) {
         return "Game description must be between 5 and 100 characters.";
     }
-    
+
     const sanitizedName = gameName.toLowerCase().replace(/[^a-z0-9]/g, '');
-    if (!sanitizedName) { 
-        return "That game name is too confusing. I need a simpler name to make a command."; 
+    if (!sanitizedName) {
+        return "That game name is too confusing. I need a simpler name to make a command.";
     }
-    
+
     const filePath = path.join(MINIGAMES_DIR, `${sanitizedName}.js`);
     const commandName = sanitizedName;
-    
+
     if (client.commands && client.commands.has(commandName)) {
         return `A command named /${commandName} already exists! Try a different name.`;
     }
-    
+
     const amoebaSystemPrompt = `
     
     
@@ -292,9 +292,9 @@ Command name: "${commandName}"
 Description: "${gameDescription}"
 Make it single-player and fun!
 `;
-    
+
     let generatedCode = '';
-    
+
     try {
         const result = await model.generateContent({
             contents: [{ parts: [{ text: amoebaUserPrompt }] }],
@@ -311,7 +311,7 @@ Make it single-player and fun!
                 generatedCode = fallbackMatch[1].trim();
             }
         }
-        
+
     } catch (error) {
         console.error('Amoeba code generation failed:', error);
         return "Amoeba encountered a bug while trying to write your game. Please try again.";
@@ -328,7 +328,7 @@ Make it single-player and fun!
         /fs\./,
         /path\./
     ];
-    
+
     for (const pattern of forbiddenPatterns) {
         if (pattern.test(generatedCode)) {
             return "Generated code contains forbidden file system operations. Game creation rejected for security.";
@@ -337,10 +337,10 @@ Make it single-player and fun!
 
     try {
         fs.writeFileSync(filePath, generatedCode);
-        
+
         // Use the new async registration function
-        const success = await registerNewCommand(client, filePath); 
-        
+        const success = await registerNewCommand(client, filePath);
+
         if (success) {
             // Note: The new command may take up to an hour to appear globally, 
             // but it's often instant in development or for test servers.
@@ -396,7 +396,7 @@ function saveJson(filepath, newData) {
     try {
         // Refresh data first to get latest state
         refreshData();
-        
+
         // For specific files, ensure we preserve the complete structure
         if (filepath === PLAYERS_FILE_PATH) {
             // Merge new data with existing data to preserve all users
@@ -411,7 +411,7 @@ function saveJson(filepath, newData) {
         } else {
             fs.writeFileSync(filepath, JSON.stringify(newData, null, 2));
         }
-        
+
         // Refresh cache after save
         refreshData();
     } catch (error) {
@@ -481,7 +481,7 @@ async function loadPermanentMemory(n = 5) {
  */
 function extractKeywords(text) {
     if (!text) return '';
-    
+
     // Common words to exclude
     const stopWords = new Set([
         'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by',
@@ -491,17 +491,17 @@ function extractKeywords(text) {
         'this', 'that', 'these', 'those', 'my', 'your', 'his', 'her', 'its', 'our', 'their',
         'what', 'when', 'where', 'why', 'how', 'who', 'which'
     ]);
-    
+
     // Extract words and filter
     const words = text.toLowerCase()
         .replace(/[^\w\s]/g, ' ')
         .split(/\s+/)
-        .filter(word => 
-            word.length > 2 && 
-            !stopWords.has(word) && 
+        .filter(word =>
+            word.length > 2 &&
+            !stopWords.has(word) &&
             !/^\d+$/.test(word)
         );
-    
+
     // Return unique keywords
     return [...new Set(words)].slice(0, 10).join(',');
 }
@@ -524,23 +524,23 @@ async function savePermanentMemory(memoryText) {
  */
 async function searchMemoryByKeywords(userMessage, limit = 3) {
     if (!db) return [];
-    
+
     try {
         const keywords = extractKeywords(userMessage);
         if (!keywords) return [];
-        
+
         const keywordList = keywords.split(',');
         const conditions = keywordList.map(() => 'keywords LIKE ?').join(' OR ');
         const params = keywordList.map(keyword => `%${keyword}%`);
         params.push(limit);
-        
+
         const rows = await db.all(`
             SELECT memory_text FROM conversational_memory 
             WHERE ${conditions}
             ORDER BY timestamp DESC 
             LIMIT ?
         `, params);
-        
+
         return rows.map(row => row.memory_text);
     } catch (error) {
         console.error("Error searching memory:", error);
@@ -555,36 +555,36 @@ async function searchMemoryByKeywords(userMessage, limit = 3) {
  */
 async function moderateMessage(userMessage) {
     const slursAndViolations = [
-        
+
         'nigger', 'nigga', 'fag', 'faggot', 'kike', 'chink', 'spic', 'retard',
         // Severe threats
         'kill yourself', 'kys', 'commit suicide', 'i will kill you', 'death threat',
-     
+
         'dox', 'personal information', 'address', 'phone number', 'social security'
     ];
-    
+
     const lowerMessage = userMessage.toLowerCase();
-    
+
     // Check for explicit violations
     for (const violation of slursAndViolations) {
         if (lowerMessage.includes(violation)) {
             return false;
         }
     }
-    
+
     // Allow fighting/violence-related terms for RPG context
     const allowedFightingTerms = [
         'fight', 'battle', 'kill', 'death', 'attack', 'defeat', 'war', 'combat',
         'jutsu', 'ninja', 'shinobi', 'rasengan', 'chidori', 'fireball'
     ];
-    
+
     // If message contains fighting terms, it's likely game-related and safe
     for (const term of allowedFightingTerms) {
         if (lowerMessage.includes(term)) {
             return true;
         }
     }
-    
+
     // Use AI moderation for ambiguous cases
     const moderationPrompt = `
 You are the Human Memory System (HMS) of a Discord bot. Your sole function is to act as a filter against severe violations.
@@ -617,9 +617,9 @@ function detectLevelGoalRequest(message) {
     const content = message.content.toLowerCase();
     const goalKeywords = ['goal', 'goalset', 'reach level', 'get to level', 'level up to', 'help me reach'];
     const hasGoalKeyword = goalKeywords.some(keyword => content.includes(keyword));
-    
+
     if (!hasGoalKeyword) return null;
-    
+
     const levelMatch = content.match(/level\s+(\d+)/i) || content.match(/(\d+)\s*level/i);
     if (levelMatch) {
         return parseInt(levelMatch[1]);
@@ -640,8 +640,8 @@ function getExpRequirement(currentLevel) {
 const missionRewards = {
     drank: { exp: 10, type: 'fixed', cooldown: 10 },
     brank: { exp: { min: 10, max: 30 }, type: 'random', cooldown: 13 },
-    arank: { 
-        exp: 9, 
+    arank: {
+        exp: 9,
         type: 'fixed',
         bonus: { every: 5, multiplier: 1 },
         jackpot: { after: 50, multiplier: 3 },
@@ -678,82 +678,82 @@ async function createGoalPlan(userId, targetLevel) {
 
     // Mission definitions with better balancing
     const missionTypes = [
-        { 
-            name: 'D-Rank', 
-            exp: missionRewards.drank.exp, 
-            cooldown: missionRewards.drank.cooldown, 
+        {
+            name: 'D-Rank',
+            exp: missionRewards.drank.exp,
+            cooldown: missionRewards.drank.cooldown,
             weight: 1.0,
             key: 'drank',
             priority: 3
         },
-        { 
-            name: 'F-Rank', 
-            exp: missionRewards.frank.exp, 
-            cooldown: missionRewards.frank.cooldown, 
+        {
+            name: 'F-Rank',
+            exp: missionRewards.frank.exp,
+            cooldown: missionRewards.frank.cooldown,
             weight: 0.3,
             key: 'frank',
             priority: 1 // Lowest priority - filler missions
         },
-        { 
-            name: 'B-Rank', 
-            exp: (missionRewards.brank.exp.min + missionRewards.brank.exp.max) / 2, 
-            cooldown: missionRewards.brank.cooldown, 
+        {
+            name: 'B-Rank',
+            exp: (missionRewards.brank.exp.min + missionRewards.brank.exp.max) / 2,
+            cooldown: missionRewards.brank.cooldown,
             weight: 1.5,
             key: 'brank',
             priority: 4
         },
-        { 
-            name: 'A-Rank', 
-            exp: missionRewards.arank.exp, 
-            cooldown: missionRewards.arank.cooldown, 
+        {
+            name: 'A-Rank',
+            exp: missionRewards.arank.exp,
+            cooldown: missionRewards.arank.cooldown,
             weight: 2.0,
             key: 'arank',
             priority: 5
         },
-        { 
-            name: 'Trials', 
-            exp: missionRewards.trials.exp(currentLevel), 
-            cooldown: missionRewards.trials.cooldown, 
+        {
+            name: 'Trials',
+            exp: missionRewards.trials.exp(currentLevel),
+            cooldown: missionRewards.trials.cooldown,
             weight: 1.8,
             key: 'trials',
             priority: 4
         },
-        { 
-            name: 'S-Rank Haku', 
-            exp: missionRewards.srank.haku.total, 
-            cooldown: missionRewards.srank.haku.cooldown, 
+        {
+            name: 'S-Rank Haku',
+            exp: missionRewards.srank.haku.total,
+            cooldown: missionRewards.srank.haku.cooldown,
             weight: 2.5,
             key: 'srank_haku',
             priority: 6
         },
-        { 
-            name: 'S-Rank Zabuza', 
-            exp: missionRewards.srank.zabuza.total, 
-            cooldown: missionRewards.srank.zabuza.cooldown, 
+        {
+            name: 'S-Rank Zabuza',
+            exp: missionRewards.srank.zabuza.total,
+            cooldown: missionRewards.srank.zabuza.cooldown,
             weight: 2.5,
             key: 'srank_zabuza',
             priority: 6
         },
-        { 
-            name: 'S-Rank Orochimaru', 
-            exp: missionRewards.srank.orochimaru.total, 
-            cooldown: missionRewards.srank.orochimaru.cooldown, 
+        {
+            name: 'S-Rank Orochimaru',
+            exp: missionRewards.srank.orochimaru.total,
+            cooldown: missionRewards.srank.orochimaru.cooldown,
             weight: 3.0,
             key: 'srank_orochimaru',
             priority: 7
         },
-        { 
-            name: 'S-Rank Kurenai', 
-            exp: missionRewards.srank.kurenai.total, 
-            cooldown: missionRewards.srank.kurenai.cooldown, 
+        {
+            name: 'S-Rank Kurenai',
+            exp: missionRewards.srank.kurenai.total,
+            cooldown: missionRewards.srank.kurenai.cooldown,
             weight: 3.0,
             key: 'srank_kurenai',
             priority: 7
         },
-        { 
-            name: 'C-Rank', 
-            exp: missionRewards.crank.exp(currentLevel), 
-            cooldown: missionRewards.crank.cooldown, 
+        {
+            name: 'C-Rank',
+            exp: missionRewards.crank.exp(currentLevel),
+            cooldown: missionRewards.crank.cooldown,
             weight: 4.0,
             key: 'crank',
             priority: 8 // Highest priority due to long cooldown
@@ -762,28 +762,28 @@ async function createGoalPlan(userId, targetLevel) {
 
     // Sort by priority (higher priority first for distribution)
     const sortedMissions = [...missionTypes].sort((a, b) => b.priority - a.priority);
-    
+
     let planSteps = [];
     let remainingExp = totalExpNeeded;
-    
+
     // First pass: Distribute high-priority missions evenly
     const highPriorityMissions = sortedMissions.filter(m => m.priority >= 4);
     let distributionRound = 0;
-    
+
     while (remainingExp > 0 && distributionRound < 10) { // Safety limit
         let distributedThisRound = false;
-        
+
         for (const mission of highPriorityMissions) {
             if (remainingExp <= 0) break;
-            
+
             const missionExp = typeof mission.exp === 'function' ? mission.exp(currentLevel) : mission.exp;
             const maxReasonableCount = Math.ceil(remainingExp / missionExp / highPriorityMissions.length);
-            
+
             if (maxReasonableCount > 0) {
                 // Add 1 mission of this type
                 const countToAdd = 1;
                 const expFromMission = countToAdd * missionExp;
-                
+
                 planSteps.push({
                     mission: mission.name,
                     count: countToAdd,
@@ -791,28 +791,28 @@ async function createGoalPlan(userId, targetLevel) {
                     totalExp: Math.round(expFromMission),
                     cooldown: mission.cooldown
                 });
-                
+
                 remainingExp -= Math.round(expFromMission);
                 distributedThisRound = true;
             }
         }
-        
+
         if (!distributedThisRound) break;
         distributionRound++;
     }
-    
+
     // Second pass: Fill remaining with medium priority
     const mediumPriorityMissions = sortedMissions.filter(m => m.priority >= 2 && m.priority < 4);
     for (const mission of mediumPriorityMissions) {
         if (remainingExp <= 0) break;
-        
+
         const missionExp = typeof mission.exp === 'function' ? mission.exp(currentLevel) : mission.exp;
         const count = Math.ceil(remainingExp / missionExp);
-        
+
         if (count > 0) {
             const actualCount = Math.min(count, 10); // Limit to prevent spam
             const expFromMissions = actualCount * missionExp;
-            
+
             planSteps.push({
                 mission: mission.name,
                 count: actualCount,
@@ -820,16 +820,16 @@ async function createGoalPlan(userId, targetLevel) {
                 totalExp: Math.round(expFromMissions),
                 cooldown: mission.cooldown
             });
-            
+
             remainingExp -= Math.round(expFromMissions);
         }
     }
-    
+
     // Final pass: Use F-Rank as filler for small amounts
     if (remainingExp > 0) {
         const fMission = missionTypes.find(m => m.key === 'frank');
         const count = Math.ceil(remainingExp / fMission.exp);
-        
+
         if (count > 0) {
             planSteps.push({
                 mission: fMission.name,
@@ -914,23 +914,23 @@ async function goalSet(targetUserId, targetLevel, message) {
  */
 async function editStat(targetUserId, stat, value, fileType, message, client) {
     if (message.author.id !== OWNER_ID) return "Only the owner can edit stats.";
-    
+
     // Refresh data right before operation
     refreshData();
-    
+
     let filePath = fileType === 'players' ? PLAYERS_FILE_PATH : USERS_FILE_PATH;
     let data = fileType === 'players' ? { ...dataCache.playersData } : { ...dataCache.usersData };
-    
+
     if (!data[targetUserId]) {
         data[targetUserId] = {};
     }
-    
+
     // Preserve existing data
     const currentUserData = { ...data[targetUserId] };
-    
+
     // Determine data type and convert value appropriately
     let processedValue = value;
-    
+
     // Check if value should be numeric
     if (!isNaN(value) && value !== '') {
         processedValue = Number(value);
@@ -942,16 +942,16 @@ async function editStat(targetUserId, stat, value, fileType, message, client) {
         // Keep as string
         processedValue = String(value);
     }
-    
+
     // Update only the specific stat while preserving others
     data[targetUserId] = {
         ...currentUserData,
         [stat]: processedValue
     };
-    
+
     // Save with proper data preservation
     saveJson(filePath, data);
-    
+
     let channel = message.channel;
     await channel.send(`<@${targetUserId}> you've been blessed by thunderbird.`);
     return `Set ${stat} of <@${targetUserId}> to ${processedValue} in ${fileType}.`;
@@ -1070,10 +1070,10 @@ module.exports.setup = (client, userPromptCounts) => {
         client.commands = new Collection();
         console.warn("[Minigame Engine] Initialized client.commands as a new Collection.");
     }
-    
+
     // Track processing to prevent multiple responses
     const processingUsers = new Set();
-    
+
     // Attempt to initialize REST client here, assuming client.token is available
     if (client.token && !restClient) {
         restClient = new REST({ version: '10' }).setToken(client.token);
@@ -1084,18 +1084,22 @@ module.exports.setup = (client, userPromptCounts) => {
 
         if (message.mentions.users.has(client.user.id)) {
             const userId = message.author.id;
-            
+            const userMessage = message.content.replace(`<@${client.user.id}>`, '').trim();
+
+            // OFFICIAL SERVER RESTRICTION - Prevent AI token waste
+            const OFFICIAL_SERVER_ID = '1381268582595297321';
+            if (message.guild && message.guild.id !== OFFICIAL_SERVER_ID) {
+                return; // Silently ignore messages from other servers
+            }
+
             // Prevent multiple processing for same user
             if (processingUsers.has(userId)) {
                 return;
             }
             processingUsers.add(userId);
-            
+
             try {
                 userPromptCounts[userId] = (userPromptCounts[userId] || 0) + 1;
-                const userMessage = message.content.replace(`<@${client.user.id}>`, '').trim();
-
-                await message.channel.sendTyping();
 
                 // Clean up old chained conversations
                 cleanupChainedConversations();
@@ -1104,7 +1108,7 @@ module.exports.setup = (client, userPromptCounts) => {
                 const isMessageSafe = await moderateMessage(userMessage);
                 if (!isMessageSafe) {
                     await message.reply("This message contains content that violates our guidelines.");
-                    return; 
+                    return;
                 }
 
                 // 2. GOAL SETTER SCRIPT
@@ -1118,7 +1122,7 @@ module.exports.setup = (client, userPromptCounts) => {
                     }
                     return;
                 }
-                
+
                 // 3. TOOL ROUTER SCRIPT (Enhanced with better detection)
                 let isToolCall = false;
                 let replyMessage = '';
@@ -1127,7 +1131,7 @@ module.exports.setup = (client, userPromptCounts) => {
                     const toolPrompt = toolDetectionPrompt.replace("{USER_MESSAGE}", userMessage);
                     const toolResult = await model.generateContent(toolPrompt);
                     const toolResponseText = cleanResponse(toolResult.response.text());
-                    
+
                     if (toolResponseText !== 'NOTOOL') {
                         const parsedToolResponse = JSON.parse(toolResponseText);
                         if (parsedToolResponse && parsedToolResponse.action) {
@@ -1136,7 +1140,7 @@ module.exports.setup = (client, userPromptCounts) => {
 
                             // Execute Tool with fresh data refresh
                             refreshData();
-                            
+
                             switch (action) {
                                 case 'giftMoney':
                                     replyMessage = await giftMoney(payload.userId, payload.amount, message);
@@ -1160,13 +1164,13 @@ module.exports.setup = (client, userPromptCounts) => {
                                     replyMessage = await editStat(payload.userId, payload.stat, payload.value, payload.fileType, message, client);
                                     break;
                                 case 'createMinigame':
-                                    replyMessage = await createMinigame(payload.userId, payload.gameName, payload.gameDescription, message, client); 
+                                    replyMessage = await createMinigame(payload.userId, payload.gameName, payload.gameDescription, message, client);
                                     break;
                                 case 'deleteMinigame':
-                                    replyMessage = await minigameTools.deleteMinigame(payload.commandName, client); 
+                                    replyMessage = await minigameTools.deleteMinigame(payload.commandName, client);
                                     break;
                                 case 'reloadMinigame':
-                                    replyMessage = await minigameTools.reloadMinigame(payload.commandName, client); 
+                                    replyMessage = await minigameTools.reloadMinigame(payload.commandName, client);
                                     break;
                                 default:
                                     replyMessage = 'Unknown tool action.';
@@ -1188,10 +1192,10 @@ module.exports.setup = (client, userPromptCounts) => {
                 // 4. CHAINED CONVERSATION & MEMORY SYSTEM
                 const chainedConversations = loadChainedConversations();
                 const previousContext = chainedConversations[userId];
-                
+
                 // Search for relevant memories based on keywords
                 const relevantMemories = await searchMemoryByKeywords(userMessage, 2);
-                const memoryContext = relevantMemories.length > 0 ? 
+                const memoryContext = relevantMemories.length > 0 ?
                     `Relevant previous conversations:\n${relevantMemories.join('\n')}\n\n` : '';
 
                 // 5. MAIN CONVERSATION (Enhanced with memory and chaining)
@@ -1235,10 +1239,10 @@ IMPORTANT: ALL YOUR ANSWERS MUST BE SHORT AND CONCISE. Answer like a human being
                     const result = await model.generateContent(conversationPrompt);
                     const responseText = result.response.text();
                     const finalResponse = cleanAndLimitMessage(responseText);
-                    
+
                     // Save to permanent memory with keywords
                     await savePermanentMemory(`User: ${userMessage.substring(0, 100)}... | Assistant: ${finalResponse.substring(0, 100)}...`);
-                    
+
                     // Update chained conversation
                     chainedConversations[userId] = {
                         previousMessage: userMessage,
@@ -1246,7 +1250,7 @@ IMPORTANT: ALL YOUR ANSWERS MUST BE SHORT AND CONCISE. Answer like a human being
                         timestamp: Date.now()
                     };
                     saveChainedConversations(chainedConversations);
-                    
+
                     await message.reply(finalResponse);
                 } catch (error) {
                     console.error('Conversation generation failed:', error);
@@ -1265,4 +1269,4 @@ module.exports.data = new SlashCommandBuilder()
     .setName('story')
     .setDescription('Naruto AI bot conversation')
     .toJSON();
-module.exports.execute = async () => {};
+module.exports.execute = async () => { };

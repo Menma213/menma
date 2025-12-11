@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ShinobiRPG - Hub</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Lato:ital,wght@0,300;0,400;1,400&family=Bangers&display=swap"
+        rel="stylesheet">
+    <style>
+        /* this will be the comment xd */
+        :root {
+            --bg-dark: #050505;
+            --accent: #ff4757;
+            --text-primary: #ffffff;
+            --font-heading: 'Cinzel', serif;
+            --font-body: 'Lato', sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            width: 100%;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
+            font-family: var(--font-body);
+            color: var(--text-primary);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .hub-container {
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 3rem 2rem;
+            border-radius: 20px;
+            border: 2px solid var(--accent);
+            box-shadow: 0 0 50px rgba(255, 71, 87, 0.3);
+        }
+
+        h1 {
+            font-family: var(--font-heading);
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(to right, #ffffff, #ff4757);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .welcome-text {
+            font-size: 1.5rem;
+            margin-bottom: 3rem;
+            color: #ccc;
+        }
+
+        .story-btn {
+            padding: 1.5rem 3rem;
+            font-size: 1.5rem;
+            font-family: var(--font-heading);
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            box-shadow: 0 5px 20px rgba(255, 71, 87, 0.4);
+        }
+
+        .story-btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(255, 71, 87, 0.6);
+        }
+
+        .user-info {
+            margin-bottom: 2rem;
+            font-size: 1.2rem;
+            opacity: 0.8;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+
+            .welcome-text {
+                font-size: 1.2rem;
+            }
+
+            .story-btn {
+                padding: 1rem 2rem;
+                font-size: 1.2rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="hub-container">
+        <h1>ShinobiRPG</h1>
+        <div class="user-info">
+            <p class="welcome-text">Welcome, <span id="username">Ninja</span>!</p>
+        </div>
+        <button class="story-btn" onclick="window.location.href='/'">Continue Story</button>
+    </div>
+
+    <script>
+        // Get user data from URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const username = urlParams.get('username');
+        const discordId = urlParams.get('discord_id');
+        const avatar = urlParams.get('avatar');
+
+        if (username) {
+            document.getElementById('username').textContent = username;
+            // Store in localStorage for the story page
+            localStorage.setItem('discord_username', username);
+            localStorage.setItem('discord_user_id', discordId);
+            if (avatar) localStorage.setItem('discord_avatar', avatar);
+        }
+    </script>
+</body>
+
+</html>

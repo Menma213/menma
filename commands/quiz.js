@@ -121,6 +121,9 @@ async function startQuiz(channel) {
         // Wait for the user to answer
         const answer = await new Promise((resolve) => {
           answerCollector.on('collect', async (interaction) => {
+            // Disable buttons immediately to prevent spam
+            await questionMessage.edit({ components: [] });
+
             // Get the selected option index
             const selectedOptionIndex = parseInt(interaction.customId.split('_')[1]);
 

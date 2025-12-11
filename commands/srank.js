@@ -896,104 +896,109 @@ async function runSurvivalBattle(interaction, users, userId, players, jutsuList,
     let player = players.find(p => p.id === userId);
     player.maxHealth = player.maxHealth || player.health;
     player.chakra = player.chakra || 10;
-    player.activeEffects = player.activeEffects || [];
+    const initialChakra = player.chakra;
+    try {
+        player.activeEffects = player.activeEffects || [];
 
-    let roundNum = 1;
-    const survivalRounds = bossConfig.survivalRounds || 5;
-    let survivedRounds = 0;
+        let roundNum = 1;
+        const survivalRounds = bossConfig.survivalRounds || 5;
+        let survivedRounds = 0;
 
-    while (player.health > 0 && survivedRounds < survivalRounds) {
-        const effectivePlayer = BattleUtils.getEffectiveStats(player);
-        const effectiveNpc = BattleUtils.getEffectiveStats(npc);
+        while (player.health > 0 && survivedRounds < survivalRounds) {
+            const effectivePlayer = BattleUtils.getEffectiveStats(player);
+            const effectiveNpc = BattleUtils.getEffectiveStats(npc);
 
-        const { embed, components } = createMovesEmbed(player, roundNum, userId, jutsuList);
+            const { embed, components } = createMovesEmbed(player, roundNum, userId, jutsuList);
 
-        // Modify components to remove lethal options or add survival instructions
-        const survivalEmbed = new EmbedBuilder()
-            .setTitle(`SURVIVE! Round ${survivedRounds + 1}/${survivalRounds}`)
-            .setColor('#FF0000')
-            .setDescription(`**OBJECTIVE: Survive ${survivalRounds} rounds!**\nDo not kill ${npc.name}!\n\n${embed.data.description}`);
+            // Modify components to remove lethal options or add survival instructions
+            const survivalEmbed = new EmbedBuilder()
+                .setTitle(`SURVIVE! Round ${survivedRounds + 1}/${survivalRounds}`)
+                .setColor('#FF0000')
+                .setDescription(`**OBJECTIVE: Survive ${survivalRounds} rounds!**\nDo not kill ${npc.name}!\n\n${embed.data.description}`);
 
-        const moveMsg = await interaction.followUp({
-            content: `${player.username}, survive!`,
-            embeds: [survivalEmbed],
-            components: components,
-            fetchReply: true
-        });
-
-        const battleImage = new AttachmentBuilder(await BattleUtils.generateBattleImage(interaction, player, player.health, npc, VILLAGE_BG, npc.image));
-        await interaction.followUp({ files: [battleImage] });
-
-        const playerAction = await new Promise(resolve => {
-            const collector = moveMsg.createMessageComponentCollector({
-                filter: ii => ii.user.id === userId,
-                time: 60000
+            const moveMsg = await interaction.followUp({
+                content: `${player.username}, survive!`,
+                embeds: [survivalEmbed],
+                components: components,
+                fetchReply: true
             });
-            collector.on('collect', async ii => {
-                await ii.deferUpdate();
-                const actionResult = await processPlayerMove(ii.customId, player, npc, effectivePlayer, effectiveNpc);
-                resolve(actionResult);
-                collector.stop();
+
+            const battleImage = new AttachmentBuilder(await BattleUtils.generateBattleImage(interaction, player, player.health, npc, VILLAGE_BG, npc.image));
+            await interaction.followUp({ files: [battleImage] });
+
+            const playerAction = await new Promise(resolve => {
+                const collector = moveMsg.createMessageComponentCollector({
+                    filter: ii => ii.user.id === userId,
+                    time: 60000
+                });
+                collector.on('collect', async ii => {
+                    await ii.deferUpdate();
+                    const actionResult = await processPlayerMove(ii.customId, player, npc, effectivePlayer, effectiveNpc);
+                    resolve(actionResult);
+                    collector.stop();
+                });
+                collector.on('end', (collected, reason) => {
+                    if (reason === 'time') resolve({ fled: true });
+                });
             });
-            collector.on('end', (collected, reason) => {
-                if (reason === 'time') resolve({ fled: true });
+
+            if (playerAction.fled) {
+                await interaction.followUp(`${player.username} fled from the battle!`);
+                return "loss";
+            }
+
+            // Apply player action (but don't kill NPC)
+            if (playerAction.damage) {
+                npc.currentHealth = Math.max(1, npc.currentHealth - playerAction.damage); // Never let NPC die
+            }
+
+            if (playerAction.heal) {
+                player.health = Math.min(player.health + playerAction.heal, player.maxHealth);
+            }
+
+            // NPC attacks
+            let npcAction = { damage: 0, heal: 0, description: `${npc.name} attacks`, specialEffects: [], hit: false };
+            if (npc.currentHealth > 0) {
+                npcAction = npcChooseMove(npc, player, effectiveNpc, effectivePlayer);
+                player.health -= npcAction.damage || 0;
+            }
+
+            player.health = Math.max(0, player.health);
+
+            const summaryEmbed = createBattleSummary(player, npc, playerAction, npcAction, roundNum, null);
+            await interaction.followUp({ embeds: [summaryEmbed] });
+
+            if (player.health <= 0) {
+                await interaction.followUp(`**You failed to survive! Game Over.**`);
+                return "loss";
+            }
+
+            survivedRounds++;
+
+            if (survivedRounds >= survivalRounds) {
+                await interaction.followUp(`**You survived ${survivalRounds} rounds! Objective complete!**`);
+                return "win";
+            }
+
+            // Regenerate chakra and process effects
+            player.chakra += CHAKRA_REGEN[player.rank] || 1;
+            npc.chakra += 2;
+
+            [player, npc].forEach(entity => {
+                entity.activeEffects.forEach(effect => {
+                    if (effect.duration > 0) effect.duration--;
+                });
+                entity.activeEffects = entity.activeEffects.filter(e => e.duration > 0);
             });
-        });
 
-        if (playerAction.fled) {
-            await interaction.followUp(`${player.username} fled from the battle!`);
-            return "loss";
+            roundNum++;
+            await new Promise(resolve => setTimeout(resolve, 3000));
         }
 
-        // Apply player action (but don't kill NPC)
-        if (playerAction.damage) {
-            npc.currentHealth = Math.max(1, npc.currentHealth - playerAction.damage); // Never let NPC die
-        }
-
-        if (playerAction.heal) {
-            player.health = Math.min(player.health + playerAction.heal, player.maxHealth);
-        }
-
-        // NPC attacks
-        let npcAction = { damage: 0, heal: 0, description: `${npc.name} attacks`, specialEffects: [], hit: false };
-        if (npc.currentHealth > 0) {
-            npcAction = npcChooseMove(npc, player, effectiveNpc, effectivePlayer);
-            player.health -= npcAction.damage || 0;
-        }
-
-        player.health = Math.max(0, player.health);
-
-        const summaryEmbed = createBattleSummary(player, npc, playerAction, npcAction, roundNum, null);
-        await interaction.followUp({ embeds: [summaryEmbed] });
-
-        if (player.health <= 0) {
-            await interaction.followUp(`**You failed to survive! Game Over.**`);
-            return "loss";
-        }
-
-        survivedRounds++;
-
-        if (survivedRounds >= survivalRounds) {
-            await interaction.followUp(`**You survived ${survivalRounds} rounds! Objective complete!**`);
-            return "win";
-        }
-
-        // Regenerate chakra and process effects
-        player.chakra += CHAKRA_REGEN[player.rank] || 1;
-        npc.chakra += 2;
-
-        [player, npc].forEach(entity => {
-            entity.activeEffects.forEach(effect => {
-                if (effect.duration > 0) effect.duration--;
-            });
-            entity.activeEffects = entity.activeEffects.filter(e => e.duration > 0);
-        });
-
-        roundNum++;
-        await new Promise(resolve => setTimeout(resolve, 3000));
+        return "unknown";
+    } finally {
+        player.chakra = initialChakra;
     }
-
-    return "unknown";
 }
 
 async function runSrankBattle(interaction, users, userId, players, jutsuList, bossConfig, bgUrl, npcImgUrl, bossName) {
@@ -1011,155 +1016,160 @@ async function runSrankBattle(interaction, users, userId, players, jutsuList, bo
     let player = players.find(p => p.id === userId);
     player.maxHealth = player.maxHealth || player.health;
     player.chakra = player.chakra || 10;
-    player.activeEffects = player.activeEffects || [];
-    if (bossName === "zabuza") {
-        player.health = Math.floor(player.health * 0.6);
-    }
-    let roundNum = 1;
-    let comboState = null;
-    if (users[userId].Combo && COMBOS[users[userId].Combo]) {
-        comboState = {
-            combo: COMBOS[users[userId].Combo],
-            usedJutsus: new Set()
-        };
-    }
-    while (player.health > 0 && npc.currentHealth > 0) {
-        const effectivePlayer = BattleUtils.getEffectiveStats(player);
-        const effectiveNpc = BattleUtils.getEffectiveStats(npc);
-        const { embed, components } = createMovesEmbed(player, roundNum, userId, jutsuList);
-        const moveMsg = await interaction.followUp({
-            content: `${player.username}, it's your turn!`,
-            embeds: [embed],
-            components: components,
-            fetchReply: true
-        });
-        // Pass the current player health (after any damage taken)
-        const battleImage = new AttachmentBuilder(await BattleUtils.generateBattleImage(interaction, player, player.health, npc, bgUrl, npcImgUrl));
-        await interaction.followUp({ files: [battleImage] });
-        const playerAction = await new Promise(resolve => {
-            const collector = moveMsg.createMessageComponentCollector({
-                filter: ii => ii.user.id === userId,
-                time: 60000
+    const initialChakra = player.chakra;
+    try {
+        player.activeEffects = player.activeEffects || [];
+        if (bossName === "zabuza") {
+            player.health = Math.floor(player.health * 0.6);
+        }
+        let roundNum = 1;
+        let comboState = null;
+        if (users[userId].Combo && COMBOS[users[userId].Combo]) {
+            comboState = {
+                combo: COMBOS[users[userId].Combo],
+                usedJutsus: new Set()
+            };
+        }
+        while (player.health > 0 && npc.currentHealth > 0) {
+            const effectivePlayer = BattleUtils.getEffectiveStats(player);
+            const effectiveNpc = BattleUtils.getEffectiveStats(npc);
+            const { embed, components } = createMovesEmbed(player, roundNum, userId, jutsuList);
+            const moveMsg = await interaction.followUp({
+                content: `${player.username}, it's your turn!`,
+                embeds: [embed],
+                components: components,
+                fetchReply: true
             });
-            collector.on('collect', async ii => {
-                await ii.deferUpdate();
-                const actionResult = await processPlayerMove(ii.customId, player, npc, effectivePlayer, effectiveNpc);
-                if (comboState && actionResult.jutsuUsed && comboState.combo.requiredJutsus.includes(actionResult.jutsuUsed)) {
-                    comboState.usedJutsus.add(actionResult.jutsuUsed);
+            // Pass the current player health (after any damage taken)
+            const battleImage = new AttachmentBuilder(await BattleUtils.generateBattleImage(interaction, player, player.health, npc, bgUrl, npcImgUrl));
+            await interaction.followUp({ files: [battleImage] });
+            const playerAction = await new Promise(resolve => {
+                const collector = moveMsg.createMessageComponentCollector({
+                    filter: ii => ii.user.id === userId,
+                    time: 60000
+                });
+                collector.on('collect', async ii => {
+                    await ii.deferUpdate();
+                    const actionResult = await processPlayerMove(ii.customId, player, npc, effectivePlayer, effectiveNpc);
+                    if (comboState && actionResult.jutsuUsed && comboState.combo.requiredJutsus.includes(actionResult.jutsuUsed)) {
+                        comboState.usedJutsus.add(actionResult.jutsuUsed);
+                    }
+                    resolve(actionResult);
+                    collector.stop();
+                });
+                collector.on('end', (collected, reason) => {
+                    if (reason === 'time') resolve({ fled: true });
+                });
+            });
+            if (playerAction.fled) {
+                await interaction.followUp(`${player.username} fled from the battle!`);
+                return "loss";
+            }
+            npc.currentHealth -= playerAction.damage || 0;
+            if (playerAction.heal) {
+                player.health = Math.min(player.health + playerAction.heal, player.maxHealth);
+            }
+            const processCombo = () => {
+                if (!comboState) return { completed: false, damageText: "" };
+                if (comboState.combo.requiredJutsus.every(jutsu => comboState.usedJutsus.has(jutsu))) {
+                    npc.currentHealth -= comboState.combo.damage;
+                    comboState.usedJutsus.clear();
+                    return {
+                        completed: true,
+                        damageText: `\n${player.username} lands a ${comboState.combo.name}! Dealt ${comboState.combo.damage} true damage!`
+                    };
                 }
-                resolve(actionResult);
-                collector.stop();
-            });
-            collector.on('end', (collected, reason) => {
-                if (reason === 'time') resolve({ fled: true });
-            });
-        });
-        if (playerAction.fled) {
-            await interaction.followUp(`${player.username} fled from the battle!`);
-            return "loss";
-        }
-        npc.currentHealth -= playerAction.damage || 0;
-        if (playerAction.heal) {
-            player.health = Math.min(player.health + playerAction.heal, player.maxHealth);
-        }
-        const processCombo = () => {
-            if (!comboState) return { completed: false, damageText: "" };
-            if (comboState.combo.requiredJutsus.every(jutsu => comboState.usedJutsus.has(jutsu))) {
-                npc.currentHealth -= comboState.combo.damage;
-                comboState.usedJutsus.clear();
-                return {
-                    completed: true,
-                    damageText: `\n${player.username} lands a ${comboState.combo.name}! Dealt ${comboState.combo.damage} true damage!`
-                };
+                return { completed: false, damageText: "" };
+            };
+            const comboResult = processCombo();
+            let npcAction = { damage: 0, heal: 0, description: `${npc.name} is defeated`, specialEffects: [], hit: false, image_url: null };
+            if (npc.currentHealth > 0) {
+                npcAction = npcChooseMove(npc, player, effectiveNpc, effectivePlayer);
+                // FIX: Register NPC's damage to player
+                player.health -= npcAction.damage || 0;
+                if (npcAction.heal) {
+                    npc.currentHealth = Math.min(npc.currentHealth + npcAction.heal, npc.health);
+                }
             }
-            return { completed: false, damageText: "" };
-        };
-        const comboResult = processCombo();
-        let npcAction = { damage: 0, heal: 0, description: `${npc.name} is defeated`, specialEffects: [], hit: false, image_url: null };
-        if (npc.currentHealth > 0) {
-            npcAction = npcChooseMove(npc, player, effectiveNpc, effectivePlayer);
-            // FIX: Register NPC's damage to player
-            player.health -= npcAction.damage || 0;
-            if (npcAction.heal) {
-                npc.currentHealth = Math.min(npc.currentHealth + npcAction.heal, npc.health);
+            player.health = Math.max(0, player.health);
+            npc.currentHealth = Math.max(0, npc.currentHealth);
+            const summaryEmbed = createBattleSummary(player, npc, playerAction, npcAction, roundNum, comboState);
+            if (comboResult.completed) {
+                summaryEmbed.setDescription(
+                    summaryEmbed.data.description + comboResult.damageText
+                );
             }
-        }
-        player.health = Math.max(0, player.health);
-        npc.currentHealth = Math.max(0, npc.currentHealth);
-        const summaryEmbed = createBattleSummary(player, npc, playerAction, npcAction, roundNum, comboState);
-        if (comboResult.completed) {
-            summaryEmbed.setDescription(
-                summaryEmbed.data.description + comboResult.damageText
-            );
-        }
-        await interaction.followUp({ embeds: [summaryEmbed] });
-        if (player.health <= 0) {
-            users[userId].srankResult = "loss";
-            fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
-            await interaction.followUp(`**You have been defeated by ${bossName}! Game Over.**`);
-            return "loss";
-        }
-        if (npc.currentHealth <= 0) {
-            // Update tutorial progress for /tutorial command
-            users[userId].srankResult = "win";
-            fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
-            await interaction.followUp(`**${bossName} has been defeated! You win!**`);
-            // Send exp and money rewards to gift inventory (gift.json)
-            const giftPath = path.resolve(__dirname, '../../menma/data/gift.json');
-            let giftData = fs.existsSync(giftPath) ? JSON.parse(fs.readFileSync(giftPath, 'utf8')) : {};
-            if (!giftData[userId]) giftData[userId] = [];
-            // Helper to generate unique id
-            function generateGiftId(userGifts) {
-                let id;
-                do {
-                    id = Math.floor(Math.random() * 50000) + 1;
-                } while (userGifts && userGifts.some(g => g.id === id));
-                return id;
+            await interaction.followUp({ embeds: [summaryEmbed] });
+            if (player.health <= 0) {
+                users[userId].srankResult = "loss";
+                fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
+                await interaction.followUp(`**You have been defeated by ${bossName}! Game Over.**`);
+                return "loss";
             }
-            const playerLevel = player.level || 1; // Get player's current level
-            const expReward = getSrankExpReward(playerLevel, bossConfig.baseExp);
-            const moneyReward = bossConfig.money;
-            giftData[userId].push({
-                id: generateGiftId(giftData[userId]),
-                type: 'exp',
-                amount: expReward,
-                from: 'srank',
-                date: Date.now()
-            });
-            giftData[userId].push({
-                id: generateGiftId(giftData[userId]),
-                type: 'money',
-                amount: moneyReward,
-                from: 'srank',
-                date: Date.now()
-            });
-            fs.writeFileSync(giftPath, JSON.stringify(giftData, null, 2));
-            users[userId].health = player.maxHealth;
-            if (!users[userId].srankDefeats) users[userId].srankDefeats = {};
-            users[userId].srankDefeats.orochimaru = (users[userId].srankDefeats.orochimaru || 0) + 1;
-            fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
-            const rewardEmbed = new EmbedBuilder()
-                .setTitle(`Battle End! ${player.username} has won!`)
-                .setDescription(
-                    `<@${userId}> has earned ${expReward} exp!
+            if (npc.currentHealth <= 0) {
+                // Update tutorial progress for /tutorial command
+                users[userId].srankResult = "win";
+                fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
+                await interaction.followUp(`**${bossName} has been defeated! You win!**`);
+                // Send exp and money rewards to gift inventory (gift.json)
+                const giftPath = path.resolve(__dirname, '../../menma/data/gift.json');
+                let giftData = fs.existsSync(giftPath) ? JSON.parse(fs.readFileSync(giftPath, 'utf8')) : {};
+                if (!giftData[userId]) giftData[userId] = [];
+                // Helper to generate unique id
+                function generateGiftId(userGifts) {
+                    let id;
+                    do {
+                        id = Math.floor(Math.random() * 50000) + 1;
+                    } while (userGifts && userGifts.some(g => g.id === id));
+                    return id;
+                }
+                const playerLevel = player.level || 1; // Get player's current level
+                const expReward = getSrankExpReward(playerLevel, bossConfig.baseExp);
+                const moneyReward = bossConfig.money;
+                giftData[userId].push({
+                    id: generateGiftId(giftData[userId]),
+                    type: 'exp',
+                    amount: expReward,
+                    from: 'srank',
+                    date: Date.now()
+                });
+                giftData[userId].push({
+                    id: generateGiftId(giftData[userId]),
+                    type: 'money',
+                    amount: moneyReward,
+                    from: 'srank',
+                    date: Date.now()
+                });
+                fs.writeFileSync(giftPath, JSON.stringify(giftData, null, 2));
+                users[userId].health = player.maxHealth;
+                if (!users[userId].srankDefeats) users[userId].srankDefeats = {};
+                users[userId].srankDefeats.orochimaru = (users[userId].srankDefeats.orochimaru || 0) + 1;
+                fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
+                const rewardEmbed = new EmbedBuilder()
+                    .setTitle(`Battle End! ${player.username} has won!`)
+                    .setDescription(
+                        `<@${userId}> has earned ${expReward} exp!
 <@${userId}> has earned $${moneyReward.toLocaleString()}! (Check /gift inventory to claim)`
-                )
-                .setColor('#006400');
-            await interaction.followUp({ embeds: [rewardEmbed] });
-            return "win";
-        }
-        player.chakra += CHAKRA_REGEN[player.rank] || 1;
-        npc.chakra += 2;
-        [player, npc].forEach(entity => {
-            entity.activeEffects.forEach(effect => {
-                if (effect.duration > 0) effect.duration--;
+                    )
+                    .setColor('#006400');
+                await interaction.followUp({ embeds: [rewardEmbed] });
+                return "win";
+            }
+            player.chakra += CHAKRA_REGEN[player.rank] || 1;
+            npc.chakra += 2;
+            [player, npc].forEach(entity => {
+                entity.activeEffects.forEach(effect => {
+                    if (effect.duration > 0) effect.duration--;
+                });
+                entity.activeEffects = entity.activeEffects.filter(e => e.duration > 0);
             });
-            entity.activeEffects = entity.activeEffects.filter(e => e.duration > 0);
-        });
-        roundNum++;
-        if (player.health > 0 && npc.currentHealth > 0) await new Promise(resolve => setTimeout(resolve, 3000));
+            roundNum++;
+            if (player.health > 0 && npc.currentHealth > 0) await new Promise(resolve => setTimeout(resolve, 3000));
+        }
+        return "unknown";
+    } finally {
+        player.chakra = initialChakra;
     }
-    return "unknown";
 }
 
 // Remove waitForContinue function (no longer needed for Kurenai battle button logic)
@@ -1513,190 +1523,195 @@ async function runOrochimaruBattle(interaction, users, userId, players, jutsuLis
     let player = players.find(p => p.id === userId);
     player.maxHealth = player.maxHealth || player.health;
     player.chakra = player.chakra || 10;
-    player.activeEffects = player.activeEffects || [];
-    let roundNum = 1;
-    let comboState = null;
-    if (users[userId].Combo && COMBOS[users[userId].Combo]) {
-        comboState = {
-            combo: COMBOS[users[userId].Combo],
-            usedJutsus: new Set()
-        };
-    }
-    let executeAvailable = false;
-
-    while (player.health > 0 && npc.currentHealth > 0) {
-        const effectivePlayer = BattleUtils.getEffectiveStats(player);
-        const effectiveNpc = BattleUtils.getEffectiveStats(npc);
-        // Check if Execute should be available (when Orochimaru is below 30% health)
-        const { embed, components } = createMovesEmbed(player, roundNum, userId, jutsuList);
-        // Add Execute option if available
-        if (executeAvailable) {
-            const executeRow = new ActionRowBuilder().addComponents(
-                new ButtonBuilder()
-                    .setCustomId(`execute-${userId}-${roundNum}`)
-                    .setLabel('EXECUTE')
-                    .setStyle(ButtonStyle.Danger)
-            );
-            components.push(executeRow);
+    const initialChakra = player.chakra;
+    try {
+        player.activeEffects = player.activeEffects || [];
+        let roundNum = 1;
+        let comboState = null;
+        if (users[userId].Combo && COMBOS[users[userId].Combo]) {
+            comboState = {
+                combo: COMBOS[users[userId].Combo],
+                usedJutsus: new Set()
+            };
         }
-        const moveMsg = await interaction.followUp({
-            content: `${player.username}, it's your turn!${executeAvailable ? "\n**EXECUTE option available!**" : ""}`,
-            embeds: [embed],
-            components: components,
-            fetchReply: true
-        });
-        // Pass the current player health (after any damage taken)
-        const battleImage = new AttachmentBuilder(await BattleUtils.generateBattleImage(interaction, player, player.health, npc, OROCHIMARU_BG, OROCHIMARU_AVATAR));
-        await interaction.followUp({ files: [battleImage] });
-        await interaction.followUp({ files: [battleImage] });
-        const playerAction = await new Promise(resolve => {
-            const collector = moveMsg.createMessageComponentCollector({
-                filter: ii => ii.user.id === userId,
-                time: 60000
+        let executeAvailable = false;
+
+        while (player.health > 0 && npc.currentHealth > 0) {
+            const effectivePlayer = BattleUtils.getEffectiveStats(player);
+            const effectiveNpc = BattleUtils.getEffectiveStats(npc);
+            // Check if Execute should be available (when Orochimaru is below 30% health)
+            const { embed, components } = createMovesEmbed(player, roundNum, userId, jutsuList);
+            // Add Execute option if available
+            if (executeAvailable) {
+                const executeRow = new ActionRowBuilder().addComponents(
+                    new ButtonBuilder()
+                        .setCustomId(`execute-${userId}-${roundNum}`)
+                        .setLabel('EXECUTE')
+                        .setStyle(ButtonStyle.Danger)
+                );
+                components.push(executeRow);
+            }
+            const moveMsg = await interaction.followUp({
+                content: `${player.username}, it's your turn!${executeAvailable ? "\n**EXECUTE option available!**" : ""}`,
+                embeds: [embed],
+                components: components,
+                fetchReply: true
             });
-            collector.on('collect', async ii => {
-                await ii.deferUpdate();
-                if (ii.customId.startsWith('execute')) {
-                    // Instant kill if Execute is used at the right time
-                    if (executeAvailable) {
-                        resolve({
-                            damage: npc.currentHealth,
-                            heal: 0,
-                            description: `${player.username} executes a perfectly timed finishing blow!`,
-                            specialEffects: ["FATAL STRIKE!"],
-                            hit: true,
-                            isExecute: true
-                        });
+            // Pass the current player health (after any damage taken)
+            const battleImage = new AttachmentBuilder(await BattleUtils.generateBattleImage(interaction, player, player.health, npc, OROCHIMARU_BG, OROCHIMARU_AVATAR));
+            await interaction.followUp({ files: [battleImage] });
+            await interaction.followUp({ files: [battleImage] });
+            const playerAction = await new Promise(resolve => {
+                const collector = moveMsg.createMessageComponentCollector({
+                    filter: ii => ii.user.id === userId,
+                    time: 60000
+                });
+                collector.on('collect', async ii => {
+                    await ii.deferUpdate();
+                    if (ii.customId.startsWith('execute')) {
+                        // Instant kill if Execute is used at the right time
+                        if (executeAvailable) {
+                            resolve({
+                                damage: npc.currentHealth,
+                                heal: 0,
+                                description: `${player.username} executes a perfectly timed finishing blow!`,
+                                specialEffects: ["FATAL STRIKE!"],
+                                hit: true,
+                                isExecute: true
+                            });
+                        } else {
+                            resolve({
+                                damage: 0,
+                                heal: 0,
+                                description: `${player.username} attempts an execution but misses the timing!`,
+                                specialEffects: ["Poor timing!"],
+                                hit: false
+                            });
+                        }
                     } else {
-                        resolve({
-                            damage: 0,
-                            heal: 0,
-                            description: `${player.username} attempts an execution but misses the timing!`,
-                            specialEffects: ["Poor timing!"],
-                            hit: false
-                        });
+                        const actionResult = await processPlayerMove(ii.customId, player, npc, effectivePlayer, effectiveNpc);
+                        if (comboState && actionResult.jutsuUsed && comboState.combo.requiredJutsus.includes(actionResult.jutsuUsed)) {
+                            comboState.usedJutsus.add(actionResult.jutsuUsed);
+                        }
+                        resolve(actionResult);
                     }
-                } else {
-                    const actionResult = await processPlayerMove(ii.customId, player, npc, effectivePlayer, effectiveNpc);
-                    if (comboState && actionResult.jutsuUsed && comboState.combo.requiredJutsus.includes(actionResult.jutsuUsed)) {
-                        comboState.usedJutsus.add(actionResult.jutsuUsed);
-                    }
-                    resolve(actionResult);
+                    collector.stop();
+                });
+                collector.on('end', (collected, reason) => {
+                    if (reason === 'time') resolve({ fled: true });
+                });
+            });
+            if (playerAction.fled) {
+                await interaction.followUp(`${player.username} fled from the battle!`);
+                return "loss";
+            }
+            npc.currentHealth -= playerAction.damage || 0;
+            if (playerAction.heal) {
+                player.health = Math.min(player.health + playerAction.heal, player.maxHealth);
+            }
+            // If player used Execute successfully, end battle
+            if (playerAction.isExecute && playerAction.hit) {
+                npc.currentHealth = 0;
+            }
+            const processCombo = () => {
+                if (!comboState) return { completed: false, damageText: "" };
+                if (comboState.combo.requiredJutsus.every(jutsu => comboState.usedJutsus.has(jutsu))) {
+                    npc.currentHealth -= comboState.combo.damage;
+                    comboState.usedJutsus.clear();
+                    return {
+                        completed: true,
+                        damageText: `\n${player.username} lands a ${comboState.combo.name}! Dealt ${comboState.combo.damage} true damage!`
+                    };
                 }
-                collector.stop();
-            });
-            collector.on('end', (collected, reason) => {
-                if (reason === 'time') resolve({ fled: true });
-            });
-        });
-        if (playerAction.fled) {
-            await interaction.followUp(`${player.username} fled from the battle!`);
-            return "loss";
-        }
-        npc.currentHealth -= playerAction.damage || 0;
-        if (playerAction.heal) {
-            player.health = Math.min(player.health + playerAction.heal, player.maxHealth);
-        }
-        // If player used Execute successfully, end battle
-        if (playerAction.isExecute && playerAction.hit) {
-            npc.currentHealth = 0;
-        }
-        const processCombo = () => {
-            if (!comboState) return { completed: false, damageText: "" };
-            if (comboState.combo.requiredJutsus.every(jutsu => comboState.usedJutsus.has(jutsu))) {
-                npc.currentHealth -= comboState.combo.damage;
-                comboState.usedJutsus.clear();
-                return {
-                    completed: true,
-                    damageText: `\n${player.username} lands a ${comboState.combo.name}! Dealt ${comboState.combo.damage} true damage!`
-                };
+                return { completed: false, damageText: "" };
+            };
+            const comboResult = processCombo();
+            let npcAction = { damage: 0, heal: 0, description: `${npc.name} is defeated`, specialEffects: [], hit: false, image_url: null };
+            if (npc.currentHealth > 0) {
+                npcAction = npcChooseMove(npc, player, effectiveNpc, effectivePlayer);
+                player.health -= npcAction.damage || 0;
+                if (npcAction.heal) {
+                    npc.currentHealth = Math.min(npc.currentHealth + npcAction.heal, npc.health);
+                }
             }
-            return { completed: false, damageText: "" };
-        };
-        const comboResult = processCombo();
-        let npcAction = { damage: 0, heal: 0, description: `${npc.name} is defeated`, specialEffects: [], hit: false, image_url: null };
-        if (npc.currentHealth > 0) {
-            npcAction = npcChooseMove(npc, player, effectiveNpc, effectivePlayer);
-            player.health -= npcAction.damage || 0;
-            if (npcAction.heal) {
-                npc.currentHealth = Math.min(npc.currentHealth + npcAction.heal, npc.health);
+            player.health = Math.max(0, player.health);
+            npc.currentHealth = Math.max(0, npc.currentHealth);
+            const summaryEmbed = createBattleSummary(player, npc, playerAction, npcAction, roundNum, comboState);
+            if (comboResult.completed) {
+                summaryEmbed.setDescription(
+                    summaryEmbed.data.description + comboResult.damageText
+                );
             }
-        }
-        player.health = Math.max(0, player.health);
-        npc.currentHealth = Math.max(0, npc.currentHealth);
-        const summaryEmbed = createBattleSummary(player, npc, playerAction, npcAction, roundNum, comboState);
-        if (comboResult.completed) {
-            summaryEmbed.setDescription(
-                summaryEmbed.data.description + comboResult.damageText
-            );
-        }
-        await interaction.followUp({ embeds: [summaryEmbed] });
-        if (player.health <= 0) {
-            users[userId].srankResult = "loss";
-            fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
-            await interaction.followUp(`**You have been defeated by Orochimaru! Game Over.**`);
-            return "loss";
-        }
-        if (npc.currentHealth <= 0) {
-            // Update tutorial progress for /tutorial command
-            users[userId].srankResult = "win";
-            fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
-            await interaction.followUp(`**Orochimaru has been defeated! You win!**`);
-            // Send exp and money rewards to gift inventory (gift.json)
-            const giftPath = path.resolve(__dirname, '../../menma/data/gift.json');
-            let giftData = fs.existsSync(giftPath) ? JSON.parse(fs.readFileSync(giftPath, 'utf8')) : {};
-            if (!giftData[userId]) giftData[userId] = [];
-            // Helper to generate unique id
-            function generateGiftId(userGifts) {
-                let id;
-                do {
-                    id = Math.floor(Math.random() * 50000) + 1;
-                } while (userGifts && userGifts.some(g => g.id === id));
-                return id;
+            await interaction.followUp({ embeds: [summaryEmbed] });
+            if (player.health <= 0) {
+                users[userId].srankResult = "loss";
+                fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
+                await interaction.followUp(`**You have been defeated by Orochimaru! Game Over.**`);
+                return "loss";
             }
-            const playerLevel = player.level || 1; // Get player's current level
-            const expReward = getSrankExpReward(playerLevel, srankBosses.orochimaru.baseExp); // Use Orochimaru's baseExp
-            const moneyReward = srankBosses.orochimaru.money; // Use Orochimaru's money
+            if (npc.currentHealth <= 0) {
+                // Update tutorial progress for /tutorial command
+                users[userId].srankResult = "win";
+                fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
+                await interaction.followUp(`**Orochimaru has been defeated! You win!**`);
+                // Send exp and money rewards to gift inventory (gift.json)
+                const giftPath = path.resolve(__dirname, '../../menma/data/gift.json');
+                let giftData = fs.existsSync(giftPath) ? JSON.parse(fs.readFileSync(giftPath, 'utf8')) : {};
+                if (!giftData[userId]) giftData[userId] = [];
+                // Helper to generate unique id
+                function generateGiftId(userGifts) {
+                    let id;
+                    do {
+                        id = Math.floor(Math.random() * 50000) + 1;
+                    } while (userGifts && userGifts.some(g => g.id === id));
+                    return id;
+                }
+                const playerLevel = player.level || 1; // Get player's current level
+                const expReward = getSrankExpReward(playerLevel, srankBosses.orochimaru.baseExp); // Use Orochimaru's baseExp
+                const moneyReward = srankBosses.orochimaru.money; // Use Orochimaru's money
 
-            giftData[userId].push({
-                id: generateGiftId(giftData[userId]),
-                type: 'exp',
-                amount: expReward,
-                from: 'srank',
-                date: Date.now()
-            });
-            giftData[userId].push({
-                id: generateGiftId(giftData[userId]),
-                type: 'money',
-                amount: moneyReward,
-                from: 'srank',
-                date: Date.now()
-            });
-            fs.writeFileSync(giftPath, JSON.stringify(giftData, null, 2));
+                giftData[userId].push({
+                    id: generateGiftId(giftData[userId]),
+                    type: 'exp',
+                    amount: expReward,
+                    from: 'srank',
+                    date: Date.now()
+                });
+                giftData[userId].push({
+                    id: generateGiftId(giftData[userId]),
+                    type: 'money',
+                    amount: moneyReward,
+                    from: 'srank',
+                    date: Date.now()
+                });
+                fs.writeFileSync(giftPath, JSON.stringify(giftData, null, 2));
 
-            await interaction.followUp({
-                embeds: [new EmbedBuilder()
-                    .setDescription(`**VICTORY!** You defeated Orochimaru.`)
-                    .addFields(
-                        { name: "Reward", value: `+${expReward} EXP, $${moneyReward.toLocaleString()} Money`, inline: true }
-                    )
-                    .setColor(0x00FF00)
-                ]
+                await interaction.followUp({
+                    embeds: [new EmbedBuilder()
+                        .setDescription(`**VICTORY!** You defeated Orochimaru.`)
+                        .addFields(
+                            { name: "Reward", value: `+${expReward} EXP, $${moneyReward.toLocaleString()} Money`, inline: true }
+                        )
+                        .setColor(0x00FF00)
+                    ]
+                });
+                return "win";
+            }
+            player.chakra += CHAKRA_REGEN[player.rank] || 1;
+            npc.chakra += 2;
+            [player, npc].forEach(entity => {
+                entity.activeEffects.forEach(effect => {
+                    if (effect.duration > 0) effect.duration--;
+                });
+                entity.activeEffects = entity.activeEffects.filter(e => e.duration > 0);
             });
-            return "win";
+            roundNum++;
+            if (player.health > 0 && npc.currentHealth > 0) await new Promise(resolve => setTimeout(resolve, 3000));
         }
-        player.chakra += CHAKRA_REGEN[player.rank] || 1;
-        npc.chakra += 2;
-        [player, npc].forEach(entity => {
-            entity.activeEffects.forEach(effect => {
-                if (effect.duration > 0) effect.duration--;
-            });
-            entity.activeEffects = entity.activeEffects.filter(e => e.duration > 0);
-        });
-        roundNum++;
-        if (player.health > 0 && npc.currentHealth > 0) await new Promise(resolve => setTimeout(resolve, 3000));
+        return "unknown";
+    } finally {
+        player.chakra = initialChakra;
     }
-    return "unknown";
 }
 
 async function runCorruptedOrochimaruBattle(interaction, users, userId, players, jutsuList) {
@@ -1716,152 +1731,157 @@ async function runCorruptedOrochimaruBattle(interaction, users, userId, players,
     let player = players.find(p => p.id === userId);
     player.maxHealth = player.maxHealth || player.health;
     player.chakra = player.chakra || 10;
-    player.activeEffects = player.activeEffects || [];
-    let roundNum = 1;
-    let comboState = null;
-    if (users[userId].Combo && COMBOS[users[userId].Combo]) {
-        comboState = {
-            combo: COMBOS[users[userId].Combo],
-            usedJutsus: new Set()
-        };
-    }
-    let executeAvailable = false;
-
-    while (player.health > 0 && npc.currentHealth > 0) {
-        const effectivePlayer = BattleUtils.getEffectiveStats(player);
-        const effectiveNpc = BattleUtils.getEffectiveStats(npc);
-        // Check if Execute should be available (when Orochimaru is below 30% health)
-        if (npc.currentHealth / npc.health <= 0.3) {
-            executeAvailable = true;
+    const initialChakra = player.chakra;
+    try {
+        player.activeEffects = player.activeEffects || [];
+        let roundNum = 1;
+        let comboState = null;
+        if (users[userId].Combo && COMBOS[users[userId].Combo]) {
+            comboState = {
+                combo: COMBOS[users[userId].Combo],
+                usedJutsus: new Set()
+            };
         }
+        let executeAvailable = false;
 
-        const { embed, components } = createMovesEmbed(player, roundNum, userId, jutsuList);
-        // Add Execute option if available
-        if (executeAvailable) {
-            const executeRow = new ActionRowBuilder().addComponents(
-                new ButtonBuilder()
-                    .setCustomId(`execute-${userId}-${roundNum}`)
-                    .setLabel('EXECUTE')
-                    .setStyle(ButtonStyle.Danger)
-            );
-            components.push(executeRow);
-        }
-        const moveMsg = await interaction.followUp({
-            content: `${player.username}, it's your turn!${executeAvailable ? "\n**EXECUTE option available!**" : ""}`,
-            embeds: [embed],
-            components: components,
-            fetchReply: true
-        });
-        // Pass the current player health (after any damage taken)
-        const battleImage = new AttachmentBuilder(await BattleUtils.generateBattleImage(interaction, player, player.health, npc, VILLAGE_BG, CORRUPTED_OROCHIMARU));
-        await interaction.followUp({ files: [battleImage] });
-        const playerAction = await new Promise(resolve => {
-            const collector = moveMsg.createMessageComponentCollector({
-                filter: ii => ii.user.id === userId,
-                time: 60000
+        while (player.health > 0 && npc.currentHealth > 0) {
+            const effectivePlayer = BattleUtils.getEffectiveStats(player);
+            const effectiveNpc = BattleUtils.getEffectiveStats(npc);
+            // Check if Execute should be available (when Orochimaru is below 30% health)
+            if (npc.currentHealth / npc.health <= 0.3) {
+                executeAvailable = true;
+            }
+
+            const { embed, components } = createMovesEmbed(player, roundNum, userId, jutsuList);
+            // Add Execute option if available
+            if (executeAvailable) {
+                const executeRow = new ActionRowBuilder().addComponents(
+                    new ButtonBuilder()
+                        .setCustomId(`execute-${userId}-${roundNum}`)
+                        .setLabel('EXECUTE')
+                        .setStyle(ButtonStyle.Danger)
+                );
+                components.push(executeRow);
+            }
+            const moveMsg = await interaction.followUp({
+                content: `${player.username}, it's your turn!${executeAvailable ? "\n**EXECUTE option available!**" : ""}`,
+                embeds: [embed],
+                components: components,
+                fetchReply: true
             });
-            collector.on('collect', async ii => {
-                await ii.deferUpdate();
-                if (ii.customId.startsWith('execute')) {
-                    // Instant kill if Execute is used at the right time
-                    if (executeAvailable) {
-                        resolve({
-                            damage: npc.currentHealth,
-                            heal: 0,
-                            description: `${player.username} executes a perfectly timed finishing blow!`,
-                            specialEffects: ["FATAL STRIKE!"],
-                            hit: true,
-                            isExecute: true
-                        });
+            // Pass the current player health (after any damage taken)
+            const battleImage = new AttachmentBuilder(await BattleUtils.generateBattleImage(interaction, player, player.health, npc, VILLAGE_BG, CORRUPTED_OROCHIMARU));
+            await interaction.followUp({ files: [battleImage] });
+            const playerAction = await new Promise(resolve => {
+                const collector = moveMsg.createMessageComponentCollector({
+                    filter: ii => ii.user.id === userId,
+                    time: 60000
+                });
+                collector.on('collect', async ii => {
+                    await ii.deferUpdate();
+                    if (ii.customId.startsWith('execute')) {
+                        // Instant kill if Execute is used at the right time
+                        if (executeAvailable) {
+                            resolve({
+                                damage: npc.currentHealth,
+                                heal: 0,
+                                description: `${player.username} executes a perfectly timed finishing blow!`,
+                                specialEffects: ["FATAL STRIKE!"],
+                                hit: true,
+                                isExecute: true
+                            });
+                        } else {
+                            resolve({
+                                damage: 0,
+                                heal: 0,
+                                description: `${player.username} attempts an execution but misses the timing!`,
+                                specialEffects: ["Poor timing!"],
+                                hit: false
+                            });
+                        }
                     } else {
-                        resolve({
-                            damage: 0,
-                            heal: 0,
-                            description: `${player.username} attempts an execution but misses the timing!`,
-                            specialEffects: ["Poor timing!"],
-                            hit: false
-                        });
+                        const actionResult = await processPlayerMove(ii.customId, player, npc, effectivePlayer, effectiveNpc);
+                        if (comboState && actionResult.jutsuUsed && comboState.combo.requiredJutsus.includes(actionResult.jutsuUsed)) {
+                            comboState.usedJutsus.add(actionResult.jutsuUsed);
+                        }
+                        resolve(actionResult);
                     }
-                } else {
-                    const actionResult = await processPlayerMove(ii.customId, player, npc, effectivePlayer, effectiveNpc);
-                    if (comboState && actionResult.jutsuUsed && comboState.combo.requiredJutsus.includes(actionResult.jutsuUsed)) {
-                        comboState.usedJutsus.add(actionResult.jutsuUsed);
-                    }
-                    resolve(actionResult);
+                    collector.stop();
+                });
+                collector.on('end', (collected, reason) => {
+                    if (reason === 'time') resolve({ fled: true });
+                });
+            });
+            if (playerAction.fled) {
+                await interaction.followUp(`${player.username} fled from the battle!`);
+                return "loss";
+            }
+            npc.currentHealth -= playerAction.damage || 0;
+            if (playerAction.heal) {
+                player.health = Math.min(player.health + playerAction.heal, player.maxHealth);
+            }
+            // If player used Execute successfully, end battle
+            if (playerAction.isExecute && playerAction.hit) {
+                npc.currentHealth = 0;
+            }
+            const processCombo = () => {
+                if (!comboState) return { completed: false, damageText: "" };
+                if (comboState.combo.requiredJutsus.every(jutsu => comboState.usedJutsus.has(jutsu))) {
+                    npc.currentHealth -= comboState.combo.damage;
+                    comboState.usedJutsus.clear();
+                    return {
+                        completed: true,
+                        damageText: `\n${player.username} lands a ${comboState.combo.name}! Dealt ${comboState.combo.damage} true damage!`
+                    };
                 }
-                collector.stop();
-            });
-            collector.on('end', (collected, reason) => {
-                if (reason === 'time') resolve({ fled: true });
-            });
-        });
-        if (playerAction.fled) {
-            await interaction.followUp(`${player.username} fled from the battle!`);
-            return "loss";
-        }
-        npc.currentHealth -= playerAction.damage || 0;
-        if (playerAction.heal) {
-            player.health = Math.min(player.health + playerAction.heal, player.maxHealth);
-        }
-        // If player used Execute successfully, end battle
-        if (playerAction.isExecute && playerAction.hit) {
-            npc.currentHealth = 0;
-        }
-        const processCombo = () => {
-            if (!comboState) return { completed: false, damageText: "" };
-            if (comboState.combo.requiredJutsus.every(jutsu => comboState.usedJutsus.has(jutsu))) {
-                npc.currentHealth -= comboState.combo.damage;
-                comboState.usedJutsus.clear();
-                return {
-                    completed: true,
-                    damageText: `\n${player.username} lands a ${comboState.combo.name}! Dealt ${comboState.combo.damage} true damage!`
-                };
+                return { completed: false, damageText: "" };
+            };
+            const comboResult = processCombo();
+            let npcAction = { damage: 0, heal: 0, description: `${npc.name} is defeated`, specialEffects: [], hit: false, image_url: null };
+            if (npc.currentHealth > 0) {
+                npcAction = npcChooseMove(npc, player, effectiveNpc, effectivePlayer);
+                player.health -= npcAction.damage || 0;
+                if (npcAction.heal) {
+                    npc.currentHealth = Math.min(npc.currentHealth + npcAction.heal, npc.health);
+                }
             }
-            return { completed: false, damageText: "" };
-        };
-        const comboResult = processCombo();
-        let npcAction = { damage: 0, heal: 0, description: `${npc.name} is defeated`, specialEffects: [], hit: false, image_url: null };
-        if (npc.currentHealth > 0) {
-            npcAction = npcChooseMove(npc, player, effectiveNpc, effectivePlayer);
-            player.health -= npcAction.damage || 0;
-            if (npcAction.heal) {
-                npc.currentHealth = Math.min(npc.currentHealth + npcAction.heal, npc.health);
+            player.health = Math.max(0, player.health);
+            npc.currentHealth = Math.max(0, npc.currentHealth);
+            const summaryEmbed = createBattleSummary(player, npc, playerAction, npcAction, roundNum, comboState);
+            if (comboResult.completed) {
+                summaryEmbed.setDescription(
+                    summaryEmbed.data.description + comboResult.damageText
+                );
             }
-        }
-        player.health = Math.max(0, player.health);
-        npc.currentHealth = Math.max(0, npc.currentHealth);
-        const summaryEmbed = createBattleSummary(player, npc, playerAction, npcAction, roundNum, comboState);
-        if (comboResult.completed) {
-            summaryEmbed.setDescription(
-                summaryEmbed.data.description + comboResult.damageText
-            );
-        }
-        await interaction.followUp({ embeds: [summaryEmbed] });
-        if (player.health <= 0) {
-            users[userId].srankResult = "loss";
-            fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
-            await interaction.followUp(`**You have been defeated by Corrupted Orochimaru! Game Over.**`);
-            return "loss";
-        }
-        if (npc.currentHealth <= 0) {
-            // Update tutorial progress for /tutorial command
-            users[userId].srankResult = "win";
-            fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
-            await interaction.followUp(`**Corrupted Orochimaru has been defeated! You win!**`);
-            return "win";
-        }
-        player.chakra += CHAKRA_REGEN[player.rank] || 1;
-        npc.chakra += 2;
-        [player, npc].forEach(entity => {
-            entity.activeEffects.forEach(effect => {
-                if (effect.duration > 0) effect.duration--;
+            await interaction.followUp({ embeds: [summaryEmbed] });
+            if (player.health <= 0) {
+                users[userId].srankResult = "loss";
+                fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
+                await interaction.followUp(`**You have been defeated by Corrupted Orochimaru! Game Over.**`);
+                return "loss";
+            }
+            if (npc.currentHealth <= 0) {
+                // Update tutorial progress for /tutorial command
+                users[userId].srankResult = "win";
+                fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
+                await interaction.followUp(`**Corrupted Orochimaru has been defeated! You win!**`);
+                return "win";
+            }
+            player.chakra += CHAKRA_REGEN[player.rank] || 1;
+            npc.chakra += 2;
+            [player, npc].forEach(entity => {
+                entity.activeEffects.forEach(effect => {
+                    if (effect.duration > 0) effect.duration--;
+                });
+                entity.activeEffects = entity.activeEffects.filter(e => e.duration > 0);
             });
-            entity.activeEffects = entity.activeEffects.filter(e => e.duration > 0);
-        });
-        roundNum++;
-        if (player.health > 0 && npc.currentHealth > 0) await new Promise(resolve => setTimeout(resolve, 3000));
+            roundNum++;
+            if (player.health > 0 && npc.currentHealth > 0) await new Promise(resolve => setTimeout(resolve, 3000));
+        }
+        return "unknown";
+    } finally {
+        player.chakra = initialChakra;
     }
-    return "unknown";
 }
 
 async function waitForContinue(interaction, userId, content = "\u200b") {

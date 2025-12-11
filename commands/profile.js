@@ -5,6 +5,8 @@ const { createCanvas, loadImage, registerFont } = require('canvas');
 const https = require('https');
 const { updateRequirements } = require('./scroll'); // Assuming this path is correct
 
+
+
 // --- Cooldown Map ---
 const cooldowns = new Map(); // Stores { userId: lastUsedTimestamp }
 
@@ -18,7 +20,8 @@ const bloodlinesPath = path.resolve(__dirname, '../../menma/data/bloodlines.json
 const GAMEPASS_IDS = {
     DONATOR: '1385640728130097182',
     LEGENDARY_NINJA: '1385640798581952714',
-    JINCHURIKI: '1385641469507010640'
+    JINCHURIKI: '1385641469507010640',
+    HOKAGE: '1381606285577031772'
 };
 
 // Color Themes
@@ -202,6 +205,14 @@ module.exports = {
                 userProfileData = updatedUser; // refresh in-memory profile for rendering
             }
 
+            // --- Handle Hokage Chakra Override ---
+            const guild = interaction.guild;
+            const member = await guild.members.fetch(targetUser.id);
+            const updatedUserForHokage = await handleHokageChakra(targetUser.id, member);
+            if (updatedUserForHokage) {
+                userProfileData = updatedUserForHokage; // refresh in-memory profile for rendering
+            }
+
             // --- Determine theme with admin command priority ---
             const theme = determineTheme(userProfileData);
 
@@ -300,6 +311,50 @@ async function handleJinchurikiChakra(userId, userProfileData) {
     return usersData[userId] || null;
 }
 
+// Handle Hokage chakra override
+async function handleHokageChakra(userId, member) {
+    const usersDataPath = path.resolve(__dirname, '../../menma/data/users.json');
+    let usersData = {};
+    try {
+        usersData = JSON.parse(fs.readFileSync(usersDataPath, 'utf8'));
+    } catch (e) {
+        console.error('Error reading users data:', e);
+        return null;
+    }
+
+    if (!usersData[userId]) return null;
+
+    const hasHokage = member.roles.cache.has(GAMEPASS_IDS.HOKAGE);
+
+    let needsUpdate = false;
+
+    if (hasHokage) {
+        if (usersData[userId].chakra !== 30) {
+            usersData[userId].chakra = 30;
+            needsUpdate = true;
+        }
+    } else {
+        if (usersData[userId].chakra > 10) { // Reset if they are not hokage but have more than base chakra
+            usersData[userId].chakra = 10;
+            needsUpdate = true;
+        }
+    }
+
+    if (needsUpdate) {
+        try {
+            fs.writeFileSync(usersDataPath, JSON.stringify(usersData, null, 2));
+            // return the updated user object so caller can refresh its in-memory copy
+            return usersData[userId];
+        } catch (e) {
+            console.error('Error writing users data:', e);
+            return null;
+        }
+    }
+
+    // no changes, but return the current user object for consistency
+    return usersData[userId] || null;
+}
+
 // Helper function to determine user's theme with admin command priority
 function determineTheme(userProfileData) {
     // Check if admin has set a custom color (highest priority)
@@ -365,18 +420,18 @@ async function generateMainProfilePage(targetUser, userProfileData, playerStats,
     if (theme.isPremium) {
         if (theme.isWinter) {
             // === WINTER FROST ROYAL EFFECTS ===
-            
+
             // 1. Falling Snowflakes (animated look)
             for (let i = 0; i < 200; i++) {
                 const x = Math.random() * canvas.width;
                 const y = Math.random() * canvas.height;
                 const size = Math.random() * 3 + 1;
                 const alpha = Math.random() * 0.8 + 0.2;
-                
+
                 ctx.save();
                 ctx.translate(x, y);
                 ctx.rotate(Math.random() * Math.PI * 2);
-                
+
                 // Draw 6-armed snowflake
                 for (let j = 0; j < 6; j++) {
                     ctx.rotate(Math.PI / 3);
@@ -386,7 +441,7 @@ async function generateMainProfilePage(targetUser, userProfileData, playerStats,
                     ctx.strokeStyle = `rgba(224, 242, 254, ${alpha})`;
                     ctx.lineWidth = 0.5;
                     ctx.stroke();
-                    
+
                     // Side branches
                     ctx.beginPath();
                     ctx.moveTo(0, -size);
@@ -397,18 +452,18 @@ async function generateMainProfilePage(targetUser, userProfileData, playerStats,
                 }
                 ctx.restore();
             }
-            
+
             // 2. Icy Diamond Crystals
             for (let i = 0; i < 50; i++) {
                 const x = Math.random() * canvas.width;
                 const y = Math.random() * canvas.height;
                 const size = Math.random() * 4 + 2;
                 const alpha = Math.random() * 0.4 + 0.1;
-                
+
                 ctx.save();
                 ctx.translate(x, y);
                 ctx.rotate(Math.random() * Math.PI);
-                
+
                 // Diamond crystal shape
                 ctx.beginPath();
                 ctx.moveTo(0, -size);
@@ -416,37 +471,37 @@ async function generateMainProfilePage(targetUser, userProfileData, playerStats,
                 ctx.lineTo(0, size);
                 ctx.lineTo(-size * 0.6, 0);
                 ctx.closePath();
-                
+
                 const crystalGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, size);
                 crystalGradient.addColorStop(0, `rgba(240, 249, 255, ${alpha * 1.5})`);
                 crystalGradient.addColorStop(1, `rgba(224, 242, 254, ${alpha * 0.3})`);
                 ctx.fillStyle = crystalGradient;
                 ctx.fill();
-                
+
                 ctx.strokeStyle = `rgba(240, 249, 255, ${alpha})`;
                 ctx.lineWidth = 0.5;
                 ctx.stroke();
                 ctx.restore();
             }
-            
+
             // 3. Frost Shimmer Effect (large glowing particles)
             for (let i = 0; i < 30; i++) {
                 const x = Math.random() * canvas.width;
                 const y = Math.random() * canvas.height;
                 const radius = Math.random() * 3 + 2;
                 const alpha = Math.random() * 0.3 + 0.1;
-                
+
                 const shimmerGradient = ctx.createRadialGradient(x, y, 0, x, y, radius * 3);
                 shimmerGradient.addColorStop(0, `rgba(224, 242, 254, ${alpha * 2})`);
                 shimmerGradient.addColorStop(0.5, `rgba(224, 242, 254, ${alpha})`);
                 shimmerGradient.addColorStop(1, `rgba(224, 242, 254, 0)`);
-                
+
                 ctx.fillStyle = shimmerGradient;
                 ctx.beginPath();
                 ctx.arc(x, y, radius * 3, 0, Math.PI * 2);
                 ctx.fill();
             }
-            
+
         } else {
             // Regular sparkles for other premium themes
             for (let i = 0; i < 150; i++) {
@@ -703,7 +758,7 @@ function drawSection(ctx, x, y, width, height, borderColor) {
     ctx.moveTo(x, y + 5);
     ctx.lineTo(x, y + height - 5);
     ctx.stroke();
-    
+
     // Add crystalline effect for frost theme
     if (borderColor === '#e0f2fe') {  // Frost Royal primary color
         // Inner glow
@@ -712,34 +767,34 @@ function drawSection(ctx, x, y, width, height, borderColor) {
         ctx.beginPath();
         ctx.roundRect(x, y, width, height, 10);
         ctx.stroke();
-        
+
         // Outer glow
         ctx.strokeStyle = 'rgba(224, 242, 254, 0.2)';
         ctx.lineWidth = 8;
         ctx.beginPath();
         ctx.roundRect(x, y, width, height, 10);
         ctx.stroke();
-        
+
         // Add small ice crystals on corners
         const corners = [
-            {x: x + 15, y: y + 15},
-            {x: x + width - 15, y: y + 15},
-            {x: x + 15, y: y + height - 15},
-            {x: x + width - 15, y: y + height - 15}
+            { x: x + 15, y: y + 15 },
+            { x: x + width - 15, y: y + 15 },
+            { x: x + 15, y: y + height - 15 },
+            { x: x + width - 15, y: y + height - 15 }
         ];
-        
+
         corners.forEach(corner => {
             ctx.save();
             ctx.translate(corner.x, corner.y);
             ctx.rotate(Math.PI / 4);
-            
+
             ctx.beginPath();
             ctx.moveTo(0, -3);
             ctx.lineTo(2, 0);
             ctx.lineTo(0, 3);
             ctx.lineTo(-2, 0);
             ctx.closePath();
-            
+
             ctx.fillStyle = 'rgba(224, 242, 254, 0.6)';
             ctx.fill();
             ctx.strokeStyle = 'rgba(240, 249, 255, 0.8)';

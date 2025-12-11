@@ -5,6 +5,13 @@
             "image": "https://static.wikia.nocookie.net/liberproeliis/images/d/df/Hiruzen_(Render).png/revision/latest?cb=20180921141106&path-prefix=pt-br",
             "tier": 1,
             "statsType": "fixed",
+            "requirements": {
+                "level": 50,
+                "missions": 10
+            },
+            "immunities": [
+                "stun"
+            ],
             "stats": {
                 "health": 50000,
                 "power": 5000,
@@ -24,6 +31,13 @@
             "image": "https://static.wikia.nocookie.net/naruto/images/b/b0/Dosu_Kinuta.png/revision/latest?cb=20210421154038",
             "tier": 2,
             "statsType": "fixed",
+            "requirements": {
+                "level": 100,
+                "missions": 10
+            },
+            "immunities": [
+                "bleed"
+            ],
             "stats": {
                 "health": 150000,
                 "power": 15000,
@@ -43,6 +57,13 @@
             "image": "https://static0.gamerantimages.com/wordpress/wp-content/uploads/2022/12/pasted-image-0.png?q=50&fit=crop&w=825&dpr=1.5",
             "tier": 3,
             "statsType": "fixed",
+            "requirements": {
+                "level": 500,
+                "missions": 10
+            },
+            "immunities": [
+                "burn"
+            ],
             "stats": {
                 "health": 500000,
                 "power": 40000,
@@ -61,6 +82,14 @@
             "image": "https://static.wikia.nocookie.net/naruto/images/0/0f/Gaara_Part_II.png/revision/latest/scale-to-width-down/300?cb=20170914045727",
             "tier": 4,
             "statsType": "fixed",
+            "requirements": {
+                "level": 600,
+                "missions": 10
+            },
+            "immunities": [
+                "stun",
+                "bleed"
+            ],
             "stats": {
                 "health": 150000,
                 "power": 120000,
@@ -79,6 +108,14 @@
             "image": "https://preview.redd.it/szkhfmq8zcx11.jpg?width=283&format=pjpg&auto=webp&s=c6f3bf6ffa36be664335e51c832a10b0887b859b",
             "tier": 5,
             "statsType": "fixed",
+            "requirements": {
+                "level": 700,
+                "missions": 10
+            },
+            "immunities": [
+                "burn",
+                "poison"
+            ],
             "stats": {
                 "health": 300000,
                 "power": 150000,
@@ -97,6 +134,14 @@
             "image": "https://static.wikia.nocookie.net/naruto/images/3/37/Zabuza_Momochi.png/revision/latest/scale-to-width-down/284?cb=20240922021336",
             "tier": 6,
             "statsType": "fixed",
+            "requirements": {
+                "level": 800,
+                "missions": 10
+            },
+            "immunities": [
+                "freeze",
+                "slow"
+            ],
             "stats": {
                 "health": 250000,
                 "power": 250000,
@@ -115,6 +160,15 @@
             "image": "https://static.wikia.nocookie.net/naruto/images/6/67/%C5%8Cnoki.png/revision/latest/scale-to-width-down/1200?cb=20181203071043",
             "tier": 7,
             "statsType": "fixed",
+            "requirements": {
+                "level": 900,
+                "missions": 10
+            },
+            "immunities": [
+                "stun",
+                "bleed",
+                "burn"
+            ],
             "stats": {
                 "health": 800000,
                 "power": 100000,
@@ -133,6 +187,15 @@
             "image": "https://i1.sndcdn.com/avatars-AkZAI8buEDmdBzBz-rxYRfg-t1080x1080.jpg",
             "tier": 8,
             "statsType": "fixed",
+            "requirements": {
+                "level": 1000,
+                "missions": 10
+            },
+            "immunities": [
+                "paralyze",
+                "slow",
+                "freeze"
+            ],
             "stats": {
                 "health": 1200000,
                 "power": 200000,
@@ -151,6 +214,15 @@
             "image": "https://static.wikia.nocookie.net/c27a8661-e6ce-4b42-acba-b82c47e31a66/scale-to-width/755",
             "tier": 9,
             "statsType": "fixed",
+            "requirements": {
+                "level": 1100,
+                "missions": 10
+            },
+            "immunities": [
+                "stun",
+                "bleed",
+                "burn"
+            ],
             "stats": {
                 "health": 2000000,
                 "power": 550000,

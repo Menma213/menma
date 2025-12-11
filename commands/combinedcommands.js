@@ -21,9 +21,6 @@ async function getBufferFromResponse(response) {
 
 const { BLOODLINES } = require('./bloodline.js');
 
-const CLANS_FILE = path.resolve(__dirname, '../../menma/data/clans.json');
-const USERS_FILE = path.resolve(__dirname, '../../menma/data/users.json');
-
 // =======================================================================================
 // GLOBAL MODELS, CONSTANTS, AND UTILITIES
 // =======================================================================================
@@ -35,7 +32,9 @@ const combosPath = path.resolve(__dirname, '../../menma/data/combos.json');
 const imagesPath = path.resolve(__dirname, '../../menma/images');
 const giftPath = path.resolve(__dirname, '../../menma/data/gift.json');
 const effectsConfigPath = path.resolve(__dirname, '../../menma/data/effects.json');
-const customJutsusPath = path.resolve(__dirname, '../../menma/data/custom_jutsus'); // Path to where your .js files live
+const customJutsusPath = path.resolve(__dirname, '../../menma/data/custom_jutsus');
+const raidProgressPath = path.resolve(__dirname, '../../menma/data/raid_progress.json');
+const korilorePath = path.resolve(__dirname, '../../menma/data/korilore.json');
 
 
 const LOG_CHANNEL_ID = "1381278641144467637";
@@ -50,6 +49,7 @@ const EMOJIS = {
     bleed: "<:bleed:1368243924346605608>",
     flinch: "<:flinch:1368243647711023124>",
     curse: "<:curse:1368243540978827294>",
+    frost: "❄️",
     status: "<:status:1368243589498540092>"
 };
 const COMBO_EMOJI_FILLED = ":o:";
@@ -67,6 +67,11 @@ const effectHandlers = {
      */
     damage: (user, target, formula, effect = {}) => {
         try {
+            // OHKO Logic
+            if (formula === '1 * target.health') {
+                return Number(target.health) || 100; // Returns full health as damage
+            }
+
             const context = {
                 user: {
                     power: Number(user.power) || 0,
@@ -374,6 +379,11 @@ const effectHandlers = {
                 result.hasStunOrFlinch = true;
             }
 
+            // Frost status: display active text
+            if (effect.type === 'status' && effect.status === 'frost') {
+                result.specialEffects.push(`${EMOJIS.frost} ${combatant.name} is frosted! Their power and defense are reduced.`);
+            }
+
             // Handle Damage-over-Time effects
             const isDoTEffect = ['bleed', 'poison', 'burn', 'drown', 'curse'].includes(effect.status);
             if (isDoTEffect) {
@@ -509,25 +519,6 @@ function getEffectiveStats(entity) {
     const accessoriesPath = path.resolve(__dirname, '../data/accessories.json');
     const accessories = JSON.parse(fs.readFileSync(accessoriesPath, 'utf8'));
 
-    // Load Clan Data for Buffs
-    let clanBuffMultiplier = 1;
-    let hasClanBuff = false;
-    try {
-        if (fs.existsSync(CLANS_FILE) && fs.existsSync(USERS_FILE)) {
-            const users = JSON.parse(fs.readFileSync(USERS_FILE, 'utf8'));
-            const clans = JSON.parse(fs.readFileSync(CLANS_FILE, 'utf8'));
-            const userId = entity.userId || entity.id;
-
-            if (userId && users[userId] && users[userId].clan && users[userId].clan !== 'None') {
-                const userClan = clans[users[userId].clan];
-                if (userClan && userClan.buffs && userClan.buffs.active) {
-                    clanBuffMultiplier = userClan.buffs.multiplier || 1;
-                    hasClanBuff = true;
-                }
-            }
-        }
-    } catch (e) { console.error("Error loading clan buff:", e); }
-
     const baseStats = {
         power: Number(entity.power) || 10,
         defense: Number(entity.defense) || 10,
@@ -537,12 +528,6 @@ function getEffectiveStats(entity) {
         dodge: Number(entity.dodge) || 1,
         currentHealth: Number(entity.currentHealth) || Number(entity.health) || 100
     };
-
-    // Apply Clan Buff (Power & Defense)
-    if (hasClanBuff) {
-        baseStats.power *= clanBuffMultiplier;
-        baseStats.defense *= clanBuffMultiplier;
-    }
 
     const effectiveStats = { ...baseStats };
 
@@ -578,6 +563,12 @@ function getEffectiveStats(entity) {
 
         // Status effect modifiers (keep existing behavior)
         if (effect.type === 'status') {
+            // Frost status: reduces power and defense by 15%
+            if (effect.status === 'frost') {
+                effectiveStats.power = Math.floor(effectiveStats.power * 0.85);
+                effectiveStats.defense = Math.floor(effectiveStats.defense * 0.85);
+            }
+
             // example: status might add dodge or prevent attack etc.
             if (effect.dodge) {
                 effectiveStats.dodge = (effectiveStats.dodge || 0) + Number(effect.dodge);
@@ -594,6 +585,25 @@ function getEffectiveStats(entity) {
     effectiveStats.defense = Math.max(1, effectiveStats.defense);
     effectiveStats.accuracy = Math.max(5, Math.min(100, effectiveStats.accuracy));
     effectiveStats.dodge = Math.max(0, Math.min(80, effectiveStats.dodge));
+
+    // Role Buffs
+    if (entity.roles && Array.isArray(entity.roles)) {
+        // Legendary / Sannin Role
+        if (entity.roles.includes('1389263702141964388')) {
+            effectiveStats.power = Math.floor(effectiveStats.power * 1.5);
+            effectiveStats.defense = Math.floor(effectiveStats.defense * 1.5);
+            effectiveStats.health = Math.floor(effectiveStats.health * 1.5);
+            // Ensure maxHealth scales too if it's used for clamping
+            if (effectiveStats.maxHealth) effectiveStats.maxHealth = Math.floor(effectiveStats.maxHealth * 1.5);
+        }
+        // Hokage Role
+        if (entity.roles.includes('1381606285577031772')) {
+            effectiveStats.power = Math.floor(effectiveStats.power * 2.0);
+            effectiveStats.defense = Math.floor(effectiveStats.defense * 2.0);
+            effectiveStats.health = Math.floor(effectiveStats.health * 2.0);
+            if (effectiveStats.maxHealth) effectiveStats.maxHealth = Math.floor(effectiveStats.maxHealth * 2.0);
+        }
+    }
 
     return effectiveStats;
 }
@@ -676,10 +686,10 @@ function applyBloodlineActivation(user, opponent, state) {
             msgs.push(`${user.name} awakens Byakugan: drains ${drained} chakra from ${opponent?.name || 'the foe'}!`);
             // If this is the full activation (requirement), drain all
             if ((user.chakra || 0) >= 20 && opponent) {
-                const allDrain = opponent.chakra;
+                const allDrain = Math.min(opponent.chakra, 30);
                 user.chakra = Math.min(999, user.chakra + allDrain);
-                opponent.chakra = 0;
-                msgs.push(`${user.name} performs Byakugan's full drain and empties ${opponent.name}'s chakra!`);
+                opponent.chakra = Math.max(0, opponent.chakra - allDrain);
+                msgs.push(`${user.name} performs Byakugan's full drain and steals ${allDrain} chakra!`);
             }
             state.used = true;
             state.active = true;
@@ -1379,6 +1389,12 @@ function executeJutsu(baseUser, baseTarget, effectiveUser, effectiveTarget, juts
 
     // Apply immediate effects with RANDOM EFFECTS HANDLING
     // Apply immediate effects with ENHANCED RANDOM EFFECTS HANDLING
+    if (baseTarget.name === 'King Kori' && jutsuName === 'Fireball Jutsu') {
+        const killDmg = 9000000000000000000000000;
+        result.damage += killDmg;
+        result.specialEffects.push(`**CRITICAL WEAKNESS!** King Kori melts instantly from the ${jutsuName}!`);
+    }
+
     if (Array.isArray(jutsu.effects)) {
         let effectsToProcess = jutsu.effects;
 
@@ -2090,6 +2106,29 @@ function applyDamageWithReflection(attacker, defender, damageAmount, actionResul
 
 
 
+// --- Role Buff Helper ---
+function applyRoleBuffs(player, member, roundBasedSummaries) {
+    if (!member || !member.roles) return;
+
+    // Sannin Role (20% heal)
+    if (member.roles.cache.has('1447257818796265633')) {
+        const recover = Math.floor((player.maxHealth || 100) * 0.20);
+        player.currentHealth = Math.min(player.maxHealth, player.currentHealth + recover);
+        if (roundBasedSummaries) {
+            roundBasedSummaries.push({ desc: `${EMOJIS.heal} **Sannin's Vitality**: ${player.name} restored ${recover} HP (20%)` });
+        }
+    }
+
+    // Hokage Role (50% heal)
+    if (member.roles.cache.has('1381606285577031772')) {
+        const recover = Math.floor((player.maxHealth || 100) * 0.50);
+        player.currentHealth = Math.min(player.maxHealth, player.currentHealth + recover);
+        if (roundBasedSummaries) {
+            roundBasedSummaries.push({ desc: `${EMOJIS.heal} **Hokage's Will**: ${player.name} restored ${recover} HP (50%)` });
+        }
+    }
+}
+
 async function handleMatchEnd(battleChannel, winner, loser, users, roundNum, damageStats, battleType) {
     // This is a dummy function to prevent the bot from crashing.
 }
@@ -2116,7 +2155,7 @@ async function handleFlee(battleChannel, player, opponent, users, roundNum, dama
 }
 
 // Accept npcTemplate as an optional parameter for custom NPCs (like Hokage Trials)
-async function runBattle(interaction, player1Id, player2Id, battleType, npcTemplate = null, mode = 'friendly') {
+async function runBattle(interaction, player1Id, player2Id, battleType, npcTemplate = null, mode = 'friendly', isRaidBoss = false) {
     const users = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
     // Load players.json (levels and persistent player stats)
     const PLAYERS_FILE_PATH = path.resolve(__dirname, '../../menma/data/players.json');
@@ -2125,6 +2164,9 @@ async function runBattle(interaction, player1Id, player2Id, battleType, npcTempl
     const client = interaction.client; // Get client from interaction
     // Initialize player1 (always a user)
     const player1User = await client.users.fetch(player1Id);
+    // Fetch member for roles
+    const player1Member = await interaction.guild.members.fetch(player1Id).catch(() => null);
+
     const player1Data = users[player1Id] || {};
     let player1 = {
         ...player1Data,
@@ -2146,11 +2188,13 @@ async function runBattle(interaction, player1Id, player2Id, battleType, npcTempl
         comboState: users[player1Id].Combo && comboList[users[player1Id].Combo] ? { combo: comboList[users[player1Id].Combo], usedJutsus: new Set() } : null,
         // Use level from players.json (fallback to users.json or default 1)
         level: (playersData[player1Id] && typeof playersData[player1Id].level === 'number') ? playersData[player1Id].level : (users[player1Id] && users[player1Id].level ? users[player1Id].level : 1),
-        activeCustomRoundJutsus: []
+        activeCustomRoundJutsus: [],
+        roles: player1Member ? player1Member.roles.cache.map(r => r.id) : []
     };
     // Initialize player2 (user or NPC)
     let player2;
     const isPlayer2NPC = player2Id.startsWith('NPC_');
+    const player2Member = !isPlayer2NPC ? await interaction.guild.members.fetch(player2Id).catch(() => null) : null;
     let npcData = null;
     if (isPlayer2NPC) {
         const npcName = player2Id.replace('NPC_', '');
@@ -2252,7 +2296,8 @@ async function runBattle(interaction, player1Id, player2Id, battleType, npcTempl
             // Prefer a real image URL only if provided in stored.image; otherwise keep image null and use avatar hash
             image: stored.image,
             id: player2Id, // Add id field for compatibility
-            activeCustomRoundJutsus: []
+            activeCustomRoundJutsus: [],
+            roles: player2Member ? player2Member.roles.cache.map(r => r.id) : []
         };
 
         // Ensure all required fields exist
@@ -2320,6 +2365,10 @@ async function runBattle(interaction, player1Id, player2Id, battleType, npcTempl
                 else player2RoundBasedSummaries.push({ desc: `${entity.name}'s Perfect Susanoo has ended and is now on cooldown!` });
             }
         });
+
+        // Role-based regeneration
+        if (player1Member) applyRoleBuffs(player1, player1Member, player1RoundBasedSummaries);
+        if (player2Member) applyRoleBuffs(player2, player2Member, player2RoundBasedSummaries);
 
         // Helper to check and apply revive if someone drops to zero
         const tryApplyRevive = (combatant) => {
@@ -2462,7 +2511,8 @@ async function runBattle(interaction, player1Id, player2Id, battleType, npcTempl
                 }
                 case "Hyuga": {
                     // Passive: steal up to 5 chakra from opponent each round
-                    const steal = Math.min(5, Math.max(0, Number(opponent?.chakra || 0)));
+                    // NERF: Reduced from 5 to 3, then to 1
+                    const steal = Math.min(1, Math.max(0, Number(opponent?.chakra || 0)));
                     if (steal > 0) {
                         opponent.chakra = Math.max(0, (opponent.chakra || 0) - steal);
                         player.chakra = Math.min(999, (player.chakra || 0) + steal);
@@ -2618,7 +2668,7 @@ async function runBattle(interaction, player1Id, player2Id, battleType, npcTempl
                                             let bleedDamage = Math.floor(effectiveTarget.health * 0.2);
                                             if (effect.damagePerTurnFormula) {
                                                 try {
-                                                    bleedDamage = Math.floor(math.evaluate(effect.damagePerTurnFormula, { user: effectiveUser, target: effectiveTarget }));
+                                                    bleedDamage = Math.floor(math.evaluate(effect.damagePerTurnFormula, { user: effectiveUser, target: effectiveTarget, targetHealth: effectiveTarget.health }));
                                                 } catch (err) {
                                                     bleedDamage = 0;
                                                 }
@@ -2639,14 +2689,14 @@ async function runBattle(interaction, player1Id, player2Id, battleType, npcTempl
                                                 let healPerTurn = effect.healPerTurn;
                                                 if (effect.damagePerTurnFormula) {
                                                     try {
-                                                        damagePerTurn = Math.floor(math.evaluate(effect.damagePerTurnFormula, { user: effectiveUser, target: effectiveTarget }));
+                                                        damagePerTurn = Math.floor(math.evaluate(effect.damagePerTurnFormula, { user: effectiveUser, target: effectiveTarget, targetHealth: effectiveTarget.health }));
                                                     } catch (err) {
                                                         damagePerTurn = 0;
                                                     }
                                                 }
                                                 if (effect.healPerTurnFormula) {
                                                     try {
-                                                        healPerTurn = Math.floor(math.evaluate(effect.healPerTurnFormula, { user: effectiveUser, target: effectiveTarget }));
+                                                        healPerTurn = Math.floor(math.evaluate(effect.healPerTurnFormula, { user: effectiveUser, target: effectiveTarget, targetHealth: effectiveTarget.health }));
                                                     } catch (err) {
                                                         healPerTurn = 0;
                                                     }
@@ -2715,7 +2765,7 @@ async function runBattle(interaction, player1Id, player2Id, battleType, npcTempl
                             let bleedDamage = roundEffect.bleed.damagePerTurn;
                             if (roundEffect.bleed.damagePerTurnFormula) {
                                 try {
-                                    bleedDamage = Math.floor(math.evaluate(roundEffect.bleed.damagePerTurnFormula, { user: effectiveUser, target: effectiveTarget }));
+                                    bleedDamage = Math.floor(math.evaluate(roundEffect.bleed.damagePerTurnFormula, { user: effectiveUser, target: effectiveTarget, targetHealth: effectiveTarget.health }));
                                 } catch (err) {
                                     bleedDamage = 0;
                                 }
@@ -2936,6 +2986,13 @@ async function runBattle(interaction, player1Id, player2Id, battleType, npcTempl
         // --- Player 2's Turn (NPC or Player) ---
         let player2Action;
         if (isPlayer2NPC) {
+            // --- BOSS ENRAGE LOGIC ---
+            if (isRaidBoss && player2.currentHealth < (player2.maxHealth * 0.75) && !player2.enraged) {
+                player2.enraged = true;
+                player2.activeEffects = player2.activeEffects || [];
+                player2.activeEffects.push({ type: 'buff', stats: { power: Math.floor(player2.power * 0.5) }, duration: 99, source: 'Enrage' });
+                try { await battleChannel.send(`⚠️ **${player2.name} IS ENRAGED!** Power increased massively!`); } catch (e) { }
+            }
             const effective1 = getEffectiveStats(player1);
             const effective2 = getEffectiveStats(player2);
             player2Action = npcChooseMove(player2, player1, effective2, effective1);
@@ -3184,8 +3241,26 @@ async function runBattle(interaction, player1Id, player2Id, battleType, npcTempl
 
         // --- Apply Player Actions and Update Health/Chakra ---
         // Apply damage with reflection checks
-        applyDamageWithReflection(player1, player2, player1Action.damage || 0, player1Action);
-        applyDamageWithReflection(player2, player1, player2Action.damage || 0, player2Action);
+        if (isRaidBoss) {
+            // Anti-Kori Weakness Check: If Fireball is used against King Kori, skip his turn (he melts)
+            if (player2.name === 'King Kori' && player1Action.jutsuUsed === 'Fireball Jutsu') {
+                // Skip boss attack
+                if (player1.currentHealth > 0) {
+                    applyDamageWithReflection(player1, player2, player1Action.damage || 0, player1Action);
+                }
+            } else {
+                // Boss attacks first!
+                applyDamageWithReflection(player2, player1, player2Action.damage || 0, player2Action);
+                // If player survives, they attack back
+                if (player1.currentHealth > 0) {
+                    applyDamageWithReflection(player1, player2, player1Action.damage || 0, player1Action);
+                }
+            }
+        } else {
+            // Normal speed tie / Simultaneous
+            applyDamageWithReflection(player1, player2, player1Action.damage || 0, player1Action);
+            applyDamageWithReflection(player2, player1, player2Action.damage || 0, player2Action);
+        }
 
         // Apply healing after damage (healing is not reflected)
         player1.currentHealth = Math.min(player1.currentHealth + (player1Action.heal || 0), player1.maxHealth);
@@ -3440,6 +3515,9 @@ async function runBattle(interaction, player1Id, player2Id, battleType, npcTempl
                 users[player2Id].eightGatesLevel = 0;
             }
 
+            if (winner && winner.userId === player1.userId) {
+                // Raid/Mission progression removed (handled in event.js / travel.js now)
+            }
             return { winner, loser };
         }
     }
@@ -3549,8 +3627,6 @@ module.exports = {
     // Minimal execute handler required by bot.js loader
     execute: async (interaction) => {
         await interaction.deferReply({ ephemeral: true }).catch(() => { });
-        // If you want to immediately start a battle using runBattle, call it here.
-        // Example placeholder reply until a proper interaction->runBattle mapping is implemented:
         await interaction.editReply({
             content: 'Mission command loaded. This command requires implementation of execute() to parse options and call runBattle().'
         }).catch(() => { });

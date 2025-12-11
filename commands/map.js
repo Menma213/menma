@@ -36,7 +36,7 @@ module.exports = {
             // Generate map
             const mapBuffer = await generateTerritoryMap({
                 showLabels: true,
-                showControlPercentage: true,
+                showControlPercentage: false,
                 clanColors,
                 userLocation
             });

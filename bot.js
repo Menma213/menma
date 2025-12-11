@@ -14,8 +14,9 @@ require('dotenv').config({ path: path.resolve(__dirname, envFile) });
 const { Client, GatewayIntentBits, Collection, REST, Routes } = require('discord.js');
 
 // Load environment variables
-const TOKEN = process.env.DISCORD_TOKEN;
-const CLIENT_ID = process.env.CLIENT_ID;
+const TOKEN = process.env.DISCORD_TOKEN ? process.env.DISCORD_TOKEN.trim() : undefined;
+const CLIENT_ID = process.env.CLIENT_ID ? process.env.CLIENT_ID.trim() : undefined;
+const CLIENT_SECRET = process.env.CLIENT_SECRET ? process.env.CLIENT_SECRET.trim() : undefined;
 
 if (!TOKEN || !CLIENT_ID) {
     console.error("❌ Missing bot token or client ID in the .env file!");
@@ -72,7 +73,7 @@ const rest = new REST({ version: '10' }).setToken(TOKEN);
 (async () => {
     try {
         console.log('🔄 Registering slash commands...');
-        
+
         // Only include commands with a valid .data.toJSON method
         const commands = Array.from(client.commands.values())
             .filter(cmd => cmd.data && typeof cmd.data.toJSON === 'function')
@@ -81,7 +82,7 @@ const rest = new REST({ version: '10' }).setToken(TOKEN);
             Routes.applicationCommands(CLIENT_ID),
             { body: commands }
         );
-        
+
         console.log('✅ Slash commands registered successfully!');
     } catch (error) {
         console.error('❌ Failed to register commands:', error);
@@ -162,4 +163,161 @@ client.on('guildMemberAdd', async member => {
 });
 
 // Log in
+// Log in
 client.login(TOKEN);
+
+// ==========================================
+// WEB SERVER INTEGRATION (Menma Story)
+// ==========================================
+
+const express = require('express');
+const webApp = express();
+const cors = require('cors');
+webApp.use(cors());
+webApp.use(express.json());
+
+// Load web server environment variables
+// Load environment variables
+// Load environment variables
+
+const WEB_PORT = process.env.WEB_PORT || 3001;
+// Fallback to CLIENT_SECRET if WEB_CLIENT_SECRET is not set
+let WEB_CLIENT_SECRET = process.env.WEB_CLIENT_SECRET || CLIENT_SECRET;
+if (WEB_CLIENT_SECRET) WEB_CLIENT_SECRET = WEB_CLIENT_SECRET.trim();
+
+let REDIRECT_URI = process.env.REDIRECT_URI;
+if (REDIRECT_URI) REDIRECT_URI = REDIRECT_URI.trim();
+
+console.log('--- Credential Debug ---');
+console.log(`CLIENT_ID: ${CLIENT_ID ? CLIENT_ID.substring(0, 4) + '...' : 'Missing'} (Length: ${CLIENT_ID ? CLIENT_ID.length : 0})`);
+console.log(`WEB_SECRET: ${WEB_CLIENT_SECRET ? WEB_CLIENT_SECRET.substring(0, 4) + '...' : 'Missing'} (Length: ${WEB_CLIENT_SECRET ? WEB_CLIENT_SECRET.length : 0})`);
+console.log(`REDIRECT_URI: ${REDIRECT_URI}`);
+console.log('------------------------');
+
+if (!REDIRECT_URI || !WEB_CLIENT_SECRET) {
+    console.warn("⚠️ Missing REDIRECT_URI or WEB_CLIENT_SECRET (or CLIENT_SECRET) in .env file. OAuth features will be disabled.");
+}
+
+// Serve static files from 'website' directory
+webApp.use(express.static(path.join(__dirname, 'website')));
+
+webApp.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'website', 'index.html'));
+});
+
+// OAuth Login
+webApp.get('/login/discord', (req, res) => {
+    console.log(`initiating login with redirect_uri: ${REDIRECT_URI}`);
+    const discordAuthUrl = `https://discord.com/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code&scope=identify`;
+    res.redirect(discordAuthUrl);
+});
+
+// OAuth Callback
+webApp.get('/oauth/callback', async (req, res) => {
+    const { code } = req.query;
+    if (!code) return res.status(400).send('No authorization code provided.');
+
+    console.log(`Exchanging code for token with redirect_uri: ${REDIRECT_URI}`);
+
+    try {
+        const tokenResponse = await fetch('https://discord.com/api/oauth2/token', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({
+                client_id: CLIENT_ID,
+                client_secret: WEB_CLIENT_SECRET,
+                grant_type: 'authorization_code',
+                code: code,
+                redirect_uri: REDIRECT_URI,
+            }),
+        });
+
+        const tokenData = await tokenResponse.json();
+        if (tokenData.error || !tokenResponse.ok) {
+            console.error("Discord Token Error:", tokenData);
+            return res.status(500).send(`Discord API Error: ${JSON.stringify(tokenData)}`);
+        }
+
+        const userResponse = await fetch('https://discord.com/api/v10/users/@me', {
+            headers: { Authorization: `Bearer ${tokenData.access_token}` },
+        });
+
+        const userData = await userResponse.json();
+
+        // Redirect to Hub with query params for local testing
+        const redirectUrl = `/hub.html?username=${encodeURIComponent(userData.username)}&discord_id=${userData.id}&avatar=${userData.avatar}`;
+        res.redirect(redirectUrl);
+
+
+    } catch (error) {
+        console.error('OAuth flow failed:', error);
+        res.status(500).send('Authentication Error');
+    }
+});
+
+// API: Complete Story
+webApp.post('/api/complete-story', async (req, res) => {
+    console.log("Received complete-story request:", req.body);
+    const { userId, storyId, jutsuChosen } = req.body;
+
+    if (!userId) return res.status(400).json({ error: 'Missing userId' });
+
+    const userStatsPath = path.join(__dirname, 'data', 'users.json');
+
+    try {
+        const data = await fs.readFileSync(userStatsPath, 'utf8');
+        let usersDB = JSON.parse(data);
+
+        if (!usersDB[userId]) usersDB[userId] = { id: userId, money: 0 };
+
+        // Update User Data
+        usersDB[userId].completedRaidStory = true;
+        if (jutsuChosen) usersDB[userId].storyJutsu = jutsuChosen;
+
+        await fs.writeFileSync(userStatsPath, JSON.stringify(usersDB, null, 4));
+        console.log(`Updated story completion for user ${userId}`);
+
+        res.json({ success: true, message: "Story progress saved." });
+
+    } catch (error) {
+        console.error('Error updating users.json:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+// API: Track Story View (Korilore)
+webApp.post('/api/track-view', async (req, res) => {
+    const { userId } = req.body;
+    if (!userId) return res.status(400).json({ error: 'Missing userId' });
+
+    const koriPath = path.join(__dirname, 'data', 'korilore.json');
+    let koriDB = { users: [] };
+
+    try {
+        if (fs.existsSync(koriPath)) {
+            const data = fs.readFileSync(koriPath, 'utf8');
+            try { koriDB = JSON.parse(data); } catch (e) { console.error("Error parsing korilore.json, resetting db"); }
+        }
+
+        if (!koriDB.users) koriDB.users = [];
+
+        // Add if not exists
+        if (!koriDB.users.includes(userId)) {
+            koriDB.users.push(userId);
+            fs.writeFileSync(koriPath, JSON.stringify(koriDB, null, 4));
+            console.log(`Logged new viewer: ${userId}`);
+        } else {
+            console.log(`Viewer ${userId} already logged.`);
+        }
+
+        res.json({ success: true });
+
+    } catch (error) {
+        console.error('Error in track-view:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+webApp.listen(WEB_PORT, () => {
+    console.log(`🌍 Web Server running on port ${WEB_PORT} (Integrated with Bot)`);
+});
