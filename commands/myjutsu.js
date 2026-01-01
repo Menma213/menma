@@ -57,17 +57,10 @@ async function createEquippedCanvas(user, equippedJutsuDetails) {
         ctx.fillText('No jutsu equipped.', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2);
     } else {
         equippedJutsuDetails.forEach((jutsu, index) => {
-            
-            // --- CRITICAL FIX: Determine the correct slot label ---
-            let slotLabel;
-            if (index === 0) {
-                // Internal index 0 (Original Slot 1) is the unchangeable "Default" slot
-                slotLabel = 'Default:';
-            } else {
-                // Internal indices 1 through 5 (Original Slots 2-6) are the changeable slots, 
-                // which should now be displayed as Slot 1, Slot 2, Slot 3, Slot 4, Slot 5.
-                slotLabel = `Slot ${index}:`;
-            }
+
+            // Slots 1-5
+            const slotNum = index + 1;
+            const slotLabel = `Slot ${slotNum}:`;
 
             // Draw a subtle divider
             if (index > 0) { // Draw divider starting before Slot 1 (internal index 1)
@@ -91,7 +84,7 @@ async function createEquippedCanvas(user, equippedJutsuDetails) {
             ctx.font = `28px ${FONT_FAMILY}`;
             ctx.fillStyle = TEXT_COLOR_PRIMARY;
             const nameWidth = ctx.measureText(nameText).width;
-            
+
             // If the jutsu name is too long, truncate and add ellipsis
             let maxNameWidth = CANVAS_WIDTH - xOffset - ctx.measureText(costText).width - ctx.measureText(slotLabel).width - 30; // Space for slot, cost, and margin
             if (nameWidth > maxNameWidth) {
@@ -104,7 +97,7 @@ async function createEquippedCanvas(user, equippedJutsuDetails) {
 
             // Position the Jutsu Name based on the length of the dynamic slotLabel
             ctx.fillText(nameText, xOffset + ctx.measureText(slotLabel).width + 15, yPos);
-            
+
             ctx.font = `22px ${FONT_FAMILY}`;
             ctx.fillStyle = TEXT_COLOR_SECONDARY;
             ctx.textAlign = 'right';
@@ -187,11 +180,11 @@ async function createLearnedCanvasPage(user, learnedJutsuList, pageIndex, totalP
             ctx.font = `18px ${FONT_FAMILY}`;
             ctx.fillStyle = TEXT_COLOR_PRIMARY;
             ctx.textAlign = 'left';
-            
+
             const maxWidth = CANVAS_WIDTH - (xOffset * 2);
             const words = (jutsu.info || 'No description available.').split(' ');
             let currentLine = '';
-            
+
             for (const word of words) {
                 const testLine = currentLine + word + ' ';
                 if (ctx.measureText(testLine).width > maxWidth && currentLine.length > 0) {
@@ -240,7 +233,7 @@ module.exports = {
             if (fs.existsSync(learnedJutsuListPath)) {
                 learnedJutsuData = JSON.parse(fs.readFileSync(learnedJutsuListPath, 'utf8'));
             }
-            
+
             if (fs.existsSync(allJutsusPath)) {
                 allJutsus = JSON.parse(fs.readFileSync(allJutsusPath, 'utf8'));
             } else {
@@ -258,26 +251,24 @@ module.exports = {
 
         // --- Equipped Jutsu Data Preparation ---
         const equippedJutsuSlots = users[userId]?.jutsu || {};
-        
-        // Sort and then slice to ensure only the first 6 slots (Original Slot 1 through Slot 6) are processed.
-        // This includes Default (index 0) and Slot 1 through Slot 5 (indices 1-5).
-        const equippedJutsuDetails = Object.entries(equippedJutsuSlots)
-            .sort(([slotA], [slotB]) => parseInt(slotA.split('_')[1]) - parseInt(slotB.split('_')[1]))
-            .slice(0, 6) // CHANGED: Limits the array to 6 entries (index 0 to 5)
-            .map(([slot, jutsuKey]) => {
-                if (jutsuKey && jutsuKey !== 'None') {
-                    const jutsuDetails = allJutsus[jutsuKey];
-                    return jutsuDetails ? {
-                        name: jutsuDetails.name ?? jutsuKey,
-                        chakraCost: jutsuDetails.chakraCost ?? '?'
-                    } : {
-                        name: `${jutsuKey} (*Unknown*)`,
-                        chakraCost: '0'
-                    };
-                }
-                return { name: '*Empty Slot*', chakraCost: null };
-            });
-            
+
+        // Filter for slots 1-5 only
+        const equippedJutsuDetails = [1, 2, 3, 4, 5].map(i => {
+            const slotKey = `slot_${i}`;
+            const jutsuKey = equippedJutsuSlots[slotKey];
+            if (jutsuKey && jutsuKey !== 'None' && jutsuKey !== 'Attack') {
+                const jutsuDetails = allJutsus[jutsuKey];
+                return jutsuDetails ? {
+                    name: jutsuDetails.name ?? jutsuKey,
+                    chakraCost: jutsuDetails.chakraCost ?? '?'
+                } : {
+                    name: `${jutsuKey} (*Unknown*)`,
+                    chakraCost: '0'
+                };
+            }
+            return { name: '*Empty Slot*', chakraCost: null };
+        });
+
         const equippedAttachment = await createEquippedCanvas(interaction.user, equippedJutsuDetails);
 
         // --- Learned Jutsu Data Preparation ---
@@ -309,7 +300,7 @@ module.exports = {
 
         function getActionRow(pageType, index, totalPages) {
             const row = new ActionRowBuilder();
-            
+
             if (pageType === 'equipped') {
                 // Only show "Jutsu Library" if there are learned jutsu to display
                 if (learnedJutsuList.length > 0) {
@@ -335,15 +326,15 @@ module.exports = {
         if (currentPageType === 'equipped') {
             currentAttachment = equippedAttachment;
         } else {
-             // This path might not be strictly needed for initial, but good for consistency
-             currentAttachment = await createLearnedCanvasPage(
+            // This path might not be strictly needed for initial, but good for consistency
+            currentAttachment = await createLearnedCanvasPage(
                 interaction.user,
                 learnedJutsuList,
                 learnedPageIndex,
                 totalLearnedPages
             );
         }
-        
+
         const initialRow = getActionRow(currentPageType, learnedPageIndex, totalLearnedPages);
 
         const response = await interaction.reply({

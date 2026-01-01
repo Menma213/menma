@@ -3,7 +3,7 @@
     "currentFloor": 51,
     "highestFloor": 51,
     "lastAttempt": 0,
-    "defeatedKingKori": true,
+    "defeatedKingKori": false,
     "seenIntro": true
   }
 }

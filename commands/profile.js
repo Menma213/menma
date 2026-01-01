@@ -596,7 +596,7 @@ async function generateMainProfilePage(targetUser, userProfileData, playerStats,
     // Rank (centered)
     ctx.font = '18px Arial';
     ctx.fillStyle = theme.accent;
-    ctx.fillText(userProfileData.rank || 'Academy Student', 300, 215);
+    ctx.fillText(userProfileData.title || 'None', 300, 215);
 
     // Bloodline (centered)
     ctx.font = '16px Arial';

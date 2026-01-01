@@ -12,6 +12,8 @@ if (fs.existsSync(envPathFile)) {
 require('dotenv').config({ path: path.resolve(__dirname, envFile) });
 
 const { Client, GatewayIntentBits, Collection, REST, Routes } = require('discord.js');
+const dataManager = require('./commands/dataUtils');
+global.dataManager = dataManager; // Make it global for all commands to access
 
 // Load environment variables
 const TOKEN = process.env.DISCORD_TOKEN ? process.env.DISCORD_TOKEN.trim() : undefined;

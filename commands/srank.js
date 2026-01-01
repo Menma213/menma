@@ -4,6 +4,10 @@ const path = require('path');
 const math = require('mathjs');
 const { updateRequirements } = require('./scroll');
 const { createCanvas, loadImage, registerFont } = require('canvas');
+const Locks = require('../utils/locks');
+const userMutex = Locks.userMutex;
+const jutsuMutex = Locks.jutsuMutex;
+const mentorMutex = Locks.mentorMutex;
 const https = require('https');
 
 const EMOJIS = {
@@ -20,10 +24,12 @@ const COMBO_EMOJI_FILLED = "⭕";
 const COMBO_EMOJI_EMPTY = "⚪";
 
 const usersPath = path.resolve(__dirname, '../../menma/data/users.json');
+const playersPath = path.resolve(__dirname, '../../menma/data/players.json');
 const jutsuPath = path.resolve(__dirname, '../../menma/data/jutsu.json');
 const jutsusPath = path.resolve(__dirname, '../../menma/data/jutsus.json');
 const imagesPath = path.resolve(__dirname, '../../menma/images');
 const combosPath = path.resolve(__dirname, '../../menma/data/combos.json');
+const mentorExpPath = path.resolve(__dirname, '../../menma/data/mentorexp.json');
 
 let jutsuList = {};
 let jutsuData = {};
@@ -46,15 +52,17 @@ async function cleanupWebhooks(interaction) {
                 await webhook.delete();
             }
         }
-    } catch (error) { }
+    } catch (error) {
+        console.error(`[SRank Error - cleanupWebhooks]:`, error);
+    }
 }
 const ASUMAANDKURENAI = 'https://i.postimg.cc/XvS9FdJv/image.png';
 const WAITWHAT = 'https://i.postimg.cc/ydfZKWTP/image.png';
 const KURENAIPANIC = 'https://i.postimg.cc/mgNWykpN/image.png';
 const KURENAIRIGHT = 'https://i.postimg.cc/bN2hspX8/image.png';
 const ASUMASCARED = 'https://i.postimg.cc/CxDQVx3B/image.png';
-const ASUMA_AVATAR = 'https://pm1.aminoapps.com/7847/98cca195c3bc0047d813f25357661be5f67818b3r1-750-754v2_hq.jpg';
-const HAKU_AVATAR = 'https://www.giantbomb.com/a/uploads/scale_medium/9/95613/2237215-haku22.jpg';
+const ASUMA_AVATAR = 'https://i.pinimg.com/originals/d9/b6/1a/d9b61a4328fd5986574164a3d40e430f.png';
+const HAKU_AVATAR = 'https://i.pinimg.com/736x/b3/f3/3f/b3f33f1fc611822295c4fa439e5c653a.jpg';
 const KAGAMI_AVATAR = 'https://i.postimg.cc/Jzr9bXRx/image.png';
 const HAKU_CORRUPT_AVATAR = 'https://i.postimg.cc/c1kJqHXq/image.png';
 const ZABUZA_AVATAR = 'https://i.postimg.cc/6pn0FP6j/image.png';
@@ -1101,58 +1109,75 @@ async function runSrankBattle(interaction, users, userId, players, jutsuList, bo
             }
             await interaction.followUp({ embeds: [summaryEmbed] });
             if (player.health <= 0) {
-                users[userId].srankResult = "loss";
-                fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
+                await userMutex.runExclusive(async () => {
+                    const u = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
+                    if (u[userId]) {
+                        u[userId].srankResult = "loss";
+                        fs.writeFileSync(usersPath, JSON.stringify(u, null, 2));
+                    }
+                });
                 await interaction.followUp(`**You have been defeated by ${bossName}! Game Over.**`);
                 return "loss";
             }
             if (npc.currentHealth <= 0) {
-                // Update tutorial progress for /tutorial command
-                users[userId].srankResult = "win";
-                fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
-                await interaction.followUp(`**${bossName} has been defeated! You win!**`);
-                // Send exp and money rewards to gift inventory (gift.json)
-                const giftPath = path.resolve(__dirname, '../../menma/data/gift.json');
-                let giftData = fs.existsSync(giftPath) ? JSON.parse(fs.readFileSync(giftPath, 'utf8')) : {};
-                if (!giftData[userId]) giftData[userId] = [];
-                // Helper to generate unique id
-                function generateGiftId(userGifts) {
-                    let id;
-                    do {
-                        id = Math.floor(Math.random() * 50000) + 1;
-                    } while (userGifts && userGifts.some(g => g.id === id));
-                    return id;
-                }
-                const playerLevel = player.level || 1; // Get player's current level
+                const playerLevel = player.level || 1;
                 const expReward = getSrankExpReward(playerLevel, bossConfig.baseExp);
                 const moneyReward = bossConfig.money;
-                giftData[userId].push({
-                    id: generateGiftId(giftData[userId]),
-                    type: 'exp',
-                    amount: expReward,
-                    from: 'srank',
-                    date: Date.now()
+
+                await userMutex.runExclusive(async () => {
+                    const u = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
+                    const p = JSON.parse(fs.readFileSync(playersPath, 'utf8'));
+
+                    if (u[userId]) {
+                        u[userId].srankResult = "win";
+                        u[userId].health = player.maxHealth;
+                        if (!u[userId].srankDefeats) u[userId].srankDefeats = {};
+                        const bossId = bossName.toLowerCase().replace(' ', '_');
+                        u[userId].srankDefeats[bossId] = (u[userId].srankDefeats[bossId] || 0) + 1;
+                        fs.writeFileSync(usersPath, JSON.stringify(u, null, 2));
+                    }
+
+                    if (p[userId]) {
+                        p[userId].exp += expReward;
+                        p[userId].money += moneyReward;
+                        p[userId].exp = Math.round(p[userId].exp * 10) / 10;
+                        fs.writeFileSync(playersPath, JSON.stringify(p, null, 2));
+                    }
                 });
-                giftData[userId].push({
-                    id: generateGiftId(giftData[userId]),
-                    type: 'money',
-                    amount: moneyReward,
-                    from: 'srank',
-                    date: Date.now()
+
+                // Update Mentor EXP
+                await mentorMutex.runExclusive(async () => {
+                    let me = {};
+                    try {
+                        me = JSON.parse(fs.readFileSync(mentorExpPath, 'utf8'));
+                    } catch (e) { }
+                    if (!me[userId]) me[userId] = { exp: 0, last_train: 0 };
+                    me[userId].exp += 1;
+                    fs.writeFileSync(mentorExpPath, JSON.stringify(me, null, 2));
                 });
-                fs.writeFileSync(giftPath, JSON.stringify(giftData, null, 2));
-                users[userId].health = player.maxHealth;
-                if (!users[userId].srankDefeats) users[userId].srankDefeats = {};
-                users[userId].srankDefeats.orochimaru = (users[userId].srankDefeats.orochimaru || 0) + 1;
-                fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
+
+                await interaction.followUp(`**${bossName} has been defeated! You win!**`);
                 const rewardEmbed = new EmbedBuilder()
                     .setTitle(`Battle End! ${player.username} has won!`)
                     .setDescription(
-                        `<@${userId}> has earned ${expReward} exp!
-<@${userId}> has earned $${moneyReward.toLocaleString()}! (Check /gift inventory to claim)`
+                        `<@${userId}> has earned ${expReward} exp!\n<@${userId}> has earned $${moneyReward.toLocaleString()}! (Rewards added to your account)`
                     )
                     .setColor('#006400');
                 await interaction.followUp({ embeds: [rewardEmbed] });
+
+                // Reward scroll drop chance
+                if (bossConfig.reward && Math.random() < bossConfig.rewardChance) {
+                    await jutsuMutex.runExclusive(async () => {
+                        const jutsuData = JSON.parse(fs.readFileSync(jutsuPath, 'utf8'));
+                        if (!jutsuData[userId]) jutsuData[userId] = { usersjutsu: [] };
+                        if (!jutsuData[userId].usersjutsu.includes(bossConfig.reward)) {
+                            jutsuData[userId].usersjutsu.push(bossConfig.reward);
+                            await interaction.followUp(`**Special Reward!** You have obtained the ${bossConfig.reward} scroll!`);
+                        }
+                        fs.writeFileSync(jutsuPath, JSON.stringify(jutsuData, null, 2));
+                    });
+                }
+
                 return "win";
             }
             player.chakra += CHAKRA_REGEN[player.rank] || 1;
@@ -1176,333 +1201,348 @@ async function runSrankBattle(interaction, users, userId, players, jutsuList, bo
 
 // Story handler for Haku
 async function runHakuStory(interaction, users, userId, players, jutsuList) {
-    const asumaWebhook = await getCharacterWebhook(interaction.channel, "Asuma", ASUMA_AVATAR);
-    const hakuWebhook = await getCharacterWebhook(interaction.channel, "Haku", HAKU_AVATAR);
-    const kagamiWebhook = await getCharacterWebhook(interaction.channel, "Kagami", KAGAMI_AVATAR);
-    const hakuCorruptWebhook = await getCharacterWebhook(interaction.channel, "Corrupted Haku", HAKU_CORRUPT_AVATAR);
-    let skipStory = false;
-    const storyRow = new ActionRowBuilder()
-        .addComponents(
-            new ButtonBuilder().setCustomId('haku_story_continue').setLabel('Continue').setStyle(ButtonStyle.Primary),
-            new ButtonBuilder().setCustomId('haku_story_skip').setLabel('Skip').setStyle(ButtonStyle.Secondary)
-        );
-    const asumaMsg = await asumaWebhook.send({
-        content: "Venturing on your first S-rank? I'll tag along. Just to be safe. Let me tell you about Haku...",
-        components: [storyRow]
-    });
-    const storyChoice = await new Promise(resolve => {
-        const storyCollector = asumaMsg.createMessageComponentCollector({
-            filter: btn => btn.user.id === userId && (btn.customId === 'haku_story_continue' || btn.customId === 'haku_story_skip'),
-            time: 60000
+    try {
+        const asumaWebhook = await getCharacterWebhook(interaction.channel, "Asuma", ASUMA_AVATAR);
+        const hakuWebhook = await getCharacterWebhook(interaction.channel, "Haku", HAKU_AVATAR);
+        const kagamiWebhook = await getCharacterWebhook(interaction.channel, "Kagami", KAGAMI_AVATAR);
+        const hakuCorruptWebhook = await getCharacterWebhook(interaction.channel, "Corrupted Haku", HAKU_CORRUPT_AVATAR);
+        let skipStory = false;
+        const storyRow = new ActionRowBuilder()
+            .addComponents(
+                new ButtonBuilder().setCustomId('haku_story_continue').setLabel('Continue').setStyle(ButtonStyle.Primary),
+                new ButtonBuilder().setCustomId('haku_story_skip').setLabel('Skip').setStyle(ButtonStyle.Secondary)
+            );
+        const asumaMsg = await asumaWebhook.send({
+            content: "Venturing on your first S-rank? I'll tag along. Sranks arent normal missions, some of your jutsus might not work on these bosses at all! Just to be safe. Let me tell you about Haku...",
+            components: [storyRow]
         });
-        storyCollector.on('collect', btn => {
-            btn.deferUpdate();
-            resolve(btn.customId);
-            storyCollector.stop();
-        });
-        storyCollector.on('end', (_, reason) => {
-            if (reason === 'time') resolve('haku_story_skip');
-        });
-    });
-    skipStory = (storyChoice === 'haku_story_skip');
-    if (skipStory) {
-        await asumaWebhook.send({ content: "You skip the story and head straight into battle with Haku." });
-        const fightRow = new ActionRowBuilder().addComponents(
-            new ButtonBuilder().setCustomId('haku_story_fight1').setLabel('Fight').setStyle(ButtonStyle.Danger)
-        );
-        const fightMsg = await asumaWebhook.send({ content: "Look. That's Haku, ready?", components: [fightRow] });
-        await new Promise(resolve => {
-            const c = fightMsg.createMessageComponentCollector({
-                filter: btn => btn.user.id === userId && btn.customId === 'haku_story_fight1',
+        const storyChoice = await new Promise(resolve => {
+            const storyCollector = asumaMsg.createMessageComponentCollector({
+                filter: btn => btn.user.id === userId && (btn.customId === 'haku_story_continue' || btn.customId === 'haku_story_skip'),
                 time: 60000
             });
-            c.on('collect', btn => { btn.deferUpdate(); resolve(); c.stop(); });
-            c.on('end', (_, reason) => { if (reason === 'time') resolve(); });
-        });
-    } else {
-        for (const loreLine of srankBosses.haku.lore) {
-            await asumaWebhook.send({ content: loreLine });
-            await new Promise(res => setTimeout(res, 2500));
-        }
-        const fightRow = new ActionRowBuilder().addComponents(
-            new ButtonBuilder().setCustomId('haku_story_ready').setLabel('Ready').setStyle(ButtonStyle.Primary)
-        );
-        const readyMsg = await asumaWebhook.send({ content: "Look. That's Haku, ready?", components: [fightRow] });
-        await new Promise(resolve => {
-            const c = readyMsg.createMessageComponentCollector({
-                filter: btn => btn.user.id === userId && btn.customId === 'haku_story_ready',
-                time: 60000
+            storyCollector.on('collect', btn => {
+                btn.deferUpdate();
+                resolve(btn.customId);
+                storyCollector.stop();
             });
-            c.on('collect', btn => { btn.deferUpdate(); resolve(); c.stop(); });
-            c.on('end', (_, reason) => { if (reason === 'time') resolve(); });
-        });
-        await hakuWebhook.send({ content: "Nobody hurts Zabuza!" });
-        await new Promise(res => setTimeout(res, 2500));
-        await hakuWebhook.send({ content: "Another Shinobi attempting to kill Zabuza? I will kill you instead!" });
-        await new Promise(res => setTimeout(res, 2500));
-        const fightRow2 = new ActionRowBuilder().addComponents(
-            new ButtonBuilder().setCustomId('haku_story_fight').setLabel('Fight').setStyle(ButtonStyle.Danger)
-        );
-        const fightMsg = await hakuWebhook.send({ content: "Prepare yourself!", components: [fightRow2] });
-        await new Promise(resolve => {
-            const c = fightMsg.createMessageComponentCollector({
-                filter: btn => btn.user.id === userId && btn.customId === 'haku_story_fight',
-                time: 60000
+            storyCollector.on('end', (_, reason) => {
+                if (reason === 'time') resolve('haku_story_skip');
             });
-            c.on('collect', btn => { btn.deferUpdate(); resolve(); c.stop(); });
-            c.on('end', (_, reason) => { if (reason === 'time') resolve(); });
         });
-    }
-    let phase1Result = await runSrankBattle(
-        interaction, users, userId, players, jutsuList,
-        srankBosses.haku, HAKU_BG, HAKU_AVATAR, "Haku"
-    );
-    if (phase1Result === "win") {
-        await hakuWebhook.send({ content: "*coughs up blood* I...*cough*" });
-        await new Promise(res => setTimeout(res, 2500));
-        await asumaWebhook.send({ content: `<@${userId}> I feel a very strange power heading towards us, we should leave immediately.` });
-        await new Promise(res => setTimeout(res, 2500));
-        await interaction.channel.send({ content: "Suddenly, the area turns into a hellish place..." });
-        await kagamiWebhook.send({ content: "Oh? Look at this weakling being defeated by a mere Shinobi." });
-        await new Promise(res => setTimeout(res, 2500));
-        await kagamiWebhook.send({ content: "You think you can change fate? How amusing. My puppets will always rise again." });
-        await new Promise(res => setTimeout(res, 2500));
-        await kagamiWebhook.send({ content: "*extends a hand towards Haku, purplish energy swirls*" });
-        await new Promise(res => setTimeout(res, 2500));
-        await hakuCorruptWebhook.send({ content: "Master...Revenge." });
-        await new Promise(res => setTimeout(res, 2500));
-        const fightRow = new ActionRowBuilder().addComponents(
-            new ButtonBuilder().setCustomId('haku_story_fight2').setLabel('Fight').setStyle(ButtonStyle.Danger)
-        );
-        const fightMsg = await hakuCorruptWebhook.send({ content: "You will not leave alive.", components: [fightRow] });
-        await new Promise(resolve => {
-            const c = fightMsg.createMessageComponentCollector({
-                filter: btn => btn.user.id === userId && btn.customId === 'haku_story_fight2',
-                time: 60000
+        skipStory = (storyChoice === 'haku_story_skip');
+        if (skipStory) {
+            await asumaWebhook.send({ content: "You skip the story and head straight into battle with Haku." });
+            const fightRow = new ActionRowBuilder().addComponents(
+                new ButtonBuilder().setCustomId('haku_story_fight1').setLabel('Fight').setStyle(ButtonStyle.Danger)
+            );
+            const fightMsg = await asumaWebhook.send({ content: "Look. That's Haku, ready?", components: [fightRow] });
+            await new Promise(resolve => {
+                const c = fightMsg.createMessageComponentCollector({
+                    filter: btn => btn.user.id === userId && btn.customId === 'haku_story_fight1',
+                    time: 60000
+                });
+                c.on('collect', btn => { btn.deferUpdate(); resolve(); c.stop(); });
+                c.on('end', (_, reason) => { if (reason === 'time') resolve(); });
             });
-            c.on('collect', btn => { btn.deferUpdate(); resolve(); c.stop(); });
-            c.on('end', (_, reason) => { if (reason === 'time') resolve(); });
-        });
-        const corruptHakuConfig = {
-            ...srankBosses.haku,
-            name: "Corrupted Haku",
-            image: HAKU_CORRUPT_AVATAR,
-            jutsu: ["Corrupted Needle Assault"],
-            health: 150,
-            power: 1300,
-            defense: 700,
-            exp: 3.5,
-            money: 15000
-        };
-        let phase2Result = await runSrankBattle(
-            interaction, users, userId, players, jutsuList,
-            corruptHakuConfig, HAKU_CORRUPT_BG, HAKU_CORRUPT_AVATAR, "Corrupted Haku"
-        );
-        if (phase2Result === "win") {
-            await kagamiWebhook.send({ content: "Hmm..Not half bad. Let me go prepare my other puppet...Zabuza. Until next time then, Shinobi." });
-            if (!users[userId].unlockedSrank) users[userId].unlockedSrank = [];
-            if (!users[userId].unlockedSrank.includes("zabuza")) {
-                users[userId].unlockedSrank.push("zabuza");
-                fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
+        } else {
+            for (const loreLine of srankBosses.haku.lore) {
+                await asumaWebhook.send({ content: loreLine });
+                await new Promise(res => setTimeout(res, 2500));
             }
+            const fightRow = new ActionRowBuilder().addComponents(
+                new ButtonBuilder().setCustomId('haku_story_ready').setLabel('Ready').setStyle(ButtonStyle.Primary)
+            );
+            const readyMsg = await asumaWebhook.send({ content: "Look. That's Haku, ready?", components: [fightRow] });
+            await new Promise(resolve => {
+                const c = readyMsg.createMessageComponentCollector({
+                    filter: btn => btn.user.id === userId && btn.customId === 'haku_story_ready',
+                    time: 60000
+                });
+                c.on('collect', btn => { btn.deferUpdate(); resolve(); c.stop(); });
+                c.on('end', (_, reason) => { if (reason === 'time') resolve(); });
+            });
+            await hakuWebhook.send({ content: "Nobody hurts Zabuza!" });
+            await new Promise(res => setTimeout(res, 2500));
+            await hakuWebhook.send({ content: "Another Shinobi attempting to kill Zabuza? I will kill you instead!" });
+            await new Promise(res => setTimeout(res, 2500));
+            const fightRow2 = new ActionRowBuilder().addComponents(
+                new ButtonBuilder().setCustomId('haku_story_fight').setLabel('Fight').setStyle(ButtonStyle.Danger)
+            );
+            const fightMsg = await hakuWebhook.send({ content: "Prepare yourself!", components: [fightRow2] });
+            await new Promise(resolve => {
+                const c = fightMsg.createMessageComponentCollector({
+                    filter: btn => btn.user.id === userId && btn.customId === 'haku_story_fight',
+                    time: 60000
+                });
+                c.on('collect', btn => { btn.deferUpdate(); resolve(); c.stop(); });
+                c.on('end', (_, reason) => { if (reason === 'time') resolve(); });
+            });
         }
-        return phase2Result;
+        let phase1Result = await runSrankBattle(
+            interaction, users, userId, players, jutsuList,
+            srankBosses.haku, HAKU_BG, HAKU_AVATAR, "Haku"
+        );
+        if (phase1Result === "win") {
+            await hakuWebhook.send({ content: "*coughs up blood* I...*cough*" });
+            await new Promise(res => setTimeout(res, 2500));
+            await asumaWebhook.send({ content: `<@${userId}> I feel a very strange power heading towards us, we should leave immediately.` });
+            await new Promise(res => setTimeout(res, 2500));
+            await interaction.channel.send({ content: "Suddenly, the area turns into a hellish place..." });
+            await kagamiWebhook.send({ content: "Oh? Look at this weakling being defeated by a mere Shinobi." });
+            await new Promise(res => setTimeout(res, 2500));
+            await kagamiWebhook.send({ content: "You think you can change fate? How amusing. My puppets will always rise again." });
+            await new Promise(res => setTimeout(res, 2500));
+            await kagamiWebhook.send({ content: "*extends a hand towards Haku, purplish energy swirls*" });
+            await new Promise(res => setTimeout(res, 2500));
+            await hakuCorruptWebhook.send({ content: "Master...Revenge." });
+            await new Promise(res => setTimeout(res, 2500));
+            const fightRow = new ActionRowBuilder().addComponents(
+                new ButtonBuilder().setCustomId('haku_story_fight2').setLabel('Fight').setStyle(ButtonStyle.Danger)
+            );
+            const fightMsg = await hakuCorruptWebhook.send({ content: "You will not leave alive.", components: [fightRow] });
+            await new Promise(resolve => {
+                const c = fightMsg.createMessageComponentCollector({
+                    filter: btn => btn.user.id === userId && btn.customId === 'haku_story_fight2',
+                    time: 60000
+                });
+                c.on('collect', btn => { btn.deferUpdate(); resolve(); c.stop(); });
+                c.on('end', (_, reason) => { if (reason === 'time') resolve(); });
+            });
+            const corruptHakuConfig = {
+                ...srankBosses.haku,
+                name: "Corrupted Haku",
+                image: HAKU_CORRUPT_AVATAR,
+                jutsu: ["Corrupted Needle Assault"],
+                health: 150,
+                power: 1300,
+                defense: 700,
+                exp: 3.5,
+                money: 15000
+            };
+            let phase2Result = await runSrankBattle(
+                interaction, users, userId, players, jutsuList,
+                corruptHakuConfig, HAKU_CORRUPT_BG, HAKU_CORRUPT_AVATAR, "Corrupted Haku"
+            );
+            if (phase2Result === "win") {
+                await kagamiWebhook.send({ content: "Hmm..Not half bad. Let me go prepare my other puppet...Zabuza. Until next time then, Shinobi." });
+                if (!users[userId].unlockedSrank) users[userId].unlockedSrank = [];
+                if (!users[userId].unlockedSrank.includes("zabuza")) {
+                    users[userId].unlockedSrank.push("zabuza");
+                    fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
+                }
+            }
+            return phase2Result;
+        }
+        return phase1Result;
+    } catch (error) {
+        console.error(`[SRank Error - runHakuStory]:`, error);
+        throw error;
     }
-    return phase1Result;
 }
 
 // Story handler for Zabuza
 async function runZabuzaStory(interaction, users, userId, players, jutsuList) {
-    const asumaWebhook = await getCharacterWebhook(interaction.channel, "Asuma", ASUMA_AVATAR);
-    const zabuzaWebhook = await getCharacterWebhook(interaction.channel, "Zabuza", ZABUZA_AVATAR);
-    const kagamiWebhook = await getCharacterWebhook(interaction.channel, "Kagami", KAGAMI_AVATAR);
-    let skipStory = false;
-    const storyRow = new ActionRowBuilder()
-        .addComponents(
-            new ButtonBuilder().setCustomId('zabuza_story_continue').setLabel('Continue').setStyle(ButtonStyle.Primary),
-            new ButtonBuilder().setCustomId('zabuza_story_skip').setLabel('Skip').setStyle(ButtonStyle.Secondary)
-        );
-    const asumaMsg = await asumaWebhook.send({
-        content: "Ready for Zabuza? Let me tell you about him...",
-        components: [storyRow]
-    });
-    const storyChoice = await new Promise(resolve => {
-        const storyCollector = asumaMsg.createMessageComponentCollector({
-            filter: btn => btn.user.id === userId && (btn.customId === 'zabuza_story_continue' || btn.customId === 'zabuza_story_skip'),
-            time: 60000
+    try {
+        const asumaWebhook = await getCharacterWebhook(interaction.channel, "Asuma", ASUMA_AVATAR);
+        const zabuzaWebhook = await getCharacterWebhook(interaction.channel, "Zabuza", ZABUZA_AVATAR);
+        const kagamiWebhook = await getCharacterWebhook(interaction.channel, "Kagami", KAGAMI_AVATAR);
+        let skipStory = false;
+        const storyRow = new ActionRowBuilder()
+            .addComponents(
+                new ButtonBuilder().setCustomId('zabuza_story_continue').setLabel('Continue').setStyle(ButtonStyle.Primary),
+                new ButtonBuilder().setCustomId('zabuza_story_skip').setLabel('Skip').setStyle(ButtonStyle.Secondary)
+            );
+        const asumaMsg = await asumaWebhook.send({
+            content: "Ready for Zabuza? Let me tell you about him...",
+            components: [storyRow]
         });
-        storyCollector.on('collect', btn => {
-            btn.deferUpdate();
-            resolve(btn.customId);
-            storyCollector.stop();
+        const storyChoice = await new Promise(resolve => {
+            const storyCollector = asumaMsg.createMessageComponentCollector({
+                filter: btn => btn.user.id === userId && (btn.customId === 'zabuza_story_continue' || btn.customId === 'zabuza_story_skip'),
+                time: 60000
+            });
+            storyCollector.on('collect', btn => {
+                btn.deferUpdate();
+                resolve(btn.customId);
+                storyCollector.stop();
+            });
+            storyCollector.on('end', (_, reason) => {
+                if (reason === 'time') resolve('zabuza_story_skip');
+            });
         });
-        storyCollector.on('end', (_, reason) => {
-            if (reason === 'time') resolve('zabuza_story_skip');
-        });
-    });
-    skipStory = (storyChoice === 'zabuza_story_skip');
-    if (skipStory) {
-        await asumaWebhook.send({ content: "You skip the story and head straight into battle with Zabuza." });
-    } else {
-        for (const loreLine of srankBosses.zabuza.lore) {
-            await asumaWebhook.send({ content: loreLine });
+        skipStory = (storyChoice === 'zabuza_story_skip');
+        if (skipStory) {
+            await asumaWebhook.send({ content: "You skip the story and head straight into battle with Zabuza." });
+        } else {
+            for (const loreLine of srankBosses.zabuza.lore) {
+                await asumaWebhook.send({ content: loreLine });
+                await new Promise(res => setTimeout(res, 2500));
+            }
+            await kagamiWebhook.send({ content: "Look who's back.. Get ready to face one of my special puppets. Come, Zabuza!" });
+            await new Promise(res => setTimeout(res, 2500));
+            await zabuzaWebhook.send({ content: "Hehehe... another little bug to crush..." });
+            await new Promise(res => setTimeout(res, 2500));
+            await zabuzaWebhook.send({ content: "You think you can defeat the Demon of the Mist? Hah!" });
             await new Promise(res => setTimeout(res, 2500));
         }
-        await kagamiWebhook.send({ content: "Look who's back.. Get ready to face one of my special puppets. Come, Zabuza!" });
-        await new Promise(res => setTimeout(res, 2500));
-        await zabuzaWebhook.send({ content: "Hehehe... another little bug to crush..." });
-        await new Promise(res => setTimeout(res, 2500));
-        await zabuzaWebhook.send({ content: "You think you can defeat the Demon of the Mist? Hah!" });
-        await new Promise(res => setTimeout(res, 2500));
-    }
-    const fightRow = new ActionRowBuilder().addComponents(
-        new ButtonBuilder().setCustomId('zabuza_story_fight').setLabel('Fight').setStyle(ButtonStyle.Danger)
-    );
-    const fightMsg = await zabuzaWebhook.send({ content: "Come on then, let's dance!", components: [fightRow] });
-    await new Promise(resolve => {
-        const c = fightMsg.createMessageComponentCollector({
-            filter: btn => btn.user.id === userId && btn.customId === 'zabuza_story_fight',
-            time: 60000
-        });
-        c.on('collect', btn => { btn.deferUpdate(); resolve(); c.stop(); });
-        c.on('end', (_, reason) => { if (reason === 'time') resolve(); });
-    });
-    let battleResult = await runSrankBattle(
-        interaction, users, userId, players, jutsuList,
-        srankBosses.zabuza, ZABUZA_BG, ZABUZA_AVATAR, "Zabuza"
-    );
-    if (battleResult === "win") {
-        await zabuzaWebhook.send({ content: "*gurgling blood* How... how did..." });
-        await new Promise(res => setTimeout(res, 2500));
-        await kagamiWebhook.send({ content: "Impressive. Very impressive." });
-        await new Promise(res => setTimeout(res, 2500));
-        await kagamiWebhook.send({ content: "You have potential. Why waste it serving these weak villages?" });
-        await new Promise(res => setTimeout(res, 2500));
-        await kagamiWebhook.send({ content: "Join me. Together we could reshape this world." });
-        await new Promise(res => setTimeout(res, 2500));
-        await asumaWebhook.send({ content: "Don't listen to her! She's manipulating you!" });
-        await new Promise(res => setTimeout(res, 2500));
-        await kagamiWebhook.send({ content: "Oh, the monkey is still here. How... annoying." });
-        await new Promise(res => setTimeout(res, 2500));
-        await kagamiWebhook.send({ content: "*flicks wrist* Let me give you something to remember me by." });
-        await new Promise(res => setTimeout(res, 2500));
-        await asumaWebhook.send({ content: `Argh! Poison... <@${userId}>, we need to get back to the village, now!` });
-        await new Promise(res => setTimeout(res, 2500));
-        await kagamiWebhook.send({ content: "Run along little monkey. But remember my offer." });
-        await new Promise(res => setTimeout(res, 2500));
-        await asumaWebhook.send({ content: "We need to get back to the village and warn everyone. This is bigger than we thought." });
-    }
-    return battleResult;
-}
-
-// Story handler for Orochimaru
-async function runOrochimaruStory(interaction, users, userId, players, jutsuList) {
-    const asumaWebhook = await getCharacterWebhook(interaction.channel, "Asuma", ASUMA_AVATAR);
-    const orochimaruWebhook = await getCharacterWebhook(interaction.channel, "Orochimaru", OROCHIMARU_AVATAR);
-    const kagamiWebhook = await getCharacterWebhook(interaction.channel, "Kagami", KAGAMI_AVATAR);
-    let skipStory = false;
-    const storyRow = new ActionRowBuilder()
-        .addComponents(
-            new ButtonBuilder().setCustomId('orochimaru_story_continue').setLabel('Continue').setStyle(ButtonStyle.Primary),
-            new ButtonBuilder().setCustomId('orochimaru_story_skip').setLabel('Skip').setStyle(ButtonStyle.Secondary)
+        const fightRow = new ActionRowBuilder().addComponents(
+            new ButtonBuilder().setCustomId('zabuza_story_fight').setLabel('Fight').setStyle(ButtonStyle.Danger)
         );
-    const asumaMsg = await asumaWebhook.send({
-        content: "It's time to face Orochimaru. Let me tell you about him...",
-        components: [storyRow]
-    });
-    const storyChoice = await new Promise(resolve => {
-        const storyCollector = asumaMsg.createMessageComponentCollector({
-            filter: btn => btn.user.id === userId && (btn.customId === 'orochimaru_story_continue' || btn.customId === 'orochimaru_story_skip'),
-            time: 60000
-        });
-        storyCollector.on('collect', btn => {
-            btn.deferUpdate();
-            resolve(btn.customId);
-            storyCollector.stop();
-        });
-        storyCollector.on('end', (_, reason) => {
-            if (reason === 'time') resolve('orochimaru_story_skip');
-        });
-    });
-    skipStory = (storyChoice === 'orochimaru_story_skip');
-    if (skipStory) {
-        await asumaWebhook.send({ content: "You skip the story and head straight into battle with Orochimaru." });
-    } else {
-        await asumaWebhook.send({ content: "It's been a month since that witch poisoned me. I think I'll be tagging along with you on S-ranks." });
-        await new Promise(res => setTimeout(res, 2500));
-        await asumaWebhook.send({ content: "The witch we met the other day will keep an eye on you. We need to gather intel about the Akatsuki." });
-        await new Promise(res => setTimeout(res, 2500));
-        await orochimaruWebhook.send({ content: "Well, well... what do we have here? More Konoha insects?" });
-        await new Promise(res => setTimeout(res, 2500));
-        await asumaWebhook.send({ content: "OROCHIMARU! YOU TRAITOR!" });
-        await new Promise(res => setTimeout(res, 2500));
-        await orochimaruWebhook.send({ content: "Another monkey. Hmph! *flicks wrist*" });
-        await new Promise(res => setTimeout(res, 2500));
-        await asumaWebhook.send({ content: `Gah! Not again... <@${userId}>, watch out!` });
-        await new Promise(res => setTimeout(res, 2500));
-        const attackRow = new ActionRowBuilder().addComponents(
-            new ButtonBuilder().setCustomId('orochimaru_attack').setLabel('Attack Orochimaru').setStyle(ButtonStyle.Danger)
-        );
-        const attackMsg = await interaction.followUp({ content: "You have no choice but to attack!", components: [attackRow], fetchReply: true });
+        const fightMsg = await zabuzaWebhook.send({ content: "Come on then, let's dance!", components: [fightRow] });
         await new Promise(resolve => {
-            const c = attackMsg.createMessageComponentCollector({
-                filter: btn => btn.user.id === userId && btn.customId === 'orochimaru_attack',
+            const c = fightMsg.createMessageComponentCollector({
+                filter: btn => btn.user.id === userId && btn.customId === 'zabuza_story_fight',
                 time: 60000
             });
             c.on('collect', btn => { btn.deferUpdate(); resolve(); c.stop(); });
             c.on('end', (_, reason) => { if (reason === 'time') resolve(); });
         });
-        await orochimaruWebhook.send({ content: "Foolish child. *effortlessly counters your attack*" });
-        await new Promise(res => setTimeout(res, 2500));
-        await interaction.followUp("**Orochimaru's power is overwhelming! You've been defeated!**");
-        await new Promise(res => setTimeout(res, 2500));
-        await interaction.followUp("**You wake up in a remote village, saved by kind villagers.**");
-        await new Promise(res => setTimeout(res, 4500));
-        await asumaWebhook.send({ content: `<@${userId}>, listen carefully. I have a plan.` });
-        await new Promise(res => setTimeout(res, 2500));
-        await asumaWebhook.send({ content: "I'll launch an all-out attack to distract him. You need to land a finishing blow to his vitals." });
-        await new Promise(res => setTimeout(res, 2500));
-        await asumaWebhook.send({ content: "But you must wait for the right moment." });
-        await new Promise(res => setTimeout(res, 2500));
-        await interaction.followUp("**You track down Orochimaru to the same location.**");
-        await new Promise(res => setTimeout(res, 2500));
-        await orochimaruWebhook.send({ content: "Back for more? How... persistent." });
-        await new Promise(res => setTimeout(res, 2500));
+        let battleResult = await runSrankBattle(
+            interaction, users, userId, players, jutsuList,
+            srankBosses.zabuza, ZABUZA_BG, ZABUZA_AVATAR, "Zabuza"
+        );
+        if (battleResult === "win") {
+            await zabuzaWebhook.send({ content: "*gurgling blood* How... how did..." });
+            await new Promise(res => setTimeout(res, 2500));
+            await kagamiWebhook.send({ content: "Impressive. Very impressive." });
+            await new Promise(res => setTimeout(res, 2500));
+            await kagamiWebhook.send({ content: "You have potential. Why waste it serving these weak villages?" });
+            await new Promise(res => setTimeout(res, 2500));
+            await kagamiWebhook.send({ content: "Join me. Together we could reshape this world." });
+            await new Promise(res => setTimeout(res, 2500));
+            await asumaWebhook.send({ content: "Don't listen to her! She's manipulating you!" });
+            await new Promise(res => setTimeout(res, 2500));
+            await kagamiWebhook.send({ content: "Oh, the monkey is still here. How... annoying." });
+            await new Promise(res => setTimeout(res, 2500));
+            await kagamiWebhook.send({ content: "*flicks wrist* Let me give you something to remember me by." });
+            await new Promise(res => setTimeout(res, 2500));
+            await asumaWebhook.send({ content: `Argh! Poison... <@${userId}>, we need to get back to the village, now!` });
+            await new Promise(res => setTimeout(res, 2500));
+            await kagamiWebhook.send({ content: "Run along little monkey. But remember my offer." });
+            await new Promise(res => setTimeout(res, 2500));
+            await asumaWebhook.send({ content: "We need to get back to the village and warn everyone. This is bigger than we thought." });
+        }
+        return battleResult;
+    } catch (error) {
+        console.error(`[SRank Error - runZabuzaStory]:`, error);
+        throw error;
     }
-    const fightRow = new ActionRowBuilder().addComponents(
-        new ButtonBuilder().setCustomId('orochimaru_fight').setLabel('Fight').setStyle(ButtonStyle.Danger)
-    );
-    const fightMsg = await orochimaruWebhook.send({ content: "Let's finish this.", components: [fightRow] });
-    await new Promise(resolve => {
-        const c = fightMsg.createMessageComponentCollector({
-            filter: btn => btn.user.id === userId && btn.customId === 'orochimaru_fight',
-            time: 60000
+}
+
+// Story handler for Orochimaru
+async function runOrochimaruStory(interaction, users, userId, players, jutsuList) {
+    try {
+        const asumaWebhook = await getCharacterWebhook(interaction.channel, "Asuma", ASUMA_AVATAR);
+        const orochimaruWebhook = await getCharacterWebhook(interaction.channel, "Orochimaru", OROCHIMARU_AVATAR);
+        const kagamiWebhook = await getCharacterWebhook(interaction.channel, "Kagami", KAGAMI_AVATAR);
+        let skipStory = false;
+        const storyRow = new ActionRowBuilder()
+            .addComponents(
+                new ButtonBuilder().setCustomId('orochimaru_story_continue').setLabel('Continue').setStyle(ButtonStyle.Primary),
+                new ButtonBuilder().setCustomId('orochimaru_story_skip').setLabel('Skip').setStyle(ButtonStyle.Secondary)
+            );
+        const asumaMsg = await asumaWebhook.send({
+            content: "It's time to face Orochimaru. Let me tell you about him...",
+            components: [storyRow]
         });
-        c.on('collect', btn => { btn.deferUpdate(); resolve(); c.stop(); });
-        c.on('end', (_, reason) => { if (reason === 'time') resolve(); });
-    });
-    let battleResult = await runSrankBattle(
-        interaction, users, userId, players, jutsuList,
-        srankBosses.orochimaru, OROCHIMARU_BG, OROCHIMARU_AVATAR, "Orochimaru"
-    );
-    if (battleResult === "win") {
-        await orochimaruWebhook.send({ content: "Impossible... how could I be defeated by... *coughs up black blood*" });
-        await new Promise(res => setTimeout(res, 2500));
-        await interaction.followUp("**Orochimaru's body begins to show signs of corruption - the same as Haku and Zabuza!**");
-        await new Promise(res => setTimeout(res, 2500));
-        await asumaWebhook.send({ content: `No... she got to him too! <@${userId}>, we need to leave, now!` });
-        await new Promise(res => setTimeout(res, 2500));
-        await kagamiWebhook.send({ content: "Leaving so soon? And here I was going to offer my congratulations." });
-        await new Promise(res => setTimeout(res, 2500));
-        await kagamiWebhook.send({ content: "You're becoming quite the nuisance. Maybe I should pay a visit to that little redhead of yours... Kurenai, was it?" });
-        await new Promise(res => setTimeout(res, 2500));
-        await asumaWebhook.send({ content: "You stay away from her!" });
-        await new Promise(res => setTimeout(res, 2500));
-        await kagamiWebhook.send({ content: "Or what? You'll try to poison me again? *laughs* Don't worry, we'll meet again soon." });
-        await new Promise(res => setTimeout(res, 2500));
-        await asumaWebhook.send({ content: "We need to get back to the village and warn everyone. This is bigger than we thought." });
+        const storyChoice = await new Promise(resolve => {
+            const storyCollector = asumaMsg.createMessageComponentCollector({
+                filter: btn => btn.user.id === userId && (btn.customId === 'orochimaru_story_continue' || btn.customId === 'orochimaru_story_skip'),
+                time: 60000
+            });
+            storyCollector.on('collect', btn => {
+                btn.deferUpdate();
+                resolve(btn.customId);
+                storyCollector.stop();
+            });
+            storyCollector.on('end', (_, reason) => {
+                if (reason === 'time') resolve('orochimaru_story_skip');
+            });
+        });
+        skipStory = (storyChoice === 'orochimaru_story_skip');
+        if (skipStory) {
+            await asumaWebhook.send({ content: "You skip the story and head straight into battle with Orochimaru." });
+        } else {
+            await asumaWebhook.send({ content: "It's been a month since that witch poisoned me. I think I'll be tagging along with you on S-ranks." });
+            await new Promise(res => setTimeout(res, 2500));
+            await asumaWebhook.send({ content: "The witch we met the other day will keep an eye on you. We need to gather intel about the Akatsuki." });
+            await new Promise(res => setTimeout(res, 2500));
+            await orochimaruWebhook.send({ content: "Well, well... what do we have here? More Konoha insects?" });
+            await new Promise(res => setTimeout(res, 2500));
+            await asumaWebhook.send({ content: "OROCHIMARU! YOU TRAITOR!" });
+            await new Promise(res => setTimeout(res, 2500));
+            await orochimaruWebhook.send({ content: "Another monkey. Hmph! *flicks wrist*" });
+            await new Promise(res => setTimeout(res, 2500));
+            await asumaWebhook.send({ content: `Gah! Not again... <@${userId}>, watch out!` });
+            await new Promise(res => setTimeout(res, 2500));
+            const attackRow = new ActionRowBuilder().addComponents(
+                new ButtonBuilder().setCustomId('orochimaru_attack').setLabel('Attack Orochimaru').setStyle(ButtonStyle.Danger)
+            );
+            const attackMsg = await interaction.followUp({ content: "You have no choice but to attack!", components: [attackRow], fetchReply: true });
+            await new Promise(resolve => {
+                const c = attackMsg.createMessageComponentCollector({
+                    filter: btn => btn.user.id === userId && btn.customId === 'orochimaru_attack',
+                    time: 60000
+                });
+                c.on('collect', btn => { btn.deferUpdate(); resolve(); c.stop(); });
+                c.on('end', (_, reason) => { if (reason === 'time') resolve(); });
+            });
+            await orochimaruWebhook.send({ content: "Foolish child. *effortlessly counters your attack*" });
+            await new Promise(res => setTimeout(res, 2500));
+            await interaction.followUp("**Orochimaru's power is overwhelming! You've been defeated!**");
+            await new Promise(res => setTimeout(res, 2500));
+            await interaction.followUp("**You wake up in a remote village, saved by kind villagers.**");
+            await new Promise(res => setTimeout(res, 4500));
+            await asumaWebhook.send({ content: `<@${userId}>, listen carefully. I have a plan.` });
+            await new Promise(res => setTimeout(res, 2500));
+            await asumaWebhook.send({ content: "I'll launch an all-out attack to distract him. You need to land a finishing blow to his vitals." });
+            await new Promise(res => setTimeout(res, 2500));
+            await asumaWebhook.send({ content: "But you must wait for the right moment." });
+            await new Promise(res => setTimeout(res, 2500));
+            await interaction.followUp("**You track down Orochimaru to the same location.**");
+            await new Promise(res => setTimeout(res, 2500));
+            await orochimaruWebhook.send({ content: "Back for more? How... persistent." });
+            await new Promise(res => setTimeout(res, 2500));
+        }
+        const fightRow = new ActionRowBuilder().addComponents(
+            new ButtonBuilder().setCustomId('orochimaru_fight').setLabel('Fight').setStyle(ButtonStyle.Danger)
+        );
+        const fightMsg = await orochimaruWebhook.send({ content: "Let's finish this.", components: [fightRow] });
+        await new Promise(resolve => {
+            const c = fightMsg.createMessageComponentCollector({
+                filter: btn => btn.user.id === userId && btn.customId === 'orochimaru_fight',
+                time: 60000
+            });
+            c.on('collect', btn => { btn.deferUpdate(); resolve(); c.stop(); });
+            c.on('end', (_, reason) => { if (reason === 'time') resolve(); });
+        });
+        let battleResult = await runSrankBattle(
+            interaction, users, userId, players, jutsuList,
+            srankBosses.orochimaru, OROCHIMARU_BG, OROCHIMARU_AVATAR, "Orochimaru"
+        );
+        if (battleResult === "win") {
+            await orochimaruWebhook.send({ content: "Impossible... how could I be defeated by... *coughs up black blood*" });
+            await new Promise(res => setTimeout(res, 2500));
+            await interaction.followUp("**Orochimaru's body begins to show signs of corruption - the same as Haku and Zabuza!**");
+            await new Promise(res => setTimeout(res, 2500));
+            await asumaWebhook.send({ content: `No... she got to him too! <@${userId}>, we need to leave, now!` });
+            await new Promise(res => setTimeout(res, 2500));
+            await kagamiWebhook.send({ content: "Leaving so soon? And here I was going to offer my congratulations." });
+            await new Promise(res => setTimeout(res, 2500));
+            await kagamiWebhook.send({ content: "You're becoming quite the nuisance. Maybe I should pay a visit to that little redhead of yours... Kurenai, was it?" });
+            await new Promise(res => setTimeout(res, 2500));
+            await asumaWebhook.send({ content: "You stay away from her!" });
+            await new Promise(res => setTimeout(res, 2500));
+            await kagamiWebhook.send({ content: "Or what? You'll try to poison me again? *laughs* Don't worry, we'll meet again soon." });
+            await new Promise(res => setTimeout(res, 2500));
+            await asumaWebhook.send({ content: "We need to get back to the village and warn everyone. This is bigger than we thought." });
+        }
+        return battleResult;
+    } catch (error) {
+        console.error(`[SRank Error - runOrochimaruStory]:`, error);
+        throw error;
     }
-    return battleResult;
 }
 
 // Special battle for Orochimaru with Execute option
@@ -1644,53 +1684,45 @@ async function runOrochimaruBattle(interaction, users, userId, players, jutsuLis
             }
             await interaction.followUp({ embeds: [summaryEmbed] });
             if (player.health <= 0) {
-                users[userId].srankResult = "loss";
-                fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
+                await userMutex.runExclusive(async () => {
+                    const u = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
+                    if (u[userId]) {
+                        u[userId].srankResult = "loss";
+                        fs.writeFileSync(usersPath, JSON.stringify(u, null, 2));
+                    }
+                });
                 await interaction.followUp(`**You have been defeated by Orochimaru! Game Over.**`);
                 return "loss";
             }
             if (npc.currentHealth <= 0) {
-                // Update tutorial progress for /tutorial command
-                users[userId].srankResult = "win";
-                fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
+                const playerLevel = player.level || 1;
+                const expReward = getSrankExpReward(playerLevel, srankBosses.orochimaru.baseExp);
+                const moneyReward = srankBosses.orochimaru.money;
+
+                await userMutex.runExclusive(async () => {
+                    const u = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
+                    const p = JSON.parse(fs.readFileSync(playersPath, 'utf8'));
+
+                    if (u[userId]) {
+                        u[userId].srankResult = "win";
+                        u[userId].health = player.maxHealth;
+                        fs.writeFileSync(usersPath, JSON.stringify(u, null, 2));
+                    }
+
+                    if (p[userId]) {
+                        p[userId].exp += expReward;
+                        p[userId].money += moneyReward;
+                        p[userId].exp = Math.round(p[userId].exp * 10) / 10;
+                        fs.writeFileSync(playersPath, JSON.stringify(p, null, 2));
+                    }
+                });
+
                 await interaction.followUp(`**Orochimaru has been defeated! You win!**`);
-                // Send exp and money rewards to gift inventory (gift.json)
-                const giftPath = path.resolve(__dirname, '../../menma/data/gift.json');
-                let giftData = fs.existsSync(giftPath) ? JSON.parse(fs.readFileSync(giftPath, 'utf8')) : {};
-                if (!giftData[userId]) giftData[userId] = [];
-                // Helper to generate unique id
-                function generateGiftId(userGifts) {
-                    let id;
-                    do {
-                        id = Math.floor(Math.random() * 50000) + 1;
-                    } while (userGifts && userGifts.some(g => g.id === id));
-                    return id;
-                }
-                const playerLevel = player.level || 1; // Get player's current level
-                const expReward = getSrankExpReward(playerLevel, srankBosses.orochimaru.baseExp); // Use Orochimaru's baseExp
-                const moneyReward = srankBosses.orochimaru.money; // Use Orochimaru's money
-
-                giftData[userId].push({
-                    id: generateGiftId(giftData[userId]),
-                    type: 'exp',
-                    amount: expReward,
-                    from: 'srank',
-                    date: Date.now()
-                });
-                giftData[userId].push({
-                    id: generateGiftId(giftData[userId]),
-                    type: 'money',
-                    amount: moneyReward,
-                    from: 'srank',
-                    date: Date.now()
-                });
-                fs.writeFileSync(giftPath, JSON.stringify(giftData, null, 2));
-
                 await interaction.followUp({
                     embeds: [new EmbedBuilder()
                         .setDescription(`**VICTORY!** You defeated Orochimaru.`)
                         .addFields(
-                            { name: "Reward", value: `+${expReward} EXP, $${moneyReward.toLocaleString()} Money`, inline: true }
+                            { name: "Reward", value: `+${expReward} EXP, $${moneyReward.toLocaleString()} Money (Added to account)`, inline: true }
                         )
                         .setColor(0x00FF00)
                     ]
@@ -1855,15 +1887,24 @@ async function runCorruptedOrochimaruBattle(interaction, users, userId, players,
             }
             await interaction.followUp({ embeds: [summaryEmbed] });
             if (player.health <= 0) {
-                users[userId].srankResult = "loss";
-                fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
+                await userMutex.runExclusive(async () => {
+                    const u = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
+                    if (u[userId]) {
+                        u[userId].srankResult = "loss";
+                        fs.writeFileSync(usersPath, JSON.stringify(u, null, 2));
+                    }
+                });
                 await interaction.followUp(`**You have been defeated by Corrupted Orochimaru! Game Over.**`);
                 return "loss";
             }
             if (npc.currentHealth <= 0) {
-                // Update tutorial progress for /tutorial command
-                users[userId].srankResult = "win";
-                fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
+                await userMutex.runExclusive(async () => {
+                    const u = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
+                    if (u[userId]) {
+                        u[userId].srankResult = "win";
+                        fs.writeFileSync(usersPath, JSON.stringify(u, null, 2));
+                    }
+                });
                 await interaction.followUp(`**Corrupted Orochimaru has been defeated! You win!**`);
                 return "win";
             }
@@ -1942,12 +1983,13 @@ module.exports = {
                 cooldownMs = Math.round(13 * 60 * 1000);
             }
 
-            if (users[userId].lastsrank && now - users[userId].lastsrank < cooldownMs) {
-                const left = cooldownMs - (now - users[userId].lastsrank);
-                return interaction.followUp({ content: `You can do this again in ${getCooldownString(left)}.`, ephemeral: true });
-            }
-            users[userId].lastsrank = now;
-            fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
+            await userMutex.runExclusive(async () => {
+                const users = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
+                if (users[userId]) {
+                    users[userId].lastsrank = now;
+                    fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
+                }
+            });
 
             let players = [
                 {
@@ -2384,42 +2426,25 @@ module.exports = {
                                             content: "I will not forget this humiliation. I will be back soon, and this time, not alone. Good bye."
                                         }, userId);
 
-                                        // Handle rewards like other sranks
-                                        const giftPath = path.resolve(__dirname, '../../menma/data/gift.json');
-                                        let giftData = fs.existsSync(giftPath) ? JSON.parse(fs.readFileSync(giftPath, 'utf8')) : {};
-                                        if (!giftData[userId]) giftData[userId] = [];
-                                        function generateGiftId(userGifts) {
-                                            let id;
-                                            do {
-                                                id = Math.floor(Math.random() * 50000) + 1;
-                                            } while (userGifts && userGifts.some(g => g.id === id));
-                                            return id;
-                                        }
                                         const playerLevel = players[0].level || 1; // Get player's current level
                                         const expReward = getSrankExpReward(playerLevel, srankBosses.kagami.baseExp); // Use Kagami's baseExp
                                         const moneyReward = srankBosses.kagami.money; // Use Kagami's money
 
-                                        giftData[userId].push({
-                                            id: generateGiftId(giftData[userId]),
-                                            type: 'exp',
-                                            amount: expReward,
-                                            from: 'srank',
-                                            date: Date.now()
+                                        await userMutex.runExclusive(async () => {
+                                            const playersData = JSON.parse(fs.readFileSync(playersPath, 'utf8'));
+                                            if (playersData[userId]) {
+                                                playersData[userId].exp += expReward;
+                                                playersData[userId].money += moneyReward;
+                                                playersData[userId].exp = Math.round(playersData[userId].exp * 10) / 10;
+                                            }
+                                            fs.writeFileSync(playersPath, JSON.stringify(playersData, null, 2));
                                         });
-                                        giftData[userId].push({
-                                            id: generateGiftId(giftData[userId]),
-                                            type: 'money',
-                                            amount: moneyReward,
-                                            from: 'srank',
-                                            date: Date.now()
-                                        });
-                                        fs.writeFileSync(giftPath, JSON.stringify(giftData, null, 2));
 
                                         await interaction.followUp({
                                             embeds: [new EmbedBuilder()
                                                 .setDescription(`**VICTORY!** You defeated Kagami.`)
                                                 .addFields(
-                                                    { name: "Reward", value: `+${expReward} EXP, $${moneyReward.toLocaleString()} Money`, inline: true }
+                                                    { name: "Reward", value: `+${expReward} EXP, $${moneyReward.toLocaleString()} Money (Added to account)`, inline: true }
                                                 )
                                                 .setColor(0x00FF00)
                                             ]
@@ -2432,6 +2457,7 @@ module.exports = {
                             result = "unknown";
                     }
                 } catch (error) {
+                    console.error(`[SRank Error - Battle/Story Execution]:`, error);
                     await interaction.followUp("An error occurred during the battle!");
                 }
             });
@@ -2443,6 +2469,7 @@ module.exports = {
             });
 
         } catch (error) {
+            console.error(`[SRank Error - Main Execute]:`, error);
             await interaction.followUp({ content: "An error occurred while executing this command." });
         }
     }

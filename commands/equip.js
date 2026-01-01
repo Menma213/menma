@@ -1,123 +1,127 @@
-const { SlashCommandBuilder } = require('discord.js');
-const fs = require('fs');
+const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags } = require('discord.js');
+const fs = require('fs').promises;
 const path = require('path');
-const { updateRequirements } = require('./scroll');
+const { userMutex } = require('../utils/locks');
 
-const usersPath = path.join(__dirname, '../../menma/data/users.json');
-const jutsuPath = path.join(__dirname, '../../menma/data/jutsu.json');
+const usersPath = path.resolve(__dirname, '../data/users.json');
+const jutsuPath = path.resolve(__dirname, '../data/jutsu.json');
+const jutsusDefPath = path.resolve(__dirname, '../data/jutsus.json');
 
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('equip')
-        .setDescription('Equip a jutsu or combo')
+        .setDescription('Equip a Jutsu or a Combo.')
         .addStringOption(option =>
             option.setName('type')
-                .setDescription('Type to equip: jutsu or combo')
+                .setDescription('What do you want to equip?')
                 .setRequired(true)
                 .addChoices(
-                    { name: 'jutsu', value: 'jutsu' },
-                    { name: 'combo', value: 'combo' }
-                )
-        )
+                    { name: 'Jutsu', value: 'jutsu' },
+                    { name: 'Combo', value: 'combo' }
+                ))
         .addStringOption(option =>
             option.setName('name')
-                .setDescription('Name of the jutsu or combo')
-                .setRequired(true)
-        )
-        .addStringOption(option =>
-            option.setName('slot')
-                .setDescription('Jutsu slot (required for jutsu)')
-                .setRequired(true)
-        ),
-
-    async autocomplete(interaction) {
-        const userId = interaction.user.id;
-        const focusedValue = interaction.options.getFocused();
-        const jutsuData = JSON.parse(fs.readFileSync(jutsuPath, 'utf8'));
-        const userJutsu = jutsuData[userId]?.usersjutsu || [];
-        
-        const filtered = userJutsu
-            .filter(jutsu => jutsu.toLowerCase().includes(focusedValue.toLowerCase()))
-            .slice(0, 25)
-            .map(jutsu => ({ name: jutsu, value: jutsu }));
-
-        await interaction.respond(filtered);
-    },
+                .setDescription('The name of the Jutsu or Combo')
+                .setRequired(true)),
 
     async execute(interaction) {
-        const type = interaction.options.getString('type');
-        const name = interaction.options.getString('name');
-        const slot = interaction.options.getString('slot');
         const userId = interaction.user.id;
+        const type = interaction.options.getString('type');
+        const itemName = interaction.options.getString('name');
 
-        if (!fs.existsSync(usersPath)) {
-            return interaction.reply({ content: "User database not found.", ephemeral: true });
+        try {
+            await interaction.deferReply();
+
+            // Load data
+            const userJutsuData = JSON.parse(await fs.readFile(jutsuPath, 'utf8'));
+            const userData = userJutsuData[userId] || { usersjutsu: ["Attack", "Transformation Jutsu"], combos: [], scrolls: [] };
+
+            if (type === 'jutsu') {
+                const userJutsusOwned = [...new Set(userData.usersjutsu || [])];
+                const matchedJutsu = userJutsusOwned.find(j => j.toLowerCase() === itemName.toLowerCase());
+
+                if (!matchedJutsu) {
+                    return interaction.editReply({ content: `You don't own a jutsu named "**${itemName}**".` });
+                }
+
+                if (matchedJutsu === "Attack") {
+                    return interaction.editReply({ content: "The basic Attack cannot be moved from Slot 0." });
+                }
+
+                // Show Slot Selection
+                const users = JSON.parse(await fs.readFile(usersPath, 'utf8'));
+                const currentJutsus = users[userId]?.jutsu || {};
+
+                const slotEmbed = new EmbedBuilder()
+                    .setTitle("Equip Jutsu")
+                    .setDescription(`Select a slot to equip **${matchedJutsu}**:\n\n` +
+                        `Slot 1: \`${currentJutsus.slot_1 || 'Empty'}\`\n` +
+                        `Slot 2: \`${currentJutsus.slot_2 || 'Empty'}\`\n` +
+                        `Slot 3: \`${currentJutsus.slot_3 || 'Empty'}\`\n` +
+                        `Slot 4: \`${currentJutsus.slot_4 || 'Empty'}\`\n` +
+                        `Slot 5: \`${currentJutsus.slot_5 || 'Empty'}\``)
+                    .setFooter({ text: `Equipping: ${matchedJutsu}` })
+                    .setColor("#2b2d31");
+
+                const slotRow = new ActionRowBuilder().addComponents(
+                    new ButtonBuilder().setCustomId(`slot_1_${matchedJutsu}`).setLabel('Slot 1').setStyle(ButtonStyle.Secondary),
+                    new ButtonBuilder().setCustomId(`slot_2_${matchedJutsu}`).setLabel('Slot 2').setStyle(ButtonStyle.Secondary),
+                    new ButtonBuilder().setCustomId(`slot_3_${matchedJutsu}`).setLabel('Slot 3').setStyle(ButtonStyle.Secondary),
+                    new ButtonBuilder().setCustomId(`slot_4_${matchedJutsu}`).setLabel('Slot 4').setStyle(ButtonStyle.Secondary),
+                    new ButtonBuilder().setCustomId(`slot_5_${matchedJutsu}`).setLabel('Slot 5').setStyle(ButtonStyle.Secondary)
+                );
+
+                const response = await interaction.editReply({ embeds: [slotEmbed], components: [slotRow] });
+
+                const collector = response.createMessageComponentCollector({
+                    filter: i => i.user.id === userId && i.customId.startsWith('slot_'),
+                    time: 60000,
+                    max: 1
+                });
+
+                collector.on('collect', async i => {
+                    const parts = i.customId.split('_');
+                    const slotNum = parts[1];
+                    const jutsuToEquip = parts.slice(2).join('_');
+
+                    await userMutex.runExclusive(async () => {
+                        const usersData = JSON.parse(await fs.readFile(usersPath, 'utf8'));
+                        if (!usersData[userId]) throw new Error("User data not found.");
+                        if (!usersData[userId].jutsu) usersData[userId].jutsu = { slot_0: "Attack" };
+
+                        usersData[userId].jutsu[`slot_${slotNum}`] = jutsuToEquip;
+                        await fs.writeFile(usersPath, JSON.stringify(usersData, null, 2));
+                    });
+
+                    await i.update({ content: `Successfully equipped **${jutsuToEquip}** to **Slot ${slotNum}**!`, embeds: [], components: [] });
+                });
+
+            } else if (type === 'combo') {
+                const userCombosOwned = [...new Set(userData.combos || [])];
+                const matchedCombo = userCombosOwned.find(c => c.toLowerCase() === itemName.toLowerCase());
+
+                if (!matchedCombo) {
+                    return interaction.editReply({ content: `You don't own a combo named "**${itemName}**".` });
+                }
+
+                await userMutex.runExclusive(async () => {
+                    const users = JSON.parse(await fs.readFile(usersPath, 'utf8'));
+                    if (!users[userId]) throw new Error("User data not found.");
+                    users[userId].Combo = matchedCombo;
+                    await fs.writeFile(usersPath, JSON.stringify(users, null, 2));
+                });
+
+                await interaction.editReply({ content: `Successfully equipped combo: **${matchedCombo}**!` });
+            }
+
+        } catch (error) {
+            console.error(error);
+            const msg = error.message || "An error occurred while executing this command.";
+            if (interaction.deferred || interaction.replied) {
+                await interaction.editReply({ content: msg });
+            } else {
+                await interaction.reply({ content: msg, flags: [MessageFlags.Ephemeral] });
+            }
         }
-        const users = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
-        if (!users[userId]) {
-            return interaction.reply({ content: "You need to enroll first!", ephemeral: true });
-        }
-
-        if (type === 'combo') {
-            // Equip combo by checking jutsu.json combos array for the user
-            if (!fs.existsSync(jutsuPath)) {
-                return interaction.reply({ content: "Jutsu database not found.", ephemeral: true });
-            }
-            const jutsuData = JSON.parse(fs.readFileSync(jutsuPath, 'utf8'));
-            const userCombos = jutsuData[userId]?.combos || [];
-            // Case-insensitive match
-            const ownedCombo = userCombos.find(c => c.toLowerCase() === name.toLowerCase());
-            if (!ownedCombo) {
-                return interaction.reply({ content: `You do not own the combo \"${name}\".`, ephemeral: true });
-            }
-            users[userId].Combo = ownedCombo;
-            fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
-            return interaction.reply({ content: `Equipped combo: **${ownedCombo}**!`, ephemeral: false });
-        }
-
-        if (type === 'jutsu') {
-            const jutsuName = name;
-            const slotNumber = parseInt(slot, 10);
-
-            // Limit to slots 1-5 only
-            if (slotNumber < 1 || slotNumber > 5) {
-                return interaction.reply({ content: "You can only equip jutsu in slots 1 to 5.", ephemeral: true });
-            }
-
-            const jutsuData = JSON.parse(fs.readFileSync(jutsuPath, 'utf8'));
-
-            // Check if user has the jutsu in their inventory (case-insensitive)
-            const userJutsu = jutsuData[userId]?.usersjutsu || [];
-            const matchedJutsu = userJutsu.find(jutsu => jutsu.toLowerCase() === jutsuName.toLowerCase());
-            if (!matchedJutsu) {
-                return interaction.reply({ content: `You don't own the jutsu \"${jutsuName}\"!`, ephemeral: true });
-            }
-
-            // Ensure the "jutsu" object exists in users.json
-            if (!users[userId].jutsu || typeof users[userId].jutsu !== 'object') {
-                return interaction.reply({ content: "Your jutsu deck is not initialized!", ephemeral: true });
-            }
-
-            // Prevent editing slot 0 (default attack slot)
-            if (slotNumber === 0) {
-                return interaction.reply({ content: "Slot 0 is reserved for the default attack and cannot be changed!", ephemeral: true });
-            }
-
-            // Equip the jutsu into the specified slot (use the correct case from inventory)
-            const slotKey = `slot_${slotNumber}`;
-            users[userId].jutsu[slotKey] = matchedJutsu;
-            fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
-
-            const equipSuccess = true;
-
-        
-
-            return interaction.reply({
-                content: `Successfully equipped \"${matchedJutsu}\" in slot ${slotNumber}!`,
-                ephemeral: false
-            });
-        }
-
-        return interaction.reply({ content: "Invalid type specified.", ephemeral: true });
     }
 };

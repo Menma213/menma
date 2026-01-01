@@ -16,7 +16,7 @@ async function getAsumaWebhook(channel) {
         if (!asumaWebhook) {
             asumaWebhook = await channel.createWebhook({
                 name: 'Asuma',
-                avatar: 'https://pm1.aminoapps.com/7847/98cca195c3bc0047d813f25357661be5f67818b3r1-750-754v2_hq.jpg',
+                avatar: 'https://i.pinimg.com/originals/d9/b6/1a/d9b61a4328fd5986574164a3d40e430f.png',
             });
         }
         return asumaWebhook;
@@ -50,17 +50,17 @@ async function safeWebhookSend(channel, webhook, sendOptions) {
 }
 
 // Verification functions
-const verifyDrank = function(userId) {
+const verifyDrank = function (userId) {
     const users = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
     return users[userId] && users[userId].drankCompleted;
 };
 
-const verifyBrank = function(userId) {
+const verifyBrank = function (userId) {
     const users = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
     return users[userId] && users[userId].brankWon;
 };
 
-const verifySrank = function(userId) {
+const verifySrank = function (userId) {
     const users = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
     return users[userId] && users[userId].srankResult;
 };
@@ -253,27 +253,27 @@ async function runCeremonyBattle(interaction, userId, asumaWebhook) {
     await safeWebhookSend(interaction.channel, asumaWebhook, {
         content: "*Asuma starts reading strange words in the ancient shinobi language. Soon the Shinigami appears and your vision goes blurry...*"
     });
-    
+
     await delay(4500);
-    
+
     await safeWebhookSend(interaction.channel, asumaWebhook, {
         content: "You can hear Asuma screaming \"Are you alright!? THIS WAS A MISTAKE!\" but you realize you find yourself in a strange place that you've never seen before."
     });
-    
+
     await delay(4500);
-    
+
     await safeWebhookSend(interaction.channel, asumaWebhook, {
         content: "You see Madara Uchiha standing on a nearby cliff, his eyes filled with killing intent. You grasp the situation and understand that you need to fight Madara."
     });
-    
+
     await delay(4500);
-    
+
     await safeWebhookSend(interaction.channel, asumaWebhook, {
         content: "You look at your body and notice the bruises healing instantly... soon you realize that you're inside the first Hokage, Hashirama Senju's body."
     });
-    
+
     await delay(4500);
-    
+
     // Initialize battle state
     const player = {
         name: "Hashirama Senju",
@@ -428,13 +428,13 @@ async function runCeremonyBattle(interaction, userId, asumaWebhook) {
             .setTitle(`Round ${round} Summary`)
             .setColor('#006400')
             .setDescription(
-            `${player.name} used ${playerAction.name}!\n` +
-            `${playerAction.description}${playerAction.damage ? ` for ${playerAction.damage} damage!` : ''}\n\n` +
-            `${npc.name} used ${npcAction.name}!\n` +
-            `${npcAction.description}${npcAction.damage ? ` for ${npcAction.damage} damage!` : ''}`
+                `${player.name} used ${playerAction.name}!\n` +
+                `${playerAction.description}${playerAction.damage ? ` for ${playerAction.damage} damage!` : ''}\n\n` +
+                `${npc.name} used ${npcAction.name}!\n` +
+                `${npcAction.description}${npcAction.damage ? ` for ${npcAction.damage} damage!` : ''}`
             )
             .addFields(
-            { name: 'Battle Status', value: `${player.name}: ${Math.max(0, player.currentHealth)}/${player.health} HP\n${npc.name}: ${Math.max(0, npc.currentHealth)}/${npc.health} HP`, inline: true }
+                { name: 'Battle Status', value: `${player.name}: ${Math.max(0, player.currentHealth)}/${player.health} HP\n${npc.name}: ${Math.max(0, npc.currentHealth)}/${npc.health} HP`, inline: true }
             );
 
         // Attach image if player's jutsu has one
@@ -460,37 +460,37 @@ async function runCeremonyBattle(interaction, userId, asumaWebhook) {
             content: "**The battle ends in a stalemate!** The vision fades and you find yourself back in the real world."
         });
     }
-    
+
     await delay(4500);
-    
+
     await safeWebhookSend(interaction.channel, asumaWebhook, {
         content: "You wake up hours later in a hospital back at Konoha. You wake up and see Asuma worried and panicked."
     });
-    
+
     await delay(4500);
-    
+
     await safeWebhookSend(interaction.channel, asumaWebhook, {
         content: "As soon as Asuma sees your active condition he says \"Are you alright? what in the world happened? You suddenly passed out, we've never seen anything like that in newer Shinobi!\""
     });
-    
+
     await delay(4500);
-    
+
     await safeWebhookSend(interaction.channel, asumaWebhook, {
         content: "You mumble: \"I saw a vision...\""
     });
-    
+
     await delay(4500);
-    
+
     await safeWebhookSend(interaction.channel, asumaWebhook, {
         content: "Asuma stands up and takes a few steps backward, his face widened with awe. \"Are you the Prodigy...!? I must inform the elders about this!\""
     });
-    
+
     await delay(5500);
-    
+
     await safeWebhookSend(interaction.channel, asumaWebhook, {
         content: "\"Oh before I pass out because of shock, don't be surprised if you randomly see visions after defeating certain NPCs or bosses. They will contain information about the past and possibly you might become the savior of this world.\""
     });
-    
+
     return npc.currentHealth <= 0;
 }
 
@@ -511,7 +511,7 @@ module.exports = {
             const trialsDone = users[userId].tutorialTrialsComplete;
             const trainingDone = users[userId].tutorialTrainingComplete;
             const finalDone = users[userId].tutorialFinalComplete;
-            
+
             const embed = new EmbedBuilder()
                 .setTitle("Tutorial Tasks")
                 .setDescription("Complete the tasks below to finish the tutorial!")
@@ -552,25 +552,25 @@ module.exports = {
                 await safeWebhookSend(interaction.channel, asumaWebhook, {
                     content: `Next I need you to learn about scrolls. Run the /scrolls info command and you'll hear a voice that is going to guide you. Treat it well, it's gonna be with you no matter where you go.`
                 });
-                
+
                 await delay(2500);
-                
+
                 await safeWebhookSend(interaction.channel, asumaWebhook, {
                     content: `Press the Continue button to proceed.`,
                     components: [createContinueRow()]
                 });
-                
+
                 if (!await waitForButton(interaction, userId, 'continue')) {
                     users[userId].tutorialFinalComplete = true;
                     fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
                     await safeWebhookSend(interaction.channel, asumaWebhook, { content: "You didn't continue in time. Tutorial marked as complete. Run /tutorial again if you want to repeat!" });
                     return;
                 }
-                
+
                 await safeWebhookSend(interaction.channel, asumaWebhook, {
                     content: `Here's a scroll that will act as an example. It only costs 1 Crystalline Shard for the extraction of the jutsu.`
                 });
-                
+
                 // Add scroll to gift inventory
                 const giftData = JSON.parse(fs.readFileSync(giftPath, 'utf8'));
                 const giftId = Math.floor(Math.random() * 5000) + 5001;
@@ -584,13 +584,13 @@ module.exports = {
                     date: now
                 });
                 fs.writeFileSync(giftPath, JSON.stringify(giftData, null, 2));
-                
+
                 await safeWebhookSend(interaction.channel, asumaWebhook, {
                     content: `Infused Chakra Blade Scroll sent to your gift inventory. (Gift ID: ${giftId})`
                 });
-                
+
                 await delay(2500);
-                
+
                 await safeWebhookSend(interaction.channel, asumaWebhook, {
                     content: `When you're done extracting and equipping the jutsu, press the Done button below. If you have the extracted jutsu equipped, I'll mark this stage as complete.`,
                     components: [createDoneRow()]
@@ -608,12 +608,12 @@ module.exports = {
                         await safeWebhookSend(interaction.channel, asumaWebhook, { content: "You didn't respond in time. Run /tutorial again to continue!" });
                         return;
                     }
-                    
+
                     // Check if user has the jutsu in usersjutsu array
                     const jutsuData = JSON.parse(fs.readFileSync(jutsuPath, 'utf8'));
                     const userJutsuArr = jutsuData[userId]?.usersjutsu || [];
                     hasJutsu = userJutsuArr.includes("Infused Chakra Blade");
-                    
+
                     if (hasJutsu) {
                         await safeWebhookSend(interaction.channel, asumaWebhook, {
                             content: `Stage complete! You have obtained the Infused Chakra Blade jutsu.`
@@ -631,7 +631,7 @@ module.exports = {
                 }
                 return;
             }
-            
+
             // Check if user has equipped the jutsu from scroll
             if (scrollsDone && users[userId].tutorialScrollStage && !users[userId].tutorialScrollsComplete) {
                 await safeWebhookSend(interaction.channel, asumaWebhook, {
@@ -644,12 +644,12 @@ module.exports = {
                     if (!await waitForButton(interaction, userId, 'done')) {
                         // If timeout, check jutsu.json anyway
                     }
-                    
+
                     // Check if user has the jutsu in usersjutsu array
                     const jutsuData = JSON.parse(fs.readFileSync(jutsuPath, 'utf8'));
                     const userJutsuArr = jutsuData[userId]?.usersjutsu || [];
                     hasJutsu = userJutsuArr.includes("Infused Chakra Blade");
-                    
+
                     if (hasJutsu) {
                         await safeWebhookSend(interaction.channel, asumaWebhook, {
                             content: `Stage complete! You have obtained the Infused Chakra Blade jutsu.`
@@ -684,7 +684,7 @@ module.exports = {
 
                     const usersNow = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
                     trialsCompleted = usersNow[userId] && usersNow[userId].trialsResult;
-                    
+
                     if (trialsCompleted) {
                         if (usersNow[userId].trialsResult === "win") {
                             await safeWebhookSend(interaction.channel, asumaWebhook, {
@@ -700,7 +700,7 @@ module.exports = {
                         usersFinal[userId] = usersFinal[userId] || {};
                         usersFinal[userId].tutorialTrialsComplete = true;
                         fs.writeFileSync(usersPath, JSON.stringify(usersFinal, null, 2));
-                        
+
                         await safeWebhookSend(interaction.channel, asumaWebhook, {
                             content: "Run /tutorial again to continue with the next section."
                         });
@@ -720,25 +720,25 @@ module.exports = {
                     content: "Now it's time to get you leveled up! From doing all those missions you must have enough exp accumulated to at least level once. Level up using /levelup and press Done when you're done.",
                     components: [createDoneRow()]
                 });
-                
+
                 let leveledUp = false;
                 while (!leveledUp) {
                     if (!await waitForButton(interaction, userId, 'done', 600000)) {
                         await safeWebhookSend(interaction.channel, asumaWebhook, { content: "You haven't leveled up yet. Try using /levelup after accumulating enough EXP!" });
                         return;
                     }
-                    
+
                     const usersNow = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../../menma/data/players.json'), 'utf8'));
                     leveledUp = usersNow[userId] && usersNow[userId].level > 1;
-                    
+
                     if (leveledUp) {
                         await safeWebhookSend(interaction.channel, asumaWebhook, {
                             content: "Congratulations on those new stats. Leveling is simple as that! Once you accumulate enough exp, just use the levelup command. F-rank mission is widely considered the \"grinding\" command because of its low cooldown and exp drop. Good luck!"
                         });
-                        
+
                         users[userId].tutorialTrainingComplete = true;
                         fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
-                        
+
                         await safeWebhookSend(interaction.channel, asumaWebhook, {
                             content: "Run /tutorial again to continue with the final section."
                         });
@@ -751,7 +751,7 @@ module.exports = {
                 }
                 return;
             }
-            
+
             // Final section
             if (users[userId].tutorialTrainingComplete && !finalDone) {
                 // Helper to send message and wait for "continue" button
@@ -798,7 +798,7 @@ module.exports = {
                 }
                 return;
             }
-            
+
             if (users[userId].tutorialFinalComplete) {
                 await safeWebhookSend(interaction.channel, asumaWebhook, {
                     content: "Congratulations! You've completed the entire tutorial. You're now ready to embark on your ninja journey!"
@@ -849,7 +849,7 @@ module.exports = {
                 return;
             }
             drankCompleted = module.exports.verifyDrank(userId);
-            
+
             if (!drankCompleted) {
                 await safeWebhookSend(interaction.channel, asumaWebhook, {
                     content: "You haven't completed /drank yet. Please complete it and press Done again.",
@@ -863,12 +863,12 @@ module.exports = {
             content: `Before everything! Remember that every mission except for drank sends the rewards to your /gift inventory.\n Good job, now start a brank. Brank Ninjas are fairly weak, but since you're new too, I'd recommend using the basic combo: Attack then Transform.`,
             components: [createContinueRow()]
         });
-        
+
         if (!await waitForButton(interaction, userId, 'continue')) {
             await safeWebhookSend(interaction.channel, asumaWebhook, { content: "You didn't continue in time. Run /tutorial again to restart!" });
             return;
         }
-        
+
         await safeWebhookSend(interaction.channel, asumaWebhook, {
             content: `Press the Done button when you've won a brank.`,
             components: [createDoneRow()]
@@ -882,7 +882,7 @@ module.exports = {
                 return;
             }
             brankWon = module.exports.verifyBrank(userId);
-            
+
             if (!brankWon) {
                 await safeWebhookSend(interaction.channel, asumaWebhook, {
                     content: "You haven't won a brank yet. Please win a brank and press Done again.",
@@ -906,7 +906,7 @@ module.exports = {
                 return;
             }
             srankCompleted = module.exports.verifySrank(userId);
-            
+
             if (srankCompleted) {
                 const usersNow = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
                 srankResult = usersNow[userId].srankResult;

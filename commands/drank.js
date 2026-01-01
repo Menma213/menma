@@ -9,6 +9,7 @@ const villagePath = path.resolve(__dirname, '../data/village.json');
 
 const anbuPath = path.resolve(__dirname, '../data/anbu.json');
 const ANBU_ROLE_ID = '1382055740268744784';
+const mentorExpPath = path.resolve(__dirname, '../data/mentorexp.json');
 
 async function checkAnbuQuestCompletion(interaction, userId) {
     const anbuData = JSON.parse(fs.readFileSync(anbuPath, 'utf8'));
@@ -97,7 +98,7 @@ function roundExpSmart(exp) {
     }
 }
 
-const { userMutex } = require('../utils/locks');
+const { userMutex, mentorMutex } = require('../utils/locks');
 
 // ... existing imports ...
 
@@ -224,6 +225,17 @@ module.exports = {
             // Update drankCompleted for tutorial
             users[userId].drankCompleted = true;
             fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
+
+            // Update Mentor EXP
+            await mentorMutex.runExclusive(async () => {
+                let me = {};
+                try {
+                    me = JSON.parse(fs.readFileSync(mentorExpPath, 'utf8'));
+                } catch (e) { }
+                if (!me[userId]) me[userId] = { exp: 0, last_train: 0 };
+                me[userId].exp += 1;
+                fs.writeFileSync(mentorExpPath, JSON.stringify(me, null, 2));
+            });
 
             await interaction.editReply({ embeds: [embed], content: dropMsg ? dropMsg : null });
         });

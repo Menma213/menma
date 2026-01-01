@@ -95,12 +95,6 @@ const eventShopItems = {
         key: "Ramen Bowl",
         type: "ramen"
     },
-    "frozen needles": {
-        name: "Frozen Needles",
-        price: 50,
-        key: "Frozen Needles",
-        type: "jutsu"
-    },
     "ice prison": {
         name: "Ice Prison",
         price: 50,
@@ -115,7 +109,7 @@ const eventShopItems = {
     },
     "profile theme: frost": {
         name: "Profile Theme: Frost",
-        price: 2000,
+        price: 600,
         key: "theme_frost",
         type: "theme"
     },

@@ -16,7 +16,8 @@
       "Transformation Jutsu"
     ],
     "ramen": 101,
-    "money": 1000
+    "money": 1000,
+    "title": "None"
   },
   "1018526599043354725": {
     "level": 1,
@@ -39,7 +40,8 @@
     "money": 15735,
     "ramen": 1,
     "lastdrank": 1750166229696,
-    "mentorExp": 1
+    "mentorExp": 1,
+    "title": "None"
   },
   "843680216022122516": {
     "level": 20,
@@ -63,7 +65,8 @@
       "None"
     ],
     "money": 1260,
-    "ramen": 1
+    "ramen": 1,
+    "title": "None"
   },
   "835408109899219004": {
     "level": 9,
@@ -74,18 +77,18 @@
     "clan": "None",
     "bloodline": "Hyuga",
     "mentor": "Sakura",
-    "rank": "Flames of the Heaven",
+    "rank": "Jounin",
     "health": 30000,
     "power": 30000,
     "defense": 30000,
     "chakra": 10,
     "jutsu": {
       "slot_0": "Attack",
-      "slot_1": "Fireball Jutsu",
-      "slot_2": "Planetary Devastation",
-      "slot_3": "Meteoric Burst",
-      "slot_4": "Crystal Palace",
-      "slot_5": "Heaven's Supremacy"
+      "slot_1": "Wheel of Fate Adaptation",
+      "slot_2": "Kirin",
+      "slot_3": "Analysis",
+      "slot_4": "Mystic Palm",
+      "slot_5": "Carnage"
     },
     "money": 1068510,
     "ramen": 119,
@@ -100,7 +103,7 @@
     "perks": "Jinchuriki",
     "lastguard": 1750175065990,
     "lastdrank": null,
-    "lastbrank": 1765480921877,
+    "lastbrank": 1767269361287,
     "lastsrank": null,
     "role": "Bruiser",
     "lastrob": 1757615299049,
@@ -189,7 +192,9 @@
     "crystalpalaceevent": true,
     "unlocked_titles": [
       "Flames of the Heaven"
-    ]
+    ],
+    "title": "Flames of the Heaven",
+    "usedMysteryBox": true
   },
   "741142009670271010": {
     "level": 1,
@@ -214,7 +219,8 @@
       "slot_5": "None"
     },
     "money": 15430,
-    "ramen": 1
+    "ramen": 1,
+    "title": "None"
   },
   "920673413268377670": {
     "level": 1,
@@ -241,7 +247,8 @@
     "money": 16550,
     "ramen": 1,
     "firstusescroll": true,
-    "Combo": "Basic Combo"
+    "Combo": "Basic Combo",
+    "title": "None"
   },
   "1112750369609633792": {
     "level": 16,
@@ -278,7 +285,8 @@
     "lastdrank": 1747074068650,
     "lastsrank": 1747074093281,
     "speed": 0,
-    "sanninSince": "2025-05-12T18:29:14.681Z"
+    "sanninSince": "2025-05-12T18:29:14.681Z",
+    "title": "None"
   },
   "728522737009819649": {
     "level": 1,
@@ -309,7 +317,8 @@
       "rank": "Genin",
       "division": 5,
       "elo": 0
-    }
+    },
+    "title": "None"
   },
   "826183795417022555": {
     "level": 1,
@@ -340,7 +349,8 @@
     "Combo": "Basic Combo",
     "lastsrank": 1746962907010,
     "occupation": "Anbu",
-    "role": "Spy"
+    "role": "Spy",
+    "title": "None"
   },
   "818893461881094175": {
     "level": 1,
@@ -378,7 +388,8 @@
     "firstusescroll": true,
     "lastDungeon": 1755625280069,
     "current_dungeon": null,
-    "dungeonscompleted": 1
+    "dungeonscompleted": 1,
+    "title": "None"
   },
   "737913304214667345": {
     "level": 100,
@@ -408,7 +419,8 @@
     "mentorExp": 5,
     "lastsrank": 1750174401835,
     "lastdrank": 1750174461414,
-    "lastArank": 1750174468052
+    "lastArank": 1750174468052,
+    "title": "None"
   },
   "1239968214130102424": {
     "level": 1,
@@ -433,7 +445,8 @@
       "slot_5": "None"
     },
     "money": 15000,
-    "ramen": 1
+    "ramen": 1,
+    "title": "None"
   },
   "1239065381373476894": {
     "level": 1,
@@ -476,7 +489,8 @@
     "current_scroll": "Needle Assault Scroll",
     "lastdrank": null,
     "occupation": "Akatsuki",
-    "tutorialStory": true
+    "tutorialStory": true,
+    "title": "None"
   },
   "1383619165843230730": {
     "level": 1,
@@ -502,7 +516,8 @@
     },
     "money": 10000,
     "ramen": 1,
-    "Combo": "Basic Combo"
+    "Combo": "Basic Combo",
+    "title": "None"
   },
   "1071680680616001557": {
     "level": 1,
@@ -534,7 +549,8 @@
     "mentorExp": 1,
     "brankWon": true,
     "firstusescroll": true,
-    "current_scroll": "Needle Assault Scroll"
+    "current_scroll": "Needle Assault Scroll",
+    "title": "None"
   },
   "1355490065899585737": {
     "level": 2,
@@ -600,7 +616,8 @@
     "dungeonscompleted": 11,
     "firstimemission": true,
     "current_mission": null,
-    "zoromission": true
+    "zoromission": true,
+    "title": "None"
   },
   "1311760847307145257": {
     "level": 1,
@@ -639,7 +656,8 @@
     "lastsrank": 1752085885835,
     "srankResult": "win",
     "occupation": "Akatsuki",
-    "role": "Bruiser"
+    "role": "Bruiser",
+    "title": "None"
   },
   "874591871412879361": {
     "level": 1,
@@ -675,7 +693,8 @@
       "rank": "Genin",
       "division": 5,
       "elo": 0
-    }
+    },
+    "title": "None"
   },
   "1210567723097001996": {
     "level": 1,
@@ -701,7 +720,8 @@
     },
     "money": 10000,
     "ramen": 1,
-    "Combo": "Basic Combo"
+    "Combo": "Basic Combo",
+    "title": "None"
   },
   "254833691438743552": {
     "level": 1,
@@ -754,7 +774,8 @@
       1753719814412,
       1753719867976,
       1753719867976
-    ]
+    ],
+    "title": "None"
   },
   "1129254239420551188": {
     "level": 1,
@@ -780,7 +801,8 @@
     },
     "money": 15000,
     "ramen": 1,
-    "Combo": "Basic Combo"
+    "Combo": "Basic Combo",
+    "title": "None"
   },
   "1111082162716950568": {
     "level": 1,
@@ -815,7 +837,8 @@
     "brankWon": true,
     "lastsrank": 1755271592251,
     "hakuDefeats": 0,
-    "corruptHakuDefeats": 0
+    "corruptHakuDefeats": 0,
+    "title": "None"
   },
   "436634341603278859": {
     "money": 0,
@@ -831,7 +854,8 @@
       "progress": {
         "npcIndex": 0
       }
-    }
+    },
+    "title": "None"
   },
   "449222713672859656": {
     "level": 1,
@@ -859,7 +883,8 @@
     "ramen": 1,
     "Combo": "Basic Combo",
     "lastsrank": 1755964374749,
-    "srankResult": "loss"
+    "srankResult": "loss",
+    "title": "None"
   },
   "963147707512418305": {
     "level": 1,
@@ -885,7 +910,8 @@
     },
     "money": 10000,
     "ramen": 1,
-    "Combo": "Basic Combo"
+    "Combo": "Basic Combo",
+    "title": "None"
   },
   "1039157053266067556": {
     "level": 1,
@@ -911,7 +937,8 @@
     },
     "money": 15000,
     "ramen": 1,
-    "Combo": "Basic Combo"
+    "Combo": "Basic Combo",
+    "title": "None"
   },
   "1409902593949433958": {
     "level": 1,
@@ -939,7 +966,8 @@
     "ramen": 51,
     "Combo": "Basic Combo",
     "LastTrials": 1757188171312,
-    "trialsResult": "lose"
+    "trialsResult": "lose",
+    "title": "None"
   },
   "420101737173483541": {
     "level": 3,
@@ -973,7 +1001,8 @@
     "elo": 0,
     "brankWon": true,
     "lastsrank": 1757254771435,
-    "firstusescroll": false
+    "firstusescroll": false,
+    "title": "None"
   },
   "420661520918380544": {
     "money": 205,
@@ -986,7 +1015,8 @@
     "current_dungeon": null,
     "LastTrials": 1757356115076,
     "losses": 1,
-    "trialsResult": "lose"
+    "trialsResult": "lose",
+    "title": "None"
   },
   "450496711123795979": {
     "level": 1,
@@ -1012,7 +1042,8 @@
     },
     "money": 15000,
     "ramen": 1,
-    "Combo": "Basic Combo"
+    "Combo": "Basic Combo",
+    "title": "None"
   },
   "646149279437553664": {
     "level": 1,
@@ -1041,7 +1072,8 @@
     "Combo": "Basic Combo",
     "firstusescroll": true,
     "lastDungeon": 1757360389399,
-    "current_dungeon": null
+    "current_dungeon": null,
+    "title": "None"
   },
   "261684298694918144": {
     "level": 1,
@@ -1072,7 +1104,8 @@
     "mentorExp": 1,
     "drankCompleted": true,
     "lastbrank": 1757434887810,
-    "elo": 0
+    "elo": 0,
+    "title": "None"
   },
   "1407794200518459464": {
     "wins": 0,
@@ -1095,7 +1128,8 @@
       "slot_4": "None",
       "slot_5": "None"
     },
-    "Combo": "Basic Combo"
+    "Combo": "Basic Combo",
+    "title": "None"
   },
   "1327078828622741588": {
     "money": 0,
@@ -1103,7 +1137,8 @@
     "rank": "Genin",
     "chakra": 10,
     "lastbrank": 1759585016463,
-    "bloodlineTuto": true
+    "bloodlineTuto": true,
+    "title": "None"
   },
   "1424401734167433389": {
     "wins": 1,
@@ -1131,10 +1166,12 @@
     "mentorExp": 1,
     "drankCompleted": true,
     "lastbrank": 1759685561663,
-    "elo": 0
+    "elo": 0,
+    "title": "None"
   },
   "me": {
-    "level": 1000000000
+    "level": 1000000000,
+    "title": "None"
   },
   "1303128250079383583": {
     "wins": 1,
@@ -1165,7 +1202,8 @@
     "lastsrank": null,
     "LastTrials": null,
     "lastDungeon": null,
-    "lastArank": null
+    "lastArank": null,
+    "title": "None"
   },
   "1132693590066331828": {
     "wins": 1,
@@ -1177,21 +1215,27 @@
     "rank": "Academy Student",
     "occupation": "Village",
     "health": 1000,
-    "power": 100,
+    "power": 10000,
     "defense": 50,
     "chakra": 10,
     "jutsu": {
       "slot_0": "Attack",
       "slot_1": "Transformation Jutsu",
-      "slot_2": "None",
+      "slot_2": "Meteoric Burst",
       "slot_3": "None",
       "slot_4": "None",
       "slot_5": "None"
     },
     "Combo": "Basic Combo",
-    "lastdrank": 1764518734410,
+    "lastdrank": null,
     "completedRaidStory": true,
-    "storyJutsu": "rasengan"
+    "storyJutsu": "rasengan",
+    "title": "None",
+    "lastbrank": 1766933628529,
+    "lastsrank": null,
+    "LastTrials": null,
+    "lastDungeon": null,
+    "lastArank": null
   },
   "961918563382362122": {
     "wins": 1,
@@ -1214,6 +1258,7 @@
       "slot_4": "None",
       "slot_5": "None"
     },
-    "Combo": "Basic Combo"
+    "Combo": "Basic Combo",
+    "title": "None"
   }
 }

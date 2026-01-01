@@ -2,6 +2,7 @@ const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const path = require('path');
 const fs = require('fs');
 const { runBattle } = require('./combinedcommands');
+const { userMutex, jutsuMutex } = require('../utils/locks');
 
 const TONERI_NPC = {
     name: "Toneri Otsutsuki",
@@ -27,7 +28,8 @@ const TONERI_NPC = {
 
 
 const usersPath = path.resolve(__dirname, '../../menma/data/users.json');
-const giftPath = path.resolve(__dirname, '../../menma/data/gift.json');
+const playersPath = path.resolve(__dirname, '../../menma/data/players.json');
+const jutsusPath = path.resolve(__dirname, '../../menma/data/jutsu.json');
 const cooldownPath = path.resolve(__dirname, '../../menma/data/otsutsuki_cooldowns.json');
 
 const TONERI_REWARDS = {
@@ -50,68 +52,6 @@ function getToneriRewardsForUser(userId) {
 
 const COOLDOWN_DURATION = 20 * 60 * 1000; // 20 minutes in ms
 
-// Utility to load and save gift.json
-function loadGiftData() {
-    if (!fs.existsSync(giftPath)) return {};
-    return JSON.parse(fs.readFileSync(giftPath, 'utf8'));
-}
-
-function saveGiftData(data) {
-    fs.writeFileSync(giftPath, JSON.stringify(data, null, 2));
-}
-
-// Utility to generate a unique gift ID
-function generateGiftId(userGifts) {
-    let id;
-    do {
-        id = Math.floor(Math.random() * 5000) + 1;
-    } while (userGifts && userGifts.some(g => g.id === id));
-    return id;
-}
-
-// Function to add rewards to gift inventory
-function addRewardsToGiftInventory(userId, rewards) {
-    let giftData = loadGiftData();
-    if (!giftData[userId]) giftData[userId] = [];
-    
-    // Add money reward
-    const moneyGiftId = generateGiftId(giftData[userId]);
-    giftData[userId].push({
-        id: moneyGiftId,
-        type: 'money',
-        amount: rewards.ryo,
-        from: 'system',
-        date: Date.now(),
-        source: 'Otsutsuki Victory'
-    });
-    
-    // Add item reward if it exists
-    if (rewards.item) {
-        const itemGiftId = generateGiftId(giftData[userId]);
-        giftData[userId].push({
-            id: itemGiftId,
-            type: 'scroll', // <-- changed from 'jutsu' to 'scroll'
-            name: rewards.item,
-            from: 'system',
-            date: Date.now(),
-            source: 'Otsutsuki Victory'
-        });
-    }
-    
-    // Add XP reward
-    const xpGiftId = generateGiftId(giftData[userId]);
-    giftData[userId].push({
-        id: xpGiftId,
-        type: 'exp',
-        amount: rewards.xp,
-        from: 'Otsutsuki',
-        date: Date.now(),
-        source: 'Otsutsuki Victory'
-    });
-    
-    saveGiftData(giftData);
-    return giftData[userId].filter(g => g.source === 'Otsutsuki Victory');
-}
 
 function loadCooldowns() {
     if (!fs.existsSync(cooldownPath)) return {};
@@ -147,7 +87,7 @@ module.exports = {
         const users = fs.existsSync(usersPath) ? JSON.parse(fs.readFileSync(usersPath, 'utf8')) : {};
 
         if (!users[userId]) {
-           
+
             return interaction.editReply({
                 content: "You must enroll before challenging an Otsutsuki! Use the `/enroll` command."
             });
@@ -186,44 +126,59 @@ module.exports = {
             // Get the calculated rewards for the user
             const calculatedRewards = getToneriRewardsForUser(userId);
 
-            // Add rewards to gift inventory
-            const giftedRewards = addRewardsToGiftInventory(userId, calculatedRewards);
-            
+            // Update rewards directly via mutexes
+            await userMutex.runExclusive(async () => {
+                const players = JSON.parse(fs.readFileSync(playersPath, 'utf8'));
+                if (players[userId]) {
+                    players[userId].exp = (players[userId].exp || 0) + calculatedRewards.xp;
+                    players[userId].money = (players[userId].money || 0) + calculatedRewards.ryo;
+                    players[userId].exp = Math.round(players[userId].exp * 10) / 10;
+                }
+                fs.writeFileSync(playersPath, JSON.stringify(players, null, 2));
+            });
+
+            if (calculatedRewards.item) {
+                await jutsuMutex.runExclusive(async () => {
+                    const jutsuData = JSON.parse(fs.readFileSync(jutsusPath, 'utf8'));
+                    if (!jutsuData[userId]) jutsuData[userId] = {};
+                    if (!jutsuData[userId].scrolls) jutsuData[userId].scrolls = [];
+                    if (!jutsuData[userId].scrolls.includes(calculatedRewards.item)) {
+                        jutsuData[userId].scrolls.push(calculatedRewards.item);
+                    }
+                    fs.writeFileSync(jutsusPath, JSON.stringify(jutsuData, null, 2));
+                });
+            }
+
             // Create rewards embed
             const rewardsEmbed = new EmbedBuilder()
                 .setTitle(`Victory! ${TONERI_NPC.name} Defeated!`)
-                .setDescription(`You have successfully defeated the powerful Otsutsuki! Your rewards have been sent to your gift inventory.`)
+                .setDescription(`You have successfully defeated the powerful Otsutsuki! Your rewards have been added directly to your account.`)
                 .setColor('#00ff00')
                 .addFields(
-                    { 
-                       name: 'Ryo Earned', 
-                        value: `+${calculatedRewards.ryo.toLocaleString()}`, 
-                        inline: true 
+                    {
+                        name: 'Ryo Earned',
+                        value: `+${calculatedRewards.ryo.toLocaleString()}`,
+                        inline: true
                     },
-                    { 
-                        name: 'XP Gained', 
-                        value: `+${calculatedRewards.xp.toLocaleString()}`, 
-                        inline: true 
+                    {
+                        name: 'XP Gained',
+                        value: `+${calculatedRewards.xp.toLocaleString()}`,
+                        inline: true
                     },
-                    { 
-                        name: 'Item Received', 
-                        value: `${TONERI_REWARDS.item}`, 
-                        inline: false 
-                    },
-                    { 
-                        name: 'Gift Information', 
-                        value: `Use \`/gift inventory\` to claim your rewards!\n**Gift IDs:** ${giftedRewards.map(g => g.id).join(', ')}`, 
-                        inline: false 
+                    {
+                        name: 'Item Received',
+                        value: `${TONERI_REWARDS.item}`,
+                        inline: false
                     }
                 )
                 .setFooter({ text: 'The peace of the world is safe... for now.' })
                 .setTimestamp()
                 .setThumbnail(TONERI_NPC.image);
 
-            
-            await interaction.followUp({ 
-                embeds: [rewardsEmbed], 
-                components: [] 
+
+            await interaction.followUp({
+                embeds: [rewardsEmbed],
+                components: []
             });
         } else {
             // Treat any non-'win' result as a loss
@@ -235,9 +190,9 @@ module.exports = {
                 .setTimestamp()
                 .setThumbnail(TONERI_NPC.image);
 
-            await interaction.followUp({ 
-                embeds: [lossEmbed], 
-                components: [] 
+            await interaction.followUp({
+                embeds: [lossEmbed],
+                components: []
             });
         }
     }

@@ -20,6 +20,7 @@ async function getBufferFromResponse(response) {
 }
 
 const { BLOODLINES } = require('./bloodline.js');
+const activeBattles = new Map(); // Exported for multiplayer commands
 
 // =======================================================================================
 // GLOBAL MODELS, CONSTANTS, AND UTILITIES
@@ -52,8 +53,8 @@ const EMOJIS = {
     frost: "❄️",
     status: "<:status:1368243589498540092>"
 };
-const COMBO_EMOJI_FILLED = ":o:";
-const COMBO_EMOJI_EMPTY = ":white_circle:";
+const COMBO_EMOJI_FILLED = "[X]";
+const COMBO_EMOJI_EMPTY = "[ ]";
 
 // --- Data Loading ---
 let jutsuList = fs.existsSync(jutsusPath) ? JSON.parse(fs.readFileSync(jutsusPath, 'utf8')) : {};
@@ -109,9 +110,55 @@ const effectHandlers = {
             if (!hits) return { damage: 0, hit: false, wasDodged: true };
 
             const rawDamage = math.evaluate(formula, context);
-            const damage = Math.max(1, Math.floor(rawDamage));
+            let damage = Math.floor(rawDamage);
+            let reflectedDamage = 0;
+            let reflectionMessage = null;
 
-            return { damage, hit: true, wasDodged: false };
+            // Adaptation Logic: Reduce damage if target is adapting
+            if (effect.jutsuName && target.activeEffects?.some(e => e.status === 'Wheel of Fate Adaptation')) {
+                target.adaptedTechniques = target.adaptedTechniques || {};
+                const hitsEndured = target.adaptedTechniques[effect.jutsuName] || 0;
+
+                // Calculate adaptation percentage
+                // 1st hit: 1 - (0 * 0.33) = 1.0 (100%)
+                // 2nd hit: 1 - (1 * 0.33) = 0.67 (67%)
+                // 3rd hit: 1 - (2 * 0.33) = 0.34 (34%)
+                // 4th+ hit: 1 - (3 * 0.33) = 0.01 -> clamped to 0
+                const adaptationMultiplier = Math.max(0, 1 - (hitsEndured * 0.33));
+                const adaptationPercent = Math.round(adaptationMultiplier * 100);
+
+                // Apply damage reduction
+                const originalDamage = damage;
+                damage = Math.floor(damage * adaptationMultiplier);
+
+                // Reflection Logic: After first hit (when adaptation starts working)
+                if (hitsEndured > 0 && damage > 0) {
+                    let reflectionPercent = 0;
+
+                    // Determine reflection percentage based on adaptation level (raised minimum to 50%)
+                    if (adaptationPercent <= 0) {
+                        reflectionPercent = 0.80; // 80% reflection at 0% damage (fully adapted)
+                    } else if (adaptationPercent <= 33) {
+                        reflectionPercent = 0.65; // 65% reflection at 33% damage
+                    } else if (adaptationPercent <= 66) {
+                        reflectionPercent = 0.50; // 50% reflection at 66% damage
+                    }
+
+                    if (reflectionPercent > 0) {
+                        reflectedDamage = Math.floor(damage * reflectionPercent);
+                        const reflectPercentDisplay = Math.round(reflectionPercent * 100);
+                        // Use the actual name properties from user/target objects
+                        const userName = user?.name || 'Attacker';
+                        const targetName = target?.name || 'Defender';
+                        reflectionMessage = `${targetName} reflected ${reflectedDamage} damage (${reflectPercentDisplay}%) back to ${userName}!`;
+                    }
+                }
+
+                // Increment adaptation for next time
+                target.adaptedTechniques[effect.jutsuName] = hitsEndured + 1;
+            }
+
+            return { damage, hit: true, wasDodged: false, reflectedDamage, reflectionMessage };
         } catch (err) {
             console.error(`Damage formula error: ${formula}`, err);
             return { damage: 0, hit: false, wasDodged: false };
@@ -256,7 +303,7 @@ const effectHandlers = {
                 max: Math.max,
                 min: Math.min
             };
-            return Math.max(0, Math.floor(math.evaluate(formula, context)));
+            return Math.floor(math.evaluate(formula, context));
         } catch (err) {
             console.error(`Heal formula error: ${formula}`, err);
             return 0;
@@ -276,7 +323,7 @@ const effectHandlers = {
                 max: Math.max,
                 min: Math.min
             };
-            return Math.max(0, Math.floor(math.evaluate(formula, context)));
+            return Math.floor(math.evaluate(formula, context));
         } catch (err) {
             console.error(`Chakra gain formula error: ${formula}`, err);
             return 0;
@@ -307,7 +354,11 @@ const effectHandlers = {
     /**
      * Status effect application with chance
      */
-    status: (chance) => {
+    status: (chance, target = {}, statusName) => {
+        // Adaptation Immunity (except for the adaptation status itself)
+        if (statusName !== 'Wheel of Fate Adaptation' && target.activeEffects?.some(e => e.status === 'Wheel of Fate Adaptation')) {
+            return false;
+        }
         return Math.random() * 100 <= chance;
     },
 
@@ -338,7 +389,7 @@ const effectHandlers = {
 
         if (effect.damagePerTurn) {
             try {
-                return Math.max(1, Math.floor(math.evaluate(effect.damagePerTurn, context)));
+                return Math.floor(math.evaluate(effect.damagePerTurn, context));
             } catch (err) {
                 console.error(`DoT formula error for ${effect.status}: ${effect.damagePerTurn}`, err);
             }
@@ -354,7 +405,7 @@ const effectHandlers = {
         };
 
         const multiplier = defaultMultipliers[effect.status] || 0.03;
-        return Math.max(1, Math.floor(combatant.health * multiplier));
+        return Math.floor(combatant.health * multiplier);
     },
 
     /**
@@ -400,7 +451,7 @@ const effectHandlers = {
                     max: Math.max,
                     min: Math.min
                 }));
-                combatant.currentHealth = Math.min(combatant.health, combatant.currentHealth + healAmount);
+                combatant.currentHealth = combatant.currentHealth + healAmount;
                 result.specialEffects.push(`${combatant.name} heals ${healAmount} HP from ${effect.status}.`);
             }
 
@@ -526,7 +577,9 @@ function getEffectiveStats(entity) {
         health: Number(entity.health) || 100,
         accuracy: Number(entity.accuracy) || 100,
         dodge: Number(entity.dodge) || 1,
-        currentHealth: Number(entity.currentHealth) || Number(entity.health) || 100
+        currentHealth: Number(entity.currentHealth) || Number(entity.health) || 100,
+        adaptedTechniques: entity.adaptedTechniques || {},
+        activeEffects: entity.activeEffects || []
     };
 
     const effectiveStats = { ...baseStats };
@@ -755,7 +808,10 @@ function applyBloodlineActivation(user, opponent, state) {
  * Generates battle image
  */
 async function generateBattleImage(player1, player2, customBgUrl = null) {
-    const width = 800, height = 400;
+    const isMultiplayer = player1.subPlayers && player1.subPlayers.length > 1;
+
+    const width = 800;
+    const height = isMultiplayer ? 500 : 400; // Increase height only for multiplayer
     const canvas = createCanvas(width, height);
     const ctx = canvas.getContext('2d');
 
@@ -788,16 +844,19 @@ async function generateBattleImage(player1, player2, customBgUrl = null) {
         ctx.closePath();
     }
 
-    // Character positions and dimensions
-    const charW = 150, charH = 150;
-    const p1X = 50, p1Y = 120;
-    const p2X = width - 50 - charW, p2Y = 120;
-    const nameY = 80, barY = 280;
+    // Standard Solo/NPC Layout Constants
+    const stdCharW = 150, stdCharH = 150;
+    const stdP1Y = 120, stdP2Y = 120;
+    const stdBarY = 280;
+
+    const p1X = 50;
+    const p2X = width - 50 - stdCharW; // 600
+
+    const nameY = 80;
     const nameH = 28, barH = 22;
 
-    // ...existing code...
     // Load and draw avatars
-    const loadAndDrawAvatar = async (player, x, y) => {
+    const loadAndDrawAvatar = async (player, x, y, w, h) => {
         let avatarUrl;
         // Prefer explicit full-image URLs (NPC images). If player.image exists but is NOT a full URL,
         // fall back to the discord avatar hash (player.avatar) to build the CDN URL.
@@ -876,13 +935,13 @@ async function generateBattleImage(player1, player2, customBgUrl = null) {
 
             // Draw the successfully loaded image
             ctx.save();
-            roundRect(ctx, x, y, charW, charH, 10);
+            roundRect(ctx, x, y, w, h, 10);
             ctx.clip();
-            ctx.drawImage(img, x, y, charW, charH);
+            ctx.drawImage(img, x, y, w, h);
             ctx.restore();
             ctx.lineWidth = 3;
             ctx.strokeStyle = "#6e1515";
-            roundRect(ctx, x, y, charW, charH, 10);
+            roundRect(ctx, x, y, w, h, 10);
             ctx.stroke();
 
         } catch (err) {
@@ -896,19 +955,19 @@ async function generateBattleImage(player1, player2, customBgUrl = null) {
                 const img = await loadImage(buffer);
 
                 ctx.save();
-                roundRect(ctx, x, y, charW, charH, 10);
+                roundRect(ctx, x, y, w, h, 10);
                 ctx.clip();
-                ctx.drawImage(img, x, y, charW, charH);
+                ctx.drawImage(img, x, y, w, h);
                 ctx.restore();
                 ctx.lineWidth = 3;
                 ctx.strokeStyle = "#6e1515";
-                roundRect(ctx, x, y, charW, charH, 10);
+                roundRect(ctx, x, y, w, h, 10);
                 ctx.stroke();
             } catch (e) {
                 console.error("Failed to load fallback avatar:", e);
                 // Draw a simple colored rect if even fallback fails
                 ctx.fillStyle = "#555";
-                roundRect(ctx, x, y, charW, charH, 10);
+                roundRect(ctx, x, y, w, h, 10);
                 ctx.fill();
                 ctx.strokeStyle = "#6e1515";
                 ctx.stroke();
@@ -916,42 +975,85 @@ async function generateBattleImage(player1, player2, customBgUrl = null) {
         }
     };
 
-    await loadAndDrawAvatar(player1, p1X, p1Y);
-    await loadAndDrawAvatar(player2, p2X, p2Y);
-    // ...existing code...
+    // Draw Player 2 (NPC) - ALWAYS use standard layout
+    await loadAndDrawAvatar(player2, p2X, stdP2Y, stdCharW, stdCharH);
+
+    // Draw Player 1 (Team or Solo)
+    let p1BarYPosition = stdBarY;
+
+    if (isMultiplayer) {
+        // Multiplayer Layout: Stack 2 players
+        const teamSize = player1.subPlayers.length; // Should be <= 2
+        const avSize = 100; // Smaller size for stack
+        const gap = 15;
+        const startY = 100; // Start slightly higher than 120 to fit stack
+
+        for (let i = 0; i < teamSize; i++) {
+            const sp = player1.subPlayers[i];
+            const yPos = startY + (i * (avSize + gap));
+            // Limit to 2 for safety based on user req
+            if (i < 2) {
+                await loadAndDrawAvatar(sp, p1X, yPos, avSize, avSize);
+            }
+        }
+        // Place HP bar below the stack. 
+        // 2 players: 100 + 100 + 15 = 215 height used. Start Y 100 => Ends 315.
+        // Bar at 330.
+        p1BarYPosition = 330;
+
+    } else {
+        // Solo Layout: Use standard
+        await loadAndDrawAvatar(player1, p1X, stdP1Y, stdCharW, stdCharH);
+        p1BarYPosition = stdBarY;
+    }
 
     // Name tags
     ctx.font = "bold 18px Arial";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
 
-    const drawNameTag = (name, x, y) => {
+    const drawNameTag = (name, x, y, w) => {
         ctx.save();
         ctx.globalAlpha = 0.7;
         ctx.fillStyle = "#000";
-        roundRect(ctx, x, y, charW, nameH, 5);
+        roundRect(ctx, x, y, w, nameH, 5);
         ctx.fill();
         ctx.restore();
         ctx.fillStyle = "#fff";
         ctx.shadowColor = "#000";
         ctx.shadowBlur = 4;
-        ctx.fillText(name, x + charW / 2, y + nameH / 2);
+        ctx.fillText(name, x + w / 2, y + nameH / 2);
         ctx.shadowBlur = 0;
     };
 
-    drawNameTag(player1.name, p1X, nameY);
-    drawNameTag(player2.name, p2X, nameY);
+    if (isMultiplayer) {
+        drawNameTag("Team", p1X, nameY, 100); // Width 100 matches avatar
+    } else {
+        drawNameTag(player1.name, p1X, nameY, stdCharW);
+    }
+
+    // NPC Name Tag
+    drawNameTag(player2.name, p2X, nameY, stdCharW);
 
     // Health bars
-    const drawHealthBar = (player, x, y, isPlayer1 = true) => {
-        const healthPercent = Math.max(player.currentHealth / player.health, 0);
+    const drawHealthBar = (player, x, y, w, isPlayer1 = true) => {
+        let currentHealth = player.currentHealth;
+        let maxHealth = player.maxHealth || player.health || 100;
+
+        // Combined HP Logic for Player 1 Team
+        if (isPlayer1 && player.subPlayers && player.subPlayers.length > 1) {
+            currentHealth = player.subPlayers.reduce((acc, p) => acc + (p.currentHealth || 0), 0);
+            maxHealth = player.subPlayers.reduce((acc, p) => acc + (p.maxHealth || p.health || 100), 0);
+        }
+
+        const healthPercent = Math.max(currentHealth / maxHealth, 0);
 
         ctx.save();
         ctx.fillStyle = "#333";
-        roundRect(ctx, x, y, charW, barH, 5);
+        roundRect(ctx, x, y, w, barH, 5);
         ctx.fill();
         ctx.fillStyle = isPlayer1 ? "#4CAF50" : "#ff4444";
-        roundRect(ctx, x, y, charW * healthPercent, barH, 5);
+        roundRect(ctx, x, y, w * healthPercent, barH, 5);
         ctx.fill();
 
         // Health text
@@ -962,8 +1064,12 @@ async function generateBattleImage(player1, player2, customBgUrl = null) {
         ctx.restore();
     };
 
-    drawHealthBar(player1, p1X, barY, true);
-    drawHealthBar(player2, p2X, barY, false);
+    // Draw P1 Bar (Custom Y for multi, Std Y for solo)
+    const p1BarWidth = isMultiplayer ? 100 : stdCharW; // Match avatar width
+    drawHealthBar(player1, p1X, p1BarYPosition, p1BarWidth, true);
+
+    // Draw P2 Bar (NPC - Always Std Y)
+    drawHealthBar(player2, p2X, stdBarY, stdCharW, false);
 
     // VS text
     ctx.save();
@@ -1417,12 +1523,34 @@ function executeJutsu(baseUser, baseTarget, effectiveUser, effectiveTarget, juts
             try {
                 switch (effect.type) {
                     case 'damage': {
+                        // Pass jutsuName for adaptation tracking
+                        effect.jutsuName = jutsuName;
                         const damageResult = effectHandlers.damage(effectiveUser, effectiveTarget, effect.formula, effect);
                         if (damageResult.hit && damageResult.damage > 0) {
                             const dmg = damageResult.damage;
                             result.damage += dmg;
                             // baseTarget.currentHealth -= dmg; // Removed this line
                             result.specialEffects.push(`Dealt ${dmg} damage`);
+
+                            // Handle reflection damage from adaptation
+                            if (damageResult.reflectedDamage && damageResult.reflectedDamage > 0) {
+                                baseUser.currentHealth = (baseUser.currentHealth || 0) - damageResult.reflectedDamage;
+                                result.reflectedDamageMessage = damageResult.reflectionMessage;
+                            }
+
+                            // Adaptation Feedback for target
+                            if (effectiveTarget.activeEffects?.some(e => e.status === 'Wheel of Fate Adaptation')) {
+                                // Ensure baseTarget has the object and update it
+                                baseTarget.adaptedTechniques = effectiveTarget.adaptedTechniques || {};
+                                const hits = baseTarget.adaptedTechniques[jutsuName] || 0;
+
+                                let tierMsg = "";
+                                if (hits === 1) tierMsg = "The wheel turns... Adaptation begins!";
+                                else if (hits === 2) tierMsg = "The wheel turns... Adaptation deepening!";
+                                else if (hits === 3) tierMsg = "The wheel turns... Adaptation almost complete!";
+                                else if (hits >= 4) tierMsg = "The wheel turns... Adaptation complete!";
+                                if (tierMsg) result.specialEffects.push(tierMsg);
+                            }
 
 
 
@@ -1480,7 +1608,7 @@ function executeJutsu(baseUser, baseTarget, effectiveUser, effectiveTarget, juts
 
                         // Only apply heal if user would survive
                         if (potentialHealth > 0) {
-                            baseUser.currentHealth = Math.min(baseUser.health, potentialHealth);
+                            baseUser.currentHealth = potentialHealth;
                             result.heal += healAmount;
                             result.specialEffects.push(`Healed ${healAmount} HP`);
                         } else {
@@ -1514,9 +1642,14 @@ function executeJutsu(baseUser, baseTarget, effectiveUser, effectiveTarget, juts
                         const canStack = effect.can_stack !== false; // Default to true if not specified
 
                         if (existingStatusIndex !== -1 && !canStack) {
-                            // Refresh duration instead of stacking
-                            targetEntity.activeEffects[existingStatusIndex].duration = effect.duration || 1;
-                            result.specialEffects.push(`Refreshed ${effect.status} duration on ${targetEntity.name}`);
+                            // Check if immunity allows this refresh
+                            if (effectHandlers.status(100, targetEntity, effect.status)) {
+                                // Refresh duration instead of stacking
+                                targetEntity.activeEffects[existingStatusIndex].duration = effect.duration || 1;
+                                result.specialEffects.push(`Refreshed ${effect.status} duration on ${targetEntity.name}`);
+                            } else {
+                                result.specialEffects.push(`${targetEntity.name} is immune, cannot refresh ${effect.status}`);
+                            }
                             break;
                         }
 
@@ -1537,7 +1670,7 @@ function executeJutsu(baseUser, baseTarget, effectiveUser, effectiveTarget, juts
                             can_stack: effect.can_stack !== false // Store stacking preference
                         };
 
-                        if (effectHandlers.status(effect.chance ?? 100)) {
+                        if (effectHandlers.status(effect.chance ?? 100, targetEntity, effect.status)) {
                             if (existingStatusIndex !== -1 && canStack) {
                                 // Stack the effect
                                 targetEntity.activeEffects.push(stored);
@@ -1642,6 +1775,11 @@ function createBattleSummary(
 
     // Helper to format jutsu descriptions, especially for multi-round jutsus
     const formatJutsuDescription = (jutsuName, roundNumber, user, target) => {
+        // Check if this is a rest action (jutsuName will be null for rest)
+        if (!jutsuName || jutsuName === 'rest') {
+            return `${user.name} rested and gained +1 chakra`;
+        }
+
         const jutsu = jutsuList[jutsuName];
         if (!jutsu) {
             // Check for stun/flinch/drown status effect
@@ -1729,7 +1867,12 @@ function createBattleSummary(
             )
         )
     );
-    let p1Chakra = Math.round(player1.chakra || 0);
+    let p1Chakra = 0;
+    if (player1.subPlayers && player1.subPlayers.length > 0) {
+        p1Chakra = Math.round(player1.subPlayers.reduce((acc, p) => acc + (p.chakra || 0), 0));
+    } else {
+        p1Chakra = Math.round(player1.chakra || 0);
+    }
     const p1EffectEmojis = getEffectEmojis(player1);
     const p2EffectEmojis = getEffectEmojis(player2);
 
@@ -1817,12 +1960,12 @@ function createBattleSummary(
     // Add fields for better organization
     embed.addFields(
         {
-            name: `${p1EffectEmojis} ${player1.name}`,
+            name: `${player1.name} ${p1EffectEmojis}`,
             value: `${p1Description}\n\n**HP:** ${p1Health}\n**Chakra:** ${p1Chakra}`,
             inline: true
         },
         {
-            name: `${p2EffectEmojis} ${player2.name}`,
+            name: `${player2.name} ${p2EffectEmojis}`,
             value: `${p2Description}\n\n**HP:** ${p2Health}\n**Chakra:** ${p2Chakra}`,
             inline: true
         }
@@ -1832,17 +1975,16 @@ function createBattleSummary(
     const activeStatusEffects = [];
     [player1, player2].forEach(p => {
         (p.activeEffects || []).forEach(effect => {
-            if (effect.type === 'status' && (effect.damagePerTurn || effect.healPerTurn)) {
-                let damageText = '';
+            if (effect.type === 'status') {
+                let extraInfo = '';
                 if (typeof effect.damagePerTurn === "number" && !isNaN(effect.damagePerTurn)) {
-                    damageText = `(takes **${Math.round(effect.damagePerTurn)}** damage this turn)`;
+                    extraInfo = ` (takes **${Math.round(effect.damagePerTurn)}** damage)`;
                 } else if (typeof effect.healPerTurn === "number" && !isNaN(effect.healPerTurn)) {
-                    damageText = `(heals **${Math.round(effect.healPerTurn)}** HP this turn)`;
-                } else {
-                    damageText = '';
+                    extraInfo = ` (heals **${Math.round(effect.healPerTurn)}** HP)`;
                 }
+
                 const statusName = effect.status.charAt(0).toUpperCase() + effect.status.slice(1);
-                activeStatusEffects.push(`${p.name} is affected by ${statusName}! ${damageText}`);
+                activeStatusEffects.push(`${p.name} is affected by **${statusName}**!${extraInfo} [${effect.duration}T]`);
             }
         });
     });
@@ -2069,6 +2211,8 @@ const BRANK_NPCS = [
 function applyDamageWithReflection(attacker, defender, damageAmount, actionResult) {
     if (damageAmount <= 0) return;
 
+    const attackName = actionResult.jutsuUsed || actionResult.comboUsed || "Attack";
+
     const reflectEffectIndex = (defender.activeEffects || []).findIndex(
         e => e.type === 'status' && e.status === 'punisher_shield_reflect'
     );
@@ -2076,32 +2220,61 @@ function applyDamageWithReflection(attacker, defender, damageAmount, actionResul
     if (reflectEffectIndex !== -1) {
         const initialDefenderHealth = defender.currentHealth;
         let tookOverwhelmingDamage = false;
-
-        // Attacker takes reflected damage
-        attacker.currentHealth = Math.max(attacker.currentHealth - damageAmount);
-
-        // Defender takes damage only if it's overwhelming
+        attacker.currentHealth = attacker.currentHealth - damageAmount;
         if (damageAmount > initialDefenderHealth) {
-            defender.currentHealth = Math.max(defender.currentHealth - damageAmount);
+            defender.currentHealth = defender.currentHealth - damageAmount;
             tookOverwhelmingDamage = true;
         }
-
         if (tookOverwhelmingDamage) {
+            actionResult.specialEffects = actionResult.specialEffects || [];
             actionResult.specialEffects.push(`${defender.name}'s Punisher Shield reflects ${damageAmount} damage back to ${attacker.name}, but the force is overwhelming and they also take ${damageAmount} damage!`);
-            actionResult.reflectedDamageMessage = `${defender.name}'s Punisher Shield reflects ${damageAmount} damage back to ${attacker.name}, but the force is overwhelming and they also take ${damageAmount} damage!`;
         } else {
-            // If not overwhelming, the shield absorbs it and heals.
             defender.currentHealth = Math.min(defender.maxHealth, defender.currentHealth + damageAmount);
+            actionResult.specialEffects = actionResult.specialEffects || [];
             actionResult.specialEffects.push(`${defender.name}'s Punisher Shield reflects ${damageAmount} damage back to ${attacker.name} and heals them for the same amount!`);
-            actionResult.reflectedDamageMessage = `${defender.name}'s Punisher Shield reflects ${damageAmount} damage back to ${attacker.name} and heals them for the same amount!`;
+        }
+        defender.activeEffects.splice(reflectEffectIndex, 1);
+        return;
+    }
+
+    // Adaptation Tracking & Reflection
+    if (defender.activeEffects?.some(e => e.status === 'Wheel of Fate Adaptation')) {
+        defender.adaptedTechniques = defender.adaptedTechniques || {};
+        const hits = defender.adaptedTechniques[attackName] || 0;
+
+        // If already fully adapted (4+ hits), reflect 50% and take no damage
+        if (hits >= 4) {
+            const reflectedDmg = Math.floor(damageAmount * 0.5);
+            attacker.currentHealth -= reflectedDmg;
+            actionResult.specialEffects = actionResult.specialEffects || [];
+            actionResult.specialEffects.push(`**ADAPTED!** ${defender.name} has fully adapted to ${attackName}. ${attacker.name} took ${reflectedDmg} reflected damage!`);
+            actionResult.reflectedDamageMessage = `**ADAPTED!** ${defender.name} fully adapted: ${attacker.name} took ${reflectedDmg} reflected damage!`;
+            return; // No damage to defender
         }
 
-        // Remove the reflect effect
-        defender.activeEffects.splice(reflectEffectIndex, 1);
-    } else {
-        // No reflection: defender takes damage
-        defender.currentHealth = Math.max(0, defender.currentHealth - damageAmount);
+        // Damage reduction logic for Combos
+        if (actionResult.comboUsed) {
+            const adaptationMultiplier = Math.max(0, 1 - (hits * 0.33));
+            damageAmount = Math.floor(damageAmount * adaptationMultiplier);
+
+            // Increment hit count for combos here
+            defender.adaptedTechniques[attackName] = hits + 1;
+
+            // Feedback for combos
+            let tierMsg = "";
+            if (hits === 0) tierMsg = "The wheel turns... Adaptation begins!";
+            else if (hits === 1) tierMsg = "The wheel turns... Adaptation deepening!";
+            else if (hits === 2) tierMsg = "The wheel turns... Adaptation almost complete!";
+            else if (hits === 3) tierMsg = "The wheel turns... Adaptation complete!";
+            if (tierMsg) {
+                actionResult.specialEffects = actionResult.specialEffects || [];
+                actionResult.specialEffects.push(tierMsg);
+            }
+        }
     }
+
+    // Default: No reflection or partial adaptation: defender takes damage
+    defender.currentHealth = defender.currentHealth - damageAmount;
 }
 
 
@@ -2191,6 +2364,7 @@ async function runBattle(interaction, player1Id, player2Id, battleType, npcTempl
         activeCustomRoundJutsus: [],
         roles: player1Member ? player1Member.roles.cache.map(r => r.id) : []
     };
+    player1.subPlayers = [player1];
     // Initialize player2 (user or NPC)
     let player2;
     const isPlayer2NPC = player2Id.startsWith('NPC_');
@@ -2327,8 +2501,68 @@ async function runBattle(interaction, player1Id, player2Id, battleType, npcTempl
 
     let battleChannel = interaction.channel;
     let battleResult = null;
+    // Register Battle
+    if (interaction.id) {
+        activeBattles.set(interaction.id, {
+            player1,
+            player2,
+            channel: interaction.channel,
+            collector: null,
+            newPlayersQueue: []
+        });
+    }
+
     // Passive chakra regen at the start of each round
     while (battleActive) {
+        // Check for new players joining
+        if (interaction.id && activeBattles.has(interaction.id)) {
+            const battleState = activeBattles.get(interaction.id);
+            if (battleState.newPlayersQueue && battleState.newPlayersQueue.length > 0) {
+                const newUsers = battleState.newPlayersQueue;
+                battleState.newPlayersQueue = []; // Clear queue
+
+                for (const newUser of newUsers) {
+                    // Check if already in
+                    if (player1.subPlayers.find(p => p.userId === newUser.id)) continue;
+
+                    // Fetch User Data
+                    const memberData = users[newUser.id] || {};
+                    const newPlayerData = {
+                        ...memberData,
+                        userId: newUser.id,
+                        name: newUser.username,
+                        avatar: newUser.avatar,
+                        discriminator: newUser.discriminator,
+                        health: Number(memberData.health) || 100,
+                        currentHealth: Number(memberData.health) || 100,
+                        maxHealth: Number(memberData.health) || 100,
+                        power: Number(memberData.power) || 10,
+                        defense: Number(memberData.defense) || 10,
+                        chakra: Number(memberData.chakra) || 10,
+                        activeEffects: [],
+                        accuracy: 100,
+                        dodge: 0,
+                        jutsu: memberData.jutsu || {},
+                        comboState: null,
+                        level: (playersData[newUser.id] && playersData[newUser.id].level) || 1,
+                        activeCustomRoundJutsus: [],
+                        roles: []
+                    };
+
+                    player1.subPlayers.push(newPlayerData);
+
+                    // Add to Team Health - Actually we calc dynmically but init helps
+                    // player1.maxHealth += newPlayerData.maxHealth; 
+
+                    // Init bloodline state
+                    bloodlineState[newUser.id] = { active: false, roundsLeft: 0, used: false };
+                }
+
+                await battleChannel.send({
+                    embeds: [new EmbedBuilder().setDescription(`**${player1.name} has summoned their allies!**`).setColor('#006400')]
+                });
+            }
+        }
 
 
 
@@ -2482,7 +2716,7 @@ async function runBattle(interaction, player1Id, player2Id, battleType, npcTempl
 
                         // Apply drain to opponent and heal to player (clamped)
                         if (opponent) {
-                            opponent.currentHealth = Math.max(0, (opponent.currentHealth || opponent.health || 0) - stealAmount);
+                            opponent.currentHealth = (opponent.currentHealth || opponent.health || 0) - stealAmount;
                         }
                         const maxHp = Number(player.maxHealth || player.health || 100);
                         player.currentHealth = Math.min(maxHp, (Number(player.currentHealth) || 0) + stealAmount);
@@ -2619,7 +2853,8 @@ async function runBattle(interaction, player1Id, player2Id, battleType, npcTempl
                                 try {
                                     switch (effect.type) {
                                         case 'damage': {
-                                            const damageResult = effectHandlers.damage(effectiveUser, effectiveTarget, effect.formula, effect);
+                                            const damageEffect = { ...effect, jutsuName: jutsuName };
+                                            const damageResult = effectHandlers.damage(effectiveUser, effectiveTarget, effect.formula, damageEffect);
                                             if (damageResult.hit && damageResult.damage > 0) {
                                                 target.currentHealth = Math.max(0, target.currentHealth - damageResult.damage);
                                                 effectSummary.push({ type: 'damage', value: damageResult.damage });
@@ -2820,158 +3055,222 @@ async function runBattle(interaction, player1Id, player2Id, battleType, npcTempl
             customBgUrl = npcData.background;
         }
 
-        // --- Player 1's Turn ---
-        const { embed: embed1, components: components1 } = createMovesEmbed(player1, roundNum);
+        // Create and Send Moves Embed for P1
+        const mainPlayer = player1.subPlayers[0];
+        const { embed: embed1, components: components1 } = createMovesEmbed(mainPlayer, roundNum);
+        // Force color
+        embed1.setColor('#006400');
+
         const moveMessage1 = await battleChannel.send({
-            content: `<@${player1.userId}>`,
+            content: `<@${mainPlayer.userId}>`,
             embeds: [embed1],
             components: components1,
             fetchReply: true
         });
 
+        // --- Generate and Send Battle Image Immediately ---
+        // (Shared)
         const battleImagePath = await generateBattleImage(player1, player2, customBgUrl);
         const battleImage = new AttachmentBuilder(battleImagePath);
         await battleChannel.send({ files: [battleImage] });
 
-        // player1Action needs to be mutable so shadow-possession can copy/overwrite it later
-        let player1Action = await new Promise(resolve => {
-            const collector = moveMessage1.createMessageComponentCollector({
-                filter: i => i.user.id === player1.userId && i.customId.endsWith(`-${player1.userId}-${roundNum}`),
-                time: 90000 // 90 seconds
-            });
+        // --- Player 1 (or Team) Turn ---
+        let player1Action = { damage: 0, heal: 0, specialEffects: [], description: "", hit: false };
+        let teamActions = [];
+        let multiplayerInterrupted = false;
 
-            collector.on('collect', async i => {
-                try {
-                    await i.deferUpdate();
-                } catch (err) {
-                    console.error("Error in deferUpdate (player1):", err);
-                    try {
-                        await i.reply({ content: "Your action could not be processed (expired interaction).", ephemeral: true });
-                    } catch (e) { }
+        // Ensure subPlayers initialized (fallback)
+        if (!player1.subPlayers) player1.subPlayers = [player1];
+
+        // Sequential Move Collection Loop
+        // We already sent P1's embed. We process P1 first, then others.
+
+        for (let i = 0; i < player1.subPlayers.length; i++) {
+            const subPlayer = player1.subPlayers[i];
+
+            // If it's NOT P1 (i > 0), we need to send their embed now (AFTER battle image)
+            let currentMessage;
+            let currentComponents;
+
+            if (i === 0) {
+                currentMessage = moveMessage1; // Already sent
+                currentComponents = components1;
+            } else {
+                if (multiplayerInterrupted) break;
+                const { embed: embedSub, components: componentsSub } = createMovesEmbed(subPlayer, roundNum);
+                embedSub.setColor('#006400');
+                currentComponents = componentsSub;
+                currentMessage = await battleChannel.send({
+                    content: `<@${subPlayer.userId}>`,
+                    embeds: [embedSub],
+                    components: componentsSub,
+                    fetchReply: true
+                });
+            }
+
+            // Wait for action
+            const subAction = await new Promise(resolve => {
+                const collector = currentMessage.createMessageComponentCollector({
+                    filter: i => i.user.id === subPlayer.userId && i.customId.endsWith(`-${subPlayer.userId}-${roundNum}`),
+                    time: 90000
+                });
+
+                // Save collector for external interruption
+                if (interaction.id && activeBattles.has(interaction.id)) {
+                    activeBattles.get(interaction.id).collector = collector;
                 }
 
-                // --- Special handling for Awaken (bloodline) button ---
-                if (i.customId.startsWith('awaken')) {
-                    // Mark pending bloodline: the player must now choose a normal jutsu to execute with the bloodline.
-                    player1.pendingBloodline = true;
-                    // Give visual feedback by disabling awaken button and editing the message
-                    try {
-                        const disabledRows = components1.map(row => {
-                            const r = ActionRowBuilder.from(row);
-                            r.components.forEach(c => {
-                                if (c.data.custom_id && c.data.custom_id.startsWith('awaken')) c.setDisabled(true);
-                            });
-                            return r;
-                        });
-                        await moveMessage1.edit({ components: disabledRows }).catch(() => { });
-                    } catch (e) { }
-                    // Inform player (edit ephemeral reply if possible)
-                    try { await i.followUp({ content: 'Awaken selected. Now choose a normal jutsu to use with your bloodline activation.', ephemeral: true }); } catch (e) { }
-                    // Do not resolve yet — wait for the player to pick their jutsu
-                    return;
-                }
+                collector.on('collect', async i => {
+                    try { await i.deferUpdate(); } catch (e) { }
 
-                if (i.customId.startsWith('move')) {
-                    const jutsuName = getJutsuByButton(i.customId, player1);
-                    const jutsu = jutsuList[jutsuName];
-                    const effective1 = getEffectiveStats(player1);
-                    const effective2 = getEffectiveStats(player2);
-
-                    // If the player had previously clicked Awaken, apply activation effects now
-                    if (player1.pendingBloodline) {
-                        const state = bloodlineState[player1.userId];
-                        const activationMsgs = applyBloodlineActivation(player1, player2, state);
+                    if (i.customId.startsWith('awaken')) {
+                        subPlayer.pendingBloodline = true;
                         try {
-                            const gif = BLOODLINE_GIFS[player1.bloodline] || null;
-                            const title = `${player1.name} awakens ${BLOODLINE_NAMES[player1.bloodline] || player1.bloodline}`;
-                            const desc = `${BLOODLINE_DEPARTMENTS[player1.bloodline] || ''}\n\n${activationMsgs.join('\n')}`;
-                            const awakenEmbed = new EmbedBuilder().setTitle(title).setDescription(desc).setColor(0x8B0000);
-                            if (gif) awakenEmbed.setImage(gif);
-                            await battleChannel.send({ embeds: [awakenEmbed] }).catch(() => { });
-                        } catch (e) { console.error('Failed to send awaken embed (player1):', e); }
-
-                        // We'll attach these messages to the jutsu result later
-                        // Execute jutsu after activation
-                        const result = executeJutsu(player1, player2, effective1, effective2, jutsuName);
-                        result.specialEffects.unshift(...activationMsgs);
-                        if (player1.comboState && player1.comboState.combo.requiredJutsus.includes(jutsuName)) {
-                            player1.comboState.usedJutsus.add(jutsuName);
-                        }
-                        player1.pendingBloodline = false;
-                        resolve(result);
-                        collector.stop();
+                            const disabledRows = currentComponents.map(row => {
+                                const r = ActionRowBuilder.from(row);
+                                r.components.forEach(c => {
+                                    if (c.data.custom_id && c.data.custom_id.startsWith('awaken')) c.setDisabled(true);
+                                });
+                                return r;
+                            });
+                            await currentMessage.edit({ components: disabledRows }).catch(() => { });
+                        } catch (e) { }
+                        try { await i.followUp({ content: 'Awaken selected. Now choose a normal jutsu to use.', ephemeral: true }); } catch (e) { }
                         return;
                     }
 
-                    // Handle round-based jutsu activation (first cast)
-                    if (jutsu?.roundBased && !player1ActiveJutsus[jutsuName]) {
-                        const result = executeJutsu(player1, player2, effective1, effective2, jutsuName, 1, true);
-                        if (!result.hit && result.specialEffects?.includes("Not enough chakra!")) {
-                            resolve(result); // Resolve with chakra error
+                    if (i.customId.startsWith('move')) {
+                        const jutsuName = getJutsuByButton(i.customId, subPlayer);
+                        const jutsu = jutsuList[jutsuName];
+                        // Calculate effective stats for THIS subplayer
+                        const effectiveSub = getEffectiveStats(subPlayer);
+                        const effectiveTarget = getEffectiveStats(player2);
+
+                        // Bloodline Activation Logic
+                        if (subPlayer.pendingBloodline) {
+                            const state = bloodlineState[subPlayer.userId];
+                            const activationMsgs = applyBloodlineActivation(subPlayer, player2, state);
+
+                            // Send Awaken Embed
+                            try {
+                                const gif = BLOODLINE_GIFS[subPlayer.bloodline] || null;
+                                const title = `${subPlayer.name} awakens ${BLOODLINE_NAMES[subPlayer.bloodline] || subPlayer.bloodline}`;
+                                const desc = `${BLOODLINE_DEPARTMENTS[subPlayer.bloodline] || ''}\n\n${activationMsgs.join('\n')}`;
+                                const awakenEmbed = new EmbedBuilder().setTitle(title).setDescription(desc).setColor('#006400');
+                                if (gif) awakenEmbed.setImage(gif);
+                                await battleChannel.send({ embeds: [awakenEmbed] }).catch(() => { });
+                            } catch (e) { }
+
+                            const result = executeJutsu(subPlayer, player2, effectiveSub, effectiveTarget, jutsuName);
+                            result.specialEffects.unshift(...activationMsgs);
+                            if (subPlayer.comboState && subPlayer.comboState.combo.requiredJutsus.includes(jutsuName)) {
+                                subPlayer.comboState.usedJutsus.add(jutsuName);
+                            }
+                            subPlayer.pendingBloodline = false;
+                            resolve(result);
                             collector.stop();
                             return;
                         }
-                        player1ActiveJutsus[jutsuName] = { round: 1 };
+
+                        // Round-Based
+                        if (jutsu?.roundBased && !player1ActiveJutsus[jutsuName]) {
+                            // TODO: activeJutsus is currently shared. This is simplified.
+                            const result = executeJutsu(subPlayer, player2, effectiveSub, effectiveTarget, jutsuName, 1, true);
+                            if (!result.hit && result.specialEffects?.includes("Not enough chakra!")) {
+                                resolve(result);
+                                collector.stop();
+                                return;
+                            }
+                            player1ActiveJutsus[jutsuName] = { round: 1 }; // Shared tracking for now
+                            resolve(result);
+                            collector.stop();
+                            return;
+                        }
+
+                        const result = executeJutsu(subPlayer, player2, effectiveSub, effectiveTarget, jutsuName);
+                        if (subPlayer.comboState && subPlayer.comboState.combo.requiredJutsus.includes(jutsuName)) {
+                            subPlayer.comboState.usedJutsus.add(jutsuName);
+                        }
+
+                        // Stun check
+                        const statusEffect = (subPlayer.activeEffects || []).find(e =>
+                            e.type === 'status' && ['stun', 'flinch', 'drown'].includes(e.status)
+                        );
+                        if (statusEffect) {
+                            resolve({
+                                damage: 0, heal: 0,
+                                description: `${subPlayer.name} is ${statusEffect.status} and can't move!`,
+                                specialEffects: [statusEffect.status.toUpperCase() + " active"],
+                                hit: false, isStatusEffect: true, jutsuUsed: null
+                            });
+                            collector.stop();
+                            return;
+                        }
                         resolve(result);
                         collector.stop();
-                        return;
-                    }
-                    const result = executeJutsu(player1, player2, effective1, effective2, jutsuName);
-                    if (player1.comboState && player1.comboState.combo.requiredJutsus.includes(jutsuName)) {
-                        player1.comboState.usedJutsus.add(jutsuName);
-                    }
-                    // ...status checks...
-                    const statusEffect = (player1.activeEffects || []).find(e =>
-                        e.type === 'status' && ['stun', 'flinch', 'drown'].includes(e.status)
-                    );
-                    if (statusEffect) {
-                        resolve({
-                            damage: 0,
-                            heal: 0,
-                            description: `${player1.name} is ${statusEffect.status} and can't move!`,
-                            specialEffects: [statusEffect.status.charAt(0).toUpperCase() + statusEffect.status.slice(1) + " active"],
-                            hit: false,
-                            isStatusEffect: true,
-                            jutsuUsed: null
-                        });
+
+                    } else {
+                        // Inventory, etc.
+                        try {
+                            resolve(await processPlayerMove(i.customId, subPlayer));
+                        } catch (err) {
+                            resolve({ damage: 0, heal: 0, description: "Error processing move.", hit: false });
+                        }
                         collector.stop();
-                        return;
                     }
-                    resolve(result);
-                } else {
-                    try {
-                        resolve(await processPlayerMove(i.customId, player1));
-                    } catch (err) {
-                        console.error("Error processing player move (player1):", err);
-                        resolve({ damage: 0, heal: 0, description: "Error processing move.", hit: false });
+                });
+
+                collector.on('end', (collected, reason) => {
+                    if (reason === 'multiplayer_joined') {
+                        resolve({ interrupted: true });
                     }
-                }
-                collector.stop();
+                    if (reason === 'time') {
+                        resolve({
+                            damage: 0, heal: 0,
+                            description: `${subPlayer.name} missed their chance!`,
+                            specialEffects: ["Missed opportunity!"],
+                            hit: false, fled: true, isRest: true
+                        });
+                    }
+                    if (subPlayer.pendingBloodline) delete subPlayer.pendingBloodline;
+                    currentMessage.edit({ components: [] }).catch(() => { });
+                });
             });
 
-            collector.on('end', (collected, reason) => {
-                if (reason === 'time') {
-                    resolve({
-                        damage: 0,
-                        heal: 0,
-                        description: `${player1.name} did not make a move.`,
-                        specialEffects: ["Missed opportunity!"],
-                        hit: false,
-                        fled: true,
-                        isRest: true // Treat as rest for summary purposes if no action
-                    });
-                }
-                if (player1.pendingBloodline) delete player1.pendingBloodline;
-                moveMessage1.edit({
-                    components: components1.map(row => {
-                        const disabledRow = ActionRowBuilder.from(row);
-                        disabledRow.components.forEach(c => c.setDisabled(true));
-                        return disabledRow;
-                    })
-                }).catch(() => { });
-            });
-        });
+            if (subAction && subAction.interrupted) {
+                multiplayerInterrupted = true;
+                break;
+            }
+            if (subAction && subAction.fled) {
+            }
+            teamActions.push(subAction);
 
+            // Short delay between players?
+            if (i < player1.subPlayers.length - 1) {
+                // If there are next players, maybe small delay
+                await new Promise(r => setTimeout(r, 1000));
+            }
+        }
+
+        if (multiplayerInterrupted) {
+            continue; // Break the 'while (battleActive)' loop's current iteration, restarting it (re-drawing image etc)
+        }
+
+        // Aggregate
+        for (const act of teamActions) {
+            if (act.fled && !player1Action.fled) {
+                player1Action.fled = true; // One flees, battle ends? Or just that player leaves? 
+                // Current engine ends battle on flee.
+            }
+            player1Action.damage += (act.damage || 0);
+            player1Action.heal += (act.heal || 0);
+            if (act.specialEffects) player1Action.specialEffects.push(...act.specialEffects);
+            player1Action.description += (player1Action.description ? "\n" : "") + (act.description || "");
+            if (act.hit) player1Action.hit = true;
+            if (act.jutsuUsed) player1Action.jutsuUsed = act.jutsuUsed; // Just take the last one
+        }
+
+        // Check for Flee
         if (player1Action.fled) {
             battleActive = false;
             await handleFlee(battleChannel, player1, player2, users, roundNum, {
@@ -3344,12 +3643,15 @@ async function runBattle(interaction, player1Id, player2Id, battleType, npcTempl
                 });
             }
 
-            player2.currentHealth = player2.currentHealth - comboResult.damage;
+            comboResult.comboUsed = combo.name;
+            applyDamageWithReflection(player1, player2, comboResult.damage || 0, comboResult);
+
             if (comboResult.heal) {
                 player1.currentHealth = Math.min(player1.currentHealth + comboResult.heal, player1.maxHealth);
             }
             comboCompleted1 = true;
             comboDamageText1 = `\n${player1.name} lands a **${combo.name}**! ${comboResult.specialEffects.join(' ')}`;
+            if (comboResult.reflectedDamageMessage) comboDamageText1 += `\n${comboResult.reflectedDamageMessage}`;
             player1.comboState.usedJutsus.clear(); // Reset combo progress
             totalDamageDealt1 += comboResult.damage || 0;
         }
@@ -3401,12 +3703,15 @@ async function runBattle(interaction, player1Id, player2Id, battleType, npcTempl
                 });
             }
 
-            player1.currentHealth = player1.currentHealth - comboResult.damage;
+            comboResult.comboUsed = combo.name;
+            applyDamageWithReflection(player2, player1, comboResult.damage || 0, comboResult);
+
             if (comboResult.heal) {
                 player2.currentHealth = Math.min(player2.currentHealth + comboResult.heal, player2.maxHealth);
             }
             comboCompleted2 = true;
             comboDamageText2 = `\n${player2.name} lands a **${combo.name}**! ${comboResult.specialEffects.join(' ')}`;
+            if (comboResult.reflectedDamageMessage) comboDamageText2 += `\n${comboResult.reflectedDamageMessage}`;
             player2.comboState.usedJutsus.clear(); // Reset combo progress
             totalDamageDealt2 += comboResult.damage || 0;
         }
@@ -3434,6 +3739,13 @@ async function runBattle(interaction, player1Id, player2Id, battleType, npcTempl
             }
 
             if (winner) {
+                // ... (existing reward logic) ...
+                // Ensure only host gets rewards. subPlayers are ignored.
+                if (winner.userId !== player1.userId && player1.subPlayers && player1.subPlayers.find(sp => sp.userId === winner.userId)) {
+                    // If for some reason a subplayer is marked as winner (unlikely with shared health logic), revert to host.
+                    winner = player1;
+                }
+
                 let bountyReward = 0;
                 try {
                     const anbuPath = path.resolve(__dirname, '../data/anbu.json');
@@ -3444,7 +3756,8 @@ async function runBattle(interaction, player1Id, player2Id, battleType, npcTempl
                         const anbuData = JSON.parse(fs.readFileSync(anbuPath, 'utf8'));
                         const akatsukiData = JSON.parse(fs.readFileSync(akatsukiPath, 'utf8'));
 
-                        if (anbuData.members[winner.userId] && akatsukiData.members[loser.userId]) {
+                        if (anbuData.members && akatsukiData.members &&
+                            anbuData.members[winner.userId] && akatsukiData.members[loser.userId]) {
                             const bountyData = JSON.parse(fs.readFileSync(bountyPath, 'utf8'));
                             const loserBounty = bountyData[loser.userId] ? bountyData[loser.userId].bounty : 0;
 
@@ -3518,9 +3831,11 @@ async function runBattle(interaction, player1Id, player2Id, battleType, npcTempl
             if (winner && winner.userId === player1.userId) {
                 // Raid/Mission progression removed (handled in event.js / travel.js now)
             }
+            if (interaction.id) activeBattles.delete(interaction.id);
             return { winner, loser };
         }
     }
+    if (interaction.id) activeBattles.delete(interaction.id);
 }
 
 /**
@@ -3620,6 +3935,7 @@ module.exports = {
         .setName('mission')
         .setDescription('All battle commands combined'),
     runBattle,
+    activeBattles,
     getEffectiveStats,
     npcChooseMove,
     comboList,

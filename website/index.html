@@ -1,397 +1,362 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ShinobiRPG - The Unlimited Winter</title>
+    <title>ShinobiRPG - Home</title>
+    <link rel="stylesheet" href="style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Lato:ital,wght@0,300;0,400;1,400&family=Bangers&display=swap"
-        rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Lato:ital,wght@0,300;0,400;1,400&family=Bangers&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.3/howler.min.js"></script>
 </head>
-
 <body>
-    <div id="story-container">
-        <!-- Intro Panel -->
-        <div class="panel active" id="panel-intro">
-            <div class="background-layer" style="background: #000;"></div>
-            <div class="content-layer centered-text">
-                <h1 class="title">Instructions</h1>
-                <p class="subtitle">Read the text from left to right. Click anywhere to proceed.</p>
-                <div class="instruction">Click to Start</div>
-                <button id="login-btn" class="action-btn" style="margin-top: 2rem; pointer-events: auto;">Login with
-                    Discord</button>
-            </div>
-        </div>
-
-        <!-- Headphones Recommended -->
-        <div class="panel info-panel" id="panel-headphones">
-            <div class="background-layer" style="background: #000;"></div>
-            <div class="content-layer centered-text">
-                <div class="info-text hidden">Headphones Recommended 🎧</div>
-            </div>
-        </div>
-
-        <!-- Training Day Intro -->
-        <div class="panel info-panel" id="panel-training-day">
-            <div class="background-layer" style="background: #000;"></div>
-            <div class="content-layer centered-text">
-                <div class="info-text hidden">A regular day of training at Konoha...</div>
-            </div>
-        </div>
-
-        <!-- 1. Konoha Field -->
-        <div class="panel" id="panel-1">
-            <div class="background-layer">
-                <img src="assets/konoha_field.png" alt="Konoha Training Field" class="bg-img">
-            </div>
-            <div class="content-layer">
-                <div class="speech-bubble top-left hidden">
-                    <p>It's time for daily practice!</p>
-                </div>
-                <div class="speech-bubble bottom-right hidden">
-                    <p>Wait... where is Sasuke?</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Info 1 -->
-        <div class="panel info-panel" id="panel-info-1">
-            <div class="background-layer"></div>
-            <div class="content-layer centered-text">
-                <div class="info-text hidden">Naruto searches the entire village...</div>
-            </div>
-        </div>
-
-        <!-- 2. Sasuke's House -->
-        <div class="panel" id="panel-2">
-            <div class="background-layer">
-                <img src="https://i.postimg.cc/Pq3jsLG0/image.png" alt="Sasuke's House" class="bg-img">
-            </div>
-            <div class="content-layer">
-                <div class="speech-bubble left hidden">
-                    <p>It's completely empty...</p>
-                </div>
-                <div class="speech-bubble right hidden">
-                    <p>He didn't even sleep here last night.</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Info 2 -->
-        <div class="panel info-panel" id="panel-info-2">
-            <div class="background-layer"></div>
-            <div class="content-layer centered-text">
-                <div class="info-text hidden">Worried, he checks inside...</div>
-            </div>
-        </div>
-
-        <!-- 3. Naruto Indoors -->
-        <div class="panel" id="panel-3">
-            <div class="background-layer">
-                <img src="https://i.postimg.cc/HxqFdX65/image.png" alt="Naruto Indoors" class="bg-img">
-            </div>
-            <div class="content-layer">
-                <div class="speech-bubble bottom-center hidden">
-                    <p>I wonder where he went...</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Info 3 -->
-        <div class="panel info-panel" id="panel-info-3">
-            <div class="background-layer"></div>
-            <div class="content-layer centered-text">
-                <div class="info-text hidden">Suddenly, Kakashi Sensei appears.</div>
-            </div>
-        </div>
-
-        <!-- 4. Kakashi Explains -->
-        <div class="panel" id="panel-4">
-            <div class="background-layer">
-                <img src="https://i.postimg.cc/Y25KNKfY/image.png" alt="Kakashi Explains" class="bg-img zoomed-out-img">
-            </div>
-        </div>
-
-        <!-- Info 4 -->
-        <div class="panel info-panel" id="panel-info-4">
-            <div class="background-layer"></div>
-            <div class="content-layer centered-text">
-                <div class="info-text hidden">They are summoned to the Council immediately.</div>
-            </div>
-        </div>
-
-        <!-- 5. Council -->
-        <div class="panel" id="panel-5">
-            <div class="background-layer">
-                <img src="https://i.postimg.cc/HnhQM9ys/image.png" alt="Hokage Council" class="bg-img zoomed-out-img">
-            </div>
-            <div class="content-layer">
-                <div class="speech-bubble hidden">
-                    <p>The Elders of the Earth Village have reported that the mysterious occurrence is happening again.
-                    </p>
-                </div>
-                <div class="speech-bubble center impact-shake hidden">
-                    <p class="impact-text">Except this time... It is much stronger!</p>
-                    <p>We must rescue whoever is missing from Konoha. At all costs!</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Info 5 -->
-        <div class="panel info-panel" id="panel-info-5">
-            <div class="background-layer"></div>
-            <div class="content-layer centered-text">
-                <div class="info-text hidden">A rescue team is formed.</div>
-            </div>
-        </div>
-
-        <!-- 6. Split Scene -->
-        <div class="panel" id="panel-6">
-            <div class="background-layer split-bg">
-                <img src="https://i.postimg.cc/cLprV4YS/image.png" alt="Kakashi" class="split-img left">
-                <img src="https://i.postimg.cc/Kv4jjgrd/image.png" alt="Naruto" class="split-img right">
-            </div>
-        </div>
-
-        <!-- Info 6 -->
-        <div class="panel info-panel" id="panel-info-6">
-            <div class="background-layer"></div>
-            <div class="content-layer centered-text">
-                <div class="info-text hidden">Before leaving, Naruto must prepare.</div>
-            </div>
-        </div>
-
-        <!-- 7. Choice -->
-        <div class="panel" id="panel-7">
-            <div class="background-layer">
-                <img src="https://i.postimg.cc/BQJXphFB/image.png" alt="Naruto Home" class="bg-img">
-            </div>
-            <div class="content-layer centered-col">
-                <h2 class="choice-title hidden">Choose your Jutsu for the journey</h2>
-                <div class="choices-container hidden">
-                    <button class="choice-btn" data-choice="shadow_clone">Shadow Clone Jutsu</button>
-                    <button class="choice-btn" data-choice="rasengan">Rasengan</button>
-                    <button class="choice-btn" data-choice="sexy_jutsu">Sexy Jutsu</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Info 7 -->
-        <div class="panel info-panel" id="panel-info-7">
-            <div class="background-layer"></div>
-            <div class="content-layer centered-text">
-                <div class="info-text hidden">The journey to The Land of Earth begins.</div>
-            </div>
-        </div>
-
-        <!-- 8. Journey -->
-        <div class="panel" id="panel-8">
-            <div class="background-layer">
-                <img src="https://i.postimg.cc/TPTpRNkD/image.png" alt="Journey Start" class="bg-img zoomed-out-img">
-            </div>
-        </div>
-
-        <!-- Info 8 -->
-        <div class="panel info-panel" id="panel-info-8">
-            <div class="background-layer"></div>
-            <div class="content-layer centered-text">
-                <div class="info-text hidden">They arrive at Iwagakure.</div>
-            </div>
-        </div>
-
-        <!-- 9. Before -->
-        <div class="panel" id="panel-9">
-            <div class="background-layer">
-                <img src="https://i.postimg.cc/C5nZ7D3m/image.png" alt="Iwagakure" class="bg-img">
-            </div>
-            <div class="content-layer">
-            </div>
-        </div>
-
-        <!-- Info 9 -->
-        <div class="panel info-panel" id="panel-info-9">
-            <div class="background-layer"></div>
-            <div class="content-layer centered-text">
-                <div class="info-text hidden">But it has changed...</div>
-            </div>
-        </div>
-
-        <!-- 10. After (NEW IMAGE) -->
-        <div class="panel" id="panel-10">
-            <div class="background-layer">
-                <img src="https://i.postimg.cc/HWMc9M7j/image.png" alt="Iwagakure Snowy" class="bg-img">
-            </div>
-        </div>
-
-        <!-- Info 10 -->
-        <div class="panel info-panel" id="panel-info-10">
-            <div class="background-layer"></div>
-            <div class="content-layer centered-text">
-                <div class="info-text hidden">Sasuke..</div>
-            </div>
-        </div>
-
-        <!-- 11. Old After Image (Tunnel/Cave) -->
-        <div class="panel" id="panel-11">
-            <div class="background-layer">
-                <img src="https://i.postimg.cc/WbMmPLKp/image.png" alt="Frozen Path" class="bg-img">
-            </div>
-        </div>
-
-        <!-- Info 11 -->
-        <div class="panel info-panel" id="panel-info-11">
-            <div class="background-layer"></div>
-            <div class="content-layer centered-text">
-                <div class="info-text hidden">Suddenly, a strange noise echoes.</div>
-            </div>
-        </div>
-
-        <!-- 12. Red Eyes (Sound Trigger) -->
-        <div class="panel sound-trigger-eyes" id="panel-12">
-            <div class="background-layer">
-                <img src="https://i.postimg.cc/6qcnqKwB/eye.png" alt="Red Eyes" class="bg-img">
-            </div>
-        </div>
-
-        <!-- Info 12 -->
-        <div class="panel info-panel" id="panel-info-12">
-            <div class="background-layer"></div>
-            <div class="content-layer centered-text">
-                <div class="info-text hidden">Meanwhile...</div>
-            </div>
-        </div>
-
-
-        <!-- 14. Climb Mission -->
-        <div class="panel" id="panel-14">
-            <div class="background-layer">
-                <img src="https://i.postimg.cc/R0yHRLCV/image.png" alt="Climb Mission" class="bg-img zoomed-out-img">
-            </div>
-            <div class="content-layer">
-                <div class="speech-bubble top-left hidden">
-                    <p>Naruto, climb that mountain and see what's happening up there!</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- 15. MINIGAME -->
-        <div class="panel" id="panel-minigame">
-            <div id="minigame-container"></div>
-            <div class="content-layer game-ui" style="pointer-events: none;">
-                <button id="start-game-btn" style="pointer-events: auto;">START CLIMB</button>
-            </div>
-
-            <!-- Mobile Controls -->
-            <div id="touch-controls">
-                <div class="d-pad">
-                    <div class="d-btn d-up">▲</div>
-                    <div class="d-btn d-left">◀</div>
-                    <div class="d-btn d-right">▶</div>
-                    <div class="d-btn d-down">▼</div>
-                </div>
-                <div class="action-pad">
-                    <button class="control-btn sprint-btn">Run</button>
-                    <button class="control-btn jump-btn">Jump</button>
-                </div>
-            </div>
-        </div>
-
-
-        <!-- 16. NPC Encounter -->
-        <div class="panel" id="panel-16">
-            <div class="background-layer" style="background: #1a1a1a;">
-                <img src="https://i.postimg.cc/TPTpRNkD/image.png" alt="Snowy Peak" class="bg-img"
-                    style="opacity: 0.5;">
-                <img src="https://i.postimg.cc/LX73fc5q/image.png" alt="Mystery NPC" class="npc-img centered-img"
-                    style="height: 80%; width: auto; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);">
-            </div>
-            <div class="content-layer centered-col">
-                <div class="speech-bubble hidden">
-                    <p>"Naruto, huh? This'll be fun!"</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- 17. Interaction -->
-        <div class="panel" id="panel-17">
-            <div class="background-layer" style="background: #1a1a1a;">
-                <img src="https://i.postimg.cc/LX73fc5q/image.png" alt="Mystery NPC" class="npc-img centered-img"
-                    style="height: 80%; width: auto; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);">
-            </div>
-            <div class="content-layer centered-col">
-                <h2 class="choice-title hidden">What will you do?</h2>
-                <div class="interaction-container hidden">
-                    <button class="action-btn fight" data-action="fight">FIGHT</button>
-                    <button class="action-btn flee" data-action="flee">FLEE</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- 18. Resolution (Text) -->
-        <div class="panel" id="panel-18">
-            <div class="background-layer" style="background: #000;"></div>
-            <div class="content-layer centered-text">
-                <div class="resolution-text hidden"
-                    style="font-size: 2rem; color: white; padding: 2rem; text-align: center;">...</div>
-            </div>
-        </div>
-
-        <!-- 19. Info: Return to Team -->
-        <div class="panel info-panel" id="panel-19">
-            <div class="background-layer"></div>
-            <div class="content-layer centered-text">
-                <div class="info-text hidden">Naruto rushes back to Kakashi and Sakura.</div>
-            </div>
-        </div>
-
-        <!-- 20. Kakashi Convo -->
-        <div class="panel" id="panel-20">
-            <div class="background-layer">
-                <img src="https://i.postimg.cc/cLygYsmH/image.png" alt="Kakashi Talk" class="bg-img">
-            </div>
-        </div>
-
-        <!-- 21. Raid Plan -->
-        <div class="panel" id="panel-21">
-            <div class="background-layer">
-                <img src="https://i.postimg.cc/nhys4nGX/image.png" alt="Raid Plan" class="bg-img">
-            </div>
-            <div class="content-layer">
-                <div class="speech-bubble bottom-center hidden">
-                    <p>"We're raiding this place."</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Outro -->
-        <div class="panel" id="panel-outro">
-            <div class="background-layer" style="background: #000;"></div>
-            <div class="content-layer centered-text">
-                <h1 class="title hidden">TO BE CONTINUED IN DISCORD</h1>
-                <p class="subtitle hidden">The raid continues on the server.</p>
-                <div class="info-text hidden" style="margin-top:20px; font-size: 1rem;">(Your progress has been saved)
-                </div>
-                <button class="restart-btn hidden" onclick="location.reload()"
-                    style="pointer-events: auto; margin-top: 2rem;">Replay Story</button>
-            </div>
-        </div>
-
-        <!-- UI Overlay -->
-        <div class="progress-bar">
-            <div class="progress-fill"></div>
-        </div>
+    <div id="intro-animation-overlay">
+        <svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+             width="100%" viewBox="0 0 496 496" enable-background="new 0 0 496 496" xml:space="preserve">
+        <path fill="#000000" opacity="1.000000" stroke="none" 
+            d="
+        M303.767151,251.670898 
+            C313.786133,252.486923 320.131256,258.646301 326.145538,265.153412 
+            C329.444336,268.722443 327.958038,272.555145 325.598938,275.982666 
+            C336.186310,286.486023 324.646637,302.133087 313.943542,304.254181 
+            C306.672119,305.695190 300.023315,304.643311 293.976227,300.505524 
+            C286.640259,295.485809 279.533264,290.174988 277.839630,279.321472 
+            C272.997742,287.172058 266.729797,289.998169 258.829651,289.454407 
+            C255.847488,289.249176 255.218231,291.222656 255.357056,293.693970 
+            C255.564514,297.386230 255.036224,300.871552 251.233688,302.534515 
+            C247.242615,304.279938 243.695389,303.222107 240.050354,300.772461 
+            C234.581696,297.097290 231.915100,292.725494 232.421936,285.831482 
+            C232.956131,278.565491 232.100372,271.208496 232.169403,263.894257 
+            C232.253952,254.936584 234.645737,252.722870 243.515182,252.685455 
+            C245.678558,252.676331 247.853775,252.828369 250.003494,252.656113 
+            C262.945099,251.619034 271.139038,258.718109 278.113068,268.895264 
+            C282.344025,257.143677 290.618500,251.074738 303.767151,251.670898 
+        M300.149719,274.275818 
+            C298.547791,275.361084 297.236481,276.807678 297.601776,278.789459 
+            C298.351410,282.856354 302.460358,283.019745 305.536102,284.628632 
+            C301.394653,286.860168 298.650116,286.645996 295.749969,284.103760 
+            C291.317535,280.218353 290.898254,272.186859 294.902191,267.863922 
+            C298.845337,263.606628 303.698730,263.785217 308.861694,268.377625 
+            C312.442352,271.562561 316.552094,271.091644 318.279419,267.213593 
+            C319.979889,263.395844 317.885681,260.800537 315.110168,258.659393 
+            C307.804749,253.023590 299.762054,252.322388 291.680176,256.373901 
+            C282.822266,260.814484 279.243958,268.506958 280.284973,278.268951 
+            C281.218506,287.023193 285.967407,293.092102 294.163788,296.120361 
+            C307.214661,300.942230 321.254700,292.107788 320.838013,279.586670 
+            C320.722748,276.121490 319.322021,273.555542 315.723114,273.423462 
+            C310.770721,273.241730 305.764984,272.732483 300.149719,274.275818 
+        M267.885834,262.968597 
+            C265.312469,257.822479 260.880249,255.584122 255.393616,255.328949 
+            C250.751099,255.113068 246.092499,255.263626 241.441864,255.195038 
+            C236.829407,255.127045 234.598053,257.832886 234.488480,261.962646 
+            C234.246231,271.093018 234.257294,280.237732 234.475922,289.369171 
+            C234.570129,293.304199 236.688126,296.014282 241.084824,295.833313 
+            C245.281143,295.660645 247.091202,293.037109 246.655243,289.176086 
+            C246.048294,283.800568 248.412079,282.665924 253.419708,282.382996 
+            C265.721924,281.688049 270.606079,275.125488 267.885834,262.968597 
+        z"/>
+        <path fill="#000000" opacity="1.000000" stroke="none" 
+            d="
+        M340.191956,182.675720 
+            C350.592377,181.719604 359.410217,183.820114 366.763947,191.157822 
+            C371.156250,195.540558 373.799744,200.059219 371.069122,206.226212 
+            C370.258911,208.056030 370.585114,209.273605 371.940765,210.650238 
+            C373.324341,212.055237 374.414459,213.749237 375.642365,215.328705 
+            C381.058502,212.151550 383.431610,205.860641 381.414551,200.174179 
+            C380.825897,198.514648 379.287720,198.167999 378.137268,197.287369 
+            C375.168396,195.014801 374.006714,192.055054 375.030762,188.482376 
+            C376.061127,184.887863 378.688507,182.889679 382.381958,182.764389 
+            C387.373230,182.595093 392.475250,182.107254 397.346344,182.892990 
+            C403.349670,183.861343 407.821869,187.916931 410.646545,193.217041 
+            C412.408142,196.522446 411.010101,199.726624 408.191315,202.121567 
+            C402.865540,206.646561 402.640869,214.009918 407.796478,218.995117 
+            C410.819702,221.918457 412.407593,225.124878 410.274994,229.234238 
+            C409.403992,230.912674 408.011536,232.732468 406.287292,232.763123 
+            C397.719116,232.915482 388.681305,236.207809 380.989746,229.448868 
+            C379.245636,227.916229 377.331207,226.577377 375.099487,224.841537 
+            C366.594849,237.079315 353.782776,233.110519 342.186890,233.058655 
+            C336.237274,233.032043 329.673035,224.415588 329.657349,218.427795 
+            C329.635071,209.931396 329.630432,201.434814 329.658691,192.938446 
+            C329.684784,185.093948 331.765900,182.996262 340.191956,182.675720 
+        M364.913483,220.247467 
+            C369.435242,212.997803 365.786407,208.112961 359.899017,204.235977 
+            C365.335358,194.980423 363.440735,189.174545 354.372223,186.145096 
+            C353.431580,185.830872 352.451263,185.466934 351.480591,185.439865 
+            C346.989502,185.314667 342.493195,185.191803 338.002869,185.279434 
+            C334.171753,185.354187 332.207428,187.627380 332.174683,191.350906 
+            C332.091187,200.839478 332.114929,210.329269 332.143311,219.818420 
+            C332.155548,223.914017 334.402435,225.931183 338.391296,225.985016 
+            C343.050781,226.047928 347.712616,226.021667 352.372406,225.959351 
+            C357.079010,225.896423 361.132172,224.210587 364.913483,220.247467 
+        M383.303467,211.968201 
+            C383.322754,214.343277 381.262177,214.711502 379.776154,215.657120 
+            C377.507233,217.100952 376.938965,219.285507 377.485443,221.741425 
+            C378.005524,224.078552 379.612518,225.554138 381.984619,225.788208 
+            C387.278381,226.310532 392.594330,226.331802 397.887299,225.768173 
+            C400.305817,225.510620 401.705658,223.829300 402.367493,221.622543 
+            C403.016418,219.458969 402.191193,217.060776 400.458191,216.388855 
+            C394.722046,214.164825 395.882324,209.480270 395.738953,205.131622 
+            C395.602234,200.982971 395.158722,196.963791 400.260101,194.881409 
+            C402.151611,194.109283 403.118561,191.645126 402.246185,189.253174 
+            C401.369965,186.850693 399.639038,185.363907 397.034363,185.317078 
+            C392.222107,185.230545 387.405975,185.219437 382.594055,185.312454 
+            C379.994385,185.362732 378.159210,186.800491 377.509583,189.310425 
+            C376.872253,191.772934 377.484192,194.313309 379.821747,195.342911 
+            C383.302246,196.875900 383.608917,199.432236 383.413208,202.602997 
+            C383.239624,205.416061 383.350922,208.246719 383.303467,211.968201 
+        z"/>
+        <path fill="#000000" opacity="1.000000" stroke="none" 
+            d="
+        M154.544937,225.199112 
+            C153.003220,222.958466 153.262711,224.801361 153.052246,225.547302 
+            C150.619003,234.171127 144.639969,235.826218 137.140091,230.620621 
+            C131.503281,226.708176 128.981155,222.101410 129.509140,215.123795 
+            C130.085907,207.501694 129.676788,199.802765 129.641891,192.137589 
+            C129.625916,188.626450 130.188324,185.436249 133.751572,183.735153 
+            C137.399124,181.993820 140.885651,182.343170 144.061188,184.864471 
+            C147.143143,187.311508 150.488800,189.489136 152.618668,193.208908 
+            C154.552094,181.894730 160.817703,179.656769 169.866257,186.405151 
+            C174.552322,189.900009 176.811890,193.865738 176.447754,199.912567 
+            C175.957855,208.047806 176.292389,216.236115 176.372787,224.400665 
+            C176.406403,227.815018 175.586700,230.803009 172.366867,232.384598 
+            C169.026627,234.025284 165.534409,233.973877 162.438492,231.710358 
+            C159.758774,229.751160 157.274124,227.525162 154.544937,225.199112 
+        M162.305878,225.881042 
+            C165.664566,225.527725 167.520264,223.466125 167.569427,220.292175 
+            C167.721344,210.484177 167.709305,200.671265 167.580124,190.862640 
+            C167.536957,187.585617 165.465179,185.717758 162.217453,185.368225 
+            C158.664017,184.985779 156.443863,186.745880 155.682022,190.112564 
+            C155.284836,191.867645 155.424652,193.744003 155.319244,195.565445 
+            C155.251694,196.732666 155.192673,197.862625 154.011124,198.596298 
+            C149.689651,201.279633 144.104263,198.286575 143.879303,193.139374 
+            C143.843002,192.308960 143.839035,191.476501 143.781097,190.647736 
+            C143.525375,186.989853 141.422195,185.288147 137.889450,185.317841 
+            C134.544464,185.345932 132.355453,187.187378 132.299271,190.451889 
+            C132.124756,200.589432 132.125641,210.734589 132.328247,220.871399 
+            C132.394302,224.177338 134.729355,225.906158 138.035400,225.869385 
+            C141.302917,225.833054 143.405731,224.175812 143.731628,220.818832 
+            C143.939804,218.674377 143.881149,216.500641 143.879013,214.340088 
+            C143.876587,211.891754 144.991150,210.868958 147.493210,210.654541 
+            C154.650314,210.041168 155.170074,210.411392 155.343262,217.972443 
+            C155.439651,222.181015 156.399750,225.643234 162.305878,225.881042 
+        z"/>
+        <path fill="#000000" opacity="1.000000" stroke="none" 
+            d="
+        M219.077087,211.902588 
+            C219.187683,204.597778 219.588684,197.767776 219.333786,190.962357 
+            C219.079483,184.172928 226.802689,180.195740 233.143234,184.357773 
+            C236.577850,186.612305 239.707626,189.331238 242.917038,191.796219 
+            C244.293808,190.963562 244.242691,189.682297 244.521942,188.619904 
+            C245.569946,184.632812 248.374084,182.932556 252.211426,182.728943 
+            C258.477478,182.396484 267.248901,190.508636 267.310547,196.762802 
+            C267.400848,205.918320 267.284485,215.075745 267.350983,224.231659 
+            C267.375427,227.600235 266.764374,230.653259 263.542603,232.312408 
+            C260.035126,234.118713 256.384888,233.963013 253.141876,231.687546 
+            C249.759995,229.314667 246.596344,226.630768 242.714737,223.596115 
+            C242.365143,227.518539 241.875595,231.090714 238.229187,232.666382 
+            C235.697937,233.760178 232.746857,234.094101 230.467667,232.754913 
+            C224.595047,229.304398 218.437622,225.807724 219.117538,217.379593 
+            C219.250793,215.727539 219.099869,214.052567 219.077087,211.902588 
+        M240.981506,215.562347 
+            C242.986115,218.210800 244.850250,220.982483 247.034882,223.473038 
+            C249.217697,225.961502 252.185837,226.609406 255.232956,225.352386 
+            C258.070251,224.181915 258.697540,221.586487 258.687469,218.736877 
+            C258.657471,210.251770 258.712677,201.766281 258.668671,193.281281 
+            C258.640045,187.763718 256.780182,185.380219 252.644791,185.324661 
+            C248.515137,185.269211 246.575043,187.786621 246.316147,193.103333 
+            C246.153809,196.436844 247.063522,199.914932 245.211639,204.094620 
+            C241.761612,199.090805 238.796127,194.758072 235.796463,190.449158 
+            C233.377747,186.974747 230.367981,184.184067 225.819092,185.601425 
+            C221.450775,186.962494 221.397812,191.023041 221.431717,194.721436 
+            C221.506363,202.868576 221.745071,211.014145 221.905701,219.160583 
+            C221.984604,223.161896 223.283463,226.091599 227.966202,225.860977 
+            C232.482483,225.638550 233.702408,222.760254 233.766632,218.737717 
+            C233.823273,215.189133 233.190399,211.556000 234.355698,207.608551 
+            C237.730484,209.430237 238.679474,212.610382 240.981506,215.562347 
+        z"/>
+        <path fill="#000000" opacity="1.000000" stroke="none" 
+            d="
+        M110.477432,234.777252 
+            C98.923843,235.632263 91.182533,229.378677 84.483925,221.764771 
+            C80.899765,217.690857 82.284431,213.926727 88.094841,208.469437 
+            C86.311806,205.640564 83.966553,203.131561 83.580429,199.389847 
+            C82.171532,185.737076 95.052422,178.907867 107.824226,182.432648 
+            C114.258987,184.208527 119.188034,188.691010 123.554207,193.487396 
+            C127.577438,197.907089 126.890205,200.256622 120.934059,207.029266 
+            C130.775711,220.207169 126.608238,231.674362 110.477432,234.777252 
+        M102.079338,216.158020 
+            C99.007477,216.757217 97.163689,214.658203 95.088776,213.016190 
+            C92.425522,210.908569 89.621384,210.381912 87.050789,213.032104 
+            C84.327049,215.840179 84.972374,218.749985 87.302338,221.500137 
+            C93.701897,229.053726 107.307205,229.472855 114.199669,222.335953 
+            C119.781998,216.555649 118.866295,208.142029 111.933723,203.993439 
+            C109.263718,202.395645 106.121101,201.584656 103.187279,200.431854 
+            C101.529739,199.780533 99.461967,199.667328 98.980835,197.442719 
+            C98.791359,196.566650 99.289558,195.792023 100.052673,195.362411 
+            C102.153587,194.179581 103.886620,195.248138 105.573532,196.394180 
+            C106.123268,196.767654 106.668205,197.162201 107.154465,197.612808 
+            C109.987152,200.237823 112.936798,200.389755 115.381203,197.371643 
+            C117.925537,194.230133 117.069321,190.999313 114.196007,188.537094 
+            C110.112877,185.038193 105.237274,183.462845 99.853889,183.962616 
+            C92.072121,184.685043 86.164360,189.828323 85.484062,196.270966 
+            C84.903526,201.768875 89.006676,206.534943 96.626251,209.198502 
+            C98.509529,209.856857 100.491394,210.306061 102.268982,211.176163 
+            C104.708923,212.370483 105.636833,214.020462 102.079338,216.158020 
+        z"/>
+        <path fill="#000000" opacity="1.000000" stroke="none" 
+            d="
+        M191.504913,300.753357 
+            C184.945694,297.010406 182.995270,291.712982 183.523941,284.644196 
+            C184.093475,277.028595 183.592148,269.337219 183.685776,261.680450 
+            C183.761398,255.497269 186.360306,252.873276 192.493912,252.706741 
+            C196.652725,252.593826 200.819962,252.582718 204.978302,252.703018 
+            C214.275665,252.972015 225.410431,261.871857 227.606537,270.362274 
+            C228.602859,274.214233 227.976791,277.728729 226.022308,280.892761 
+            C224.416229,283.492737 224.418152,285.574219 225.817657,288.248322 
+            C229.325470,294.950745 229.137344,299.168060 225.663803,301.841553 
+            C222.204834,304.503845 217.877792,303.700897 212.216385,299.381653 
+            C210.774170,298.281372 209.278549,297.251099 207.802567,296.185120 
+            C202.458542,304.327789 198.655762,305.441864 191.504913,300.753357 
+        M193.856995,255.176727 
+            C189.727646,255.027039 186.310226,256.148865 186.232788,260.971191 
+            C186.075119,270.791718 186.125732,280.618530 186.281967,290.439697 
+            C186.338608,294.000153 188.549286,295.937897 192.123001,295.857300 
+            C195.678009,295.777100 197.602264,293.786041 197.803009,290.212341 
+            C197.868362,289.049316 197.824478,287.879761 197.900848,286.717804 
+            C198.008987,285.072296 197.884033,283.252228 200.115494,282.806488 
+            C202.165558,282.396973 203.651855,283.106628 204.656769,284.985107 
+            C206.148148,287.772919 207.660233,290.553986 209.286255,293.264282 
+            C211.070358,296.238037 213.850204,296.567993 216.681778,295.263428 
+            C219.502548,293.963928 220.337021,291.341095 219.339142,288.516754 
+            C218.458649,286.024658 217.110504,283.687714 215.862640,281.338684 
+            C214.904724,279.535431 215.042969,278.123718 216.232498,276.320374 
+            C222.678940,266.547577 217.426559,256.069489 205.763947,255.333069 
+            C202.113174,255.102554 198.440445,255.219208 193.856995,255.176727 
+        z"/>
+        <path fill="#000000" opacity="1.000000" stroke="none" 
+            d="
+        M300.234497,235.042099 
+            C290.421509,234.006821 283.494965,228.458984 277.298340,222.113617 
+            C269.402252,214.028000 268.979645,199.716095 275.804749,190.777802 
+            C282.890839,181.497696 296.452362,178.264648 306.838867,184.388412 
+            C315.418213,189.446655 323.768829,195.213425 325.438812,206.482056 
+            C327.513885,220.484390 319.553558,231.886169 305.590546,234.452835 
+            C303.962311,234.752121 302.302612,234.880157 300.234497,235.042099 
+        M274.610291,212.762085 
+            C279.336853,224.330032 289.869232,229.736938 301.448853,226.539871 
+            C312.201630,223.571091 318.430756,213.195007 316.620514,201.267914 
+            C314.834167,189.498154 302.475952,181.762573 289.813171,184.487900 
+            C278.017029,187.026733 270.974640,199.595428 274.610291,212.762085 
+        z"/>
+        <path fill="#000000" opacity="1.000000" stroke="none" 
+            d="
+        M179.684235,190.121429 
+            C180.752487,184.594025 184.119965,182.590042 189.082947,182.662979 
+            C192.079453,182.707031 195.111343,182.967880 198.067490,182.621185 
+            C205.580551,181.740051 210.235092,186.398178 214.646439,191.146591 
+            C217.680893,194.412903 216.714569,199.251114 213.125076,202.200195 
+            C207.956436,206.446701 207.675781,214.041000 212.514893,218.711792 
+            C216.810364,222.857880 217.458572,226.837723 214.408218,230.496017 
+            C212.959702,232.233200 211.175262,233.344315 208.822571,233.340149 
+            C203.661438,233.331024 198.422943,233.891846 193.359070,233.189148 
+            C187.271866,232.344482 182.788559,228.259415 180.184631,222.876282 
+            C178.541901,219.480240 180.006287,216.094543 183.267914,213.726379 
+            C187.934143,210.338409 188.153717,200.945251 183.644669,197.615387 
+            C181.209015,195.816666 179.675415,193.635422 179.684235,190.121429 
+        M200.859085,199.146378 
+            C200.940796,197.300812 202.434021,196.794144 203.729584,196.056168 
+            C206.213028,194.641556 208.071930,192.648193 207.340988,189.621857 
+            C206.568039,186.421524 203.997742,185.245865 200.877106,185.223511 
+            C196.717667,185.193695 192.557877,185.217194 188.398239,185.213913 
+            C185.611298,185.211700 183.415970,186.376541 182.597260,189.051926 
+            C181.729462,191.887817 182.614197,194.498215 185.396194,195.798004 
+            C187.968674,196.999908 188.560211,198.842361 188.417450,201.399292 
+            C188.278549,203.887192 188.303955,206.393845 188.424469,208.884171 
+            C188.569763,211.887054 188.197464,214.289978 184.887604,215.709442 
+            C182.529953,216.720566 181.945312,219.241135 182.490799,221.728470 
+            C183.063095,224.337936 184.952957,225.733948 187.504532,225.820312 
+            C192.320938,225.983307 197.146423,225.959320 201.966644,225.896927 
+            C204.837875,225.859772 206.672134,224.146255 207.347656,221.506836 
+            C208.008514,218.924713 206.688995,216.580994 204.479294,215.720551 
+            C200.819687,214.295593 200.617554,211.660385 200.746017,208.507935 
+            C200.861130,205.683640 200.783188,202.851501 200.859085,199.146378 
+        z"/>
+        <path fill="#000000" opacity="1.000000" stroke="none" 
+            d="
+        M286.165344,201.783020 
+            C288.072479,197.115387 291.210968,194.523880 295.894104,194.873047 
+            C299.802856,195.164474 302.808594,197.394852 304.037018,201.274170 
+            C305.481171,205.834732 305.098541,210.233856 301.552002,213.803665 
+            C298.979218,216.393311 295.694458,217.031311 292.311981,215.830002 
+            C288.544586,214.491974 286.418732,211.520874 285.857361,207.627197 
+            C285.601746,205.854111 285.953003,203.993530 286.165344,201.783020 
+        M302.221649,203.471939 
+            C301.451355,200.653961 299.860596,200.173630 297.416992,201.669907 
+            C294.498322,203.457108 291.577393,209.534607 292.588928,211.949631 
+            C293.300690,213.648880 294.790802,214.036423 296.309906,213.626297 
+            C300.576477,212.474365 302.379578,209.363632 302.573029,205.139664 
+            C302.587952,204.813873 302.491547,204.482971 302.221649,203.471939 
+        z"/>
+        </svg>
     </div>
+    <header class="main-header">
+        <nav class="main-nav">
+            <a href="/" class="logo">ShinobiRPG</a>
+            <ul>
+                <li><a href="#" data-page="home" class="nav-link active">Home</a></li>
+                <li><a href="#" data-page="jutsus" class="nav-link">Jutsus</a></li>
+                <li><a href="#" data-page="game" class="nav-link">Games</a></li>
+                <li><a href="#" data-page="about" class="nav-link">About</a></li>
+            </ul>
+        </nav>
+    </header>
 
-    <script src="bridge_game.js"></script>
+    <main id="app-content">
+        <section id="home-page" class="page-section active">
+            <div class="container">
+                <h1>Welcome to ShinobiRPG</h1>
+                <p>Explore the world of ninjas and become the greatest shinobi!</p>
+                <button class="action-btn">Play Now</button>
+            </div>
+        </section>
+
+        <section id="jutsus-page" class="page-section">
+            <div class="container">
+                <h1>Our Jutsus</h1>
+                <p>Discover powerful techniques and master them.</p>
+                <ul>
+                    <li>Fireball Jutsu</li>
+                    <li>Shadow Clone Jutsu</li>
+                    <li>Rasengan</li>
+                </ul>
+            </div>
+        </section>
+
+        <section id="game-page" class="page-section">
+            <div class="container">
+                <h1>Pixel Dungeon</h1>
+                <p>An open-source roguelike game. Click play to start!</p>
+                <button id="play-game-btn" class="action-btn">Play Game</button>
+                <div id="game-container" style="display: none; width: 100%; height: 80vh; margin-top: 20px;">
+                    <iframe id="game-iframe" style="width: 100%; height: 100%; border: none;"></iframe>
+                </div>
+            </div>
+        </section>
+
+        <section id="about-page" class="page-section">
+            <div class="container">
+                <h1>About Us</h1>
+                <p>Learn more about the ShinobiRPG project and its creators.</p>
+            </div>
+        </section>
+    </main>
+
+    <footer class="main-footer">
+        <p>&copy; 2025 ShinobiRPG. All rights reserved.</p>
+    </footer>
+
     <script src="script.js"></script>
 </body>
-
 </html>
-<!--this will be the comment xd-->

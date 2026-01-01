@@ -1592,7 +1592,7 @@
       },
       {
         "type": "damage",
-        "formula": "user.power * 2000 / target.defense",
+        "formula": "user.power * 20 / target.defense",
         "chance": 50
       }
     ]
@@ -2417,5 +2417,30 @@
         }
       }
     }
+  },
+  "Wheel of Fate Adaptation": {
+    "name": "Wheel of Fate Adaptation",
+    "obtainment": "unobtainable",
+    "description": "Eight-Handled Sword Divergent Sila Divine General: Adaptation. A divine wheel manifests behind the user, spinning as they adapt to every attack.",
+    "chakraCost": 30,
+    "image_url": "https://media.tenor.com/h9vZeOgN-5gAAAAM/mahoraga-adapts-mahoraga.gif",
+    "category": "Custom",
+    "obtainable": false,
+    "effects": [
+      {
+        "type": "buff",
+        "stats": {
+          "power": "user.power * 25"
+        },
+        "duration": 10
+      },
+      {
+        "type": "status",
+        "status": "Wheel of Fate Adaptation",
+        "duration": 10,
+        "chance": 100,
+        "applyToUser": true
+      }
+    ]
   }
 }

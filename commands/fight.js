@@ -50,21 +50,21 @@ module.exports = {
         const collector = response.createMessageComponentCollector({ filter, time: 60000 });
 
         collector.on('collect', async i => {
-            await i.deferUpdate().catch(() => {});
+            await i.deferUpdate().catch(() => { });
             if (i.customId === 'accept_fight') {
-                await response.edit({ content: "Fight accepted! Starting battle...", components: [] }).catch(() => {});
+                await response.edit({ content: "Fight accepted! Starting battle...", components: [] }).catch(() => { });
                 let battleResult;
                 try {
                     // Capture the result of the battle
                     battleResult = await runBattle(interaction, userId, opponent.id, 'fight');
                 } catch (err) {
                     console.error('runBattle error (fight command):', err);
-                    await interaction.followUp({ content: 'An error occurred while starting the fight.', ephemeral: true }).catch(() => {});
+                    await interaction.followUp({ content: 'An error occurred while starting the fight.', ephemeral: true }).catch(() => { });
                 }
 
                 // --- TOURNAMENT HOOK ---
                 // If the battle completed and returned a winner/loser, process it.
-                if (battleResult && battleResult.winner && battleResult.loser) {
+                if (battleResult && battleResult.winner && battleResult.loser && battleResult.winner.userId && battleResult.loser.userId) {
                     try {
                         // This will silently do nothing if the match isn't part of an active tournament.
                         await processTournamentFight(interaction.client, battleResult.winner.userId, battleResult.loser.userId, interaction.user.id);
@@ -75,14 +75,14 @@ module.exports = {
                 // --- END TOURNAMENT HOOK ---
 
             } else {
-                await response.edit({ content: "Fight declined.", components: [] }).catch(() => {});
+                await response.edit({ content: "Fight declined.", components: [] }).catch(() => { });
             }
             collector.stop();
         });
 
         collector.on('end', (_, reason) => {
             if (reason === 'time') {
-                response.edit({ content: "Fight invitation expired.", components: [] }).catch(() => {});
+                response.edit({ content: "Fight invitation expired.", components: [] }).catch(() => { });
             }
         });
     }

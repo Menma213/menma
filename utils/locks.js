@@ -7,6 +7,8 @@ const giftMutex = new Mutex();
 const anbuMutex = new Mutex();
 const bountyMutex = new Mutex();
 const jutsuMutex = new Mutex();
+const inventoryMutex = new Mutex();
+const mentorMutex = new Mutex();
 
 module.exports = {
     userMutex,
@@ -15,5 +17,7 @@ module.exports = {
     giftMutex,
     anbuMutex,
     bountyMutex,
-    jutsuMutex
+    jutsuMutex,
+    inventoryMutex,
+    mentorMutex
 };

@@ -2,7 +2,7 @@ const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const fs = require('fs');
 const path = require('path');
 const { runBattle, getCooldownString } = require('./combinedcommands.js');
-const { userMutex, bountyMutex, jutsuMutex } = require('../utils/locks');
+const { userMutex, bountyMutex, jutsuMutex, mentorMutex } = require('../utils/locks');
 
 const usersPath = path.resolve(__dirname, '../data/users.json');
 const playersPath = path.resolve(__dirname, '../data/players.json');
@@ -10,6 +10,7 @@ const giftPath = path.resolve(__dirname, '../data/gift.json'); // Kept for refer
 const bountyPath = path.resolve(__dirname, '../data/bounty.json');
 const akatsukiPath = path.resolve(__dirname, '../data/akatsuki.json');
 const jutsuJsonPath = path.resolve(__dirname, '../data/jutsu.json');
+const mentorExpPath = path.resolve(__dirname, '../data/mentorexp.json');
 const DONATOR_ROLE = "1385640728130097182";
 const JINCHURIKI_ROLE = "1385641469507010640";
 const LEGENDARY_ROLE = "1385640798581952714";
@@ -217,6 +218,17 @@ module.exports = {
 
                     fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
                     fs.writeFileSync(playersPath, JSON.stringify(players, null, 2));
+                });
+
+                // Update Mentor EXP in mentorexp.json
+                await mentorMutex.runExclusive(async () => {
+                    let me = {};
+                    try {
+                        me = JSON.parse(fs.readFileSync(mentorExpPath, 'utf8'));
+                    } catch (e) { }
+                    if (!me[userId]) me[userId] = { exp: 0, last_train: 0 };
+                    me[userId].exp += 1;
+                    fs.writeFileSync(mentorExpPath, JSON.stringify(me, null, 2));
                 });
 
                 // Bounty

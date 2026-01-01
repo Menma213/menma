@@ -2,6 +2,11 @@ const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, Butt
 const fs = require('fs');
 const path = require('path');
 const { createCanvas, loadImage } = require('canvas');
+const Locks = require('../utils/locks') || {};
+const userMutex = Locks.userMutex;
+const jutsuMutex = Locks.jutsuMutex;
+const inventoryMutex = Locks.inventoryMutex;
+
 
 
 const EMOJIS = {
@@ -49,12 +54,26 @@ module.exports = {
         let inventory = JSON.parse(fs.readFileSync(inventoryPath, 'utf8'));
         let jutsuData = JSON.parse(fs.readFileSync(jutsuPath, 'utf8'));
 
-        // Check if user is already enrolled by checking either file
-        if (players[userId] || users[userId]) {
-            return interaction.reply({ 
-                content: "You are already enrolled! Use /profile to view your stats.", 
-                ephemeral: true 
+        try {
+            // Check if user is already enrolled by checking either file
+            let alreadyEnrolled = false;
+            await userMutex.runExclusive(async () => {
+                const players = fs.existsSync(playersPath) ? JSON.parse(fs.readFileSync(playersPath, 'utf8')) : {};
+                const users = fs.existsSync(usersPath) ? JSON.parse(fs.readFileSync(usersPath, 'utf8')) : {};
+                if (players[userId] || users[userId]) {
+                    alreadyEnrolled = true;
+                }
             });
+
+            if (alreadyEnrolled) {
+                return interaction.reply({
+                    content: "You are already enrolled! Use /profile to view your stats.",
+                    ephemeral: true
+                });
+            }
+        } catch (error) {
+            console.error(`[Enroll Error - Initial Check]:`, error);
+            return interaction.reply({ content: "An error occurred while checking your enrollment status.", ephemeral: true });
         }
 
         // Create enrollment embed
@@ -90,86 +109,107 @@ module.exports = {
         const collector = enrollMsg.createMessageComponentCollector({ time: 30000 });
 
         collector.on('collect', async (i) => {
-            if (!i.customId.startsWith('accept-') && !i.customId.startsWith('decline-')) return;
-            if (i.user.id !== userId) return i.reply({ content: "This isn't your enrollment!", ephemeral: true });
+            try {
+                if (!i.customId.startsWith('accept-') && !i.customId.startsWith('decline-')) return;
+                if (i.user.id !== userId) return i.reply({ content: "This isn't your enrollment!", ephemeral: true });
 
-            if (i.customId === `accept-${userId}`) {
-                // Create player data with the 6 core stats
-                players[userId] = {
-                    level: 1,
-                    exp: 0,
-                    money: 1000,
-                    ramen: 1,
-                    SS: 0,
-                    elo: 0
-                };
-                
-                // Create user data with all other stats
-                users[userId] = {
-                    wins: 0,
-                    losses: 0,
-                    rankedPoints: 0,
-                    clan: 'None',
-                    bloodline: 'Unknown',
-                    mentor: 'None',
-                    rank: 'Academy Student',
-                    occupation: 'Village',
-                    health: 1000, // Starting health for the player
-                    power: 100,
-                    defense: 50,
-                    chakra: 10,
-                    jutsu: {
-                        slot_0: 'Attack',
-                        slot_1: 'Transformation Jutsu',
-                        slot_2: 'None',
-                        slot_3: 'None',
-                        slot_4: 'None',
-                        slot_5: 'None'
-                    },
-                    Combo: "Basic Combo"
-                };
+                if (i.customId === `accept-${userId}`) {
+                    // Update: Use locks to save all files safely
+                    if (!userMutex || !inventoryMutex || !jutsuMutex) {
+                        console.error("[Enroll Error]: One or more mutexes are undefined!", {
+                            userMutex: !!userMutex,
+                            inventoryMutex: !!inventoryMutex,
+                            jutsuMutex: !!jutsuMutex
+                        });
+                        return interaction.followUp("A system error occurred (Mutex missing). Please contact an admin.");
+                    }
 
-                // Add to inventory
-                inventory[userId] = {
-                    usersjutsu: ['Transformation Jutsu']
-                };
+                    await Promise.all([
+                        userMutex.runExclusive(async () => {
+                            const players = JSON.parse(fs.readFileSync(playersPath, 'utf8'));
+                            const users = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
 
-                // Add to jutsu.json
-                if (!jutsuData[userId]) {
-                    jutsuData[userId] = {
-                        usersjutsu: ['Transformation Jutsu']
-                    };
-                } else if (!jutsuData[userId].usersjutsu.includes('Transformation Jutsu')) {
-                    jutsuData[userId].usersjutsu.push('Transformation Jutsu');
+                            players[userId] = {
+                                level: 1,
+                                exp: 0,
+                                money: 1000,
+                                ramen: 1,
+                                SS: 0,
+                                elo: 0
+                            };
+
+                            users[userId] = {
+                                wins: 0,
+                                losses: 0,
+                                rankedPoints: 0,
+                                clan: 'None',
+                                bloodline: 'Unknown',
+                                mentor: 'None',
+                                rank: 'Academy Student',
+                                occupation: 'Village',
+                                health: 1000,
+                                power: 100,
+                                defense: 50,
+                                chakra: 10,
+                                jutsu: {
+                                    slot_0: 'Attack',
+                                    slot_1: 'Transformation Jutsu',
+                                    slot_2: 'None',
+                                    slot_3: 'None',
+                                    slot_4: 'None',
+                                    slot_5: 'None'
+                                },
+                                Combo: "Basic Combo"
+                            };
+
+                            fs.writeFileSync(playersPath, JSON.stringify(players, null, 2));
+                            fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
+                        }),
+                        inventoryMutex.runExclusive(async () => {
+                            const inventory = fs.existsSync(inventoryPath) ? JSON.parse(fs.readFileSync(inventoryPath, 'utf8')) : {};
+                            inventory[userId] = {
+                                usersjutsu: ['Transformation Jutsu']
+                            };
+                            fs.writeFileSync(inventoryPath, JSON.stringify(inventory, null, 2));
+                        }),
+                        jutsuMutex.runExclusive(async () => {
+                            const jutsuData = fs.existsSync(jutsuPath) ? JSON.parse(fs.readFileSync(jutsuPath, 'utf8')) : {};
+                            if (!jutsuData[userId]) {
+                                jutsuData[userId] = {
+                                    usersjutsu: ['Transformation Jutsu']
+                                };
+                            } else if (!jutsuData[userId].usersjutsu.includes('Transformation Jutsu')) {
+                                jutsuData[userId].usersjutsu.push('Transformation Jutsu');
+                            }
+                            fs.writeFileSync(jutsuPath, JSON.stringify(jutsuData, null, 2));
+                        })
+                    ]);
+
+                    await i.update({
+                        content: 'You have accepted the trial! Prepare for battle...',
+                        components: []
+                    });
+
+                    // Start battle
+                    await this.startBattle(interaction, userId, userAvatar, enemyImage);
+                } else {
+                    await i.update({
+                        content: 'You chose to remain in the shadows... Maybe next time.',
+                        components: []
+                    });
                 }
-
-                // Save all files
-                fs.writeFileSync(playersPath, JSON.stringify(players, null, 2));
-                fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
-                fs.writeFileSync(inventoryPath, JSON.stringify(inventory, null, 2));
-                fs.writeFileSync(jutsuPath, JSON.stringify(jutsuData, null, 2));
-
-                await i.update({ 
-                    content: 'You have accepted the trial! Prepare for battle...', 
-                    components: [] 
-                });
-
-                // Start battle
-                await this.startBattle(interaction, userId, userAvatar, enemyImage);
-            } else {
-                await i.update({ 
-                    content: 'You chose to remain in the shadows... Maybe next time.', 
-                    components: [] 
-                });
+                collector.stop();
+            } catch (error) {
+                console.error(`[Enroll Error - Collector]:`, error);
+                await i.reply({ content: "An error occurred during enrollment. Please try again.", ephemeral: true }).catch(() => { });
             }
-            collector.stop();
         });
 
         collector.on('end', async (collected) => {
             if (collected.size === 0) {
-                await interaction.editReply({ 
-                    content: 'Enrollment timed out. Try again later.', 
-                    components: [] 
+                await interaction.editReply({
+                    content: 'Enrollment timed out. Try again later.',
+                    components: []
                 });
             }
         });
@@ -178,8 +218,13 @@ module.exports = {
     async startBattle(interaction, userId, userAvatar, enemyImage) {
         const playersPath = path.resolve(__dirname, '../../menma/data/players.json');
         const usersPath = path.resolve(__dirname, '../../menma/data/users.json');
-        let players = JSON.parse(fs.readFileSync(playersPath, 'utf8'));
-        let users = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
+
+        let players, users;
+        await userMutex.runExclusive(async () => {
+            players = JSON.parse(fs.readFileSync(playersPath, 'utf8'));
+            users = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
+        });
+
         let playerData = players[userId];
         let userData = users[userId];
 
@@ -188,11 +233,11 @@ module.exports = {
             let damage = 0;
             let description = '';
             let chakraCost = 0;
-            
+
             if (move === 'attack') {
                 damage = 2 * (userData.power + (transformationActive ? 5 : 0));
                 description = 'used Attack';
-            } 
+            }
             else if (move === 'transform') {
                 chakraCost = 5;
                 if (userData.chakra >= chakraCost) {
@@ -201,16 +246,16 @@ module.exports = {
                     transformationRounds = 3;
                     description = 'used Transformation Jutsu';
                 } else {
-                    return { 
-                        damage: 0, 
+                    return {
+                        damage: 0,
                         description: 'failed to perform jutsu (not enough chakra)',
                         specialEffects: ['Chakra exhausted!']
                     };
                 }
             }
 
-            return { 
-                damage, 
+            return {
+                damage,
                 description,
                 chakraCost
             };
@@ -219,9 +264,9 @@ module.exports = {
         // Process enemy move
         const processEnemyMove = () => {
             const damage = 11 * enemy.power / userData.defense;
-            return { 
-                damage, 
-                description: 'used Shuriken Throw' 
+            return {
+                damage,
+                description: 'used Shuriken Throw'
             };
         };
 
@@ -262,8 +307,8 @@ module.exports = {
                     comboProgressText
                 )
                 .addFields(
-                    { 
-                        name: 'Your Jutsu Slots', 
+                    {
+                        name: 'Your Jutsu Slots',
                         value: jutsuSlots || 'No jutsu equipped'
                     }
                 )
@@ -288,7 +333,7 @@ module.exports = {
                         .setStyle(ButtonStyle.Primary)
                 );
             } else if (Object.values(userData.jutsu).includes('Transformation Jutsu')) {
-                 // Add disabled button if not enough chakra
+                // Add disabled button if not enough chakra
                 row.addComponents(
                     new ButtonBuilder()
                         .setCustomId(`transform-${userId}-${roundNum}`)
@@ -357,8 +402,8 @@ module.exports = {
                     comboProgressText
                 )
                 .addFields(
-                    { 
-                        name: 'Battle Status', 
+                    {
+                        name: 'Battle Status',
                         value: `${interaction.user.username} | ${userData.health.toFixed(0)} HP  ${enemy.name} | ${enemy.currentHealth.toFixed(0)} HP`
                     }
                 )
@@ -368,21 +413,30 @@ module.exports = {
         // Check battle status
         const checkBattleStatus = async () => {
             if (userData.health <= 0) {
-                return { 
-                    content: `Defeat! You were defeated by the rogue ninja.`, 
-                    components: [] 
+                return {
+                    content: `Defeat! You were defeated by the rogue ninja.`,
+                    components: []
                 };
             }
             if (enemy.currentHealth <= 0) {
                 // Update user stats on victory
-                userData.wins += 1;
-                playerData.exp += 10; // Updated to 10 to match embed text
-                playerData.money += 5000; // Updated to 5000 to match embed text
-                // Restore player health and chakra to max after enrollment battle
-                userData.health = playerMaxHealth;
-                userData.chakra = 10;
-                fs.writeFileSync(playersPath, JSON.stringify(players, null, 2));
-                fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
+                await userMutex.runExclusive(async () => {
+                    const players = JSON.parse(fs.readFileSync(playersPath, 'utf8'));
+                    const users = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
+                    const pData = players[userId];
+                    const uData = users[userId];
+
+                    if (pData && uData) {
+                        uData.wins += 1;
+                        pData.exp += 10;
+                        pData.money += 5000;
+                        uData.health = playerMaxHealth;
+                        uData.chakra = 10;
+
+                        fs.writeFileSync(playersPath, JSON.stringify(players, null, 2));
+                        fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
+                    }
+                });
 
                 // --- START NEW DM LOGIC ---
                 try {
@@ -408,16 +462,16 @@ module.exports = {
                     await interaction.followUp({ content: "I couldn't send you a welcome DM, please check your privacy settings!", ephemeral: true });
                 }
                 // --- END NEW DM LOGIC ---
-                
-                return { 
-                    content: `Victory! You defeated the rogue ninja!\nRewards:\n+10 EXP\n+5000 Money`, 
-                    components: [] 
+
+                return {
+                    content: `Victory! You defeated the rogue ninja!\nRewards:\n+10 EXP\n+5000 Money`,
+                    components: []
                 };
             }
-            
+
             // Passive chakra regeneration (occurs at the end of the opponent's turn, before the next round)
             userData.chakra = Math.min(userData.chakra + 2, 10);
-            
+
             // Update transformation status
             if (transformationActive) {
                 transformationRounds -= 1;
@@ -425,7 +479,7 @@ module.exports = {
                     transformationActive = false;
                 }
             }
-            
+
             roundNum += 1;
             return null;
         };
@@ -556,7 +610,7 @@ module.exports = {
             ctx.textBaseline = "middle";
             ctx.shadowColor = "#000";
             ctx.shadowBlur = 1;
-            
+
             ctx.shadowBlur = 0;
             ctx.restore();
 
@@ -610,9 +664,9 @@ module.exports = {
         const battleImage = new AttachmentBuilder(battleImageBuffer, { name: `battle_scene_${userId}.png` });
 
         // Send moves embed first, then battle image, then tip
-        let lastBattleMsg = await interaction.followUp({ 
-            embeds: [movesEmbed], 
-            components, 
+        let lastBattleMsg = await interaction.followUp({
+            embeds: [movesEmbed],
+            components,
         });
         await interaction.followUp({ files: [battleImage] });
         // Only send tip after the first battle image
@@ -623,183 +677,188 @@ module.exports = {
         }
 
         battleCollector.on('collect', async (i) => {
-            if (!i.customId.includes(userId)) return i.reply({ content: "This isn't your battle!", ephemeral: true });
-            await i.deferUpdate();
+            try {
+                if (!i.customId.includes(userId)) return i.reply({ content: "This isn't your battle!", ephemeral: true });
+                await i.deferUpdate();
 
-            // Remove buttons from previous message (if any)
-            if (lastBattleMsg) {
-                await lastBattleMsg.edit({ components: [] }).catch(() => {});
-            }
-
-            // Extract the base action from the custom ID
-            const action = i.customId.split('-')[0];
-
-            let playerMove, enemyMove;
-
-            // Combo tracking
-            if (action === 'attack') {
-                playerMove = processPlayerMove('attack');
-                if (comboState.combo.requiredJutsus.includes('Attack')) comboState.usedJutsus.add('Attack');
-                enemy.currentHealth -= playerMove.damage;
-                totalDamageDealt += playerMove.damage; // Track damage dealt
-                enemyMove = processEnemyMove();
-                userData.health -= enemyMove.damage;
-                totalDamageTaken += enemyMove.damage; // Track damage taken
-            } 
-            else if (action === 'transform') {
-                playerMove = processPlayerMove('transform');
-                if (comboState.combo.requiredJutsus.includes('Transformation Jutsu')) comboState.usedJutsus.add('Transformation Jutsu');
-                if (playerMove.description.includes('failed')) {
-                    // Send error message as a follow-up and stop
-                    await interaction.followUp({ content: `**${interaction.user.username}** ${playerMove.description}. Select your move again.`, ephemeral: true });
-                    // Re-send the move selection buttons
-                    const nextMoves = createMovesEmbed();
-                    lastBattleMsg = await interaction.followUp({ 
-                        embeds: [nextMoves.embed], 
-                        components: nextMoves.components 
-                    });
-                    // Skip the rest of the round logic and enemy move
-                    return; 
+                // Remove buttons from previous message (if any)
+                if (lastBattleMsg) {
+                    await lastBattleMsg.edit({ components: [] }).catch(() => { });
                 }
-                enemyMove = processEnemyMove();
-                userData.health -= enemyMove.damage;
-                totalDamageTaken += enemyMove.damage;
-            }
-            else if (action === 'rest') {
-                userData.chakra = Math.min(userData.chakra + 1, 10);
-                enemyMove = processEnemyMove();
-                userData.health -= enemyMove.damage;
-                playerMove = { 
-                    damage: 0, 
-                    description: 'rested and gained +1 Chakra',
-                    specialEffects: ['+1 Chakra']
-                };
-                totalDamageTaken += enemyMove.damage;
-            }
-            else if (action === 'flee') {
-                await interaction.editReply({
-                    content: 'You fled from battle! Enrollment failed.',
-                    embeds: [],
-                    components: [],
-                    files: []
+
+                // Extract the base action from the custom ID
+                const action = i.customId.split('-')[0];
+
+                let playerMove, enemyMove;
+
+                // Combo tracking
+                if (action === 'attack') {
+                    playerMove = processPlayerMove('attack');
+                    if (comboState.combo.requiredJutsus.includes('Attack')) comboState.usedJutsus.add('Attack');
+                    enemy.currentHealth -= playerMove.damage;
+                    totalDamageDealt += playerMove.damage; // Track damage dealt
+                    enemyMove = processEnemyMove();
+                    userData.health -= enemyMove.damage;
+                    totalDamageTaken += enemyMove.damage; // Track damage taken
+                }
+                else if (action === 'transform') {
+                    playerMove = processPlayerMove('transform');
+                    if (comboState.combo.requiredJutsus.includes('Transformation Jutsu')) comboState.usedJutsus.add('Transformation Jutsu');
+                    if (playerMove.description.includes('failed')) {
+                        // Send error message as a follow-up and stop
+                        await interaction.followUp({ content: `**${interaction.user.username}** ${playerMove.description}. Select your move again.`, ephemeral: true });
+                        // Re-send the move selection buttons
+                        const nextMoves = createMovesEmbed();
+                        lastBattleMsg = await interaction.followUp({
+                            embeds: [nextMoves.embed],
+                            components: nextMoves.components
+                        });
+                        // Skip the rest of the round logic and enemy move
+                        return;
+                    }
+                    enemyMove = processEnemyMove();
+                    userData.health -= enemyMove.damage;
+                    totalDamageTaken += enemyMove.damage;
+                }
+                else if (action === 'rest') {
+                    userData.chakra = Math.min(userData.chakra + 1, 10);
+                    enemyMove = processEnemyMove();
+                    userData.health -= enemyMove.damage;
+                    playerMove = {
+                        damage: 0,
+                        description: 'rested and gained +1 Chakra',
+                        specialEffects: ['+1 Chakra']
+                    };
+                    totalDamageTaken += enemyMove.damage;
+                }
+                else if (action === 'flee') {
+                    await interaction.editReply({
+                        content: 'You fled from battle! Enrollment failed.',
+                        embeds: [],
+                        components: [],
+                        files: []
+                    });
+                    battleCollector.stop();
+                    return;
+                }
+
+                // Combo completion check and bonus damage
+                let comboCompletedThisRound = false;
+                let comboDamageText = "";
+                if (
+                    comboState &&
+                    comboState.combo.requiredJutsus.every(jutsu => comboState.usedJutsus.has(jutsu))
+                ) {
+                    // Apply combo effects
+                    const combo = comboState.combo;
+                    playerMove.damage += combo.damage || 0;
+                    comboCompletedThisRound = true;
+                    comboDamageText = `\n${interaction.user.username} lands a ${combo.name}! Massive damage!`;
+                    comboState.usedJutsus.clear();
+                    // Apply combo damage immediately (it was added to playerMove.damage, so it is applied to the enemy health here)
+                    // enemy.currentHealth -= combo.damage || 0; // The damage is already included in playerMove.damage which subtracted from enemy.currentHealth above
+                    totalDamageDealt += combo.damage || 0;
+                }
+
+                // Use the new battle image generator for each round
+                const newBattleImageBuffer = await generateBattleImage({
+                    userId,
+                    userAvatar,
+                    enemyImage,
+                    playerHealth: userData.health,
+                    playerMaxHealth: playerMaxHealth,
+                    enemyHealth: enemy.currentHealth,
+                    enemyMaxHealth: enemy.health,
+                    roundNum
                 });
-                battleCollector.stop();
-                return;
-            }
+                const newBattleImage = new AttachmentBuilder(newBattleImageBuffer, { name: `battle_scene_${userId}.png` });
 
-            // Combo completion check and bonus damage
-            let comboCompletedThisRound = false;
-            let comboDamageText = "";
-            if (
-                comboState &&
-                comboState.combo.requiredJutsus.every(jutsu => comboState.usedJutsus.has(jutsu))
-            ) {
-                // Apply combo effects
-                const combo = comboState.combo;
-                playerMove.damage += combo.damage || 0;
-                comboCompletedThisRound = true;
-                comboDamageText = `\n${interaction.user.username} lands a ${combo.name}! Massive damage!`;
-                comboState.usedJutsus.clear();
-                // Apply combo damage immediately (it was added to playerMove.damage, so it is applied to the enemy health here)
-                // enemy.currentHealth -= combo.damage || 0; // The damage is already included in playerMove.damage which subtracted from enemy.currentHealth above
-                totalDamageDealt += combo.damage || 0;
-            }
+                // Check battle status
+                const battleStatus = await checkBattleStatus();
+                if (battleStatus) {
+                    // Show final round summary before win/lose screen
+                    const summaryEmbed = createRoundSummary(playerMove, enemyMove);
+                    if (comboCompletedThisRound) {
+                        summaryEmbed.setDescription(
+                            summaryEmbed.data.description + comboDamageText
+                        );
+                    }
+                    await interaction.followUp({
+                        content: 'Final Round!',
+                        embeds: [summaryEmbed],
+                        components: [],
+                    });
 
-            // Use the new battle image generator for each round
-            const newBattleImageBuffer = await generateBattleImage({
-                userId,
-                userAvatar,
-                enemyImage,
-                playerHealth: userData.health,
-                playerMaxHealth: playerMaxHealth,
-                enemyHealth: enemy.currentHealth,
-                enemyMaxHealth: enemy.health,
-                roundNum
-            });
-            const newBattleImage = new AttachmentBuilder(newBattleImageBuffer, { name: `battle_scene_${userId}.png` });
+                    // Show final stats in the win/lose screen
+                    if (enemy.currentHealth <= 0) {
+                        const victoryEmbed = new EmbedBuilder()
+                            .setTitle('Congratulations Shinobi!')
+                            .setDescription(
+                                'You have been accepted into the Shinobi world!\n\n' +
+                                `**Total Damage Dealt:** ${Math.round(totalDamageDealt)}\n` +
+                                `**Total Damage Taken:** ${Math.round(totalDamageTaken)}\n\n` +
+                                'Use `/help` to know more about the bot\nUse `/tutorial` to learn the basics and earn your starter money!'
+                            )
+                            .setColor('#4B0082')
+                            .setImage('https://static.wikia.nocookie.net/naruto/images/5/50/Team_Kakashi.png/revision/latest?cb=20161219035928')
+                            .setFooter({
+                                text: 'Begin your journey',
+                                iconURL: 'https://i.pinimg.com/736x/a3/c2/6c/a3c26c173f6a317431b2ddd586f8b10a.jpg'
+                            })
+                            .addFields({
+                                name: 'Next Steps',
+                                value: '[ShinobiRPG Official Server](https://discord.gg/GPPVnydZ8m) - Start your adventure today!'
+                            });
 
-            // Check battle status
-            const battleStatus = await checkBattleStatus();
-            if (battleStatus) {
-                // Show final round summary before win/lose screen
+                        await interaction.followUp({
+                            content: null,
+                            embeds: [victoryEmbed],
+                            components: [],
+                            files: [newBattleImage]
+                        });
+                    } else {
+                        // Defeat
+                        const defeatEmbed = new EmbedBuilder()
+                            .setTitle('Defeat!')
+                            .setDescription(
+                                `You were defeated by the rogue ninja.\n\n` +
+                                `**Total Damage Dealt:** ${Math.round(totalDamageDealt)}\n` +
+                                `**Total Damage Taken:** ${Math.round(totalDamageTaken)}`
+                            )
+                            .setColor('#b91c1c');
+                        await interaction.followUp({
+                            embeds: [defeatEmbed],
+                            files: [newBattleImage]
+                        });
+                    }
+                    battleCollector.stop();
+                    return;
+                }
+
+                // Send moves embed first, then battle image (tip only after first image)
                 const summaryEmbed = createRoundSummary(playerMove, enemyMove);
                 if (comboCompletedThisRound) {
                     summaryEmbed.setDescription(
                         summaryEmbed.data.description + comboDamageText
                     );
                 }
-                await interaction.followUp({ 
-                    content: 'Final Round!', 
-                    embeds: [summaryEmbed], 
-                    components: [], 
+                lastBattleMsg = await interaction.followUp({
+                    content: 'Battle continues!',
+                    embeds: [summaryEmbed],
+                    components: [],
                 });
-                
-                // Show final stats in the win/lose screen
-                if (enemy.currentHealth <= 0) {
-                    const victoryEmbed = new EmbedBuilder()
-                        .setTitle('Congratulations Shinobi!')
-                        .setDescription(
-                            'You have been accepted into the Shinobi world!\n\n' +
-                            `**Total Damage Dealt:** ${Math.round(totalDamageDealt)}\n` +
-                            `**Total Damage Taken:** ${Math.round(totalDamageTaken)}\n\n` +
-                            'Use `/help` to know more about the bot\nUse `/tutorial` to learn the basics and earn your starter money!'
-                        )
-                        .setColor('#4B0082')
-                        .setImage('https://static.wikia.nocookie.net/naruto/images/5/50/Team_Kakashi.png/revision/latest?cb=20161219035928')
-                        .setFooter({ 
-                            text: 'Begin your journey', 
-                            iconURL: 'https://i.pinimg.com/736x/a3/c2/6c/a3c26c173f6a317431b2ddd586f8b10a.jpg' 
-                        })
-                        .addFields({
-                            name: 'Next Steps',
-                            value: '[ShinobiRPG Official Server](https://discord.gg/GPPVnydZ8m) - Start your adventure today!'
-                        });
+                await interaction.followUp({ files: [newBattleImage] });
 
-                    await interaction.followUp({ 
-                        content: null,
-                        embeds: [victoryEmbed], 
-                        components: [], 
-                        files: [newBattleImage] 
-                    });
-                } else {
-                    // Defeat
-                    const defeatEmbed = new EmbedBuilder()
-                        .setTitle('Defeat!')
-                        .setDescription(
-                            `You were defeated by the rogue ninja.\n\n` +
-                            `**Total Damage Dealt:** ${Math.round(totalDamageDealt)}\n` +
-                            `**Total Damage Taken:** ${Math.round(totalDamageTaken)}`
-                        )
-                        .setColor('#b91c1c');
-                    await interaction.followUp({ 
-                        embeds: [defeatEmbed], 
-                        files: [newBattleImage] 
-                    });
-                }
-                battleCollector.stop();
-                return;
+                // Next round moves selection as a new message
+                const nextMoves = createMovesEmbed();
+                lastBattleMsg = await interaction.followUp({
+                    embeds: [nextMoves.embed],
+                    components: nextMoves.components
+                });
+            } catch (error) {
+                console.error(`[Enroll Error - Battle Loop]:`, error);
+                await interaction.followUp({ content: "An error occurred during battle!", ephemeral: true }).catch(() => { });
             }
-
-            // Send moves embed first, then battle image (tip only after first image)
-            const summaryEmbed = createRoundSummary(playerMove, enemyMove);
-            if (comboCompletedThisRound) {
-                summaryEmbed.setDescription(
-                    summaryEmbed.data.description + comboDamageText
-                );
-            }
-            lastBattleMsg = await interaction.followUp({ 
-                content: 'Battle continues!', 
-                embeds: [summaryEmbed], 
-                components: [], 
-            });
-            await interaction.followUp({ files: [newBattleImage] });
-
-            // Next round moves selection as a new message
-            const nextMoves = createMovesEmbed();
-            lastBattleMsg = await interaction.followUp({ 
-                embeds: [nextMoves.embed], 
-                components: nextMoves.components 
-            });
         });
 
         battleCollector.on('end', () => {

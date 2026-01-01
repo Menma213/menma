@@ -1,69 +1,70 @@
-const { SlashCommandBuilder } = require('discord.js');
-const fs = require('fs');
+const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+const fs = require('fs').promises;
 const path = require('path');
-const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const { runBattle, comboList } = require('./combinedcommands.js');
 const { handleClanMaterialDrop } = require('../utils/materialUtils.js');
+const { userMutex, giftMutex, bountyMutex, mentorMutex } = require('../utils/locks');
+
+// --- Paths (Relative to /commands) ---
+const usersPath = path.resolve(__dirname, '../data/users.json');
+const playersPath = path.resolve(__dirname, '../data/players.json');
+const giftPath = path.resolve(__dirname, '../data/gift.json');
+const akatsukiPath = path.resolve(__dirname, '../data/akatsuki.json');
+const bountyPath = path.resolve(__dirname, '../data/bounty.json');
+const mentorExpPath = path.resolve(__dirname, '../data/mentorexp.json');
 
 // --- Constants ---
-const usersPath = path.resolve(__dirname, '../../menma/data/users.json');
-const playersPath = path.resolve(__dirname, '../../menma/data/players.json');
-const giftPath = path.resolve(__dirname, '../../menma/data/gift.json');
-const akatsukiPath = path.resolve(__dirname, '../../menma/data/akatsuki.json');
-const bountyPath = path.resolve(__dirname, '../../menma/data/bounty.json');
 const JINCHURIKI_ROLE = "1385641469507010640";
 const LEGENDARY_ROLE = "1385640798581952714";
 const DONATOR_ROLE = "1385640728130097182";
-const HOKAGE_ROLE = '1349278752944947240';
 
-// --- Mock ARANK_NPCS ---
 const ARANK_NPCS = [
     {
         name: "Jugo",
         image: "https://i.postimg.cc/vmfSx5V1/17-D3-B777-0-FC6-4-EE4-957-D-513-CC60-D8924.png",
-        baseHealth: 0.8,
-        basePower: 1.2,
-        baseDefense: 0.5,
+        baseHealth: 1.2,
+        basePower: 1.5,
+        baseDefense: 1.0,
         accuracy: 85,
-        dodge: 0,
+        dodge: 5,
         jutsu: ["Attack", "Monster Claw"]
     },
     {
         name: "Temari",
         image: "https://i.postimg.cc/1tS7G4Gv/6-CCACDF3-9612-4831-8-D31-046-BEA1586-D9.png",
-        baseHealth: 0.2,
-        basePower: 1.0,
-        baseDefense: 0.5,
+        baseHealth: 1.0,
+        basePower: 1.4,
+        baseDefense: 0.8,
         accuracy: 90,
-        dodge: 0,
+        dodge: 10,
         jutsu: ["Attack", "Wind Scythe"]
     },
     {
         name: "Kankuro",
         image: "https://i.postimg.cc/y8wbNLk4/5-F95788-A-754-C-4-BA6-B0-E0-39-BCE2-FDCF04.png",
-        baseHealth: 0.2,
-        basePower: 1.1,
-        baseDefense: 0.7,
+        baseHealth: 1.0,
+        basePower: 1.3,
+        baseDefense: 1.2,
         accuracy: 80,
-        dodge: 0,
+        dodge: 5,
         jutsu: ["Attack", "Puppet Master"]
     },
     {
         name: "Suigetsu",
         image: "https://i.postimg.cc/GmBfrW3x/54-AE56-B1-E2-EE-4179-BD24-EEC282-A8-B3-BF.png",
-        baseHealth: 0.6,
-        basePower: 1.0,
-        baseDefense: 0.6,
+        baseHealth: 1.4,
+        basePower: 1.2,
+        baseDefense: 1.1,
         accuracy: 75,
-        dodge: 0,
+        dodge: 15,
         jutsu: ["Attack", "Water Dragon Jutsu"]
     },
     {
         name: "Fuguki",
         image: "https://i.postimg.cc/QMJJrm7q/064262-C0-1-BC4-47-B2-A06-A-59-DC193-C0285.png",
-        baseHealth: 0.6,
-        basePower: 1.2,
-        baseDefense: 0.8,
+        baseHealth: 1.5,
+        basePower: 1.6,
+        baseDefense: 1.4,
         accuracy: 70,
         dodge: 0,
         jutsu: ["Attack", "Samehada Slash"]
@@ -71,31 +72,31 @@ const ARANK_NPCS = [
     {
         name: "Jinpachi",
         image: "https://i.postimg.cc/SsZLnKD2/809-EBF4-E-70-EF-4-C83-BCE4-3-D6-C228-B1239.png",
-        baseHealth: 0.7,
-        basePower: 1.1,
-        baseDefense: 0.7,
+        baseHealth: 1.3,
+        basePower: 1.5,
+        baseDefense: 1.1,
         accuracy: 85,
-        dodge: 0,
+        dodge: 10,
         jutsu: ["Attack", "Greast Forest Crumbling"]
     },
     {
         name: "Kushimaru",
         image: "https://i.postimg.cc/3wTF6VkR/53-BE91-D0-8-A53-47-C9-BD48-A06728-AFE79-C.png",
-        baseHealth: 0.6,
-        basePower: 1.1,
-        baseDefense: 0.6,
+        baseHealth: 1.2,
+        basePower: 1.4,
+        baseDefense: 0.9,
         accuracy: 95,
-        dodge: 0,
+        dodge: 20,
         jutsu: ["Attack", "One Thousand Slashes"]
     },
     {
         name: "Baki",
         image: "https://i.postimg.cc/Jn7c7XcC/5997-D785-7-C7-D-4-BC0-93-DB-CCF7-CA3-CDB56.png",
-        baseHealth: 0.5,
-        basePower: 1.0,
-        baseDefense: 0.7,
+        baseHealth: 1.1,
+        basePower: 1.4,
+        baseDefense: 1.2,
         accuracy: 85,
-        dodge: 0,
+        dodge: 10,
         jutsu: ["Attack", "Wind Scythe"]
     }
 ];
@@ -109,15 +110,17 @@ function generateGiftId(userGifts) {
     return id;
 }
 
-async function calculateRewards(userId, totalEnemiesDefeated, player, interaction) {
-    const baseExp = 15 + (player.level * 0.1);
-    const baseMoney = 200 + Math.floor((player.level || 1) * 5);
+async function handleRewards(userId, totalEnemiesDefeated, playerLevel, interaction) {
+    const baseExp = 15 + (playerLevel * 0.1);
+    const baseMoney = 200 + Math.floor(playerLevel * 5);
     let exp = baseExp, money = baseMoney, isJackpot = false, isBonus = false, isNormal = false, bounty = 0;
 
-    if ((totalEnemiesDefeated + 1) % 5 === 0) {
-        let bonusExp = Math.max(1 * (player.level || 1), baseExp);
+    const missionNum = totalEnemiesDefeated + 1;
+
+    if (missionNum % 5 === 0) {
+        let bonusExp = Math.max(1 * playerLevel, baseExp);
         let bonusMoney = baseMoney;
-        if (totalEnemiesDefeated + 1 === 50) {
+        if (missionNum === 50) {
             exp = Math.floor(bonusExp * 3.0);
             money = Math.floor(bonusMoney * 20);
             isJackpot = true;
@@ -130,224 +133,231 @@ async function calculateRewards(userId, totalEnemiesDefeated, player, interactio
         isNormal = true;
     }
 
-    const giftDataPath = giftPath;
-    let giftData = fs.existsSync(giftDataPath) ? JSON.parse(fs.readFileSync(giftDataPath, 'utf8')) : {};
-    if (!giftData[userId]) giftData[userId] = [];
+    // --- Akatsuki Bounty ---
+    let isAkatsuki = false;
+    try {
+        const akatsukiContent = await fs.readFile(akatsukiPath, 'utf8');
+        const akatsukiData = JSON.parse(akatsukiContent);
+        if (akatsukiData.members && akatsukiData.members[userId]) isAkatsuki = true;
+    } catch (e) { }
 
-    giftData[userId].push({
-        id: generateGiftId(giftData[userId]),
-        type: 'exp',
-        amount: exp,
-        from: 'arank',
-        date: Date.now()
-    });
-
-    giftData[userId].push({
-        id: generateGiftId(giftData[userId]),
-        type: 'money',
-        amount: money,
-        from: 'arank',
-        date: Date.now()
-    });
-
-    const akatsukiData = fs.existsSync(akatsukiPath) ? JSON.parse(fs.readFileSync(akatsukiPath, 'utf8')) : {};
-    if (akatsukiData.members && akatsukiData.members[userId]) {
+    if (isAkatsuki) {
         bounty = 10;
-        const bountyData = fs.existsSync(bountyPath) ? JSON.parse(fs.readFileSync(bountyPath, 'utf8')) : {};
-        if (!bountyData[userId]) {
-            bountyData[userId] = { bounty: 0 };
-        }
-        bountyData[userId].bounty += bounty;
-        fs.writeFileSync(bountyPath, JSON.stringify(bountyData, null, 2));
-
-        giftData[userId].push({
-            id: generateGiftId(giftData[userId]),
-            type: 'bounty',
-            amount: bounty,
-            from: 'arank',
-            date: Date.now()
-        });
     }
 
-    fs.writeFileSync(giftDataPath, JSON.stringify(giftData, null, 2));
-
-    return {
-        exp,
-        money,
-        bounty,
-        isJackpot,
-        isBonus,
-        isNormal
-    };
+    return { exp, money, bounty, isJackpot, isBonus, isNormal };
 }
 
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('arank')
-        .setDescription('Engage in 50 A-Rank NPC battles for rewards and materials.'),
+        .setDescription('Engage in up to 50 A-Rank NPC battles for rewards and materials.'),
 
     async execute(interaction) {
         const userId = interaction.user.id;
-        const users = fs.existsSync(usersPath) ? JSON.parse(fs.readFileSync(usersPath, 'utf8')) : {};
-        const players = fs.existsSync(playersPath) ? JSON.parse(fs.readFileSync(playersPath, 'utf8')) : {};
-        if (!users[userId]) {
+
+        // 1. Initial Load & Cooldown Check
+        let playerStats = null;
+        let cooldownInfo = { onCooldown: false, timeLeft: 0 };
+
+        await userMutex.runExclusive(async () => {
+            const users = JSON.parse(await fs.readFile(usersPath, 'utf8'));
+            const players = JSON.parse(await fs.readFile(playersPath, 'utf8'));
+
+            if (!users[userId] || !players[userId]) {
+                return;
+            }
+
+            const now = Date.now();
+            let cooldownMs = 20 * 60 * 1000;
+            const memberRoles = interaction.member.roles.cache;
+
+            if (memberRoles.has(JINCHURIKI_ROLE)) cooldownMs = 12 * 60 * 1000;
+            else if (memberRoles.has(LEGENDARY_ROLE)) cooldownMs = Math.round(13.2 * 60 * 1000);
+            else if (memberRoles.has(DONATOR_ROLE)) cooldownMs = Math.round(14.5 * 60 * 1000);
+
+            if (users[userId].lastArank && now - users[userId].lastArank < cooldownMs) {
+                cooldownInfo.onCooldown = true;
+                cooldownInfo.timeLeft = cooldownMs - (now - users[userId].lastArank);
+            } else {
+                users[userId].lastArank = now;
+                await fs.writeFile(usersPath, JSON.stringify(users, null, 2));
+                playerStats = { ...users[userId], ...players[userId], userId };
+            }
+        });
+
+        if (!playerStats) {
+            if (cooldownInfo.onCooldown) {
+                const min = Math.floor(cooldownInfo.timeLeft / 60000);
+                const sec = Math.floor((cooldownInfo.timeLeft % 60000) / 1000);
+                return interaction.reply({ content: `You can do this again in ${min}m ${sec}s.`, ephemeral: true });
+            }
             return interaction.reply({ content: "You need to enroll first!", ephemeral: true });
         }
 
         await interaction.deferReply({ ephemeral: false });
 
-        const now = Date.now();
-        let cooldownMs = 20 * 60 * 1000;
-        const memberRoles = interaction.member.roles.cache;
-        if (memberRoles.has(JINCHURIKI_ROLE)) {
-            cooldownMs = 12 * 60 * 1000;
-        } else if (memberRoles.has(LEGENDARY_ROLE)) {
-            cooldownMs = Math.round(12 * 60 * 1000 * 1.1);
-        } else if (memberRoles.has(DONATOR_ROLE)) {
-            cooldownMs = Math.round(12 * 60 * 1000 * 1.1 * 1.1);
-        }
-        if (users[userId].lastArank && now - users[userId].lastArank < cooldownMs) {
-            const left = cooldownMs - (now - users[userId].lastArank);
-            const min = Math.floor(left / 60000);
-            const sec = Math.floor((left % 60000) / 1000);
-            return interaction.editReply({ content: `You can do this again in ${min}m ${sec}s.`, ephemeral: false });
-        }
-        users[userId].lastArank = now;
-        fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
-
         let totalEnemiesDefeated = 0;
         let playerLost = false;
-        let player = { ...users[userId], ...players[userId] };
-        player.currentHealth = player.health;
-        player.chakra = player.chakra || 10;
-        player.activeEffects = [];
-        player.accuracy = 100;
-        player.dodge = 0;
-        player.jutsu = users[userId].jutsu || {};
 
-        let comboState = null;
-        if (player.Combo && comboList[player.Combo]) {
-            comboState = {
-                combo: comboList[player.Combo],
-                usedJutsus: new Set()
-            };
-            player.comboState = comboState;
-        }
+        // Prepare player for battle loop
+        let combatant = {
+            ...playerStats,
+            currentHealth: playerStats.health,
+            chakra: playerStats.chakra || 20,
+            activeEffects: [],
+            accuracy: 100,
+            dodge: 0,
+            jutsu: playerStats.jutsu || {}
+        };
 
         while (totalEnemiesDefeated < 50 && !playerLost) {
             const randomNpc = ARANK_NPCS[Math.floor(Math.random() * ARANK_NPCS.length)];
             const npcId = `NPC_${randomNpc.name}`;
 
-            let npc = {
-                ...randomNpc,
-                userId: npcId,
-                name: randomNpc.name,
-                currentHealth: randomNpc.health,
-                chakra: 10,
-                activeEffects: [],
-                jutsu: Object.fromEntries(randomNpc.jutsu.map((j, i) => [i, j]))
-            };
+            // Clean up combatant state for new round (keep HP/Chakra from previous)
+            combatant.activeEffects = [];
+            if (combatant.Combo && comboList[combatant.Combo]) {
+                combatant.comboState = { combo: comboList[combatant.Combo], usedJutsus: new Set() };
+            }
 
-            player.activeEffects = [];
-            player.comboState = comboState;
+            // Run Battle
+            const result = await runBattle(interaction, userId, npcId, 'arank', randomNpc);
 
-            const { winner, loser } = await runBattle(interaction, userId, npcId, 'arank', npc);
+            if (result.winner && result.winner.userId === userId) {
+                // Update persistent battle stats
+                combatant.currentHealth = result.winner.currentHealth;
+                combatant.chakra = result.winner.chakra;
+                totalEnemiesDefeated++;
 
-            if (winner && winner.userId === userId) {
-                player.currentHealth = winner.currentHealth;
-                player.chakra = winner.chakra;
+                // --- Rewards Calculation ---
+                const rewards = await handleRewards(userId, totalEnemiesDefeated - 1, playerStats.level || 1, interaction);
+
+                // --- Mentor & Wins Progress & Rewards ---
+                await userMutex.runExclusive(async () => {
+                    const users = JSON.parse(await fs.readFile(usersPath, 'utf8'));
+                    const players = JSON.parse(await fs.readFile(playersPath, 'utf8'));
+
+                    if (users[userId]) {
+                        users[userId].mentorExp = (users[userId].mentorExp || 0) + 1;
+                        users[userId].wins = (users[userId].wins || 0) + 1;
+                    }
+
+                    if (players[userId]) {
+                        players[userId].exp += rewards.exp;
+                        players[userId].money += rewards.money;
+                        // Use the rounding helper if needed or simple Math.round
+                        players[userId].exp = Math.round(players[userId].exp * 10) / 10;
+                    }
+
+                    await fs.writeFile(usersPath, JSON.stringify(users, null, 2));
+                    await fs.writeFile(playersPath, JSON.stringify(players, null, 2));
+                });
+
+                // Update Mentor EXP in mentorexp.json
+                await mentorMutex.runExclusive(async () => {
+                    const me = JSON.parse(await fs.readFile(mentorExpPath, 'utf8').catch(() => "{}"));
+                    if (!me[userId]) me[userId] = { exp: 0, last_train: 0 };
+                    me[userId].exp += 1;
+                    await fs.writeFile(mentorExpPath, JSON.stringify(me, null, 2));
+                });
+
+                if (rewards.bounty > 0) {
+                    await bountyMutex.runExclusive(async () => {
+                        let bountyData = {};
+                        try {
+                            const bContent = await fs.readFile(bountyPath, 'utf8');
+                            bountyData = JSON.parse(bContent);
+                        } catch (e) { }
+
+                        if (!bountyData[userId]) bountyData[userId] = { bounty: 0 };
+                        bountyData[userId].bounty += rewards.bounty;
+                        await fs.writeFile(bountyPath, JSON.stringify(bountyData, null, 2));
+                    });
+                }
+
+                // --- Material Drops (Handles its own saving) ---
+                const drops = handleClanMaterialDrop(userId, 4); // A-rank is roughly tier 4 difficulty
+
+                let dropMsg = "";
+                if (drops) {
+                    dropMsg = "\n**Clan Materials Found:**\n" + Object.entries(drops).map(([m, q]) => `• ${m}: ${q}`).join('\n');
+                }
+
+                const description = `<@${userId}> earned **${rewards.exp} EXP** and **$${rewards.money.toLocaleString()} Ryo**!${rewards.bounty > 0 ? `\nEarned **${rewards.bounty} Bounty**!` : ''}`;
+
+                const rewardEmbed = new EmbedBuilder()
+                    .setTitle(rewards.isJackpot ? "JACKPOT REWARD!" : rewards.isBonus ? "BONUS REWARD!" : "Mission Progress")
+                    .setDescription(`${description}\n\nEnemies Defeated: **${totalEnemiesDefeated}/50**\nRewards added directly to your account.`)
+                    .setColor(rewards.isJackpot ? '#FFD700' : rewards.isBonus ? '#00BFFF' : '#006400');
+
+                const msgOptions = { embeds: [rewardEmbed] };
+                if (dropMsg) msgOptions.content = "```\n" + dropMsg + "\n```";
+
+                // Use channel.send if interaction is old, otherwise followUp
+                try {
+                    await interaction.followUp(msgOptions);
+                } catch (e) {
+                    await interaction.channel.send({ content: `<@${userId}>`, ...msgOptions });
+                }
+
+                // --- Continue? ---
+                if (totalEnemiesDefeated < 50) {
+                    const continueRow = new ActionRowBuilder().addComponents(
+                        new ButtonBuilder().setCustomId('continue_arank').setLabel('Next Battle').setStyle(ButtonStyle.Success),
+                        new ButtonBuilder().setCustomId('stop_arank').setLabel('End Mission').setStyle(ButtonStyle.Danger)
+                    );
+
+                    let continueMsg;
+                    try {
+                        continueMsg = await interaction.followUp({
+                            content: "Do you want to continue the mission?",
+                            components: [continueRow]
+                        });
+                    } catch (e) {
+                        continueMsg = await interaction.channel.send({
+                            content: `<@${userId}>, do you want to continue the mission?`,
+                            components: [continueRow]
+                        });
+                    }
+
+                    const choice = await new Promise(resolve => {
+                        const collector = continueMsg.createMessageComponentCollector({
+                            filter: i => i.user.id === userId,
+                            time: 30000,
+                            max: 1
+                        });
+                        collector.on('collect', async i => {
+                            try { await i.deferUpdate(); } catch (e) { }
+                            resolve(i.customId);
+                        });
+                        collector.on('end', collected => {
+                            if (collected.size === 0) resolve('stop_arank');
+                        });
+                    });
+
+                    // Cleanup buttons
+                    try { await continueMsg.edit({ components: [] }); } catch (e) { }
+
+                    if (choice === 'stop_arank') {
+                        await interaction.channel.send(`Mission ended by player. Total enemies defeated: ${totalEnemiesDefeated}`);
+                        break;
+                    }
+                }
             } else {
                 playerLost = true;
-                await interaction.followUp(`**Defeat!** You were defeated by ${npc.name} after defeating ${totalEnemiesDefeated} enemies.`);
-                break;
-            }
-
-            totalEnemiesDefeated++;
-
-            if (users[userId]) {
-                users[userId].mentorExp = (users[userId].mentorExp || 0) + 1;
-                users[userId].wins = (users[userId].wins || 0) + 1;
-            }
-
-            // --- REWARDS & DROPS ---
-            const rewards = await calculateRewards(userId, totalEnemiesDefeated, player, interaction);
-            const drops = handleClanMaterialDrop(userId);
-            let dropMsg = "";
-            if (drops) {
-                dropMsg += "\nClan Materials Found:\n";
-                for (const [mat, qty] of Object.entries(drops)) {
-                    dropMsg += `${mat}: ${qty}\n`;
-                }
-            }
-
-            let rewardEmbed;
-            let description = `<@${userId}> has earned ${rewards.exp} exp!\n<@${userId}> has earned $${rewards.money}!`;
-            if (rewards.bounty > 0) {
-                description += `\n<@${userId}> has earned ${rewards.bounty} bounty!`;
-            }
-
-            if (rewards.isJackpot) {
-                rewardEmbed = new EmbedBuilder()
-                    .setTitle(`Battle End!`)
-                    .setDescription(`**JACKPOT REWARD!**\n${description}\nYou've completed 50 enemies in this mission!`)
-                    .setColor('#FFD700');
-            } else if (rewards.isBonus) {
-                rewardEmbed = new EmbedBuilder()
-                    .setTitle(`Battle End!!`)
-                    .setDescription(`**BONUS REWARD!**\n${description}\nEnemies Defeated: ${totalEnemiesDefeated}`)
-                    .setColor('#00BFFF');
-            } else {
-                rewardEmbed = new EmbedBuilder()
-                    .setTitle(`Battle End!`)
-                    .setDescription(`${description}\nEnemies Defeated: ${totalEnemiesDefeated}\nAll rewards have been sent to your gift inventory. Use **/gift inventory** to claim them!`)
-                    .setColor('#006400');
-            }
-
-            await interaction.followUp({
-                embeds: [rewardEmbed],
-                content: dropMsg ? "```" + dropMsg + "```" : null
-            });
-
-            if (totalEnemiesDefeated < 50) {
-                const continueRow = new ActionRowBuilder().addComponents(
-                    new ButtonBuilder().setCustomId('continue_arank').setLabel('Continue Mission').setStyle(ButtonStyle.Success),
-                    new ButtonBuilder().setCustomId('stop_arank').setLabel('End Mission').setStyle(ButtonStyle.Danger)
-                );
-                const continueMessage = await interaction.followUp({
-                    content: "Do you want to continue the mission?",
-                    components: [continueRow]
-                });
-
-                const choice = await new Promise(resolve => {
-                    const collector = continueMessage.createMessageComponentCollector({
-                        filter: i => i.user.id === userId,
-                        time: 30000,
-                        max: 1
-                    });
-                    collector.on('collect', async i => {
-                        await i.deferUpdate();
-                        resolve(i.customId);
-                    });
-                    collector.on('end', collected => {
-                        if (collected.size === 0) resolve('stop_arank');
-                    });
-                });
-
-                if (choice === 'stop_arank') {
-                    await interaction.followUp("Mission ended by player.");
-                    break;
-                }
+                await interaction.channel.send(`**Defeat!** <@${userId}> was defeated by ${randomNpc.name} after defeating ${totalEnemiesDefeated} enemies.`);
             }
         }
 
-  
-        // Do NOT persist chakra changes caused by battles — chakra is a temporary resource.
-        // Persist only health so in-battle chakra/spend doesn't permanently reduce the user's stored chakra.
-        // If you want to restore chakra to a specific value after the run, set it explicitly here (e.g. users[userId].chakra = users[userId].chakra || 10)
-        fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
-
         if (!playerLost && totalEnemiesDefeated >= 50) {
-            await interaction.followUp(`**Congratulations!** You have successfully completed all 50 A-Rank battles!`);
+            const finalEmbed = new EmbedBuilder()
+                .setTitle("🏆 MISSION COMPLETE 🏆")
+                .setDescription(`<@${userId}> has successfully cleared all 50 A-Rank battles! Truly a master shinobi.`)
+                .setColor('#FFD700')
+                .setThumbnail(interaction.user.displayAvatarURL());
+
+            await interaction.channel.send({ embeds: [finalEmbed] });
         }
     }
 };

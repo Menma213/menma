@@ -22,7 +22,7 @@ try {
 // Christmas Event Constants
 const CHRISTMAS_TOKEN = 'Christmas Token';
 const EVENT_START = new Date('2025-12-10T00:00:00Z');
-const EVENT_END = new Date('2025-12-25T23:59:59Z');
+const EVENT_END = new Date('2026-30-25T23:59:59Z');
 
 // Summon costs
 const SINGLE_COST = 10;

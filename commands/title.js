@@ -36,7 +36,7 @@ module.exports = {
         }
 
         if (subheading === 'list') {
-            const currentTitle = user.rank || "None";
+            const currentTitle = user.title || "None";
             const embed = new EmbedBuilder()
                 .setTitle(`${interaction.user.username}'s Titles`)
                 .setColor('#FFD700')
@@ -64,7 +64,7 @@ module.exports = {
             const row = new ActionRowBuilder().addComponents(selectMenu);
 
             const response = await interaction.reply({
-                content: `**Current Title:** ${user.rank || "None"}\nSelect a title to equip:`,
+                content: `**Current Title:** ${user.title || "None"}\nSelect a title to equip:`,
                 components: [row],
                 fetchReply: true
             });
@@ -75,9 +75,9 @@ module.exports = {
             collector.on('collect', async i => {
                 const selectedTitle = i.values[0];
 
-                // Reload user data to avoid race conditions (simple file lock is not here but good practice)
+                // Reload user data to avoid race conditions
                 const currentUsers = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
-                currentUsers[userId].rank = selectedTitle;
+                currentUsers[userId].title = selectedTitle;
                 fs.writeFileSync(usersPath, JSON.stringify(currentUsers, null, 2));
 
                 await i.update({ content: `**Transformed!**\nYou are now known as **${selectedTitle}**!`, components: [] });

@@ -2,7 +2,7 @@ const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const fs = require('fs').promises;
 const path = require('path');
 const { runBattle, getCooldownString } = require('./combinedcommands.js');
-const { userMutex, giftMutex, bountyMutex } = require('../utils/locks');
+const { userMutex, giftMutex, bountyMutex, mentorMutex } = require('../utils/locks');
 const { handleClanMaterialDrop } = require('../utils/materialUtils');
 
 const usersPath = path.resolve(__dirname, '../data/users.json');
@@ -10,6 +10,7 @@ const playersPath = path.resolve(__dirname, '../data/players.json');
 const giftPath = path.resolve(__dirname, '../data/gift.json');
 const anbuPath = path.resolve(__dirname, '../data/anbu.json');
 const territoriesPath = path.resolve(__dirname, '../data/territories.json');
+const mentorExpPath = path.resolve(__dirname, '../data/mentorexp.json');
 
 const JINCHURIKI_ROLE = "1385641469507010640";
 const LEGENDARY_ROLE = "1385640798581952714";
@@ -100,73 +101,6 @@ function generateGiftId(userGifts) {
     return id;
 }
 
-async function handleBrankReward(interaction, player1) {
-    let rewardEmbed;
-    let dropMsg = "";
-
-    await userMutex.runExclusive(async () => {
-        const users = JSON.parse(await fs.readFile(usersPath, 'utf8'));
-        const playersData = JSON.parse(await fs.readFile(playersPath, 'utf8'));
-
-        const user = users[player1.userId];
-        const player = playersData[player1.userId];
-
-        if (!user || !player) return;
-
-        // Calculate Rewards
-        const territories = JSON.parse(await fs.readFile(territoriesPath, 'utf8'));
-        const userLocation = user.location || 'land_of_fire';
-        const currentTier = territories.territories[userLocation]?.tier || 1;
-
-        const expReward = (1 + (player.level * 0.1)) * currentTier;
-        const moneyReward = 1000 * currentTier;
-
-        // Update Player
-        player.exp += expReward;
-        player.money += moneyReward;
-        player.exp = roundExpSmart(player.exp);
-
-        // Handle Material Drops
-        const drops = await handleClanMaterialDrop(player1.userId, currentTier);
-
-        dropMsg = "```";
-        if (drops) {
-            dropMsg += "\nClan Materials Found:\n";
-            for (const [mat, qty] of Object.entries(drops)) {
-                dropMsg += `${mat}: ${qty}\n`;
-            }
-        }
-        dropMsg += "```";
-        if (!drops) dropMsg = "";
-
-        // Check Anbu Quest
-        const anbuData = JSON.parse(await fs.readFile(anbuPath, 'utf8'));
-        if (anbuData.quest && anbuData.quest[player1.userId]) {
-            if (anbuData.quest[player1.userId].brank < 10) {
-                anbuData.quest[player1.userId].brank++;
-                await fs.writeFile(anbuPath, JSON.stringify(anbuData, null, 2));
-            }
-            await checkAnbuQuestCompletion(interaction, player1.userId);
-        }
-
-        // Save Data
-        await fs.writeFile(playersPath, JSON.stringify(playersData, null, 2));
-        // Update brankWon for tutorial
-        user.brankWon = true;
-        await fs.writeFile(usersPath, JSON.stringify(users, null, 2));
-
-        let description = `<@${player1.userId}> has earned ${expReward.toFixed(1)} exp!\n<@${player1.userId}> has earned $${moneyReward}!`;
-
-        rewardEmbed = new EmbedBuilder()
-            .setTitle(`Battle End!`)
-            .setDescription(`${description}\nAll rewards have been sent to your gift inventory. Use **/gift inventory** to claim them!`)
-            .setColor('#006400');
-    });
-
-    if (rewardEmbed) {
-        await interaction.channel.send({ embeds: [rewardEmbed], content: dropMsg || null });
-    }
-}
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -215,16 +149,61 @@ module.exports = {
             }
 
             const territories = JSON.parse(await fs.readFile(territoriesPath, 'utf8'));
+            const playersData = JSON.parse(await fs.readFile(playersPath, 'utf8'));
+            const playerLevel = playersData[userId]?.level || 1;
+
+            const userLocationValue = userLocation || 'land_of_fire';
             const currentTier = territories.territories[userLocation]?.tier || 1;
             const tierNpcs = TIER_NPCS[currentTier] || TIER_NPCS[1];
-            const selectedNpc = tierNpcs[Math.floor(Math.random() * tierNpcs.length)];
+
+            let selectedNpc;
+            if (playerLevel < 20) {
+                selectedNpc = TIER_NPCS[1].find(npc => npc.name === "Bandit") || TIER_NPCS[1][0];
+            } else {
+                selectedNpc = tierNpcs[Math.floor(Math.random() * tierNpcs.length)];
+            }
 
             const { winner } = await runBattle(interaction, userId, `NPC_${selectedNpc.name}`, 'brank', selectedNpc);
 
             try { await interaction.deleteReply(); } catch (e) { }
 
             if (winner && winner.userId === userId) {
-                await handleBrankReward(interaction, winner);
+                const expReward = 50 * currentTier;
+                const moneyReward = 1000 * currentTier;
+
+                // Update Player and User data with locks
+                await userMutex.runExclusive(async () => {
+                    const pd = JSON.parse(await fs.readFile(playersPath, 'utf8'));
+                    const ud = JSON.parse(await fs.readFile(usersPath, 'utf8'));
+
+                    if (pd[userId]) {
+                        pd[userId].exp += expReward;
+                        pd[userId].money += moneyReward;
+                        pd[userId].exp = Math.round(pd[userId].exp * 10) / 10;
+                    }
+
+                    if (ud[userId]) {
+                        ud[userId].brankWon = true; // Update tutorial variable
+                    }
+
+                    await fs.writeFile(playersPath, JSON.stringify(pd, null, 2));
+                    await fs.writeFile(usersPath, JSON.stringify(ud, null, 2));
+                });
+
+                // Update Mentor EXP
+                await mentorMutex.runExclusive(async () => {
+                    const me = JSON.parse(await fs.readFile(mentorExpPath, 'utf8').catch(() => "{}"));
+                    if (!me[userId]) me[userId] = { exp: 0, last_train: 0 };
+                    me[userId].exp += 1;
+                    await fs.writeFile(mentorExpPath, JSON.stringify(me, null, 2));
+                });
+
+                const victoryEmbed = new EmbedBuilder()
+                    .setTitle("Victory!")
+                    .setDescription(`You defeated ${selectedNpc.name}!\n\n**Rewards:**\n+ ${expReward} EXP\n+ $${moneyReward} Money\n\nRewards have been added to your account balance.`)
+                    .setColor("#00FF00");
+
+                await interaction.followUp({ embeds: [victoryEmbed] });
             }
         } catch (error) {
             console.error(error);

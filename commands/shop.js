@@ -102,12 +102,6 @@ const eventShopItems = [
         key: "Ramen Bowl"
     },
     {
-        name: "Needle Assault",
-        description: "Jutsu: Launch sharp ice needles at your opponent.",
-        price: 50,
-        key: "Needle Assault"
-    },
-    {
         name: "Ice Prison",
         description: "Jutsu: Trap your opponent in a prison of ice.",
         price: 50,
@@ -122,7 +116,7 @@ const eventShopItems = [
     {
         name: "Profile Theme: Frost",
         description: "Unlocks the 'Frost' profile theme. Auto-equipped on purchase.",
-        price: 2000,
+        price: 600,
         key: "theme_frost"
     },
     {
