@@ -1,0 +1,31 @@
+[Bridge] Initializing JSDOM...
+node : ??? 
+Verification failed: 
+TypeError: Cannot set 
+property navigator of 
+#<Object> which has 
+only a getter
+At line:1 char:1
++ node 
+verify_gwent.js > 
+debug_log.txt 2>&1
++ ~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo    
+          : NotSpeci  
+  fied: (??? Verifi   
+ catio...s only a     
+getter:String) []    
+, RemoteException
+    + FullyQualifiedE 
+   rrorId : NativeCo  
+  mmandError
+ 
+    at 
+GwentBridge.init (C:\U
+sers\HI\Desktop\menma\
+utils\gwent_bridge.js:
+37:26)
+    at async test (C:\
+Users\HI\Desktop\menma
+\verify_gwent.js:7:9)

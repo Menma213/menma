@@ -168,8 +168,10 @@ module.exports = {
             try { await interaction.deleteReply(); } catch (e) { }
 
             if (winner && winner.userId === userId) {
-                const expReward = 50 * currentTier;
-                const moneyReward = 1000 * currentTier;
+                // Tier now adds a small percentage bonus instead of direct multiplication
+                const tierBonus = 1 + ((currentTier) * 0.50); // Tier 1 = 1x, Tier 5 = 1.6x, Tier 9 = 2.2x
+                const expReward = Math.floor(40 * tierBonus);
+                const moneyReward = Math.floor(600 * tierBonus);
 
                 // Update Player and User data with locks
                 await userMutex.runExclusive(async () => {
@@ -180,6 +182,12 @@ module.exports = {
                         pd[userId].exp += expReward;
                         pd[userId].money += moneyReward;
                         pd[userId].exp = Math.round(pd[userId].exp * 10) / 10;
+
+                        // Increment mission count
+                        if (!pd[userId].missions_completed) {
+                            pd[userId].missions_completed = 0;
+                        }
+                        pd[userId].missions_completed += 1;
                     }
 
                     if (ud[userId]) {
@@ -188,6 +196,17 @@ module.exports = {
 
                     await fs.writeFile(playersPath, JSON.stringify(pd, null, 2));
                     await fs.writeFile(usersPath, JSON.stringify(ud, null, 2));
+
+                    // --- Anbu Quest Tracking ---
+                    const anbuData = JSON.parse(await fs.readFile(anbuPath, 'utf8'));
+                    if (anbuData.quest && anbuData.quest[userId]) {
+                        if ((anbuData.quest[userId].brank || 0) < 10) {
+                            anbuData.quest[userId].brank = (anbuData.quest[userId].brank || 0) + 1;
+                            await fs.writeFile(anbuPath, JSON.stringify(anbuData, null, 2));
+                        }
+                        // Check for quest completion
+                        await checkAnbuQuestCompletion(interaction, userId);
+                    }
                 });
 
                 // Update Mentor EXP

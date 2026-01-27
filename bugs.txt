@@ -1,0 +1,2 @@
+shop and buy commands unalignment: "Goku's Pole" now exists in the Accessory Shop and can be purchased with /buy accessory. [FIXED]
+Anbu command completion: The arank command isnt updating the anbu quest missions, as a result, exclude arank from the anbu missions, it's only drank and brank now. [FIXED]

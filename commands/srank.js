@@ -1978,9 +1978,14 @@ module.exports = {
             if (memberRoles.has(JINCHURIKI_ROLE)) {
                 cooldownMs = 10 * 60 * 1000;
             } else if (memberRoles.has(LEGENDARY_ROLE)) {
-                cooldownMs = Math.round(12 * 60 * 1000);
+                cooldownMs = 12 * 60 * 1000;
             } else if (memberRoles.has(DONATOR_ROLE)) {
-                cooldownMs = Math.round(13 * 60 * 1000);
+                cooldownMs = 13 * 60 * 1000;
+            }
+
+            if (users[userId].lastsrank && now - users[userId].lastsrank < cooldownMs) {
+                const left = cooldownMs - (now - users[userId].lastsrank);
+                return await interaction.followUp({ content: `You can do an S-Rank mission again in ${getCooldownString(left)}.` });
             }
 
             await userMutex.runExclusive(async () => {
@@ -2018,12 +2023,31 @@ module.exports = {
             const availableBosses = {};
             const userDefeats = users[userId].srankDefeats || {};
             const userUnlocked = users[userId].unlockedSrank || [];
+
+            // Helper function to check if a boss should be unlocked
+            const isBossUnlocked = (bossId, boss) => {
+                // Always unlocked if explicitly in unlockedSrank
+                if (userUnlocked.includes(bossId)) return true;
+
+                // Haku is always available (requiredDefeats: 0)
+                if (boss.requiredDefeats === 0) return true;
+
+                // For other bosses, check if any boss that unlocks this one has been defeated
+                for (const [otherBossId, otherBoss] of Object.entries(srankBosses)) {
+                    if (otherBoss.unlocks === bossId && (userDefeats[otherBossId] > 0 || userUnlocked.includes(otherBossId))) {
+                        return true;
+                    }
+                }
+
+                return false;
+            };
+
             for (const [bossId, boss] of Object.entries(srankBosses)) {
-                const defeatCount = userDefeats[bossId] || 0;
-                if (boss.requiredDefeats <= defeatCount || userUnlocked.includes(bossId)) {
+                if (isBossUnlocked(bossId, boss)) {
                     availableBosses[bossId] = boss;
                 }
             }
+
             // Always allow Haku if nothing else unlocked
             if (Object.keys(availableBosses).length === 0) {
                 availableBosses.haku = srankBosses.haku;

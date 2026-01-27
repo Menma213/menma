@@ -34,13 +34,13 @@
     "name": "Asura's Blade of Execution",
     "description": "Unleashes god-like power",
     "obtainment": "Obtained after completing the naruto quest in scroll missions",
-    "chakraCost": 0,
+    "chakraCost": 10,
     "category": "No Category",
     "image_url": "https://static.wikia.nocookie.net/naruto/images/c/c0/Amenomihashira.png/revision/latest?cb=20160721141416",
     "effects": [
       {
         "type": "damage",
-        "formula": "5000 * user.power / target.defense"
+        "formula": "3500 * user.power / target.defense"
       },
       {
         "type": "buff",
@@ -82,8 +82,8 @@
   },
   "Summon Ninken": {
     "name": "Summon Ninken",
-    "description": "Summons ninja dogs to stun the opponent",
-    "info": "User summons ninja dogs to stun the opponent for 2 rounds.",
+    "description": "user summons ninja dogs to stun the opponent",
+    "info": "user summons ninja dogs to stun the opponent for 2 rounds.",
     "obtainment": "obtained from kakashi mentor",
     "chakraCost": 11,
     "category": "Genin",
@@ -266,9 +266,10 @@
       {
         "type": "debuff",
         "stats": {
-          "defense": -10
+          "power": "-target.power * 0.05",
+          "defense": "-target.defense * 0.05"
         },
-        "duration": 2
+        "duration": 3
       }
     ]
   },
@@ -342,7 +343,7 @@
     "description": "dodges all incoming attacks and strikes the enemy",
     "info": "User dodges all incoming attacks and attacks the enemy.",
     "obtainment": "obtained from minato during hokage trials",
-    "chakraCost": 5,
+    "chakraCost": 15,
     "category": "Hokage",
     "effects": [
       {
@@ -352,7 +353,7 @@
       {
         "type": "buff",
         "stats": {
-          "dodge": 6000
+          "dodge": 1000
         },
         "duration": 1
       }
@@ -454,7 +455,7 @@
         "status": "bleed",
         "duration": 2,
         "chance": 100,
-        "damagePerTurn": "target.health * 0.2"
+        "damagePerTurn": "target.health * 0.05"
       }
     ]
   },
@@ -508,8 +509,8 @@
       {
         "type": "debuff",
         "stats": {
-          "power": "-target.power * 0.15",
-          "defense": "-target.defense * 0.15"
+          "power": "-target.power * 0.05",
+          "defense": "-target.defense * 0.05"
         },
         "duration": 3
       },
@@ -518,7 +519,7 @@
         "status": "bleed",
         "duration": 2,
         "chance": 100,
-        "damagePerTurn": "target.health * 0.2"
+        "damagePerTurn": "target.health * 0.05"
       }
     ]
   },
@@ -1592,7 +1593,7 @@
       },
       {
         "type": "damage",
-        "formula": "user.power * 20 / target.defense",
+        "formula": "user.power * 2000 / target.defense",
         "chance": 50
       }
     ]
@@ -1730,13 +1731,13 @@
       },
       {
         "type": "damage",
-        "formula": "user.power * 6000 / target.defense"
+        "formula": "user.power * 2500 / target.defense"
       }
     ],
     "effects": [
       {
         "type": "damage",
-        "formula": "user.power * 3000 / target.defense"
+        "formula": "user.power * 2500 / target.defense"
       },
       {
         "type": "buff",
@@ -1851,7 +1852,7 @@
     "effects": [
       {
         "type": "damage",
-        "formula": "3000 * user.power / target.defense"
+        "formula": "2500 * user.power / target.defense"
       },
       {
         "type": "status",
@@ -2422,8 +2423,8 @@
     "name": "Wheel of Fate Adaptation",
     "obtainment": "unobtainable",
     "description": "Eight-Handled Sword Divergent Sila Divine General: Adaptation. A divine wheel manifests behind the user, spinning as they adapt to every attack.",
-    "chakraCost": 30,
-    "image_url": "https://media.tenor.com/h9vZeOgN-5gAAAAM/mahoraga-adapts-mahoraga.gif",
+    "chakraCost": 18,
+    "image_url": "https://i1.sndcdn.com/artworks-j6HVFrTzupWEmPlA-yPGA5Q-t500x500.jpg",
     "category": "Custom",
     "obtainable": false,
     "effects": [
@@ -2442,5 +2443,351 @@
         "applyToUser": true
       }
     ]
+  },
+  "Rebirth Protocol": {
+    "name": "Rebirth Protocol",
+    "description": "**Surprised? It’s the genius of the Big Gete Star**\n The user’s damaged body liquefies into living metal, instantly reconstructing itself with flawless precision — as if the attack never landed.",
+    "image_url": "https://i.redd.it/541nu84fh8kd1.gif",
+    "chakraCost": 15,
+    "category": "custom",
+    "obtainment": "unobtainable",
+    "obtainable": false,
+    "effects": [
+      {
+        "type": "heal",
+        "formula": "user.health * 0.35"
+      },
+      {
+        "type": "buff",
+        "stats": {
+          "defense": "user.defense * 40"
+        },
+        "duration": 4
+      },
+      {
+        "type": "damage",
+        "formula": "user.power * 2500 / target.defense",
+        "critChance": 25
+      }
+    ]
+  },
+  "King of Hell": {
+    "name": "King of Hell",
+    "description": "**I'LL BECOME THE KING OF HELL!**\n  user coats all three blades in powerful Armament Haki and Conqueror Haki. A colossal dragon-shaped aura coils around them as they charge forward, unleashing a devastating three-sword strike that tears through the battlefield in a single, decisive motion, leaving behind crushing pressure and carved terrain",
+    "image_url": "https://i.pinimg.com/originals/7c/9a/3c/7c9a3cb7b488581e26318e2d6ec88a0f.gif",
+    "chakraCost": 15,
+    "category": "custom",
+    "obtainment": "unobtainable",
+    "obtainable": false,
+    "effects": [
+      {
+        "type": "damage",
+        "formula": "user.power * 2500 / target.defense"
+      },
+      {
+        "type": "debuff",
+        "stats": {
+          "defense": "target.defense * 0.15"
+        },
+        "duration": 5
+      },
+      {
+        "type": "status",
+        "status": "bleed",
+        "damagePerTurn": "target.health * 0.15",
+        "duration": 3,
+        "chance": 100
+      }
+    ]
+  },
+  "Black Vortex Cataclysm": {
+    "name": "Black Vortex Cataclysm",
+    "description": "Darkness swallows everything...even your hope!\n user spreads an abyss of crushing darkness across the battlefield as gravity twists violently inward. Shadows collapse toward a single point, dragging enemies off balance before the user surges forward, unleashing a devastating quake-charged strike that shatters the ground and space around the target",
+    "image_url": "https://i.pinimg.com/originals/93/32/bf/9332bf76c5a8c8389ef447b5df1a3f05.gif",
+    "chakraCost": 15,
+    "category": "custom",
+    "obtainment": "unobtainable",
+    "obtainable": false,
+    "effects": [
+      {
+        "type": "damage",
+        "formula": "user.power * 2500 / target.defense"
+      },
+      {
+        "type": "debuff",
+        "stats": {
+          "defense": "target.defense * 0.15"
+        },
+        "duration": 5
+      },
+      {
+        "type": "status",
+        "status": "darkness",
+        "duration": 5,
+        "chance": 100,
+        "damagePerTurn": "target.health * 0.15"
+      }
+    ]
+  },
+  "Ruri'iro Kujaku": {
+    "name": "Ruri'iro Kujaku",
+    "description": "Split and Deviate\n user  unlocks the next level, releasing their shikai and stealing their opponents health",
+    "image_url": "",
+    "chakraCost": 15,
+    "category": "custom",
+    "obtainment": "unobtainable",
+    "obtainable": false,
+    "effects": [
+      {
+        "type": "damage",
+        "formula": "user.power * 2500 / target.defense"
+      },
+      {
+        "type": "buff",
+        "stats": {
+          "power": "user.power * 20"
+        },
+        "duration": 5
+      },
+      {
+        "type": "lifesteal",
+        "amount": "target.health * 0.25"
+      }
+    ]
+  },
+  "200% Hollow Purple": {
+    "name": "200% Hollow Purple",
+    "description": "**200% Hollow Purple**\n user amplifies the power of this singular attack by 200% and devastates the entire city",
+    "image_url": "https://i.postimg.cc/MTHfsvmY/image.png",
+    "chakraCost": 10,
+    "category": "custom",
+    "obtainment": "unobtainable",
+    "obtainable": false,
+    "effects": [
+      {
+        "type": "damage",
+        "formula": "user.power * 2500 / target.defense"
+      },
+      {
+        "type": "debuff",
+        "stats": {
+          "defense": "target.power * 0.15"
+        },
+        "duration": 5
+      },
+      {
+        "type": "buff",
+        "stats": {
+          "power": "user.power * 20"
+        },
+        "duration": 5
+      }
+    ]
+  },
+  "Hakai Release": {
+    "name": "Hakai Release",
+    "description": "user calls upon their godly energy, releasing a ball of mass destruction towards their opponent that erases anything it came into contact with",
+    "image_url": "https://i.imgur.com/4cniHFE.gif",
+    "chakraCost": 15,
+    "category": "Custom",
+    "obtainment": "unobtainable",
+    "obtainable": false,
+    "scriptFile": "hakai_release.js"
+  },
+  "Dragon Emperor Life Destructor": {
+    "name": "Dragon Emperor Life Destructor",
+    "description": "**THERE SHALL AND ONLY BE ONE AND ONLY ONE BE ONE SUPREME BEY AND THAT IS THIS LDRAGO DESTRUCTOR ALONE **\nuser Launches his Ultimate bey which fights beside him and  Uses his Ultimate bey move where Ldrago is a massacre given form. The moment it activates, the air shatters and life is wrenched out of the enemy by force, muscles tearing, bones screaming under pressure that feels like existence itself is being crushed. Blood boils, senses rupture, and the victim’s body betrays them as their own vitality is ripped apart cell by cell. What remains is not defeat, but ruin—an enemy left broken, hollow, and fully aware that L’Dragos did not just end the fight… it erased them",
+    "image_url": "https://i.pinimg.com/originals/24/4a/37/244a37cdcac7ab2698ec22d0d5b52c6e.gif",
+    "chakraCost": 15,
+    "category": "Custom",
+    "obtainment": "unobtainable",
+    "obtainable": false,
+    "scriptFile": "dragon_emperor_life_destructor.js"
+  },
+  "Four Violet Flames Formation": {
+    "name": "Four Violet Flames Formation",
+    "description": "user  produces a large barrier around themself, protecting them from attacks and causing the enemy to become dazed from the blinding purple lights of the barrier, stumbling the target. Once inside the barrier, user will gain a massive boost to defense",
+    "image_url": "https://i.postimg.cc/J46q4GRK/image.png",
+    "chakraCost": 20,
+    "category": "Custom",
+    "obtainment": "unobtainable",
+    "obtainable": false,
+    "scriptFile": "four_violet_flames_formation.js"
+  },
+  "Summon Shrek": {
+    "name": "Summon Shrek",
+    "description": "user has summoned shrek, who beats the enemy out of their swamp",
+    "image_url": "https://i.pinimg.com/originals/fb/47/9d/fb479d0cdd9f61a1f95a49c38776451a.gif",
+    "chakraCost": 10,
+    "category": "Custom",
+    "obtainment": "unobtainable",
+    "obtainable": false,
+    "effects": [
+      {
+        "type": "damage",
+        "formula": "user.power * 3000 / target.defense"
+      },
+      {
+        "type": "debuff",
+        "stats": {
+          "defense": "target.defense * 0.20"
+        },
+        "duration": 5
+      },
+      {
+        "type": "buff",
+        "stats": {
+          "power": "user.power * 40"
+        },
+        "duration": 5
+      }
+    ]
+  },
+  "Unified Will": {
+    "name": "Unified Will",
+    "description": "**My swords… my will… my Haki. All of it becomes one!**\n Just by standing on the battlefield, the user dominates it every strike hits harder, every blow taken feels lighter, and enemies with weaker resolve crumble before the user’s presence",
+    "image_url": "https://i.redd.it/vlgegxut5jff1.gif",
+    "chakraCost": 10,
+    "category": "Custom",
+    "obtainment": "unobtainable",
+    "obtainable": false,
+    "effects": [
+      {
+        "type": "status",
+        "status": "stun",
+        "duration": 5
+      },
+      {
+        "type": "debuff",
+        "stats": {
+          "defense": "target.defense * 0.20"
+        },
+        "duration": 5
+      },
+      {
+        "type": "buff",
+        "stats": {
+          "power": "user.power * 20"
+        },
+        "duration": 5
+      }
+    ]
+  },
+  "Full Counter": {
+    "name": "Full Counter",
+    "description": "Now then, Eat up your own shi-\n user Reflects back the attacks aimed at him bypassing all defences and absorbing some of the power and dealing the damage",
+    "image_url": "https://i.redd.it/b28p8s5vhogf1.gif",
+    "category": "Custom",
+    "chakraCost": 15,
+    "scriptFile": "full_counter.js"
+  },
+  "World Cutting Slash": {
+    "name": "World Cutting Slash",
+    "description": "Scales of Dragon. Repulsion. Twin Meteors.\n user compresses chakra energy into a slash that ignores conventional distance and form. With a single motion, the slash tears through space itself, carving a fracture across the battlefield ",
+    "image_url": "https://i.pinimg.com/236x/14/85/ba/1485ba4dc4ec829955523c4139f70f16.jpg",
+    "category": "Custom",
+    "chakraCost": 15,
+    "obtainment": "unobtainable",
+    "obtainable": false,
+    "scriptFile": "world_cutting_slash.js"
+  },
+  "PIERCING BLOOD: CONVERGENCE MAXIMUM": {
+    "name": "PIERCING BLOOD: CONVERGENCE MAXIMUM",
+    "description": "When you get to the other side, be sure to ask for my brothers forgiveness\n user compresses blood between their hands, creating a high pressure beam and heating it up to extreme temperatures as it’s released. While pressuring the opponent with the piercing blood, user also creates convergence orbs that explode in proximity to the opponent",
+    "image_url": "https://gifdb.com/images/high/choso-the-blood-compressed-fap9wp0ier8kp6ke.gif",
+    "category": "Custom",
+    "chakraCost": 20,
+    "obtainment": "unobtainable",
+    "custombackground": {
+      "round": 2,
+      "url": "https://i.postimg.cc/zGHvD849/image.png"
+    },
+    "roundBased": true,
+    "roundEffects": {
+      "1": {
+        "description": "user compresses blood, releasing a high pressure piercing beam that poisons the target!",
+        "effects": [
+          {
+            "type": "damage",
+            "formula": "2500 * user.power / target.defense * max(0, user.chakra - 5)"
+          },
+          {
+            "type": "status",
+            "status": "poison",
+            "duration": 5
+          },
+          {
+            "type": "buff",
+            "stats": {
+              "accuracy": 100
+            },
+            "duration": 5
+          }
+        ]
+      },
+      "2-3": {
+        "description": "Convergence orbs float around the target, exploding when close",
+        "effects": [
+          {
+            "type": "damage",
+            "formula": "target.currentHealth * 0.25"
+          }
+        ]
+      }
+    }
+  },
+  "FLOWING RED SCALE": {
+    "name": "FLOWING RED SCALE",
+    "description": "I mist walk ahead of my little brothers. That’s why I’m strong.\n user  manipulates the blood within their own body, increasing their stats and creating a hardened blood armor to protect themselves",
+    "image_url": "https://gifdb.com/images/high/choso-jujutsu-kaisen-blood-on-hand-edahvidgz012wn79.gif",
+    "category": "Custom",
+    "chakraCost": 12,
+    "obtainment": "unobtainable",
+    "obtainable": false,
+    "scriptFile": "flowing_red_scale.js"
+  },
+  "Pee Pee Poo Poo": {
+    "name": "Pee Pee Poo Poo",
+    "description": "user does a pee pee poo poo",
+    "image_url": "https://i.pinimg.com/originals/24/4a/37/244a37cdcac7ab2698ec22d0d5b52c6e.gif",
+    "chakraCost": 10,
+    "category": "Custom",
+    "obtainment": "unobtainable",
+    "obtainable": false,
+    "effects": [],
+    "scriptFile": "pee_pee_poo_poo.js"
+  },
+  "Perfect Sage": {
+    "name": "Perfect Sage",
+    "description": "user absorbs chakra nature, enhancing their stats and improving their combat skills ",
+    "image_url": "https://media.tenor.com/4Yi8L0rA9qoAAAAM/hashirama.gif",
+    "chakraCost": 15,
+    "category": "Custom",
+    "obtainment": "unobtainable",
+    "obtainable": false,
+    "effects": [],
+    "scriptFile": "perfect_sage.js"
+  },
+  "Gold Experience Requiem": {
+    "name": "Gold Experience Requiem",
+    "description": "You will never arrive at the truth that will occur! None who stand before me shall ever do so, no matter what abilities they may wield!\nuser Takes the  Ultimate Stand and summons a humanoid golden entity that embodies absolute control over every effect and granting the user  life after death",
+    "image_url": "https://images.steamusercontent.com/ugc/838078363697465176/FB6D82BB82EC82998E12EEF7A67B691FD7164BA7/?imw=5000&imh=5000&ima=fit&impolicy=Letterbox&imcolor=%23000000&letterbox=false",
+    "chakraCost": 0,
+    "category": "Custom",
+    "obtainment": "unobtainable",
+    "obtainable": false,
+    "effects": [],
+    "scriptFile": "gold_experience_requiem.js"
+  },
+  "Violent Fierce God Slicer": {
+    "name": "Violent Fierce God Slicer",
+    "description": "ɪꜰ ʏᴏᴜ ꜰᴇᴇʟ ɴᴏᴛʜɪɴɢ ꜰʀᴏᴍ ᴛʜɪꜱ ᴀᴛᴛᴀᴄᴋ ..... ᴛʜᴇɴ ʏᴏᴜʀ ᴀʟʀᴇᴀᴅʏ ᴅᴇᴀᴅ\n user Concentrates his Super Saiyan Rośe aura converting his anger into power around his hand forming a pink and black scythe which cuts through dimensions and damaging the target",
+    "image_url": "https://i.pinimg.com/originals/55/3c/9e/553c9e2df7214ebf3a56d4a081e8bf7c.gif",
+    "chakraCost": 15,
+    "category": "Custom",
+    "obtainment": "unobtainable",
+    "obtainable": false,
+    "effects": [],
+    "scriptFile": "violent_fierce_god_slicer.js"
   }
 }

@@ -1,0 +1,76 @@
+{
+  "money": 1000,
+  "packs": 0,
+  "collection": {
+    "Maurice": {
+      "count": 1,
+      "rarity": "Rare",
+      "ovr": 60,
+      "color": "#3498db",
+      "source": "Koukyoushihen Eureka Seven",
+      "image": "https://s4.anilist.co/file/anilistcdn/character/large/b4049-8qUf12mbGToi.png",
+      "id": 4049
+    },
+    "Ryuunosuke Fujinami": {
+      "count": 1,
+      "rarity": "Rare",
+      "ovr": 56,
+      "color": "#3498db",
+      "source": "Urusei Yatsura (2022)",
+      "image": "https://s4.anilist.co/file/anilistcdn/character/large/b3646-FDsINzDkEul2.jpg",
+      "id": 3646
+    },
+    "Yukino Kikukawa": {
+      "count": 1,
+      "rarity": "Uncommon",
+      "ovr": 35,
+      "color": "#2ecc71",
+      "source": "Mai-HiME",
+      "image": "https://s4.anilist.co/file/anilistcdn/character/large/3667.jpg",
+      "id": 3667
+    },
+    "Hayato": {
+      "count": 1,
+      "rarity": "Common",
+      "ovr": 27,
+      "color": "#95a5a6",
+      "source": "BASARA",
+      "image": "https://s4.anilist.co/file/anilistcdn/character/large/4349.jpg",
+      "id": 4349
+    },
+    "Gudrif": {
+      "count": 1,
+      "rarity": "Rare",
+      "ovr": 53,
+      "color": "#3498db",
+      "source": "BLOOD+",
+      "image": "https://s4.anilist.co/file/anilistcdn/character/large/b886-s7NWHizVr5bT.png",
+      "id": 886
+    },
+    "Sarah Dupont": {
+      "count": 1,
+      "rarity": "Uncommon",
+      "ovr": 33,
+      "color": "#2ecc71",
+      "source": "Kaleido Star",
+      "image": "https://s4.anilist.co/file/anilistcdn/character/large/b877-XzDsO5BuejlJ.jpg",
+      "id": 877
+    }
+  },
+  "decks": [
+    [],
+    [],
+    [],
+    [],
+    []
+  ],
+  "decknames": [
+    "",
+    "",
+    "",
+    "",
+    ""
+  ],
+  "selectedDeck": 0,
+  "lastSummon": 1769428147892
+}

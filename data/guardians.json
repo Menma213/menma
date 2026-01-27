@@ -26,7 +26,7 @@
                 "Shadow Clone Jutsu"
             ]
         },
-        "village_of_sound": {
+        "hidden_village_of_sound": {
             "name": "Guardian II: Sound Ninja Leader",
             "image": "https://static.wikia.nocookie.net/naruto/images/b/b0/Dosu_Kinuta.png/revision/latest?cb=20210421154038",
             "tier": 2,
@@ -103,7 +103,7 @@
                 "Wind Scythe Jutsu"
             ]
         },
-        "village_of_sand": {
+        "hidden_village_of_sand": {
             "name": "Guardian V: Puppet Master",
             "image": "https://preview.redd.it/szkhfmq8zcx11.jpg?width=283&format=pjpg&auto=webp&s=c6f3bf6ffa36be664335e51c832a10b0887b859b",
             "tier": 5,

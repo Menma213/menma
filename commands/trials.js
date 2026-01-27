@@ -195,10 +195,15 @@ module.exports = {
                 });
 
                 const territoriesPath = path.resolve(__dirname, '../data/territories.json');
-                const territories = fs.existsSync(territoriesPath) ? JSON.parse(fs.readFileSync(territoriesPath, 'utf8')) : {};
-                const currentTier = territories.territories[userLocation]?.tier || 1;
+                let currentTier = 1;
+                try {
+                    const territoriesData = JSON.parse(fs.readFileSync(territoriesPath, 'utf8'));
+                    currentTier = territoriesData.territories[userLocation]?.tier || 1;
+                } catch (e) {
+                    console.error('[trials.js] Failed to read current tier:', e);
+                }
 
-                const expReward = (1 + (playerLevel * 1)) * currentTier;
+                const expReward = Math.round((25 + (playerLevel * 0.5)) * currentTier);
                 const moneyReward = 10000 * currentTier;
 
                 // Apply Rewards

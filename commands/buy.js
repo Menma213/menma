@@ -8,132 +8,7 @@ const playersPath = path.join(__dirname, '../../menma/data/players.json');
 const usersPath = path.join(__dirname, '../../menma/data/users.json');
 const autofrankPath = path.join(__dirname, '../../menma/data/autofrank.json');
 
-// Use the same shopItems as in shop.js
-const shopItems = {
-    "basic combo": {
-        name: "Basic Combo",
-        description: "Attack + Transformation Jutsu",
-        effect: "Creates an \"Empowered Attack\" that deals 100 True Damage.",
-        price: 0,
-        requirements: ["attack", "transformation"]
-    },
-    "intermediate combo": {
-        name: "Intermediate Combo",
-        description: "Analysis + Transformation Jutsu + Rasengan",
-        effect: "Deals 100,000 damage, stuns the opponent for 1 round, and applies bleed.",
-        price: 10000,
-        requirements: ["analysis", "transformation", "rasengan"]
-    }
-};
-
-// Premium shop items (should match shop.js)
-const premiumItems = [
-    {
-        name: "donator",
-        display: "Donator Gamepass",
-        description: "Unlocks the exclusive Donator role.",
-        price: 100,
-        roleId: "1385640728130097182",
-        duration: 30 * 24 * 60 * 60 * 1000, // 1 month in ms, use 15000 for 15 seconds
-        type: 'role'
-    },
-    {
-        name: "legendary ninja",
-        display: "Legendary Ninja",
-        description: "Grants the Legendary Ninja role.",
-        price: 200,
-        roleId: "1385640798581952714",
-        duration: 30 * 24 * 60 * 60 * 1000, // 1 month in ms, use 15000 for 15 seconds
-        type: 'role'
-    },
-    {
-        name: "jinchuriki",
-        display: "Jinchuriki",
-        description: "Become a Jinchuriki and receive the Jinchuriki role.",
-        price: 500,
-        roleId: "1385641469507010640",
-        duration: 30 * 24 * 60 * 60 * 1000, // 1 month in ms, use 15000 for 15 seconds
-        type: 'role'
-    },
-    {
-        name: "custom jutsu",
-        display: "Custom Jutsu",
-        description: "Create your own custom jutsu! (3 effects)",
-        price: 1000,
-        type: 'custom_jutsu'
-    },
-    {
-        name: "auto frank 3h",
-        display: "Auto-Frank (3 Hours)",
-        description: "Automatically run F-rank missions for 3 hours. Grants 21,600 base EXP.",
-        price: 600, // Example price
-        type: 'autofrank',
-        durationKey: '3h'
-    },
-    {
-        name: "auto frank 6h",
-        display: "Auto-Frank (6 Hours)",
-        description: "Automatically run F-rank missions for 6 hours. Grants 43,200 base EXP.",
-        price: 1400, // Example price
-        type: 'autofrank',
-        durationKey: '6h'
-    },
-    {
-        name: "auto frank 12h",
-        display: "Auto-Frank (12 Hours)",
-        description: "Automatically run F-rank missions for 12 hours. Grants 86,400 base EXP.",
-        price: 2000, // Example price
-        type: 'autofrank',
-        durationKey: '12h'
-    }
-];
-
-const eventShopItems = {
-    "ramen bowl": {
-        name: "Ramen Bowl",
-        price: 5,
-        key: "Ramen Bowl",
-        type: "ramen"
-    },
-    "ice prison": {
-        name: "Ice Prison",
-        price: 50,
-        key: "Ice Prison",
-        type: "jutsu"
-    },
-    "crystal palace": {
-        name: "Crystal Palace",
-        price: 500,
-        key: "Crystal Palace",
-        type: "jutsu"
-    },
-    "profile theme: frost": {
-        name: "Profile Theme: Frost",
-        price: 600,
-        key: "theme_frost",
-        type: "theme"
-    },
-    "twin rising dragons": {
-        name: "Twin Rising Dragons",
-        price: 150,
-        key: "Twin Rising Dragons",
-        type: "jutsu"
-    },
-    "primary lotus": {
-        name: "Primary Lotus",
-        price: 150,
-        key: "Primary Lotus",
-        type: "jutsu"
-    }
-};
-
-const miscShopItems = {
-    "stat refund": {
-        name: "Stat Refund",
-        price: 500, // Example price in Shinobi Shards
-        key: "stat_refund"
-    }
-};
+const { shopItems, premiumItems, jutsuShopItems, eventShopItems, miscShopItems } = require('../data/shopConfig.js');
 
 // Replace with your log channel ID
 const LOG_CHANNEL_ID = '1381278641144467637';
@@ -212,6 +87,10 @@ module.exports = {
         .addStringOption(option =>
             option.setName('anbu')
                 .setDescription('Buy an item from the ANBU shop')
+                .setRequired(false))
+        .addStringOption(option =>
+            option.setName('accessory')
+                .setDescription('Buy an accessory for money')
                 .setRequired(false)),
 
     async execute(interaction) {
@@ -222,8 +101,9 @@ module.exports = {
         const miscName = interaction.options.getString('misc');
         const akatsukiItem = interaction.options.getString('akatsuki');
         const anbuItem = interaction.options.getString('anbu');
+        const accessoryName = interaction.options.getString('accessory');
 
-        if (!comboName && !ssName && !eventName && !jutsuName && !miscName && !akatsukiItem && !anbuItem) {
+        if (!comboName && !ssName && !eventName && !jutsuName && !miscName && !akatsukiItem && !anbuItem && !accessoryName) {
             return interaction.reply("Buy something...c'mon.");
         }
 
@@ -329,7 +209,7 @@ module.exports = {
         }
 
         if (ssName) {
-            const premium = premiumItems.find(item => item.name === ssName.toLowerCase());
+            const premium = premiumItems.find(item => item.id === ssName.toLowerCase());
             if (!premium) {
                 return interaction.reply('That premium item doesn\'t exist in the shop!');
             }
@@ -372,7 +252,19 @@ module.exports = {
                 return interaction.reply(`<@${userId}> Successfully purchased ${premium.display}! You now have 1 more ${premium.durationKey} auto-frank session.`);
             }
 
-            if (players[userId].premiumRoles && players[userId].premiumRoles.some(r => r.roleId === premium.roleId)) {
+            // --- Custom Jutsu handling (allow multiple) ---
+            if (premium.type === 'custom_jutsu') {
+                if (!players[userId].ss || players[userId].ss < premium.price) {
+                    return interaction.reply(`You need ${premium.price} Shinobi Shards to buy this item!`);
+                }
+                players[userId].ss -= premium.price;
+                fs.writeFileSync(playersPath, JSON.stringify(players, null, 4));
+
+                await logPurchase(interaction, `<@${userId}> purchased a **Custom Jutsu** for ${premium.price} Shinobi Shards.`);
+                return interaction.reply(`<@${userId}> Successfully purchased a **Custom Jutsu**!`);
+            }
+
+            if (players[userId].premiumRoles && players[userId].premiumRoles.some(r => r && r.roleId === premium.roleId)) {
                 return interaction.reply('You already own this premium item!');
             }
 
@@ -625,6 +517,52 @@ module.exports = {
             return interaction.reply(`Successfully purchased ${item.name}!
 You now have 1 Stat Refund available. Use the /refund command to access it.`);
         }
+
+        // --- BUY ACCESSORY SHOP ---
+        if (accessoryName) {
+            const itemKey = accessoryName.toLowerCase();
+            const accessoriesPath = path.resolve(__dirname, '../data/accessories.json');
+            const accessories = JSON.parse(fs.readFileSync(accessoriesPath, 'utf8'));
+            const item = accessories.find(acc => acc.name.toLowerCase() === itemKey);
+
+            if (!item) {
+                return interaction.reply('That accessory does not exist in the shop!');
+            }
+
+            const players = JSON.parse(fs.readFileSync(playersPath, 'utf8'));
+            const userId = interaction.user.id;
+
+            if (!players[userId]) {
+                return interaction.reply('You need to be enrolled first!');
+            }
+
+            if (players[userId].money < item.price) {
+                return interaction.reply(`You need $${item.price} to buy this accessory!`);
+            }
+
+            // Read and update userAccessory.json
+            const userAccessoryPath = path.join(__dirname, '../data/userAccessory.json');
+            let userAccessoryData = fs.existsSync(userAccessoryPath) ? JSON.parse(fs.readFileSync(userAccessoryPath, 'utf8')) : {};
+
+            if (!userAccessoryData[userId]) {
+                userAccessoryData[userId] = { inventory: [], equipped: null, bonusStats: {} };
+            }
+
+            if (userAccessoryData[userId].inventory.includes(item.name)) {
+                return interaction.reply('You already have this accessory in your inventory.');
+            }
+
+            // Deduct money
+            players[userId].money -= item.price;
+            fs.writeFileSync(playersPath, JSON.stringify(players, null, 4));
+
+            // Update inventory in userAccessory.json
+            userAccessoryData[userId].inventory.push(item.name);
+            fs.writeFileSync(userAccessoryPath, JSON.stringify(userAccessoryData, null, 4));
+
+            await logPurchase(interaction, `<@${userId}> purchased accessory **${item.name}** for $${item.price}.`);
+            return interaction.reply(`Successfully purchased ${item.name}! Use \`/accessory\` to equip it.`);
+        }
     },
 
     // --- Persisted premium-role cleanup / scheduler on startup ---
@@ -642,8 +580,8 @@ You now have 1 Stat Refund available. Use the /refund command to access it.`);
                 const remainingRoles = [];
                 for (const roleObj of pdata.premiumRoles) {
                     if (!roleObj || !roleObj.roleId || !roleObj.expiresAt) {
-                        // keep malformed entries to avoid data loss
-                        remainingRoles.push(roleObj);
+                        // skip malformed entries
+                        modified = true;
                         continue;
                     }
                     const msLeft = roleObj.expiresAt - Date.now();
@@ -692,6 +630,29 @@ You now have 1 Stat Refund available. Use the /refund command to access it.`);
             if (modified) {
                 fs.writeFileSync(playersPath, JSON.stringify(players, null, 4));
             }
+
+            // --- Separate cleanup for users.json malformed entries ---
+            try {
+                if (fs.existsSync(usersPath)) {
+                    const users = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
+                    let usersModified = false;
+                    for (const udata of Object.values(users)) {
+                        if (udata && Array.isArray(udata.premiumRoles)) {
+                            const beforeLen = udata.premiumRoles.length;
+                            udata.premiumRoles = udata.premiumRoles.filter(r => r && r.roleId && r.expiresAt);
+                            if (udata.premiumRoles.length !== beforeLen) {
+                                usersModified = true;
+                            }
+                        }
+                    }
+                    if (usersModified) {
+                        fs.writeFileSync(usersPath, JSON.stringify(users, null, 4));
+                    }
+                }
+            } catch (e) {
+                console.error('[buy.js] Failed to clean up users.json on startup:', e);
+            }
+
             console.log('[buy.js] Scheduled premium role expirations on startup.');
         } catch (e) {
             console.error('[buy.js] Failed to schedule premium role expirations on startup:', e);

@@ -1,11 +1,11 @@
-const { 
-    SlashCommandBuilder, 
-    EmbedBuilder, 
-    PermissionsBitField, 
-    ModalBuilder, 
-    TextInputBuilder, 
-    TextInputStyle, 
-    ActionRowBuilder, 
+const {
+    SlashCommandBuilder,
+    EmbedBuilder,
+    PermissionsBitField,
+    ModalBuilder,
+    TextInputBuilder,
+    TextInputStyle,
+    ActionRowBuilder,
     ButtonBuilder, // Added ButtonBuilder
     ButtonStyle // Added ButtonStyle
 } = require('discord.js');
@@ -18,11 +18,11 @@ const playersPath = path.resolve(__dirname, '../../menma/data/players.json');
 const BAN_FILE = path.resolve(__dirname, '../../menma/data/frank_bans.json');
 
 // Constant IDs for roles, channels, and users
-const SERVER_BOOSTER_ROLE = '1399150845022572544'; 
+const SERVER_BOOSTER_ROLE = '1399150845022572544';
 const COOLDOWN = 3000; // 3 seconds
-const CAPTCHA_FAIL_ALERT_CHANNEL = '1381271394901557323'; 
-const MAIN_SERVER_ID = '1381268582595297321'; 
-const ADMIN_ID = '1381268854776529028'; 
+const CAPTCHA_FAIL_ALERT_CHANNEL = '1381271394901557323';
+const MAIN_SERVER_ID = '1381268582595297321';
+const ADMIN_ID = '1381268854776529028';
 const CAPTCHA_TIMEOUT_MS = 300000; // 5 minutes to click the button
 const MODAL_SUBMISSION_TIMEOUT_MS = 60000; // 60 seconds to submit the modal
 
@@ -134,7 +134,7 @@ module.exports = {
 
         // --- 2. CAPTCHA Logic (Interactive Button/Modal Flow) ---
         let captchaPassed = true; // Assume success unless CAPTCHA is required
-        
+
         // 5% chance to trigger CAPTCHA
         if (Math.random() < 0.05) {
             captchaPassed = false;
@@ -173,14 +173,14 @@ You have **${Math.floor(CAPTCHA_TIMEOUT_MS / 60000)} minutes** to click the butt
                 // Wait for the user to click the button
                 componentInteraction = await initialReply.awaitMessageComponent({
                     filter: i => i.customId === buttonId && i.user.id === userId,
-                    time: CAPTCHA_TIMEOUT_MS, 
+                    time: CAPTCHA_TIMEOUT_MS,
                     errors: ['time'],
                 });
             } catch (err) {
                 // Button Timeout: Ban the user
                 bans[userId] = { bannedAt: now, reason: 'Captcha button timeout' };
                 saveBans(bans);
-                
+
                 // Edit the original message to show failure and remove the button
                 const timeoutEmbed = new EmbedBuilder()
                     .setColor('#DC3545')
@@ -188,9 +188,9 @@ You have **${Math.floor(CAPTCHA_TIMEOUT_MS / 60000)} minutes** to click the butt
                     .setDescription('You failed to click the submission button within 5 minutes. You have been temporarily banned from using frank.')
                     .setFooter({ text: 'Approach an admin for an unban.' });
 
-                await interaction.editReply({ 
-                    embeds: [timeoutEmbed], 
-                    components: [] 
+                await interaction.editReply({
+                    embeds: [timeoutEmbed],
+                    components: []
                 }).catch(() => console.error('Failed to edit reply on captcha button timeout.'));
 
                 // Alert admin channel
@@ -236,9 +236,9 @@ You have **${Math.floor(CAPTCHA_TIMEOUT_MS / 60000)} minutes** to click the butt
                 // Modal Submission Timeout: Ban the user
                 bans[userId] = { bannedAt: now, reason: 'Modal submission timeout' };
                 saveBans(bans);
-                
+
                 // Edit the original message to show failure and remove the button
-                await interaction.editReply({ 
+                await interaction.editReply({
                     embeds: [new EmbedBuilder().setColor('#DC3545').setTitle('❌ Modal Timed Out').setDescription('You did not submit the code in time. You have been temporarily banned from using frank.')],
                     components: [] // Remove the button
                 }).catch(() => console.error('Failed to edit reply on modal submission timeout.'));
@@ -257,9 +257,9 @@ You have **${Math.floor(CAPTCHA_TIMEOUT_MS / 60000)} minutes** to click the butt
 
             // Code Verification
             const userInput = modalSubmitInteraction.fields.getTextInputValue('captcha_input');
-            
+
             // Disable the button immediately on submission (success or failure)
-            await interaction.editReply({ components: [] }).catch(() => {});
+            await interaction.editReply({ components: [] }).catch(() => { });
 
             if (userInput === captcha) {
                 captchaPassed = true;
@@ -269,13 +269,13 @@ You have **${Math.floor(CAPTCHA_TIMEOUT_MS / 60000)} minutes** to click the butt
                 // Incorrect Input: Ban the user
                 bans[userId] = { bannedAt: now, reason: 'Incorrect captcha input' };
                 saveBans(bans);
-                
+
                 // Reply to the modal submission
                 await modalSubmitInteraction.reply({
                     content: "❌ Captcha failed. You have been temporarily banned from using frank. Please approach an admin to get yourself unbanned.",
                     ephemeral: true
                 });
-                
+
                 // Alert admin channel
                 try {
                     const alertChannel = await interaction.client.channels.fetch(CAPTCHA_FAIL_ALERT_CHANNEL);
@@ -290,11 +290,11 @@ You have **${Math.floor(CAPTCHA_TIMEOUT_MS / 60000)} minutes** to click the butt
         }
 
         // --- 3. Mission Reward Logic ---
-        
+
         // This block is only reached if:
         // A) CAPTCHA was skipped (interaction.replied is false)
         // B) CAPTCHA was successfully passed (interaction.replied is true)
-        
+
         let replyFunction;
 
         if (interaction.replied) {
@@ -314,7 +314,7 @@ You have **${Math.floor(CAPTCHA_TIMEOUT_MS / 60000)} minutes** to click the butt
             exp = Math.floor(exp * 1.5); // Apply 1.5x booster bonus
             boosterMessage = ' *(Server Booster Bonus!)*';
         }
-        
+
         // Update EXP in players.json
         if (!players[userId]) players[userId] = {};
         players[userId].exp = (players[userId].exp || 0) + exp;

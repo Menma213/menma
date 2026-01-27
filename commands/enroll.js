@@ -176,7 +176,11 @@ module.exports = {
                             const jutsuData = fs.existsSync(jutsuPath) ? JSON.parse(fs.readFileSync(jutsuPath, 'utf8')) : {};
                             if (!jutsuData[userId]) {
                                 jutsuData[userId] = {
-                                    usersjutsu: ['Transformation Jutsu']
+                                    usersjutsu: ['Attack', 'Transformation Jutsu'],
+                                    combos: [],
+                                    scrolls: [],
+                                    items: {},
+                                    rankeditems: []
                                 };
                             } else if (!jutsuData[userId].usersjutsu.includes('Transformation Jutsu')) {
                                 jutsuData[userId].usersjutsu.push('Transformation Jutsu');

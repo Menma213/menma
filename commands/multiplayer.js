@@ -12,13 +12,16 @@ module.exports = {
     async execute(interaction) {
         const targetUser = interaction.options.getUser('user');
 
-        // Find battle where interaction user is the host (player1)
+        // Find battle where interaction user is the host (player1) and it's in this channel
         let battleId = null;
         let battleState = null;
 
-        for (const [id, state] of activeBattles) {
-            // Check if user is the main host
-            if (state.player1 && state.player1.userId === interaction.user.id) {
+        // Iterate backwards through activeBattles (Map entries are in insertion order, so latest is last)
+        const entries = Array.from(activeBattles.entries());
+        for (let i = entries.length - 1; i >= 0; i--) {
+            const [id, state] = entries[i];
+            // Match host AND channel to ensure we get the correct current battle
+            if (state.player1 && state.player1.userId === interaction.user.id && state.channel.id === interaction.channel.id) {
                 battleId = id;
                 battleState = state;
                 break;
@@ -26,12 +29,12 @@ module.exports = {
         }
 
         if (!battleId || !battleState) {
-            return interaction.reply({ content: "You are not currently the host of an active battle!", ephemeral: true });
+            return interaction.reply({ content: "You are not currently the host of an active battle in this channel!", ephemeral: true });
         }
 
-        // Check if battle is already full (max 2 players for now)
-        if (battleState.player1.subPlayers && battleState.player1.subPlayers.length >= 2) {
-            return interaction.reply({ content: "The battle is already full! (Max 2 players)", ephemeral: true });
+        // Check if battle is already full (increased max to 4 players)
+        if (battleState.player1.subPlayers && battleState.player1.subPlayers.length >= 4) {
+            return interaction.reply({ content: "The battle is already full! (Max 4 players)", ephemeral: true });
         }
 
         // Check if user is already in the battle

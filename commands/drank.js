@@ -189,8 +189,8 @@ module.exports = {
             const userLocation = user.location || 'land_of_fire';
             const currentTier = territories.territories[userLocation]?.tier || 1;
 
-            let expReward = (1 + (player.level * 0.1)) * currentTier;
-            let moneyReward = 1000 * currentTier;
+            let expReward = Math.max(1, Math.floor((0.2 + (player.level * 0.01)) * currentTier));
+            let moneyReward = Math.floor(150 * currentTier);
 
             player.exp += expReward;
             player.exp = roundExpSmart(player.exp);

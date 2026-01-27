@@ -41,6 +41,10 @@ if (!fs.existsSync(cooldownsPath)) {
     saveData(cooldownsPath, {});
 }
 
+// Webhook Cache to prevent hitting Discord API limits
+const webhookCache = new Map();
+const CACHE_TTL = 60000; // 1 minute
+
 /**
  * Deletes all webhooks in the channel managed by the bot.
  * This is crucial to prevent the Discord API's webhook limit (15) from being reached.
@@ -48,13 +52,18 @@ if (!fs.existsSync(cooldownsPath)) {
  */
 async function cleanupWebhooks(interaction) {
     try {
+        const channelId = interaction.channel.id;
         const webhooks = await interaction.channel.fetchWebhooks();
-        for (const webhook of webhooks.values()) {
-            if (webhook.owner && webhook.owner.id === interaction.client.user.id) {
-                await webhook.delete();
-            }
+        const botWebhooks = webhooks.filter(webhook => webhook.owner && webhook.owner.id === interaction.client.user.id);
+
+        if (botWebhooks.size > 0) {
+            console.log(`Cleaning up ${botWebhooks.size} bot-owned webhooks in channel ${channelId}...`);
+            await Promise.all(botWebhooks.map(w => w.delete().catch(e => console.error(`Failed to delete webhook ${w.id}:`, e))));
+            console.log("Cleaned up webhooks successfully.");
         }
-        console.log("Cleaned up webhooks successfully.");
+
+        // Clear cache for this channel
+        webhookCache.delete(channelId);
     } catch (error) {
         console.error("Failed to clean up webhooks:", error);
     }
@@ -68,22 +77,85 @@ async function cleanupWebhooks(interaction) {
  * @returns {Promise<Webhook>} The webhook object.
  */
 async function getWebhook(interaction, name, avatar) {
+    const channel = interaction.channel;
+    const channelId = channel.id;
+    const now = Date.now();
+
     try {
-        let webhooks = await interaction.channel.fetchWebhooks();
-        let npcWebhook = webhooks.find(w => w.name === name);
-        if (npcWebhook) {
-            return npcWebhook;
-        } else {
-            return await interaction.channel.createWebhook({
-                name: name,
-                avatar: avatar,
-                reason: 'For dynamic NPC dialogue in dungeons'
-            });
+        let cache = webhookCache.get(channelId);
+
+        // Fetch webhooks if cache is stale
+        if (!cache || (now - cache.lastFetched > CACHE_TTL)) {
+            const fetched = await channel.fetchWebhooks().catch(() => new Map());
+            cache = { webhooks: fetched, lastFetched: now };
+            webhookCache.set(channelId, cache);
         }
+
+        // 1. Find ANY webhook owned by this bot in this channel to use as Worker
+        let worker = cache.webhooks.find(w => w.owner && w.owner.id === interaction.client.user.id);
+        if (worker) return worker;
+
+        // 2. If no worker exists, check if we can create one
+        if (cache.webhooks.size >= 15) {
+            console.log(`[Worker Webhook] Channel ${channelId} full. Cleaning up bot ones...`);
+            const botWebhooks = cache.webhooks.filter(w => w.owner && w.owner.id === interaction.client.user.id);
+            if (botWebhooks.size > 0) {
+                // Parallel delete is faster
+                await Promise.all(botWebhooks.map(w => w.delete().catch(() => { })));
+            } else {
+                // If the channel is full of webhooks NOT owned by us, we must use fallback
+                console.warn(`[Worker Webhook] Channel ${channelId} full of external webhooks.`);
+                return createFallbackWebhook(interaction, name, avatar);
+            }
+            // Refresh cache after cleanup
+            const refreshed = await channel.fetchWebhooks().catch(() => new Map());
+            cache = { webhooks: refreshed, lastFetched: Date.now() };
+            webhookCache.set(channelId, cache);
+        }
+
+        // 3. Create the worker webhook (identity handled via overrides in send)
+        const newWorker = await channel.createWebhook({
+            name: 'Menma Worker',
+            avatar: interaction.client.user.displayAvatarURL(),
+            reason: 'Worker for dynamic NPC dialogue'
+        });
+        cache.webhooks.set(newWorker.id, newWorker);
+        return newWorker;
+
     } catch (error) {
-        console.error("Failed to get or create webhook:", error);
-        return null;
+        console.error("Worker Webhook Error:", error);
+        return createFallbackWebhook(interaction, name, avatar);
     }
+}
+
+/**
+ * Creates a dummy webhook object that falls back to regular channel messages.
+ * This prevents the bot from crashing if webhook creation fails.
+ */
+function createFallbackWebhook(interaction, name, avatar) {
+    return {
+        name,
+        avatar,
+        send: async (options) => {
+            const content = typeof options === 'string' ? options : options.content;
+            const msgContent = `**${options.username || name}**: ${content || ""}`;
+            const sendOptions = {
+                content: msgContent,
+                embeds: options.embeds,
+                components: options.components,
+                files: options.files
+            };
+            return interaction.channel.send(sendOptions);
+        },
+        editMessage: async (id, options) => {
+            try {
+                const msg = await interaction.channel.messages.fetch(id);
+                if (msg) return await msg.edit(options);
+            } catch (e) {
+                console.error("Fallback editMessage failed:", e);
+            }
+        }
+    };
 }
 
 // --- Tutorial Logic ---
@@ -274,8 +346,8 @@ async function handleCharacterInteraction(interaction, users, userId, characterN
     const zoroWebhook = await getWebhook(interaction, 'Zoro', ZORO_AVATAR);
     const userWebhook = await getWebhook(interaction, interaction.user.username, interaction.user.displayAvatarURL());
     const narutoWebhook = await getWebhook(interaction, 'Naruto', 'https://cdn.mos.cms.futurecdn.net/Hpq4NZjKWjHRRyH9bt3Z2e.jpg');
-    const yutaWebhook = await getWebhook(interaction, 'Yuta', 'https://static.wikia.nocookie.net/jujutsu-kaisen/images/7/77/Yuta_Okkotsu_%28Anime%29.png');
-    const jinwooWebhook = await getWebhook(interaction, 'Jinwoo', 'https://static.wikia.nocookie.net/solo-leveling/images/a/ac/Sung_Jin-Woo_anime_design.png');
+    const yutaWebhook = await getWebhook(interaction, 'Yuta', 'https://i.pinimg.com/736x/f8/c0/ba/f8c0ba6a76ac948a2dac799fcae89311.jpg');
+    const jinwooWebhook = await getWebhook(interaction, 'Jinwoo', 'https://i.pinimg.com/originals/76/f4/54/76f4544dc9bb679320e21afd35dc1241.png');
 
     // Dialogue and quest state
     if (user.current_mission === 'zoro_locket' && characterName !== 'zoro' && userScrolls.includes("Zoro's Locket") === false) {
@@ -302,13 +374,14 @@ async function handleCharacterInteraction(interaction, users, userId, characterN
             // Quest complete
             await userWebhook.send({ content: "Zoro, I found your locket!" });
             await delay(1000);
-            const msg = await zoroWebhook.send({ content: "Thank you, young shinobi! With this, I can return to my crew. My debt is now paid.",
+            const msg = await zoroWebhook.send({
+                content: "Thank you, young shinobi! With this, I can return to my crew. My debt is now paid.",
                 components:
-                [
-                    new ActionRowBuilder().addComponents(
-                        new ButtonBuilder().setCustomId('zoro_mission_finish').setLabel('Finish Quest').setStyle(ButtonStyle.Success)
-                    )
-                ]
+                    [
+                        new ActionRowBuilder().addComponents(
+                            new ButtonBuilder().setCustomId('zoro_mission_finish').setLabel('Finish Quest').setStyle(ButtonStyle.Success)
+                        )
+                    ]
             });
 
             // Wait for the user to click the "Finish Quest" button
@@ -435,52 +508,57 @@ async function handleCharacterInteraction(interaction, users, userId, characterN
             // Quest complete logic
             await userWebhook.send({ content: "Naruto, I have 1,000 wins!" });
             await delay(1000);
-            const msg = await narutoWebhook.send({ content: "You've done it! You have 1,000 wins! Take this, the scroll of the legendary Asura's Blade of Execution.",
+            const msg = await narutoWebhook.send({
+                content: "You've done it! You have 1,000 wins! Take this, the legendary Asura's Blade of Execution. It is yours to command!",
                 components:
-                [
-                    new ActionRowBuilder().addComponents(
-                        new ButtonBuilder().setCustomId('naruto_mission_finish').setLabel('Finish Quest').setStyle(ButtonStyle.Success)
-                    )
-                ]
+                    [
+                        new ActionRowBuilder().addComponents(
+                            new ButtonBuilder().setCustomId('naruto_claim_jutsu').setLabel('Claim Asura\'s Blade').setStyle(ButtonStyle.Success)
+                        )
+                    ]
             });
-            // Add scroll to user's inventory
-            if (!jutsuData[userId].scrolls) jutsuData[userId].scrolls = [];
-            if (!jutsuData[userId].scrolls.includes("Asura's Blade of Execution")) {
-                jutsuData[userId].scrolls.push("Asura's Blade of Execution");
-                saveData(jutsusPath, jutsuData);
-            }
 
-            // Wait for the user to click the "Finish Quest" button
-            const filter = i => i.customId === 'naruto_mission_finish' && i.user.id === userId;
+            // Wait for the user to click the "Claim" button
+            const filter = i => i.customId === 'naruto_claim_jutsu' && i.user.id === userId;
             try {
                 const res = await msg.awaitMessageComponent({ filter, time: 60000 });
                 await res.deferUpdate();
+
+                // Add JUTSU directly to jutsu.json
+                let jutsuDataRaw = loadData(jutsusPath);
+                if (!jutsuDataRaw[userId]) jutsuDataRaw[userId] = { usersjutsu: [] };
+                if (!Array.isArray(jutsuDataRaw[userId].usersjutsu)) jutsuDataRaw[userId].usersjutsu = [];
+
+                if (!jutsuDataRaw[userId].usersjutsu.includes("Asura's Blade of Execution")) {
+                    jutsuDataRaw[userId].usersjutsu.push("Asura's Blade of Execution");
+                    saveData(jutsusPath, jutsuDataRaw);
+                    await narutoWebhook.send({ content: "The **Asura's Blade of Execution** has been added to your jutsu list!" });
+                } else {
+                    await narutoWebhook.send({ content: "You already have this jutsu." });
+                }
 
                 // Set the tracker and save data
                 user.narutomission = true;
                 user.current_mission = null;
                 saveData(usersPath, users);
 
-                // Edit the message to remove the button and confirm completion
+                // Edit the original message to remove the button
                 await narutoWebhook.editMessage(msg.id, { content: "Naruto's quest is complete!", components: [] });
 
             } catch (e) {
-                console.error("Naruto finish button timed out:", e);
-                // The bot can't edit the webhook message, so we send a new one
+                console.error("Naruto claim button timed out:", e);
                 try {
-                    await narutoWebhook.send({ content: "Quest finish action timed out." });
-                } catch (editError) {
-                    console.error("Failed to send new message on timeout:", editError);
-                }
+                    await narutoWebhook.send({ content: "Claim action timed out." });
+                } catch (err) { }
             }
             return;
         } else {
-             await narutoWebhook.send({ content: "Hey again! Thank you for saving the lost green dude. I wanna treat you with bowls of ramen..but i have a much better offer...Asura.", username: 'Naruto', avatarURL: 'https://cdn.mos.cms.futurecdn.net/Hpq4NZjKWjHRRyH9bt3Z2e.jpg' });
-             await delay(1000);
-             const row = new ActionRowBuilder().addComponents(new ButtonBuilder().setCustomId('naruto_asura').setLabel('Asura?').setStyle(ButtonStyle.Primary));
-             const msg = await interaction.channel.send({ content: "...", components: [row] });
-             const filter = i => i.customId === 'naruto_asura' && i.user.id === userId;
-             try {
+            await narutoWebhook.send({ content: "Hey again! Thank you for saving the lost green dude. I wanna treat you with bowls of ramen..but i have a much better offer...Asura.", username: 'Naruto', avatarURL: 'https://cdn.mos.cms.futurecdn.net/Hpq4NZjKWjHRRyH9bt3Z2e.jpg' });
+            await delay(1000);
+            const row = new ActionRowBuilder().addComponents(new ButtonBuilder().setCustomId('naruto_asura').setLabel('Asura?').setStyle(ButtonStyle.Primary));
+            const msg = await interaction.channel.send({ content: "...", components: [row] });
+            const filter = i => i.customId === 'naruto_asura' && i.user.id === userId;
+            try {
                 const res = await msg.awaitMessageComponent({ filter, time: 60000 });
                 await res.deferUpdate();
                 await userWebhook.send({ content: "Asura?", username: interaction.user.username, avatarURL: interaction.user.displayAvatarURL() });
@@ -488,24 +566,24 @@ async function handleCharacterInteraction(interaction, users, userId, characterN
                 const startQuestRow = new ActionRowBuilder().addComponents(
                     new ButtonBuilder().setCustomId('naruto_quest_begin').setLabel('Start Quest').setStyle(ButtonStyle.Success)
                 );
-                const startQuestMsg = await narutoWebhook.send({ content: "Yup. THe legendary Shinobi Asura Otsutsuki. I have a plan for you and if you succeed you might learn the legendary Asura's Blade of Execution, inarguably the strongest Jutsu known to mankind. The catch is...you must win, 1000 battles! When you get A THOUSAND wins, come to me. I will then give you the scroll of the Legendary Jutsu.", components: [startQuestRow]});
-                 const startQuestFilter = i => i.customId === 'naruto_quest_begin' && i.user.id === userId;
-                 const startQuestRes = await startQuestMsg.awaitMessageComponent({ startQuestFilter, time: 60000});
-                 await startQuestRes.deferUpdate();
+                const startQuestMsg = await narutoWebhook.send({ content: "Yup. THe legendary Shinobi Asura Otsutsuki. I have a plan for you and if you succeed you might learn the legendary Asura's Blade of Execution, inarguably the strongest Jutsu known to mankind. The catch is...you must win, 1000 battles! When you get A THOUSAND wins, come to me. I will then give you the scroll of the Legendary Jutsu.", components: [startQuestRow] });
+                const startQuestFilter = i => i.customId === 'naruto_quest_begin' && i.user.id === userId;
+                const startQuestRes = await startQuestMsg.awaitMessageComponent({ startQuestFilter, time: 60000 });
+                await startQuestRes.deferUpdate();
 
-                 user.current_mission = "naruto_wins";
-                 saveData(usersPath, users);
-                 await interaction.channel.send({ content: "Naruto's quest has begun! Win 1000 battles to complete it." });
+                user.current_mission = "naruto_wins";
+                saveData(usersPath, users);
+                await interaction.channel.send({ content: "Naruto's quest has begun! Win 1000 battles to complete it." });
 
-             } catch (e) {
+            } catch (e) {
                 await msg.edit({ content: "Dialogue timed out. Please use `/scroll mission` to continue.", components: [] });
-             } finally {
+            } finally {
                 try {
                     await msg.edit({ components: [] });
                 } catch (err) {
                     console.error("Failed to edit message:", err);
                 }
-             }
+            }
         }
 
     } else if (characterName === 'yuta') {
@@ -586,14 +664,18 @@ async function handleDungeonGame(interaction, users, userId) {
     await delay(2500);
 
     async function sendNPCMessage(npc, content, options = {}) {
-        // Ensure content is a non-empty string
         if (typeof content !== 'string' || !content.trim()) {
             content = npc.dialogue || npc.success_dialogue || npc.failure_dialogue || "[No message available]";
         }
-        const npcWebhook = await getWebhook(interaction, npc.name, npc.avatar);
-        if (npcWebhook) {
-            await delay(2500);
-            return npcWebhook.send({ content: content, username: npc.name, avatarURL: npc.avatar, ...options });
+        const worker = await getWebhook(interaction, npc.name, npc.avatar);
+        if (worker) {
+            // No delay here for 'brute force' speed as requested
+            return worker.send({
+                content: content,
+                username: npc.name,
+                avatarURL: npc.avatar,
+                ...options
+            });
         }
     }
 
@@ -650,7 +732,7 @@ async function handleDungeonGame(interaction, users, userId) {
             try {
                 const playerLevel = users[userId].level || 1;
                 expAmount = eval(dungeon.rewards.success.exp_formula.replace(/player\.level/g, playerLevel));
-            } catch {}
+            } catch { }
         }
         if (expAmount > 0) {
             if (!giftData[userId]) giftData[userId] = [];
@@ -668,7 +750,7 @@ async function handleDungeonGame(interaction, users, userId) {
             try {
                 const playerLevel = users[userId].level || 1;
                 moneyAmount = eval(dungeon.rewards.success.money_formula.replace(/player\.level/g, playerLevel));
-            } catch {}
+            } catch { }
         }
         if (moneyAmount > 0) {
             if (!giftData[userId]) giftData[userId] = [];
@@ -883,12 +965,26 @@ async function handleDungeonGame(interaction, users, userId) {
                 await bossWebhook.editMessage(embedMessage.id, { embeds: [updatedEmbed], components: [button] });
 
                 if (timer === perfectParryIndex) {
+                    const startTime = Date.now();
                     const filter = i => i.customId === 'parry_button' && i.user.id === userId;
                     try {
                         const res = await interaction.channel.awaitMessageComponent({ filter, time: 1000 });
+                        const responseTime = (Date.now() - startTime) / 1000;
                         isPerfect = true;
                         clearInterval(interval);
-                        await res.update({ embeds: [updatedEmbed.setColor('#00FF00').setDescription('Perfect Parry! You won!')], components: [] });
+
+                        const currentBest = users[userId].bestParryTime || 9.99;
+                        let timeMsg = `Reaction: **${responseTime.toFixed(3)}s**`;
+
+                        if (responseTime < currentBest) {
+                            users[userId].bestParryTime = responseTime;
+                            saveData(usersPath, users);
+                            timeMsg += `\n**NEW BEST TIME!** (Previously: ${currentBest === 9.99 ? 'None' : currentBest.toFixed(3) + 's'})`;
+                        } else {
+                            timeMsg += `\n(Best: ${currentBest.toFixed(3)}s)`;
+                        }
+
+                        await res.update({ embeds: [updatedEmbed.setColor('#00FF00').setDescription(`Perfect Parry! You won!\n\n${timeMsg}`)], components: [] });
                         dungeonSuccess();
                     } catch (e) {
                         if (!isPerfect) {
@@ -936,7 +1032,7 @@ async function handleDungeonGame(interaction, users, userId) {
                 dungeonFailure('Timed out.');
             } finally {
                 if (msg) {
-                    try { await msg.edit({ components: [] }); } catch {}
+                    try { await msg.edit({ components: [] }); } catch { }
                 }
             }
         }
@@ -975,7 +1071,7 @@ async function handleDungeonGame(interaction, users, userId) {
                 dungeonFailure('Timed out.');
             } finally {
                 if (msg) {
-                    try { await msg.edit({ components: [] }); } catch {}
+                    try { await msg.edit({ components: [] }); } catch { }
                 }
             }
         }

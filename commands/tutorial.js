@@ -130,8 +130,8 @@ async function generateBattleImage(player, npc, roundNum = 1) {
     if (bgImg) ctx.drawImage(bgImg, 0, 0, width, height);
 
     // Character images
-    const hashiramaImgUrl = 'https://static.wikia.nocookie.net/naruto/images/2/20/Hashirama%27s_Sage_Mode.png/revision/latest/scale-to-width-down/985?cb=20150112025603';
-    const madaraImgUrl = 'https://dailyanimeart.com/wp-content/uploads/2014/08/madara-wants-to-fight-hashirama1.jpg?w=730';
+    const hashiramaImgUrl = 'https://i.postimg.cc/Pxrv0Q0Q/image.png';
+    const madaraImgUrl = 'https://i.postimg.cc/rwX0qkv4/image.png';
     let hashiramaImg, madaraImg;
     try {
         hashiramaImg = await loadImage(hashiramaImgUrl);

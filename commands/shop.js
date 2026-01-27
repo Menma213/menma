@@ -2,145 +2,7 @@ const { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, Embed
 const fs = require('fs');
 const path = require('path');
 
-// Shop database
-const shopItems = {
-    "basic combo": {
-        name: "Basic Combo",
-        description: "Attack + Transformation Jutsu",
-        effect: "Creates an \"Empowered Attack\" that deals 100 True Damage.",
-        price: 0,
-        requirements: ["attack", "transformation"]
-    },
-    "intermediate combo": {
-        name: "Intermediate Combo",
-        description: "Analysis + Transformation Jutsu + Rasengan",
-        effect: "Deals 100,000 damage, stuns the opponent for 1 round, and applies bleed.",
-        price: 10000,
-        requirements: ["analysis", "transformation", "rasengan"]
-    }
-    // Future combos can be added here
-};
-
-// Premium shop items
-const premiumItems = [
-    {
-        name: "Donator",
-        description: "Unlocks the exclusive Donator role.",
-        price: 100, // Example price in Shinobi Shards
-        roleId: "1385640728130097182", // Placeholder
-        duration: 30 * 24 * 60 * 60 * 1000, // 1 month in ms, use 15000 for 15 seconds
-        type: 'role'
-    },
-    {
-        name: "Legendary Ninja",
-        description: "Grants the Legendary Ninja role.",
-        price: 200,
-        roleId: "1385640798581952714", // Placeholder
-        duration: 30 * 24 * 60 * 60 * 1000, // 1 month in ms, use 15000 for 15 seconds
-        type: 'role'
-    },
-    {
-        name: "Jinchuriki",
-        description: "Become a Jinchuriki and receive the Jinchuriki role.",
-        price: 500,
-        roleId: "1385641469507010640", // Placeholder
-        duration: 30 * 24 * 60 * 60 * 1000, // 1 month in ms, use 15000 for 15 seconds
-        type: 'role'
-    },
-    {
-        name: "Custom Jutsu",
-        description: "Create your own custom jutsu! (3 effects)",
-        price: 1000,
-        type: 'custom_jutsu'
-        // No roleId, no duration, handled in real time
-    },
-    {
-        name: "Auto-Frank (3 Hours)",
-        description: "Automatically run F-rank missions for 3 hours. Grants 21,600 EXP.\n To buy use: auto frank 3h",
-        price: 600, // Example price
-        type: 'autofrank',
-        durationKey: '3h'
-    },
-    {
-        name: "Auto-Frank (6 Hours)",
-        description: "Automatically run F-rank missions for 6 hours. Grants 43,200 EXP.\n To buy use: auto frank 6h",
-        price: 1400, // Example price
-        type: 'autofrank',
-        durationKey: '6h'
-    },
-    {
-        name: "Auto-Frank (12 Hours)",
-        description: "Automatically run F-rank missions for 12 hours. Grants 86,400 EXP.\n To buy use: auto frank 12h",
-        price: 2000, // Example price
-        type: 'autofrank',
-        durationKey: '12h'
-    }
-];
-
-// Jutsu shop items (money)
-const jutsuShopItems = [
-    {
-        name: "Human Boulder",
-        description: "Transforms into a massive boulder and rolls over target.",
-        price: 10000,
-        key: "Human Boulder"
-    },
-    {
-        name: "Puppet Kazekage",
-        description: "Summons a puppet to attack target. Stays until death.",
-        price: 100000,
-        key: "Puppet Kazekage"
-    }
-];
-
-// Event shop items (Christmas Tokens)
-const eventShopItems = [
-    {
-        name: "Ramen Bowl",
-        description: "A delicious bowl of ramen. Restores health or stashes for later.",
-        price: 1,
-        key: "Ramen Bowl"
-    },
-    {
-        name: "Ice Prison",
-        description: "Jutsu: Trap your opponent in a prison of ice.",
-        price: 50,
-        key: "Ice Prison"
-    },
-    {
-        name: "Crystal Palace",
-        description: "Ultimate Ice Jutsu. Ignores x Defense.",
-        price: 500,
-        key: "Crystal Palace"
-    },
-    {
-        name: "Profile Theme: Frost",
-        description: "Unlocks the 'Frost' profile theme. Auto-equipped on purchase.",
-        price: 600,
-        key: "theme_frost"
-    },
-    {
-        name: "Twin Rising Dragons",
-        description: "Powerful Ninja Tool barrage.",
-        price: 150,
-        key: "Twin Rising Dragons"
-    },
-    {
-        name: "Primary Lotus",
-        description: "Taijutsu combo.",
-        price: 150,
-        key: "Primary Lotus"
-    }
-];
-
-const miscShopItems = [
-    {
-        name: "Stat Refund",
-        description: "Refunds all your invested stat points, allowing you to reallocate them.",
-        price: 500, // Example price in Shinobi Shards
-        key: "stat_refund"
-    }
-];
+const { shopItems, premiumItems, jutsuShopItems, eventShopItems, miscShopItems } = require('../data/shopConfig.js');
 
 const MAIN_GUILD_ID = '1381268582595297321'; // Main server ID
 const UPGRADE_CHAT_LINK = 'https://upgrade.chat/1381268582595297321/upgrades'; // Replace with your actual link
@@ -177,7 +39,7 @@ module.exports = {
             .setTitle('JUTSUS SHOP')
             .setDescription('Buy powerful jutsus for money!')
             .addFields(
-                ...jutsuShopItems.map(item => ({
+                ...Object.values(jutsuShopItems).map(item => ({
                     name: item.name,
                     value: `${item.description}\nCost: $${item.price}`,
                     inline: false
@@ -206,7 +68,7 @@ module.exports = {
             .setTitle('❄️ WINTER EVENT SHOP ❄️')
             .setDescription(`Spend your Christmas Tokens on limited-time rewards!\nYour Tokens: **${christmasTokens}**`)
             .addFields(
-                ...eventShopItems.map(item => ({
+                ...Object.values(eventShopItems).map(item => ({
                     name: item.name,
                     value: `${item.description}\nCost: ${item.price} Tokens`,
                     inline: false
@@ -220,13 +82,30 @@ module.exports = {
             .setTitle('MISC SHOP')
             .setDescription('Miscellaneous items for your ninja journey!')
             .addFields(
-                ...miscShopItems.map(item => ({
+                ...Object.values(miscShopItems).map(item => ({
                     name: item.name,
                     value: `${item.description}\nCost: ${item.price} Shinobi Shards`,
                     inline: false
                 }))
             )
-            .setFooter({ text: 'Page 4/4' });
+            .setFooter({ text: 'Page 4/5' });
+
+        // Add Accessory Shop embed
+        const accessoriesPath = path.resolve(__dirname, '../data/accessories.json');
+        const allAccessories = JSON.parse(fs.readFileSync(accessoriesPath, 'utf8'));
+
+        const accessoryEmbed = new EmbedBuilder()
+            .setColor(0xFFFF00)
+            .setTitle('ACCESSORY SHOP')
+            .setDescription('Buy powerful accessories for money!')
+            .addFields(
+                ...allAccessories.map(item => ({
+                    name: item.name,
+                    value: `${item.description}\nCost: $${item.price}`,
+                    inline: false
+                }))
+            )
+            .setFooter({ text: 'Page 5/5' });
 
         // Add navigation buttons
         const row1 = new ActionRowBuilder().addComponents(
@@ -260,6 +139,10 @@ module.exports = {
             new ButtonBuilder()
                 .setCustomId('anbu_shop')
                 .setLabel('ANBU')
+                .setStyle(ButtonStyle.Secondary),
+            new ButtonBuilder()
+                .setCustomId('accessory_shop')
+                .setLabel('Accessories')
                 .setStyle(ButtonStyle.Secondary)
         );
 
@@ -279,6 +162,8 @@ module.exports = {
                 await i.update({ embeds: [eventEmbed], components: [row1, row2] });
             } else if (i.customId === 'misc_shop') {
                 await i.update({ embeds: [miscEmbed], components: [row1, row2] });
+            } else if (i.customId === 'accessory_shop') {
+                await i.update({ embeds: [accessoryEmbed], components: [row1, row2] });
             } else if (i.customId === 'akatsuki_shop') {
                 const akatsukiPath = path.resolve(__dirname, '../data/akatsuki.json');
                 const akatsukiData = JSON.parse(fs.readFileSync(akatsukiPath, 'utf8'));

@@ -4,6 +4,14 @@ const { Client, GatewayIntentBits, Collection, REST, Routes, Events } = require(
 const express = require('express');
 const cors = require('cors');
 
+// Check for node-llama-cpp dependency
+try {
+    require.resolve('node-llama-cpp');
+    console.log("✅ dependency 'node-llama-cpp' found.");
+} catch (e) {
+    console.error("❌ dependency 'node-llama-cpp' not found!");
+}
+
 // Add this block at the very top, before any require('dotenv').config()
 // Support for .env.path file
 const envPathFile = path.join(__dirname, '.env.path');
@@ -38,6 +46,68 @@ client.commands = new Collection();
 
 // Add global prompt counter
 const userPromptCounts = {};
+
+// Money Logging System
+const lastUserInteraction = {};
+const MONEY_LOG_LIMIT = 2000000;
+const MONEY_LOG_CHANNEL = '1381278641144467637';
+const MONEY_LOG_FILE = path.join(__dirname, 'menma', 'data', 'money_gain_logs.txt');
+const PLAYERS_FILE = path.join(__dirname, 'menma', 'data', 'players.json');
+let lastPlayersState = {};
+
+// Initial load of players state
+try {
+    if (fs.existsSync(PLAYERS_FILE)) {
+        lastPlayersState = JSON.parse(fs.readFileSync(PLAYERS_FILE, 'utf8'));
+    }
+} catch (e) {
+    console.error('[MoneyMonitor] Failed initial load:', e);
+}
+
+function monitorMoneyGains() {
+    try {
+        if (!fs.existsSync(PLAYERS_FILE)) return;
+        const currentData = JSON.parse(fs.readFileSync(PLAYERS_FILE, 'utf8'));
+
+        for (const userId in currentData) {
+            const oldMoney = lastPlayersState[userId]?.money || 0;
+            const newMoney = currentData[userId]?.money || 0;
+            const gain = newMoney - oldMoney;
+
+            if (gain >= MONEY_LOG_LIMIT) {
+                const interaction = lastUserInteraction[userId];
+                const now = Date.now();
+                let source = "Unknown / System";
+
+                if (interaction && (now - interaction.timestamp < 120000)) { // 2 minute window
+                    source = `Command: /${interaction.command}`;
+                }
+
+                const logEntry = ` **MONEY (Prod)**\n` +
+                    `**User:** <@${userId}> (${userId})\n` +
+                    `**Gain:** $${gain.toLocaleString()}\n` +
+                    `**New Balance:** $${newMoney.toLocaleString()}\n` +
+                    `**Source:** ${source}\n` +
+                    `**Time:** ${new Date().toLocaleString()}`;
+
+                // Log to Discord
+                client.channels.fetch(MONEY_LOG_CHANNEL).then(channel => {
+                    if (channel) channel.send(logEntry);
+                }).catch(err => console.error('[MoneyMonitor] Discord Log Error:', err));
+
+                // Log to Text File
+                const fileEntry = `[${new Date().toISOString()}] User: ${userId}, Gain: ${gain}, NewBalance: ${newMoney}, Source: ${source}\n`;
+                fs.appendFileSync(MONEY_LOG_FILE, fileEntry);
+            }
+        }
+        lastPlayersState = JSON.parse(JSON.stringify(currentData));
+    } catch (err) {
+        // Silently fail to avoid disrupting the bot
+    }
+}
+
+// Poll every 5 seconds for changes
+setInterval(monitorMoneyGains, 5000);
 
 // Load all command files
 const commandsPath = path.join(__dirname, 'menma/commands');
@@ -168,6 +238,12 @@ client.on('interactionCreate', async interaction => {
     const command = client.commands.get(interaction.commandName);
     if (!command) return;
 
+    // Track interaction for money logging
+    lastUserInteraction[interaction.user.id] = {
+        command: interaction.commandName,
+        timestamp: Date.now()
+    };
+
     try {
         await command.execute(interaction);
     } catch (error) {
@@ -266,9 +342,18 @@ webApp.get('/', (req, res) => {
 
 // OAuth Login
 webApp.get('/login/discord', (req, res) => {
-    if (!CLIENT_ID || !REDIRECT_URI) return res.send("Missing Config");
-    console.log(`initiating login with redirect_uri: ${REDIRECT_URI}`);
-    const url = `https://discord.com/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code&scope=identify`;
+    // Prefer environment variable, fallback to request host for local dev if needed (though usually needs to match EXACTLY)
+    const effectiveRedirectUri = process.env.REDIRECT_URI || REDIRECT_URI;
+
+    if (!CLIENT_ID || !effectiveRedirectUri) {
+        console.error("Missing CLIENT_ID or REDIRECT_URI");
+        return res.send("Server Configuration Error: Missing OAuth Config");
+    }
+
+    console.log(`[OAuth] Initiating login. ClientID: ${CLIENT_ID.substring(0, 4)}...`);
+    console.log(`[OAuth] Using Redirect URI: ${effectiveRedirectUri}`);
+
+    const url = `https://discord.com/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(effectiveRedirectUri)}&response_type=code&scope=identify`;
     res.redirect(url);
 });
 
@@ -277,7 +362,8 @@ webApp.get('/oauth/callback', async (req, res) => {
     const { code } = req.query;
     if (!code) return res.status(400).send('No authorization code provided.');
 
-    console.log(`Exchanging code for token with redirect_uri: ${REDIRECT_URI}`);
+    const effectiveRedirectUri = process.env.REDIRECT_URI || REDIRECT_URI;
+    console.log(`[OAuth] Exchanging code. Using Redirect URI: ${effectiveRedirectUri}`);
 
     try {
         const tokenResponse = await fetch('https://discord.com/api/oauth2/token', {
@@ -288,7 +374,7 @@ webApp.get('/oauth/callback', async (req, res) => {
                 client_secret: WEB_CLIENT_SECRET,
                 grant_type: 'authorization_code',
                 code: code,
-                redirect_uri: REDIRECT_URI,
+                redirect_uri: effectiveRedirectUri,
             }),
         });
 
@@ -300,9 +386,9 @@ webApp.get('/oauth/callback', async (req, res) => {
         });
         const userData = await userResponse.json();
 
-        // 1. Redirect to Hub with query params
-        // This allows hub.html to set localStorage and show a welcome screen
-        const redirectUrl = `/hub.html?username=${encodeURIComponent(userData.username)}&discord_id=${userData.id}&avatar=${userData.avatar}`;
+        // 1. Redirect to Index with query params
+        // This allows index.html to set localStorage and update UI
+        const redirectUrl = `/index.html?username=${encodeURIComponent(userData.username)}&discord_id=${userData.id}&avatar=${userData.avatar}`;
         res.redirect(redirectUrl);
 
     } catch (err) {
@@ -351,6 +437,110 @@ webApp.post('/api/complete-story', (req, res) => {
 });
 
 
+// API: Bank Data
+webApp.get('/api/bank-data', (req, res) => {
+    const userId = req.query.userId;
+    if (!userId) return res.status(400).json({ error: 'Missing userId' });
+
+    // Path to players.json - ensuring we look in the right place relative to actualbot.js
+    const playersPath = path.join(__dirname, 'menma', 'data', 'players.json');
+
+    try {
+        if (!fs.existsSync(playersPath)) {
+            // Fallback for dev/test environments if file is missing
+            return res.status(404).json({ error: 'Data not available' });
+        }
+        const data = JSON.parse(fs.readFileSync(playersPath, 'utf8'));
+        const user = data[userId];
+        if (user) {
+            res.json({
+                money: user.money || 0,
+                ss: user.ss || 0,
+                success: true
+            });
+        } else {
+            res.json({ money: 0, ss: 0, error: 'User not found', success: false });
+        }
+    } catch (e) {
+        console.error("Bank API Error", e);
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
+// =========================================
+// ADMIN API (Owner Only)
+// =========================================
+const OWNER_ID = '835408109899219004';
+
+// Middleware-like check for admin
+const isAdmin = (req) => {
+    const adminId = req.headers['x-admin-id'] || req.query.adminId;
+    return adminId === OWNER_ID;
+};
+
+// GET User/Player Data
+webApp.get('/api/admin/get-data', (req, res) => {
+    if (!isAdmin(req)) return res.status(403).json({ error: 'Unauthorized. Admin only.' });
+
+    const targetId = req.query.targetId;
+    if (!targetId) return res.status(400).json({ error: 'Missing targetId' });
+
+    const playersPath = path.join(__dirname, 'menma', 'data', 'players.json');
+    const usersPath = path.join(__dirname, 'menma', 'data', 'users.json');
+
+    try {
+        let response = { success: true, userData: null, playerData: null };
+
+        if (fs.existsSync(usersPath)) {
+            const users = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
+            response.userData = users[targetId] || null;
+        }
+
+        if (fs.existsSync(playersPath)) {
+            const players = JSON.parse(fs.readFileSync(playersPath, 'utf8'));
+            response.playerData = players[targetId] || null;
+        }
+
+        if (!response.userData && !response.playerData) {
+            return res.status(404).json({ error: 'User/Player not found in data files.' });
+        }
+
+        res.json(response);
+    } catch (e) {
+        console.error("Admin API Get Error", e);
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
+// UPDATE User/Player Data
+webApp.post('/api/admin/update-data', (req, res) => {
+    if (!isAdmin(req)) return res.status(403).json({ error: 'Unauthorized. Admin only.' });
+
+    const { targetId, type, data } = req.body; // type: 'user' or 'player'
+    if (!targetId || !type || !data) return res.status(400).json({ error: 'Missing parameters' });
+
+    const fileName = type === 'user' ? 'users.json' : 'players.json';
+    const filePath = path.join(__dirname, 'menma', 'data', fileName);
+
+    try {
+        if (!fs.existsSync(filePath)) return res.status(404).json({ error: `File ${fileName} not found` });
+
+        // READ ENTIRE FILE: We read the full JSON to memory
+        const allData = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+
+        // UPDATE ONLY THE SPECIFIC USER: This ensures we don't wipe other hundreds of users.
+        // We only modify the entry for the targetId.
+        allData[targetId] = data;
+
+        // WRITE BACK: Save the updated full JSON object.
+        fs.writeFileSync(filePath, JSON.stringify(allData, null, 2));
+        res.json({ success: true, message: `${type} data updated successfully for ${targetId}.` });
+    } catch (e) {
+        console.error("Admin API Update Error", e);
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
 webApp.listen(WEB_PORT, () => {
     console.log(`🌍 Production Web Server running on port ${WEB_PORT}`);
 });
@@ -358,4 +548,4 @@ webApp.listen(WEB_PORT, () => {
 client.login(TOKEN);
 
 
-
+//this is the main file of a discord bot hosted on Pterodactyl. This is the main production variant and should not lose any of its major functionality while editing. 

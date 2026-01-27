@@ -1,0 +1,231 @@
+{
+  "money": 1000,
+  "packs": 0,
+  "collection": {
+    "Saeko Nogami": 1,
+    "Sakura": 1,
+    "Shiso Mikagi": {
+      "count": 1,
+      "rarity": "Common",
+      "ovr": 80,
+      "color": "#95a5a6",
+      "source": "Ayashi no Ceres",
+      "image": "https://s4.anilist.co/file/anilistcdn/character/large/1688.jpg",
+      "id": 1688
+    },
+    "Benge": {
+      "count": 1,
+      "rarity": "Uncommon",
+      "ovr": 85,
+      "color": "#2ecc71",
+      "source": "Vampire Hunter D (2000)",
+      "image": "https://s4.anilist.co/file/anilistcdn/character/large/b1025-0Qn4JSwdTe4P.png",
+      "id": 1025
+    },
+    "Yamato Akitsuki": {
+      "count": 1,
+      "rarity": "Uncommon",
+      "ovr": 55,
+      "color": "#2ecc71",
+      "source": "Fuuka",
+      "image": "https://s4.anilist.co/file/anilistcdn/character/large/b335-hHpZn2E1PJU7.jpg",
+      "id": 335
+    },
+    "Mercédès Morcerf": {
+      "count": 1,
+      "rarity": "Rare",
+      "ovr": 52,
+      "color": "#3498db",
+      "source": "Gankutsuou",
+      "image": "https://s4.anilist.co/file/anilistcdn/character/large/b2290-LWpUN1Z2gFhK.png",
+      "id": 2290
+    },
+    "Yoshimi Satou": {
+      "count": 1,
+      "rarity": "Common",
+      "ovr": 18,
+      "color": "#95a5a6",
+      "source": "Tsuyokiss",
+      "image": "https://s4.anilist.co/file/anilistcdn/character/large/b824-yP2dbEuovLMy.jpg",
+      "id": 824
+    },
+    "Hime Utsumiya": {
+      "count": 1,
+      "rarity": "Common",
+      "ovr": 21,
+      "color": "#95a5a6",
+      "source": "Brain Powerd",
+      "image": "https://s4.anilist.co/file/anilistcdn/character/large/4222.jpg",
+      "id": 4222
+    },
+    "Satsuki Kusakabe": {
+      "count": 1,
+      "rarity": "Epic",
+      "ovr": 93,
+      "color": "#9b59b6",
+      "source": "Tonari no Totoro",
+      "image": "https://s4.anilist.co/file/anilistcdn/character/large/267.jpg",
+      "id": 267
+    },
+    "Mahiro Muto": {
+      "count": 1,
+      "rarity": "Uncommon",
+      "ovr": 38,
+      "color": "#2ecc71",
+      "source": "Busou Renkin",
+      "image": "https://s4.anilist.co/file/anilistcdn/character/large/3444.jpg",
+      "id": 3444
+    },
+    "Lancelot": {
+      "count": 1,
+      "rarity": "Uncommon",
+      "ovr": 40,
+      "color": "#2ecc71",
+      "source": "Romeo x Juliet",
+      "image": "https://s4.anilist.co/file/anilistcdn/character/large/2191.jpg",
+      "id": 2191
+    },
+    "Zafila": {
+      "count": 1,
+      "rarity": "Uncommon",
+      "ovr": 31,
+      "color": "#2ecc71",
+      "source": "Mahou Shoujo Lyrical Nanoha A's",
+      "image": "https://s4.anilist.co/file/anilistcdn/character/large/4178.jpg",
+      "id": 4178
+    },
+    "Kambei Shimada": {
+      "count": 1,
+      "rarity": "Uncommon",
+      "ovr": 35,
+      "color": "#2ecc71",
+      "source": "Samurai 7",
+      "image": "https://s4.anilist.co/file/anilistcdn/character/large/153.jpg",
+      "id": 153
+    },
+    "Hideki Saitou": {
+      "count": 1,
+      "rarity": "Common",
+      "ovr": 24,
+      "color": "#95a5a6",
+      "source": "Battle Programmer Shirase",
+      "image": "https://s4.anilist.co/file/anilistcdn/character/large/4438.jpg",
+      "id": 4438
+    },
+    "Shinichi Samesuga": {
+      "count": 1,
+      "rarity": "Common",
+      "ovr": 18,
+      "color": "#95a5a6",
+      "source": "Tsuyokiss",
+      "image": "https://s4.anilist.co/file/anilistcdn/character/large/b821-9jxl02NT2AiK.jpg",
+      "id": 821
+    },
+    "Masayoshi Asahina": {
+      "count": 1,
+      "rarity": "Uncommon",
+      "ovr": 36,
+      "color": "#2ecc71",
+      "source": "Abenobashi Mahou☆Shoutengai",
+      "image": "https://s4.anilist.co/file/anilistcdn/character/large/b261-KxlKCa6Vi0RI.png",
+      "id": 261
+    },
+    "Oboro": {
+      "count": 1,
+      "rarity": "Uncommon",
+      "ovr": 42,
+      "color": "#2ecc71",
+      "source": "Utawarerumono",
+      "image": "https://s4.anilist.co/file/anilistcdn/character/large/b291-AYDPuGAC1Osa.png",
+      "id": 291
+    },
+    "Kei": {
+      "count": 1,
+      "rarity": "Common",
+      "ovr": 27,
+      "color": "#95a5a6",
+      "source": "Shin Shirayuki-hime Densetsu Pretear",
+      "image": "https://s4.anilist.co/file/anilistcdn/character/large/b548-Ep9ioJ6ZmpN8.png",
+      "id": 548
+    },
+    "Mizuki Segawa": {
+      "count": 1,
+      "rarity": "Common",
+      "ovr": 19,
+      "color": "#95a5a6",
+      "source": "Kyoushoku Soukou Guyver (TV)",
+      "image": "https://s4.anilist.co/file/anilistcdn/character/large/b3046-rwqtDk4bLbCo.png",
+      "id": 3046
+    },
+    "Mikimaro Shimura": {
+      "count": 1,
+      "rarity": "Common",
+      "ovr": 10,
+      "color": "#95a5a6",
+      "source": "Marriage: Kekkon",
+      "image": "https://s4.anilist.co/file/anilistcdn/character/large/3388.jpg",
+      "id": 3388
+    },
+    "Reinhard von Lohengramm": {
+      "count": 1,
+      "rarity": "Rare",
+      "ovr": 63,
+      "color": "#3498db",
+      "source": "Ginga Eiyuu Densetsu",
+      "image": "https://s4.anilist.co/file/anilistcdn/character/large/b3066-bq8s1DooZyTJ.png",
+      "id": 3066
+    },
+    "Nanami Konoe": {
+      "count": 1,
+      "rarity": "Common",
+      "ovr": 23,
+      "color": "#95a5a6",
+      "source": "Lamune",
+      "image": "https://s4.anilist.co/file/anilistcdn/character/large/3663.jpg",
+      "id": 3663
+    },
+    "Jimsy": {
+      "count": 1,
+      "rarity": "Uncommon",
+      "ovr": 31,
+      "color": "#2ecc71",
+      "source": "Mirai Shounen Conan",
+      "image": "https://s4.anilist.co/file/anilistcdn/character/large/b2854-MIRW0wDE0GN4.png",
+      "id": 2854
+    },
+    "Urumi Kanzaki": {
+      "count": 1,
+      "rarity": "Epic",
+      "ovr": 78,
+      "color": "#9b59b6",
+      "source": "GTO",
+      "image": "https://s4.anilist.co/file/anilistcdn/character/large/b455-JI7SM4C2iBIF.jpg",
+      "id": 455
+    },
+    "Hotaru": {
+      "count": 1,
+      "rarity": "Common",
+      "ovr": 27,
+      "color": "#95a5a6",
+      "source": ".hack//Tasogare no Udewa Densetsu",
+      "image": "https://s4.anilist.co/file/anilistcdn/character/large/2230.jpg",
+      "id": 2230
+    }
+  },
+  "decks": [
+    [],
+    [],
+    [],
+    [],
+    []
+  ],
+  "decknames": [
+    "",
+    "",
+    "",
+    "",
+    ""
+  ],
+  "selectedDeck": 0,
+  "lastSummon": 1769427954652
+}

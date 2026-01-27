@@ -58,7 +58,7 @@ module.exports = {
         // 2. Data Loading & Migration
         let usersData = readJsonFile(usersPath);
         let userAccessoryData = readJsonFile(userAccessoryPath);
-        
+
         // --- Migration Logic ---
         let migrationOccurred = false;
         if (!userAccessoryData[userId] && usersData[userId]?.inventory?.accessories) {
@@ -71,7 +71,7 @@ module.exports = {
             };
             delete usersData[userId].inventory.accessories;
             delete usersData[userId].equippedAccessory;
-            
+
             writeJsonFile(userAccessoryPath, userAccessoryData);
             writeJsonFile(usersPath, usersData);
         }
@@ -143,7 +143,7 @@ module.exports = {
             // Save files
             writeJsonFile(usersPath, usersData);
             writeJsonFile(userAccessoryPath, userAccessoryData);
-            
+
             return interaction.editReply({ content: `Successfully unequipped **${unequippedItemName}**.` });
         }
 
@@ -171,7 +171,7 @@ module.exports = {
         } else {
             embed.addFields({ name: 'Inventory', value: 'You do not own any accessories.' });
         }
-        
+
         let replyOptions = { embeds: [embed] };
         if (migrationOccurred) {
             replyOptions.content = 'Your accessory data has been migrated to the new system!';

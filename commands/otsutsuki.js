@@ -7,10 +7,10 @@ const { userMutex, jutsuMutex } = require('../utils/locks');
 const TONERI_NPC = {
     name: "Toneri Otsutsuki",
     image: "https://www.pngplay.com/wp-content/uploads/12/Toneri-Otsutsuki-Transparent-Images.png",
-    health: 150000000,
-    currentHealth: 150000000,
-    power: 150000000,
-    defense: 15000000,
+    health: 1500000,
+    currentHealth: 1500000,
+    power: 1500000,
+    defense: 150000,
     accuracy: 1000,
     chakra: 1000,
     "statsType": "fixed",
@@ -35,18 +35,28 @@ const cooldownPath = path.resolve(__dirname, '../../menma/data/otsutsuki_cooldow
 const TONERI_REWARDS = {
     ryo: 100000,
     item: "Tenseigan Scroll",
-    // xp as a helper function (call with player level)
-    xp: (level = 1) => 50 + (Number(level) * 4)
+    xp: (level = 1) => 50 + (Number(level) * 0.5)
 };
 
-// Helper to build the rewards object for a specific userId by reading their level from players.json
 function getToneriRewardsForUser(userId) {
     const players = fs.existsSync(path.resolve(__dirname, '../../menma/data/players.json')) ? JSON.parse(fs.readFileSync(path.resolve(__dirname, '../../menma/data/players.json'), 'utf8')) : {};
+    const users = fs.existsSync(path.resolve(__dirname, '../../menma/data/users.json')) ? JSON.parse(fs.readFileSync(path.resolve(__dirname, '../../menma/data/users.json'), 'utf8')) : {};
     const playerLevel = players[userId] && players[userId].level ? players[userId].level : 1;
+    const userLocation = users[userId] && users[userId].location ? users[userId].location : 'land_of_fire';
+
+    const territoriesPath = path.resolve(__dirname, '../../menma/data/territories.json');
+    let tier = 1;
+    if (fs.existsSync(territoriesPath)) {
+        try {
+            const territories = JSON.parse(fs.readFileSync(territoriesPath, 'utf8'));
+            tier = territories.territories[userLocation]?.tier || 1;
+        } catch (e) { }
+    }
+
     return {
-        ryo: TONERI_REWARDS.ryo,
+        ryo: TONERI_REWARDS.ryo * tier,
         item: TONERI_REWARDS.item,
-        xp: TONERI_REWARDS.xp(playerLevel)
+        xp: TONERI_REWARDS.xp(playerLevel) * tier
     };
 }
 

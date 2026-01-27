@@ -1,5 +1,4 @@
 const { Events, SlashCommandBuilder, EmbedBuilder, Collection, Routes, REST } = require('discord.js');
-const { GoogleGenerativeAI } = require('@google/generative-ai');
 const fs = require('fs');
 const path = require('path');
 const sqlite = require('sqlite');
@@ -10,12 +9,81 @@ require('dotenv').config();
 // Your Discord User ID, used for security checks
 const OWNER_ID = '835408109899219004';
 
-const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
-// Main Model: High reasoning/coding capability (Gemini 3 Flash Preview)
-const mainModel = genAI.getGenerativeModel({ model: "gemini-3-flash-preview" });
-// Refiner Model: Fast instruction following for prompts/minigames (Gemini 2.5 Flash Lite)
-const refinerModel = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
-const model = mainModel; // Backward compatibility alias
+// --- LOCAL AI SETUP (NODE-LLAMA-CPP) ---
+let llamaModel = null;
+let llamaContext = null;
+let llamaSession = null;
+let isModelLoaded = false;
+
+async function initAI() {
+    if (isModelLoaded) return;
+    try {
+        const { getLlama } = await import("node-llama-cpp");
+        const llama = await getLlama();
+
+        const MODEL_PATH = path.resolve(__dirname, '../models/gemma-2-2b-it-q4_k_s.gguf');
+
+        if (!fs.existsSync(MODEL_PATH)) {
+            console.error(`[AI] Model not found at ${MODEL_PATH}. Please run /setup_ai first.`);
+            return;
+        }
+
+        llamaModel = await llama.loadModel({
+            modelPath: MODEL_PATH
+        });
+
+        llamaContext = await llamaModel.createContext({
+            threads: 2,
+            contextSize: 4096
+        });
+
+        isModelLoaded = true;
+        console.log("[AI] Local AI (Gemma 2 2b) Initialized Successfully!");
+    } catch (e) {
+        console.error("[AI] Initialization failed:", e);
+    }
+}
+
+// Trigger lazy init
+initAI();
+
+async function generateResponse(prompt, systemInstruction = "", maxTokens = 150) {
+    if (!isModelLoaded) {
+        await initAI();
+        if (!isModelLoaded) return "The system is currently preparing. Please try again soon.";
+    }
+
+    try {
+        const { LlamaChatSession } = await import("node-llama-cpp");
+        if (!llamaSession) {
+            llamaSession = new LlamaChatSession({
+                contextSequence: llamaContext.getSequence(),
+                systemPrompt: systemInstruction
+            });
+        }
+
+        const result = await llamaSession.prompt(prompt, {
+            temperature: 0.7,
+            maxTokens: maxTokens
+        });
+
+        // Strip <think> tags and clean output
+        let cleaned = result.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
+
+        // Remove emoji-like characters
+        cleaned = cleaned.replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F700}-\u{1F77F}\u{1F780}-\u{1F7FF}\u{1F800}-\u{1F8FF}\u{1F900}-\u{1F9FF}\u{1FA00}-\u{1FA6F}\u{1FA70}-\u{1FAFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '');
+
+        // Hard character limit: 300
+        if (cleaned.length > 300) {
+            cleaned = cleaned.substring(0, 297) + "...";
+        }
+
+        return cleaned;
+    } catch (error) {
+        console.error("[AI] Generation Error:", error);
+        return "An internal fluctuation occurred.";
+    }
+}
 
 // --- MINIGAME ENGINE SETUP ---
 // Minigames directory under the commands folder (e.g. /menma/commands/minigames)
@@ -65,27 +133,17 @@ function saveChainedConversations(data) {
 }
 
 /**
- * Clear old chained conversations (older than 10 minutes)
- * Implements a time-based sliding window.
+ * Clear old chained conversations (older than 5 minutes)
  */
 function cleanupChainedConversations() {
     const conversations = loadChainedConversations();
     const now = Date.now();
-    const timeWindow = 10 * 60 * 1000; // 10 minutes context window
+    const fiveMinutesAgo = now - (5 * 60 * 1000);
 
     let changed = false;
     Object.keys(conversations).forEach(userId => {
-        const userHistory = conversations[userId] || [];
-
-        // Filter messages that are within the time window
-        const freshHistory = userHistory.filter(msg => (now - msg.timestamp) < timeWindow);
-
-        if (freshHistory.length !== userHistory.length) {
-            if (freshHistory.length === 0) {
-                delete conversations[userId];
-            } else {
-                conversations[userId] = freshHistory;
-            }
+        if (conversations[userId].timestamp < fiveMinutesAgo) {
+            delete conversations[userId];
             changed = true;
         }
     });
@@ -128,39 +186,6 @@ async function refreshDiscordCommands(client) {
         console.error('[Discord API] Failed to register application commands:', error);
         return false;
     }
-}
-
-const ERROR_LOG_CHANNEL_ID = '1381268582595297321';
-
-/**
- * Report errors to Discord directly
- */
-async function reportErrorToDiscord(client, error, context = 'General Error') {
-    if (!client) return;
-    try {
-        const errorChannel = await client.channels.fetch(ERROR_LOG_CHANNEL_ID).catch(() => null);
-        if (!errorChannel) return;
-
-        const errorEmbed = new EmbedBuilder()
-            .setTitle(`🚨 Error Report: ${context}`)
-            .setColor('#FF0000')
-            .addFields(
-                { name: 'Message', value: error.message ? error.message.substring(0, 1000) : 'No message' },
-                { name: 'Stack', value: error.stack ? error.stack.substring(0, 1000) : 'No stack trace' }
-            )
-            .setTimestamp();
-
-        await errorChannel.send({ embeds: [errorEmbed] });
-    } catch (reportErr) {
-        console.error('Failed to report error to Discord:', reportErr);
-    }
-}
-
-// Global Error Handlers
-if (process.listenerCount('uncaughtException') === 0) {
-    process.on('uncaughtException', async (error) => {
-        console.error('Uncaught Exception:', error);
-    });
 }
 
 /**
@@ -270,66 +295,6 @@ const minigameTools = {
 };
 
 /**
- * Refines a user's minigame prompt into a full design document
- */
-async function refineMinigamePrompt(rawPrompt) {
-    const systemPrompt = `
-    You are a Lead Game Designer. Your goal is to take a simple game idea and expand it into a detailed technical design document for a Discord.js minigame.
-    
-    The user's idea: "${rawPrompt}"
-    
-    Output a detailed plan including:
-    1. Game Logic (how it works, winning/losing conditions)
-    2. Controls (using Discord Buttons/Select Menus)
-    3. Multiplayer Support (if feasible/requested, otherwise Singleplayer)
-    4. Visuals (Embed structure)
-    
-    Keep it concise but technical.
-    `;
-
-    try {
-        const result = await refinerModel.generateContent({
-            contents: [{ parts: [{ text: rawPrompt }] }],
-            systemInstruction: { parts: [{ text: systemPrompt }] },
-        });
-        return result.response.text();
-    } catch (error) {
-        console.error("Refiner failed:", error);
-        return rawPrompt; // Fallback to raw prompt
-    }
-}
-
-/**
- * Refines a user's minigame prompt into a full design document
- */
-async function refineMinigamePrompt(rawPrompt) {
-    const systemPrompt = `
-    You are a Lead Game Designer. Your goal is to take a simple game idea and expand it into a detailed technical design document for a Discord.js minigame.
-    
-    The user's idea: "${rawPrompt}"
-    
-    Output a detailed plan including:
-    1. Game Logic (how it works, winning/losing conditions)
-    2. Controls (using Discord Buttons/Select Menus)
-    3. Multiplayer Support (if feasible/requested, otherwise Singleplayer)
-    4. Visuals (Embed structure)
-    
-    Keep it concise but technical.
-    `;
-
-    try {
-        const result = await refinerModel.generateContent({
-            contents: [{ parts: [{ text: rawPrompt }] }],
-            systemInstruction: { parts: [{ text: systemPrompt }] },
-        });
-        return result.response.text();
-    } catch (error) {
-        console.error("Refiner failed:", error);
-        return rawPrompt; // Fallback to raw prompt
-    }
-}
-
-/**
  * Tool function: Creates a new minigame command
  * This function now uses the async registerNewCommand
  */
@@ -356,43 +321,55 @@ async function createMinigame(targetUserId, gameName, gameDescription, message, 
         return `A command named /${commandName} already exists! Try a different name.`;
     }
 
-    // Step 1: Refine the Prompt
-    const refinedDesign = await refineMinigamePrompt(gameDescription);
-    const fullContext = `Game: ${gameName}\nOriginal Idea: ${gameDescription}\n\nDesign Doc:\n${refinedDesign}`;
-
     const amoebaSystemPrompt = `
+    
+    
+    
     You are Amoeba, a world-class professional developer who specializes in coding minigames for Discord.
+    
+    
     
     CRITICAL REQUIREMENTS:
     
-    # Dataset Reference: '${MINIGAME_DATASET}'
+    # Here's a dataset that will help you with making discord minigames: '${MINIGAME_DATASET}'
     
-    1. Use 'discord.js' v14 (SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType).
+    1. Use 'discord.js' v14 (SlashCommandBuilder, EmbedBuilder, interaction.reply with components)
+    
     2. Command name MUST be exactly: '${commandName}'
-    3. Description MUST be short (under 100 characters).
-    4. NO external file system operations (fs, path, require('../')).
-    5. Game logic must be contained strictly within 'execute'.
-    6. Support MULTIPLAYER if the design calls for it involved using 'interaction.user.id' vs opponent ID.
-    7. Use 'interaction.followUp' or 'interaction.reply' appropriately. Handle component collectors (createMessageComponentCollector) carefully.
-    8. You have PERMISSION to access the terminal or logs conceptually (but in code, just standard error handling).
+    
+    3. Description MUST be short (under 100 characters): '${gameDescription}'
+    
+    4. NO external file system operations (fs, path, require('../'))
+    
+    5. NO forbidden modules - only use discord.js and built-in Node.js modules
+    
+    6. All game logic must be contained within the 'execute' function
+    
+    7. Use EmbedBuilder for main game display
+    
+    8. Keep code simple and self-contained
+    
+    
     
     Respond with ONLY the JavaScript code in a markdown block.
+    
+    
+    
     `;
 
     const amoebaUserPrompt = `
-    Generate the code for this game:
-    ${fullContext}
-    `;
+Generate a Discord.js v14 Slash Command for a minigame named "${gameName}".
+Game concept: "${gameDescription}"
+Command name: "${commandName}"
+Description: "${gameDescription}"
+Make it single-player and fun!
+`;
 
     let generatedCode = '';
 
     try {
-        const result = await mainModel.generateContent({
-            contents: [{ parts: [{ text: amoebaUserPrompt }] }],
-            systemInstruction: { parts: [{ text: amoebaSystemPrompt }] },
-        });
+        const responseText = await generateResponse(amoebaUserPrompt, amoebaSystemPrompt);
 
-        const responseText = result.response.text();
         const codeMatch = responseText.match(/```javascript\n([\s\S]*?)\n```/);
         if (codeMatch && codeMatch[1]) {
             generatedCode = codeMatch[1].trim();
@@ -405,13 +382,10 @@ async function createMinigame(targetUserId, gameName, gameDescription, message, 
 
     } catch (error) {
         console.error('Amoeba code generation failed:', error);
-        // Report error
-        await reportErrorToDiscord(client, error, `Minigame Generation: ${gameName}`);
         return "Amoeba encountered a bug while trying to write your game. Please try again.";
     }
 
     if (!generatedCode) {
-        await reportErrorToDiscord(client, new Error("Empty code generated"), `Minigame Generation: ${gameName}`);
         return "Amoeba couldn't generate the code structure for the game.";
     }
 
@@ -597,14 +571,13 @@ function extractKeywords(text) {
         );
 
     // Return unique keywords
-    // Return unique keywords formatted for LIKE query
-    return [...new Set(words)].slice(0, 20); // Return array of keywords
+    return [...new Set(words)].slice(0, 10).join(',');
 }
 
-async function savePermanentMemory(memoryText, isUser = false) {
-    if (!db || !memoryText || !isUser) return; // ONLY save user prompts
+async function savePermanentMemory(memoryText) {
+    if (!db || !memoryText) return;
     try {
-        const keywords = extractKeywords(memoryText).join(' '); // Space separated for potential FTS
+        const keywords = extractKeywords(memoryText);
         await db.run(`
             INSERT INTO conversational_memory (memory_text, timestamp, keywords)
             VALUES (?, ?, ?)
@@ -617,21 +590,16 @@ async function savePermanentMemory(memoryText, isUser = false) {
 /**
  * Keyword-based memory search
  */
-async function searchMemoryByKeywords(userMessage, limit = 5) {
+async function searchMemoryByKeywords(userMessage, limit = 3) {
     if (!db) return [];
 
     try {
         const keywords = extractKeywords(userMessage);
-        if (keywords.length === 0) return [];
+        if (!keywords) return [];
 
-        // Dynamic SQL construction for flexibility
-        // Matches if memory_text contains the keyword OR keywords column contains it
-        const conditions = keywords.map(() => '(memory_text LIKE ? OR keywords LIKE ?)').join(' OR ');
-        const params = [];
-        keywords.forEach(kw => {
-            params.push(`%${kw}%`); // Search in text
-            params.push(`%${kw}%`); // Search in keywords col
-        });
+        const keywordList = keywords.split(',');
+        const conditions = keywordList.map(() => 'keywords LIKE ?').join(' OR ');
+        const params = keywordList.map(keyword => `%${keyword}%`);
         params.push(limit);
 
         const rows = await db.all(`
@@ -701,9 +669,8 @@ ONLY block if this message contains:
 Respond with ONLY a single word: 'SAFE' if permissible, or 'UNSAFE' if it contains severe violations.
 `;
     try {
-        const result = await model.generateContent(moderationPrompt);
-        const responseText = result.response.text().trim().toUpperCase();
-        return responseText === 'SAFE';
+        const responseText = (await generateResponse(moderationPrompt)).trim().toUpperCase();
+        return responseText.includes('SAFE');
     } catch (error) {
         console.error('Moderation system failed:', error);
         return true;
@@ -1204,6 +1171,9 @@ module.exports.setup = (client, userPromptCounts) => {
                 // Clean up old chained conversations
                 cleanupChainedConversations();
 
+                // Show typing indicator
+                await message.channel.sendTyping();
+
                 // 1. MODERATION SCRIPT (Improved Filter)
                 const isMessageSafe = await moderateMessage(userMessage);
                 if (!isMessageSafe) {
@@ -1229,8 +1199,7 @@ module.exports.setup = (client, userPromptCounts) => {
 
                 try {
                     const toolPrompt = toolDetectionPrompt.replace("{USER_MESSAGE}", userMessage);
-                    const toolResult = await model.generateContent(toolPrompt);
-                    const toolResponseText = cleanResponse(toolResult.response.text());
+                    const toolResponseText = await generateResponse(toolPrompt);
 
                     if (toolResponseText !== 'NOTOOL') {
                         const parsedToolResponse = JSON.parse(toolResponseText);
@@ -1291,31 +1260,26 @@ module.exports.setup = (client, userPromptCounts) => {
 
                 // 4. CHAINED CONVERSATION & MEMORY SYSTEM
                 const chainedConversations = loadChainedConversations();
-                const userHistory = Array.isArray(chainedConversations[userId]) ? chainedConversations[userId] : [];
+                const previousContext = chainedConversations[userId];
 
                 // Search for relevant memories based on keywords
                 const relevantMemories = await searchMemoryByKeywords(userMessage, 2);
                 const memoryContext = relevantMemories.length > 0 ?
                     `Relevant previous conversations:\n${relevantMemories.join('\n')}\n\n` : '';
 
-                // Build Context String from History
-                const contextString = userHistory.map(msg =>
-                    `${msg.role === 'user' ? 'User' : 'You'}: "${msg.content}"`
-                ).join('\n');
-
                 // 5. MAIN CONVERSATION (Enhanced with memory and chaining)
                 const conversationPrompt = `
+You are a human-like assistance module for the ShinobiRPG Naruto bot. 
 
-You do not have a name. Your personality is that of a human being. You talk like any human would and THINK like any human would. You also have feelings just like humans and if the users arent treating you nicely, you react just like a human, in a defensive or angry way.
-
-The user may use other languages when they talk to you, when that's the case, send the reply in the same language that the user prompted in. If I say a prompt in Portuguese answer in Portuguese as well.
+STRICT RULES:
+1. NEVER output more than 200 characters. For casual greetings, stay under 40 characters.
+2. NEVER explain complex off-topic concepts like medical conditions unless explicitly asked in a Naruto context.
+3. Stay in character as a concise human assistant.
+4. No emojis. No italics.
 
 ${memoryContext}
 
-Recent Conversation History (last 10 mins):
-${contextString}
-
-Current message: "${userMessage}"
+${previousContext ? `Previous context from this conversation: "${previousContext.previousMessage}" - You responded: "${previousContext.previousResponse}"\n\nCurrent message: "${userMessage}"\n\nContinue the conversation naturally, considering the previous exchange.` : `Current message: "${userMessage}"`}
 
 You have access to the following knowledge bases:
 When users ask about jutsus refer to the jutsu data and answer properly. If they ask anything else that you already have information of in the helper.json which is helperData answer it as well.
@@ -1344,23 +1308,21 @@ IMPORTANT: ALL YOUR ANSWERS MUST BE SHORT AND CONCISE. Answer like a human being
 `;
 
                 try {
-                    const result = await model.generateContent(conversationPrompt);
-                    const responseText = result.response.text();
-                    const finalResponse = cleanAndLimitMessage(responseText);
+                    // Set logic for casual or complex token limits
+                    const isCasual = userMessage.length < 15;
+                    const maxT = isCasual ? 50 : 150;
 
-                    // Save to permanent memory - ONLY USER PROMPTS
-                    await savePermanentMemory(userMessage, true);
+                    const finalResponse = await generateResponse(conversationPrompt, "", maxT);
 
-                    // Update chained conversation history
-                    userHistory.push({ role: 'user', content: userMessage, timestamp: Date.now() });
-                    userHistory.push({ role: 'model', content: finalResponse, timestamp: Date.now() });
+                    // Save to permanent memory
+                    await savePermanentMemory(`User: ${userMessage.substring(0, 100)}... | Assistant: ${finalResponse.substring(0, 100)}...`);
 
-                    // Keep history manageable (e.g., last 20 messages max to prevent huge prompts)
-                    if (userHistory.length > 20) {
-                        userHistory.splice(0, userHistory.length - 20);
-                    }
-
-                    chainedConversations[userId] = userHistory;
+                    // Update chained conversation
+                    chainedConversations[userId] = {
+                        previousMessage: userMessage,
+                        previousResponse: finalResponse,
+                        timestamp: Date.now()
+                    };
                     saveChainedConversations(chainedConversations);
 
                     await message.reply(finalResponse);

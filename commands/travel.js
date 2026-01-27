@@ -35,10 +35,10 @@ module.exports = {
                         .setRequired(true)
                         .addChoices(
                             { name: 'Land of Fire (Tier 1)', value: 'land_of_fire' },
-                            { name: 'Hidden Village of Sound (Tier 2)', value: 'village_of_sound' },
+                            { name: 'Hidden Village of Sound (Tier 2)', value: 'hidden_village_of_sound' },
                             { name: 'Country of Rain (Tier 3)', value: 'country_of_rain' },
                             { name: 'Land of Wind (Tier 4)', value: 'land_of_wind' },
-                            { name: 'Hidden Village of Sand (Tier 5)', value: 'village_of_sand' },
+                            { name: 'Hidden Village of Sand (Tier 5)', value: 'hidden_village_of_sand' },
                             { name: 'Land of Water (Tier 6)', value: 'land_of_water' },
                             { name: 'Land of Earth (Tier 7)', value: 'land_of_earth' },
                             { name: 'Land of Lightning (Tier 8)', value: 'land_of_lightning' },

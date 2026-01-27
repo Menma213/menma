@@ -3,7 +3,7 @@
         "name": "Uchiha Necklace",
         "description": "A necklace passed down through the Uchiha clan. It is said to enhance the wearer's perception and reflexes.",
         "rarity": "Rare",
-        "price": 500,
+        "price": 5000,
         "stats": {
             "power": 2500,
             "defense": 1000,
@@ -14,7 +14,7 @@
         "name": "The Sage Cloak",
         "description": "A cloak worn by the sages of Mount Myoboku. It is imbued with natural energy, granting the wearer enhanced durability and chakra control.",
         "rarity": "Epic",
-        "price": 1500,
+        "price": 15000,
         "stats": {
             "defense": 1500,
             "power": 1500
@@ -24,7 +24,7 @@
         "name": "The Sword of Kusanagi",
         "description": "A legendary sword wielded by Orochimaru. It is said to be able to cut through anything.",
         "rarity": "Legendary",
-        "price": 3000,
+        "price": 30000,
         "stats": {
             "power": 6000
         },
@@ -36,7 +36,7 @@
         "name": "Gara's Gourd",
         "description": "A gourd filled with sand that is controlled by the user's will. It can be used for both offense and defense.",
         "rarity": "Epic",
-        "price": 1500,
+        "price": 15000,
         "stats": {
             "defense": 3000
         }
@@ -45,7 +45,7 @@
         "name": "Infinity",
         "description": "The ultimate defense. It is said that nothing can touch the wearer.",
         "rarity": "Legendary",
-        "price": 3000,
+        "price": 30000,
         "stats": {
             "defense": 8000
         },
@@ -57,7 +57,7 @@
         "name": "The Founding Titan",
         "description": "The power of the titans. Grants immense power, but at a great cost.",
         "rarity": "Mythical",
-        "price": 7500,
+        "price": 75000,
         "stats": {
             "power": 10000,
             "defense": 10000
@@ -71,7 +71,7 @@
         "name": "Ryomen Sukuna's Finger",
         "description": "A cursed object that grants the user immense power, but at a great cost.",
         "rarity": "Legendary",
-        "price": 3000,
+        "price": 30000,
         "stats": {
             "power": 7000
         },
@@ -83,7 +83,7 @@
         "name": "Goku's Pole",
         "description": "A magical pole that can extend to any length.",
         "rarity": "Rare",
-        "price": 500,
+        "price": 50000,
         "stats": {
             "power": 1200,
             "accuracy": 5
@@ -93,7 +93,7 @@
         "name": "Death Note",
         "description": "A notebook that kills anyone whose name is written inside.",
         "rarity": "Thunderbird",
-        "price": 15000,
+        "price": 1500000,
         "effects": [
             {
                 "type": "instant_kill",

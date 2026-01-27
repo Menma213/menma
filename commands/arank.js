@@ -12,6 +12,8 @@ const giftPath = path.resolve(__dirname, '../data/gift.json');
 const akatsukiPath = path.resolve(__dirname, '../data/akatsuki.json');
 const bountyPath = path.resolve(__dirname, '../data/bounty.json');
 const mentorExpPath = path.resolve(__dirname, '../data/mentorexp.json');
+const anbuPath = path.resolve(__dirname, '../data/anbu.json');
+const ANBU_ROLE_ID = '1382055740268744784';
 
 // --- Constants ---
 const JINCHURIKI_ROLE = "1385641469507010640";
@@ -22,9 +24,9 @@ const ARANK_NPCS = [
     {
         name: "Jugo",
         image: "https://i.postimg.cc/vmfSx5V1/17-D3-B777-0-FC6-4-EE4-957-D-513-CC60-D8924.png",
-        baseHealth: 1.2,
-        basePower: 1.5,
-        baseDefense: 1.0,
+        baseHealth: 0.1,
+        basePower: 0.1,
+        baseDefense: 0.1,
         accuracy: 85,
         dodge: 5,
         jutsu: ["Attack", "Monster Claw"]
@@ -32,9 +34,9 @@ const ARANK_NPCS = [
     {
         name: "Temari",
         image: "https://i.postimg.cc/1tS7G4Gv/6-CCACDF3-9612-4831-8-D31-046-BEA1586-D9.png",
-        baseHealth: 1.0,
-        basePower: 1.4,
-        baseDefense: 0.8,
+        baseHealth: 0.1,
+        basePower: 0.1,
+        baseDefense: 0.1,
         accuracy: 90,
         dodge: 10,
         jutsu: ["Attack", "Wind Scythe"]
@@ -42,9 +44,9 @@ const ARANK_NPCS = [
     {
         name: "Kankuro",
         image: "https://i.postimg.cc/y8wbNLk4/5-F95788-A-754-C-4-BA6-B0-E0-39-BCE2-FDCF04.png",
-        baseHealth: 1.0,
-        basePower: 1.3,
-        baseDefense: 1.2,
+        baseHealth: 0.1,
+        basePower: 0.1,
+        baseDefense: 0.1,
         accuracy: 80,
         dodge: 5,
         jutsu: ["Attack", "Puppet Master"]
@@ -52,9 +54,9 @@ const ARANK_NPCS = [
     {
         name: "Suigetsu",
         image: "https://i.postimg.cc/GmBfrW3x/54-AE56-B1-E2-EE-4179-BD24-EEC282-A8-B3-BF.png",
-        baseHealth: 1.4,
-        basePower: 1.2,
-        baseDefense: 1.1,
+        baseHealth: 0.1,
+        basePower: 0.1,
+        baseDefense: 0.1,
         accuracy: 75,
         dodge: 15,
         jutsu: ["Attack", "Water Dragon Jutsu"]
@@ -62,9 +64,9 @@ const ARANK_NPCS = [
     {
         name: "Fuguki",
         image: "https://i.postimg.cc/QMJJrm7q/064262-C0-1-BC4-47-B2-A06-A-59-DC193-C0285.png",
-        baseHealth: 1.5,
-        basePower: 1.6,
-        baseDefense: 1.4,
+        baseHealth: 0.1,
+        basePower: 0.1,
+        baseDefense: 0.1,
         accuracy: 70,
         dodge: 0,
         jutsu: ["Attack", "Samehada Slash"]
@@ -72,9 +74,9 @@ const ARANK_NPCS = [
     {
         name: "Jinpachi",
         image: "https://i.postimg.cc/SsZLnKD2/809-EBF4-E-70-EF-4-C83-BCE4-3-D6-C228-B1239.png",
-        baseHealth: 1.3,
-        basePower: 1.5,
-        baseDefense: 1.1,
+        baseHealth: 0.1,
+        basePower: 0.1,
+        baseDefense: 0.1,
         accuracy: 85,
         dodge: 10,
         jutsu: ["Attack", "Greast Forest Crumbling"]
@@ -82,9 +84,9 @@ const ARANK_NPCS = [
     {
         name: "Kushimaru",
         image: "https://i.postimg.cc/3wTF6VkR/53-BE91-D0-8-A53-47-C9-BD48-A06728-AFE79-C.png",
-        baseHealth: 1.2,
-        basePower: 1.4,
-        baseDefense: 0.9,
+        baseHealth: 0.1,
+        basePower: 0.1,
+        baseDefense: 0.1,
         accuracy: 95,
         dodge: 20,
         jutsu: ["Attack", "One Thousand Slashes"]
@@ -92,14 +94,16 @@ const ARANK_NPCS = [
     {
         name: "Baki",
         image: "https://i.postimg.cc/Jn7c7XcC/5997-D785-7-C7-D-4-BC0-93-DB-CCF7-CA3-CDB56.png",
-        baseHealth: 1.1,
-        basePower: 1.4,
-        baseDefense: 1.2,
+        baseHealth: 0.1,
+        basePower: 0.1,
+        baseDefense: 0.1,
         accuracy: 85,
         dodge: 10,
         jutsu: ["Attack", "Wind Scythe"]
     }
 ];
+
+
 
 // --- Helper Functions ---
 function generateGiftId(userGifts) {
@@ -110,9 +114,11 @@ function generateGiftId(userGifts) {
     return id;
 }
 
-async function handleRewards(userId, totalEnemiesDefeated, playerLevel, interaction) {
-    const baseExp = 15 + (playerLevel * 0.1);
-    const baseMoney = 200 + Math.floor(playerLevel * 5);
+async function handleRewards(userId, totalEnemiesDefeated, playerLevel, interaction, tier = 1) {
+    const tierBonus = 1 + ((tier) * 0.50);
+
+    const baseExp = Math.floor((12 + (playerLevel * 0.08)) * tierBonus);
+    const baseMoney = Math.floor((120 + Math.floor(playerLevel * 2.5)) * tierBonus);
     let exp = baseExp, money = baseMoney, isJackpot = false, isBonus = false, isNormal = false, bounty = 0;
 
     const missionNum = totalEnemiesDefeated + 1;
@@ -121,19 +127,18 @@ async function handleRewards(userId, totalEnemiesDefeated, playerLevel, interact
         let bonusExp = Math.max(1 * playerLevel, baseExp);
         let bonusMoney = baseMoney;
         if (missionNum === 50) {
-            exp = Math.floor(bonusExp * 3.0);
-            money = Math.floor(bonusMoney * 20);
+            exp = Math.floor(bonusExp * 2.5);
+            money = Math.floor(bonusMoney * 8);
             isJackpot = true;
         } else {
-            exp = Math.floor(bonusExp);
-            money = Math.floor(bonusMoney);
+            exp = Math.floor(bonusExp * 1.2);
+            money = Math.floor(bonusMoney * 1.5);
             isBonus = true;
         }
     } else {
         isNormal = true;
     }
 
-    // --- Akatsuki Bounty ---
     let isAkatsuki = false;
     try {
         const akatsukiContent = await fs.readFile(akatsukiPath, 'utf8');
@@ -231,7 +236,13 @@ module.exports = {
                 totalEnemiesDefeated++;
 
                 // --- Rewards Calculation ---
-                const rewards = await handleRewards(userId, totalEnemiesDefeated - 1, playerStats.level || 1, interaction);
+                const territoriesPath = path.resolve(__dirname, '../data/territories.json');
+                let tier = 1;
+                try {
+                    const territories = JSON.parse(await fs.readFile(territoriesPath, 'utf8'));
+                    tier = territories.territories[playerStats.location || 'land_of_fire']?.tier || 1;
+                } catch (e) { }
+                const rewards = await handleRewards(userId, totalEnemiesDefeated - 1, playerStats.level || 1, interaction, tier);
 
                 // --- Mentor & Wins Progress & Rewards ---
                 await userMutex.runExclusive(async () => {
@@ -246,12 +257,19 @@ module.exports = {
                     if (players[userId]) {
                         players[userId].exp += rewards.exp;
                         players[userId].money += rewards.money;
-                        // Use the rounding helper if needed or simple Math.round
                         players[userId].exp = Math.round(players[userId].exp * 10) / 10;
+
+                        // Increment mission count
+                        if (!players[userId].missions_completed) {
+                            players[userId].missions_completed = 0;
+                        }
+                        players[userId].missions_completed += 1;
                     }
 
                     await fs.writeFile(usersPath, JSON.stringify(users, null, 2));
                     await fs.writeFile(playersPath, JSON.stringify(players, null, 2));
+
+
                 });
 
                 // Update Mentor EXP in mentorexp.json

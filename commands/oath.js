@@ -53,7 +53,7 @@ module.exports = {
         const embed = new EmbedBuilder()
             .setTitle('The Oath of Return')
             .setColor('#FFA500')
-            .setDescription('The path of shadows has led you here, but the will of fire still flickers within you. To return to the village, a sacrifice must be made.')
+            .setDescription('The path of shadows has led you here, but the will of fire still flickers within you. To return to the village, a sacrifice must be made.\n Say these words! `I acknowledge my sins and i wish to return to the village.`')
             .addFields({ name: 'The Sacrifice', value: 'You must sacrifice 10% of your maximum health, a permanent reminder of the path you once walked.' })
             .setFooter({ text: 'The village awaits your decision.' });
 
@@ -121,13 +121,13 @@ module.exports = {
 
             } catch (err) {
                 console.error("Oath modal error:", err);
-                await i.followUp({ content: 'You took too long to recite the oath. The moment has passed.', ephemeral: true }).catch(() => {});
+                await i.followUp({ content: 'You took too long to recite the oath. The moment has passed.', ephemeral: true }).catch(() => { });
             }
         });
 
         collector.on('end', (collected) => {
             if (collected.size === 0) {
-                interaction.editReply({ components: [] }).catch(() => {});
+                interaction.editReply({ components: [] }).catch(() => { });
             }
         });
     },

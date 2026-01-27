@@ -198,19 +198,12 @@ module.exports = {
                 return;
             }
 
-            // --- Handle Jinchuriki Chakra Override ---
-            // allow handler to return an updated user object (reflecting chakra change)
-            const updatedUser = await handleJinchurikiChakra(targetUser.id, userProfileData);
-            if (updatedUser) {
-                userProfileData = updatedUser; // refresh in-memory profile for rendering
-            }
-
-            // --- Handle Hokage Chakra Override ---
+            // --- Handle Chakra Overrides (Hokage/Jinchuriki) ---
             const guild = interaction.guild;
             const member = await guild.members.fetch(targetUser.id);
-            const updatedUserForHokage = await handleHokageChakra(targetUser.id, member);
-            if (updatedUserForHokage) {
-                userProfileData = updatedUserForHokage; // refresh in-memory profile for rendering
+            const updatedChakraUser = await updateChakraOverrides(targetUser.id, member, userProfileData);
+            if (updatedChakraUser) {
+                userProfileData = updatedChakraUser;
             }
 
             // --- Determine theme with admin command priority ---
@@ -265,8 +258,8 @@ module.exports = {
     }
 };
 
-// Handle Jinchuriki chakra override
-async function handleJinchurikiChakra(userId, userProfileData) {
+// Handle chakra overrides for Jinchuriki and Hokage
+async function updateChakraOverrides(userId, member, userProfileData) {
     const usersDataPath = path.resolve(__dirname, '../../menma/data/users.json');
     let usersData = {};
     try {
@@ -278,72 +271,42 @@ async function handleJinchurikiChakra(userId, userProfileData) {
 
     if (!usersData[userId]) return null;
 
-    const hasJinchuriki = userProfileData &&
+    const hasJinchuriki = (userProfileData &&
         Array.isArray(userProfileData.premiumRoles) &&
-        userProfileData.premiumRoles.some(role => role.roleId === GAMEPASS_IDS.JINCHURIKI);
+        userProfileData.premiumRoles.some(role => role && role.roleId === GAMEPASS_IDS.JINCHURIKI)) ||
+        (userProfileData && userProfileData.perks === "Jinchuriki") ||
+        member.roles.cache.has(GAMEPASS_IDS.JINCHURIKI);
 
-    let needsUpdate = false;
-
-    if (hasJinchuriki) {
-        if (usersData[userId].chakra !== 15) {
-            usersData[userId].chakra = 15;
-            needsUpdate = true;
-        }
-    } else {
-        if (usersData[userId].chakra > 10) {
-            usersData[userId].chakra = 10;
-            needsUpdate = true;
-        }
-    }
-
-    if (needsUpdate) {
-        try {
-            fs.writeFileSync(usersDataPath, JSON.stringify(usersData, null, 2));
-            // return the updated user object so caller can refresh its in-memory copy
-            return usersData[userId];
-        } catch (e) {
-            console.error('Error writing users data:', e);
-            return null;
-        }
-    }
-
-    // no changes, but return the current user object for consistency
-    return usersData[userId] || null;
-}
-
-// Handle Hokage chakra override
-async function handleHokageChakra(userId, member) {
-    const usersDataPath = path.resolve(__dirname, '../../menma/data/users.json');
-    let usersData = {};
+    // Additionally check players.json for Jinchuriki status as per user request
+    let hasJinchurikiInPlayers = false;
     try {
-        usersData = JSON.parse(fs.readFileSync(usersDataPath, 'utf8'));
+        const playersDataPath = path.resolve(__dirname, '../../menma/data/players.json');
+        if (fs.existsSync(playersDataPath)) {
+            const playersData = JSON.parse(fs.readFileSync(playersDataPath, 'utf8'));
+            if (playersData[userId] && Array.isArray(playersData[userId].premiumRoles)) {
+                hasJinchurikiInPlayers = playersData[userId].premiumRoles.some(role => role && role.roleId === GAMEPASS_IDS.JINCHURIKI);
+            }
+        }
     } catch (e) {
-        console.error('Error reading users data:', e);
-        return null;
+        console.error('Error checking players for Jinchuriki:', e);
     }
-
-    if (!usersData[userId]) return null;
 
     const hasHokage = member.roles.cache.has(GAMEPASS_IDS.HOKAGE);
 
-    let needsUpdate = false;
-
+    let targetChakra = 10;
     if (hasHokage) {
-        if (usersData[userId].chakra !== 30) {
-            usersData[userId].chakra = 30;
-            needsUpdate = true;
-        }
-    } else {
-        if (usersData[userId].chakra > 10) { // Reset if they are not hokage but have more than base chakra
-            usersData[userId].chakra = 10;
-            needsUpdate = true;
-        }
+        targetChakra = 30;
+    } else if (hasJinchuriki || hasJinchurikiInPlayers) {
+        targetChakra = 15;
     }
 
-    if (needsUpdate) {
+    // Only set if different. 
+    // Note: If they have manually increased chakra above 10, this will reset them to 10 if they aren't Jinchuriki/Hokage.
+    // Based on user request "sets their chakra to 10 if they dont", this seems to be the intended behavior.
+    if (usersData[userId].chakra !== targetChakra) {
+        usersData[userId].chakra = targetChakra;
         try {
             fs.writeFileSync(usersDataPath, JSON.stringify(usersData, null, 2));
-            // return the updated user object so caller can refresh its in-memory copy
             return usersData[userId];
         } catch (e) {
             console.error('Error writing users data:', e);
@@ -351,8 +314,7 @@ async function handleHokageChakra(userId, member) {
         }
     }
 
-    // no changes, but return the current user object for consistency
-    return usersData[userId] || null;
+    return usersData[userId];
 }
 
 // Helper function to determine user's theme with admin command priority
@@ -375,13 +337,13 @@ function determineTheme(userProfileData) {
     // If no admin color, check gamepass roles
     const userRoles = userProfileData.premiumRoles || [];
 
-    const hasJinchuriki = userRoles.some(role => role.roleId === GAMEPASS_IDS.JINCHURIKI);
+    const hasJinchuriki = userRoles.some(role => role && role.roleId === GAMEPASS_IDS.JINCHURIKI);
     if (hasJinchuriki) return THEMES.JINCHURIKI;
 
-    const hasLegendaryNinja = userRoles.some(role => role.roleId === GAMEPASS_IDS.LEGENDARY_NINJA);
+    const hasLegendaryNinja = userRoles.some(role => role && role.roleId === GAMEPASS_IDS.LEGENDARY_NINJA);
     if (hasLegendaryNinja) return THEMES.LEGENDARY_NINJA;
 
-    const hasDonator = userRoles.some(role => role.roleId === GAMEPASS_IDS.DONATOR);
+    const hasDonator = userRoles.some(role => role && role.roleId === GAMEPASS_IDS.DONATOR);
     if (hasDonator) return THEMES.DONATOR;
 
     return THEMES.GREY_BASIC; // Default to basic grey for non-donators

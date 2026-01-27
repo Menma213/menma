@@ -16,6 +16,9 @@ app.use(express.json());
 // [CHANGED] Serve static files from the 'website/story' directory (The new Interactive Story)
 app.use(express.static(path.join(__dirname, 'website', 'story')));
 
+// [NEW] Event Page
+app.use('/event', express.static(path.join(__dirname, 'websitee', 'event')));
+
 // [BACKUP] Old configuration for the 3D Game
 // app.use(express.static(path.join(__dirname, 'website')));
 

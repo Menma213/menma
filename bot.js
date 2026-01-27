@@ -46,6 +46,68 @@ if (typeof storyModule.setup === 'function') {
 }
 // --- End minigame engine setup ---
 
+// Money Logging System
+const lastUserInteraction = {};
+const MONEY_LOG_LIMIT = 2000000;
+const MONEY_LOG_CHANNEL = '1381278641144467637';
+const MONEY_LOG_FILE = path.join(__dirname, 'data', 'money_gain_logs.txt');
+const PLAYERS_FILE = path.join(__dirname, 'data', 'players.json');
+let lastPlayersState = {};
+
+// Initial load of players state
+try {
+    if (fs.existsSync(PLAYERS_FILE)) {
+        lastPlayersState = JSON.parse(fs.readFileSync(PLAYERS_FILE, 'utf8'));
+    }
+} catch (e) {
+    console.error('[MoneyMonitor] Failed initial load:', e);
+}
+
+function monitorMoneyGains() {
+    try {
+        if (!fs.existsSync(PLAYERS_FILE)) return;
+        const currentData = JSON.parse(fs.readFileSync(PLAYERS_FILE, 'utf8'));
+
+        for (const userId in currentData) {
+            const oldMoney = lastPlayersState[userId]?.money || 0;
+            const newMoney = currentData[userId]?.money || 0;
+            const gain = newMoney - oldMoney;
+
+            if (gain >= MONEY_LOG_LIMIT) {
+                const interaction = lastUserInteraction[userId];
+                const now = Date.now();
+                let source = "Unknown / System";
+
+                if (interaction && (now - interaction.timestamp < 120000)) { // 2 minute window
+                    source = `Command: /${interaction.command}`;
+                }
+
+                const logEntry = `💰 **BIG MONEY ALERT**\n` +
+                    `**User:** <@${userId}> (${userId})\n` +
+                    `**Gain:** $${gain.toLocaleString()}\n` +
+                    `**New Balance:** $${newMoney.toLocaleString()}\n` +
+                    `**Source:** ${source}\n` +
+                    `**Time:** ${new Date().toLocaleString()}`;
+
+                // Log to Discord
+                client.channels.fetch(MONEY_LOG_CHANNEL).then(channel => {
+                    if (channel) channel.send(logEntry);
+                }).catch(err => console.error('[MoneyMonitor] Discord Log Error:', err));
+
+                // Log to Text File
+                const fileEntry = `[${new Date().toISOString()}] User: ${userId}, Gain: ${gain}, NewBalance: ${newMoney}, Source: ${source}\n`;
+                fs.appendFileSync(MONEY_LOG_FILE, fileEntry);
+            }
+        }
+        lastPlayersState = JSON.parse(JSON.stringify(currentData));
+    } catch (err) {
+        // Silently fail to avoid disrupting the bot
+    }
+}
+
+// Poll every 5 seconds for changes
+setInterval(monitorMoneyGains, 5000);
+
 // Load all command files
 const commandsPath = path.join(__dirname, '/commands');
 const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
@@ -97,6 +159,12 @@ client.on('interactionCreate', async interaction => {
 
     const command = client.commands.get(interaction.commandName);
     if (!command) return;
+
+    // Track interaction for money logging
+    lastUserInteraction[interaction.user.id] = {
+        command: interaction.commandName,
+        timestamp: Date.now()
+    };
 
     try {
         await command.execute(interaction);
