@@ -820,7 +820,7 @@ const applyEffect = (effect, user, target, effectiveUser, effectiveTarget, resul
                 const targetEntity = effect.applyToTarget ? target : user;
                 const cleansed = effectHandlers.cleanse(targetEntity);
                 if (cleansed.length > 0) {
-                    if (result.specialEffects) result.specialEffects.push(`${targetEntity.name} cleansed: ${cleansed.join(', ')}`);
+                    if (result.specialEffects) result.specialEffects.push(`${targetEntity.name} cleanses: ${cleansed.join(', ')}`);
                 }
                 Object.assign(effect.applyToTarget ? effectiveTarget : effectiveUser, getEffectiveStats(targetEntity));
                 return { type: 'cleanse', value: cleansed };

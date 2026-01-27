@@ -56,6 +56,12 @@ function execute({
         result.specialEffects.push("The slash failed to tear space correctly.");
     }
 
+    // --- B.5 CLEANSE EFFECT ---
+    const cleansed = effectHandlers.cleanse(baseUser);
+    if (cleansed && cleansed.length > 0) {
+        result.specialEffects.push(`${baseUser.name} cleanses: ${cleansed.join(', ')}`);
+    }
+
     // --- C. BUFFS (20x Power) ---
     // Multiply Power by 20x for 3 rounds
     const powerDelta = Math.floor(effectiveUser.power * 19);

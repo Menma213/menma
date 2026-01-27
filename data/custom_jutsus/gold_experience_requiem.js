@@ -46,7 +46,7 @@ function execute({
     // --- 3. CLEANSE EFFECT ---
     const cleansed = effectHandlers.cleanse(baseUser);
     if (cleansed && cleansed.length > 0) {
-        result.specialEffects.push(`Cleansed negative effects: ${cleansed.join(', ')}`);
+        result.specialEffects.push(`${baseUser.name} cleanses: ${cleansed.join(', ')}`);
     }
 
     // --- 4. STATUS IMMUNITY (3 Rounds) ---
@@ -67,8 +67,8 @@ function execute({
             type: 'status',
             status: 'revive',
             duration: 99,
-            heal_amount: maxHealth,
-            revive_to_max_health: true,
+            heal_amount: Math.floor(maxHealth * 0.5),
+            revive_to_max_health: false,
             once_per_battle: true,
             source: jutsuData.name
         });
@@ -80,13 +80,13 @@ function execute({
             type: 'revive',
             trigger: 'onDeath',
             healPercent: 0.5,
-            heal_amount: maxHealth,
+            heal_amount: Math.floor(maxHealth * 0.5),
             once: true,
             duration: 99,
             source: jutsuData.name
         });
 
-        result.specialEffects.push(`**Endless Life:** ${baseUser.name} will revive to half HP if defeated!`);
+        result.specialEffects.push(`**Endless Life:** ${baseUser.name} will revive to 50% HP if defeated!`);
     } else {
         result.specialEffects.push(`**Endless Life:** ${baseUser.name} has already revived this battle and cannot do it again.`);
     }
