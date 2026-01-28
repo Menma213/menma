@@ -100,6 +100,16 @@ const THEMES = {
         flexText: '❄❄',
         isPremium: true,
         isWinter: true
+    },
+    AKATSUKI: {
+        primary: '#a30000', // Dark Red
+        secondary: '#000000', // AMOLED Black
+        accent: '#ff2b2b', // Bright Red
+        background: ['#000000', '#120000', '#000000'],
+        bgUrl: 'https://i.postimg.cc/3J4VD64M/image.png',
+        flexText: 'AKATSUKI',
+        isPremium: true,
+        isAkatsuki: true
     }
 };
 
@@ -332,6 +342,7 @@ function determineTheme(userProfileData) {
         if (color === 'green') return THEMES.GREEN;
         if (color === 'orange') return THEMES.ORANGE;
         if (color === 'frost') return THEMES.FROST_ROYAL;
+        if (color === 'akatsuki') return THEMES.AKATSUKI;
     }
 
     // If no admin color, check gamepass roles
@@ -377,6 +388,19 @@ async function generateMainProfilePage(targetUser, userProfileData, playerStats,
         ctx.fillStyle = theme.background[0];
     }
     ctx.fillRect(0, 0, 600, 900);
+
+    // --- Akatsuki Background Image ---
+    if (theme.isAkatsuki && theme.bgUrl) {
+        try {
+            const bgImage = await loadImageWithRetry(theme.bgUrl);
+            ctx.save();
+            ctx.globalAlpha = 0.4; // 40% opacity for background image
+            ctx.drawImage(bgImage, 0, 0, 600, 900);
+            ctx.restore();
+        } catch (err) {
+            console.error("Error loading Akatsuki background:", err);
+        }
+    }
 
     // --- Sparkling Effects (for premium themes) ---
     if (theme.isPremium) {
@@ -463,6 +487,47 @@ async function generateMainProfilePage(targetUser, userProfileData, playerStats,
                 ctx.arc(x, y, radius * 3, 0, Math.PI * 2);
                 ctx.fill();
             }
+
+        } else if (theme.isAkatsuki) {
+            // === AKATSUKI EXCLUSIVE EFFECTS ===
+
+            // 1. Dark Red Mist/Clouds
+            for (let i = 0; i < 40; i++) {
+                const x = Math.random() * canvas.width;
+                const y = Math.random() * canvas.height;
+                const radius = Math.random() * 80 + 40;
+                const mistGradient = ctx.createRadialGradient(x, y, 0, x, y, radius);
+                mistGradient.addColorStop(0, 'rgba(139, 0, 0, 0.15)'); // Dark Red Mist
+                mistGradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+
+                ctx.fillStyle = mistGradient;
+                ctx.beginPath();
+                ctx.arc(x, y, radius, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // 2. Floating Red Particles (Ember-like)
+            for (let i = 0; i < 80; i++) {
+                const x = Math.random() * canvas.width;
+                const y = Math.random() * canvas.height;
+                const size = Math.random() * 2 + 0.5;
+                const alpha = Math.random() * 0.7 + 0.3;
+
+                ctx.shadowBlur = 4;
+                ctx.shadowColor = '#ff0000';
+                ctx.fillStyle = `rgba(255, 43, 43, ${alpha})`;
+                ctx.beginPath();
+                ctx.arc(x, y, size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.shadowBlur = 0;
+
+            // 3. Subtle Red Vignette
+            const vignette = ctx.createRadialGradient(300, 450, 200, 300, 450, 600);
+            vignette.addColorStop(0, 'rgba(0, 0, 0, 0)');
+            vignette.addColorStop(1, 'rgba(139, 0, 0, 0.2)');
+            ctx.fillStyle = vignette;
+            ctx.fillRect(0, 0, 600, 900);
 
         } else {
             // Regular sparkles for other premium themes
@@ -764,6 +829,19 @@ function drawSection(ctx, x, y, width, height, borderColor) {
             ctx.stroke();
             ctx.restore();
         });
+    } else if (borderColor === '#a30000') { // Akatsuki Dark Red
+        // Dark Glowing Red Inner Edge
+        ctx.strokeStyle = 'rgba(163, 0, 0, 0.4)';
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.roundRect(x, y, width, height, 10);
+        ctx.stroke();
+
+        // Pulsing-like Shadow
+        ctx.shadowBlur = 8;
+        ctx.shadowColor = '#8b0000';
+        ctx.stroke();
+        ctx.shadowBlur = 0;
     }
 }
 

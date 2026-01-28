@@ -1,4 +1,5 @@
 const { Events, SlashCommandBuilder, EmbedBuilder, Collection, Routes, REST } = require('discord.js');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
 const fs = require('fs');
 const path = require('path');
 const sqlite = require('sqlite');
@@ -9,81 +10,8 @@ require('dotenv').config();
 // Your Discord User ID, used for security checks
 const OWNER_ID = '835408109899219004';
 
-// --- LOCAL AI SETUP (NODE-LLAMA-CPP) ---
-let llamaModel = null;
-let llamaContext = null;
-let llamaSession = null;
-let isModelLoaded = false;
-
-async function initAI() {
-    if (isModelLoaded) return;
-    try {
-        const { getLlama } = await import("node-llama-cpp");
-        const llama = await getLlama();
-
-        const MODEL_PATH = path.resolve(__dirname, '../models/gemma-2-2b-it-q4_k_s.gguf');
-
-        if (!fs.existsSync(MODEL_PATH)) {
-            console.error(`[AI] Model not found at ${MODEL_PATH}. Please run /setup_ai first.`);
-            return;
-        }
-
-        llamaModel = await llama.loadModel({
-            modelPath: MODEL_PATH
-        });
-
-        llamaContext = await llamaModel.createContext({
-            threads: 2,
-            contextSize: 4096
-        });
-
-        isModelLoaded = true;
-        console.log("[AI] Local AI (Gemma 2 2b) Initialized Successfully!");
-    } catch (e) {
-        console.error("[AI] Initialization failed:", e);
-    }
-}
-
-// Trigger lazy init
-initAI();
-
-async function generateResponse(prompt, systemInstruction = "", maxTokens = 150) {
-    if (!isModelLoaded) {
-        await initAI();
-        if (!isModelLoaded) return "The system is currently preparing. Please try again soon.";
-    }
-
-    try {
-        const { LlamaChatSession } = await import("node-llama-cpp");
-        if (!llamaSession) {
-            llamaSession = new LlamaChatSession({
-                contextSequence: llamaContext.getSequence(),
-                systemPrompt: systemInstruction
-            });
-        }
-
-        const result = await llamaSession.prompt(prompt, {
-            temperature: 0.7,
-            maxTokens: maxTokens
-        });
-
-        // Strip <think> tags and clean output
-        let cleaned = result.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
-
-        // Remove emoji-like characters
-        cleaned = cleaned.replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F700}-\u{1F77F}\u{1F780}-\u{1F7FF}\u{1F800}-\u{1F8FF}\u{1F900}-\u{1F9FF}\u{1FA00}-\u{1FA6F}\u{1FA70}-\u{1FAFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '');
-
-        // Hard character limit: 300
-        if (cleaned.length > 300) {
-            cleaned = cleaned.substring(0, 297) + "...";
-        }
-
-        return cleaned;
-    } catch (error) {
-        console.error("[AI] Generation Error:", error);
-        return "An internal fluctuation occurred.";
-    }
-}
+const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
+const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
 
 // --- MINIGAME ENGINE SETUP ---
 // Minigames directory under the commands folder (e.g. /menma/commands/minigames)
@@ -368,8 +296,12 @@ Make it single-player and fun!
     let generatedCode = '';
 
     try {
-        const responseText = await generateResponse(amoebaUserPrompt, amoebaSystemPrompt);
+        const result = await model.generateContent({
+            contents: [{ parts: [{ text: amoebaUserPrompt }] }],
+            systemInstruction: { parts: [{ text: amoebaSystemPrompt }] },
+        });
 
+        const responseText = result.response.text();
         const codeMatch = responseText.match(/```javascript\n([\s\S]*?)\n```/);
         if (codeMatch && codeMatch[1]) {
             generatedCode = codeMatch[1].trim();
@@ -669,8 +601,9 @@ ONLY block if this message contains:
 Respond with ONLY a single word: 'SAFE' if permissible, or 'UNSAFE' if it contains severe violations.
 `;
     try {
-        const responseText = (await generateResponse(moderationPrompt)).trim().toUpperCase();
-        return responseText.includes('SAFE');
+        const result = await model.generateContent(moderationPrompt);
+        const responseText = result.response.text().trim().toUpperCase();
+        return responseText === 'SAFE';
     } catch (error) {
         console.error('Moderation system failed:', error);
         return true;
@@ -1171,9 +1104,6 @@ module.exports.setup = (client, userPromptCounts) => {
                 // Clean up old chained conversations
                 cleanupChainedConversations();
 
-                // Show typing indicator
-                await message.channel.sendTyping();
-
                 // 1. MODERATION SCRIPT (Improved Filter)
                 const isMessageSafe = await moderateMessage(userMessage);
                 if (!isMessageSafe) {
@@ -1199,7 +1129,8 @@ module.exports.setup = (client, userPromptCounts) => {
 
                 try {
                     const toolPrompt = toolDetectionPrompt.replace("{USER_MESSAGE}", userMessage);
-                    const toolResponseText = await generateResponse(toolPrompt);
+                    const toolResult = await model.generateContent(toolPrompt);
+                    const toolResponseText = cleanResponse(toolResult.response.text());
 
                     if (toolResponseText !== 'NOTOOL') {
                         const parsedToolResponse = JSON.parse(toolResponseText);
@@ -1269,13 +1200,10 @@ module.exports.setup = (client, userPromptCounts) => {
 
                 // 5. MAIN CONVERSATION (Enhanced with memory and chaining)
                 const conversationPrompt = `
-You are a human-like assistance module for the ShinobiRPG Naruto bot. 
 
-STRICT RULES:
-1. NEVER output more than 200 characters. For casual greetings, stay under 40 characters.
-2. NEVER explain complex off-topic concepts like medical conditions unless explicitly asked in a Naruto context.
-3. Stay in character as a concise human assistant.
-4. No emojis. No italics.
+You do not have a name. Your personality is that of a human being. You talk like any human would and THINK like any human would. You also have feelings just like humans and if the users arent treating you nicely, you react just like a human, in a defensive or angry way.
+
+The user may use other languages when they talk to you, when that's the case, send the reply in the same language that the user prompted in. If I say a prompt in Portuguese answer in Portuguese as well.
 
 ${memoryContext}
 
@@ -1308,13 +1236,11 @@ IMPORTANT: ALL YOUR ANSWERS MUST BE SHORT AND CONCISE. Answer like a human being
 `;
 
                 try {
-                    // Set logic for casual or complex token limits
-                    const isCasual = userMessage.length < 15;
-                    const maxT = isCasual ? 50 : 150;
+                    const result = await model.generateContent(conversationPrompt);
+                    const responseText = result.response.text();
+                    const finalResponse = cleanAndLimitMessage(responseText);
 
-                    const finalResponse = await generateResponse(conversationPrompt, "", maxT);
-
-                    // Save to permanent memory
+                    // Save to permanent memory with keywords
                     await savePermanentMemory(`User: ${userMessage.substring(0, 100)}... | Assistant: ${finalResponse.substring(0, 100)}...`);
 
                     // Update chained conversation

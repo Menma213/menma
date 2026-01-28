@@ -15,7 +15,7 @@ const TONERI_NPC = {
     chakra: 1000,
     "statsType": "fixed",
     immunities: ["stun", "bleed", "burn", "status"],
-    dodge: 100,
+    dodge: 50,
     background: "https://i.postimg.cc/cLxM7Gbm/image.png",
     jutsu: [
         "Attack",

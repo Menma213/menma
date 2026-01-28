@@ -2789,5 +2789,81 @@
     "obtainable": false,
     "effects": [],
     "scriptFile": "violent_fierce_god_slicer.js"
+  },
+  "Explosive Bird": {
+    "name": "Explosive Bird",
+    "description": "user creates a bird made of explosive chakra and sends it towards target",
+    "image_url": "https://i.pinimg.com/originals/55/3c/9e/553c9e2df7214ebf3a56d4a081e8bf7c.gif",
+    "chakraCost": 15,
+    "category": "raid Boss jutsu",
+    "obtainment": "unobtainable",
+    "obtainable": false,
+    "effects": [
+      {
+        "type": "damage",
+        "formula": "3000 * user.power / target.defense"
+      },
+      {
+        "type": "status",
+        "status": "Bleed",
+        "duration": 10
+      },
+      {
+        "type": "debuff",
+        "stats": {
+          "defense": "target.defense * 0.20"
+        },
+        "duration": 10
+      }
+    ]
+  },
+  "C3": {
+    "name": "C3",
+    "description": "user drops a life sized nuke onto target",
+    "image_url": "https://i.pinimg.com/originals/55/3c/9e/553c9e2df7214ebf3a56d4a081e8bf7c.gif",
+    "chakraCost": 15,
+    "category": "raid Boss jutsu",
+    "obtainment": "unobtainable",
+    "obtainable": false,
+    "effects": [
+      {
+        "type": "damage",
+        "formula": "10000 * user.power / target.defense"
+      },
+      {
+        "type": "OHKO",
+        "chance": 0.5
+      }
+    ]
+  },
+  "Izanami": {
+    "name": "Izanami",
+    "description": "**Teachings that do not speak of pain have no meaning, for humankind cannot gain anything in return**\n user uses Izanami, The Space and Time around them slowed down. user now controls the time around them for the fate to be decided.",
+    "info": "On use: Sets HP/Chakra to Infinity for 3 rounds (Recording Phase). After Recording, Flow Phase starts where target MUST repeat moves or deal 0 damage, while user auto-repeats moves. Only usable once. Last Resort: If dying without using, revives at 1 HP, cleanses, and activates Life Drainer mode.",
+    "image_url": "https://media.tenor.com/_7iTq0Z3SjMAAAAM/itachi-izanami.gif",
+    "chakraCost": 0,
+    "category": "Akatsuki Event Exclusive",
+    "obtainment": "unobtainable",
+    "obtainable": true,
+    "effects": [],
+    "scriptFile": "izanami.js"
+  },
+  "Life Drainer": {
+    "name": "Life Drainer",
+    "description": "User drains the very life essence of the target.",
+    "info": "Attack: user.power * 2500 / target.defense. Steals 50% Max HP from target.",
+    "chakraCost": 0,
+    "category": "Exclusive",
+    "obtainment": "Triggered by Izanami Last Resort",
+    "effects": [
+      {
+        "type": "damage",
+        "formula": "user.power * 2500 / target.defense"
+      },
+      {
+        "type": "lifesteal_max_hp",
+        "percentage": 50
+      }
+    ]
   }
 }

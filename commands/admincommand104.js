@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 
 const usersPath = path.resolve(__dirname, '../../menma/data/users.json');
-const ALLOWED_COLORS = ['default', 'grey', 'donator', 'legendary', 'jinchuriki', 'blue', 'cyan', 'green', 'orange', 'frost', 'amoled'];
+const ALLOWED_COLORS = ['default', 'grey', 'donator', 'legendary', 'jinchuriki', 'blue', 'cyan', 'green', 'orange', 'frost', 'akatsuki'];
 const ADMIN_ROLE_ID = '1381268854776529028'; // Replace with your actual admin role ID
 
 module.exports = {

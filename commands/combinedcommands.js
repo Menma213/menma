@@ -64,6 +64,12 @@ let effectsConfig = fs.existsSync(effectsConfigPath) ? JSON.parse(fs.readFileSyn
 
 // --- Enhanced Effect Handlers ---
 const effectHandlers = {
+    lifestealMaxHP(user, target, percentage) {
+        const amount = Math.floor((target.maxHealth || target.health || 100) * (percentage / 100));
+        target.currentHealth = (target.currentHealth || 0) - amount;
+        user.currentHealth = (user.currentHealth || 0) + amount;
+        return amount;
+    },
     /**
      * Calculates damage with improved dodge mechanics
      */
@@ -429,7 +435,9 @@ const effectHandlers = {
      * Instant kill with chance
      */
     instantKill: (chance) => {
-        return Math.random() * 100 <= chance;
+        if (chance <= 0) return false;
+        if (chance > 1) return Math.random() * 100 <= chance;
+        return Math.random() <= chance;
     },
 
     /**
@@ -831,14 +839,25 @@ const applyEffect = (effect, user, target, effectiveUser, effectiveTarget, resul
                 if (result.specialEffects) result.specialEffects.push(`Gained ${chakraGain} Chakra`);
                 return { type: 'chakra_gain', value: chakraGain };
             }
-            case 'instantKill': {
+            case 'instantKill':
+            case 'OHKO':
+            case 'ohko': {
+                const targetEntity = effect.applyToUser ? user : target;
                 if (effectHandlers.instantKill(effect.chance)) {
-                    target.currentHealth = 0;
-                    if (result.specialEffects) result.specialEffects.push(`${target.name} was instantly killed!`);
+                    targetEntity.currentHealth = 0;
+                    if (result.specialEffects) result.specialEffects.push(`${targetEntity.name} was instantly killed!`);
                     return { type: 'instantKill', value: true };
                 }
                 break;
             }
+            case 'lifesteal_max_hp': {
+                const percentage = Number(effect.percentage) || 0;
+                const stolen = effectHandlers.lifestealMaxHP(user, target, percentage);
+                if (result.specialEffects) result.specialEffects.push(`Life Drainer: Stole ${stolen} HP from target (50% Max HP)!`);
+                return { type: 'lifesteal_max_hp', value: stolen };
+            }
+            default:
+                break;
         }
     } catch (err) {
         console.error(`Error processing ${effect.type} effect:`, err);
@@ -1452,7 +1471,17 @@ function createMovesEmbed(player, roundNum) {
         );
 
     let availableJutsusForDisplay = Object.entries(player.jutsu)
-        .filter(([_, jutsu]) => jutsu !== 'None' && !(jutsu === 'Attack' && player.activeEffects?.some(e => e.type === 'status' && e.status === 'Perfect Susanoo Active')))
+        .filter(([_, jutsu]) => {
+            if (jutsu === 'None') return false;
+            // Life Drainer Lock: only allow Attack
+            if (player.activeEffects?.some(e => e.status === 'Life Drainer Active')) {
+                return jutsu === 'Attack';
+            }
+            if (jutsu === 'Attack' && player.activeEffects?.some(e => e.type === 'status' && e.status === 'Perfect Susanoo Active')) {
+                return false;
+            }
+            return true;
+        })
         .map(([key, jutsuName]) => ({ key, name: jutsuName, data: jutsuList[jutsuName] }));
 
     // Add Susano Slash as an extra option if Perfect Susanoo is active
@@ -1490,7 +1519,11 @@ function createMovesEmbed(player, roundNum) {
             const chakraCost = data?.chakraCost || 0;
             if ((typeof player.chakra === "number" ? player.chakra : 0) < chakraCost) {
                 isDisabled = true;
+            }
 
+            // Disable Izanami if used
+            if (name === 'Izanami' && player.izanamiUsed) {
+                isDisabled = true;
             }
 
             return new ButtonBuilder()
@@ -2112,16 +2145,23 @@ function createBattleSummary(
         p2Description += comboDamageText2;
     }
 
+    // Display overrides for Izanami Infinity
+    const isAnyIzanamiRecording = (player1.izanamiPhase === "recording" || player2.izanamiPhase === "recording");
+    let p1HealthDisplay = isAnyIzanamiRecording ? "∞" : p1Health;
+    let p1ChakraDisplay = isAnyIzanamiRecording ? "∞" : p1Chakra;
+    let p2HealthDisplay = isAnyIzanamiRecording ? "∞" : p2Health;
+    let p2ChakraDisplay = isAnyIzanamiRecording ? "∞" : p2Chakra;
+
     // Add fields for better organization
     embed.addFields(
         {
             name: `${player1.name} ${p1EffectEmojis}`,
-            value: `${p1Description}\n\n**HP:** ${p1Health}\n**Chakra:** ${p1Chakra}`,
+            value: `${p1Description}\n\n**HP:** ${p1HealthDisplay}\n**Chakra:** ${p1ChakraDisplay}`,
             inline: true
         },
         {
             name: `${player2.name} ${p2EffectEmojis}`,
-            value: `${p2Description}\n\n**HP:** ${p2Health}\n**Chakra:** ${p2Chakra}`,
+            value: `${p2Description}\n\n**HP:** **${p2HealthDisplay}**\n**Chakra:** **${p2ChakraDisplay}**`,
             inline: true
         }
     );
@@ -2654,6 +2694,30 @@ async function runBattle(interaction, player1Id, player2Id, battleType, npcTempl
             })(),
             activeCustomRoundJutsus: []
         };
+
+        // --- Raid Boss Deidara Persistent HP Logic ---
+        if (isRaidBoss && player2.name === 'Deidara') {
+            const raidBossPath = path.resolve(__dirname, '../../menma/data/deidara_raid.json');
+            let raidData = { currentHP: 5000000000 };
+            try {
+                if (fs.existsSync(raidBossPath)) {
+                    raidData = JSON.parse(fs.readFileSync(raidBossPath, 'utf8'));
+                } else {
+                    fs.writeFileSync(raidBossPath, JSON.stringify(raidData, null, 2));
+                }
+            } catch (e) {
+                console.error("Error loading Deidara raid HP:", e);
+            }
+            player2.health = 5000000000;
+            player2.maxHealth = 5000000000;
+            player2.currentHealth = raidData.currentHP;
+
+            // Set stats as requested
+            player2.power = 20000000;
+            player2.defense = 20000000;
+            player2.accuracy = 100;
+            player2.dodge = 50;
+        }
         // ...existing code...
         // ...existing code...
     } else {
@@ -2822,6 +2886,27 @@ async function runBattle(interaction, player1Id, player2Id, battleType, npcTempl
         const tryApplyRevive = (combatant) => {
             if (!combatant || (combatant.currentHealth || 0) > 0) return false;
 
+            // --- IZANAMI LAST RESORT ---
+            const hasIzanami = Object.values(combatant.jutsu || {}).some(j => j === 'Izanami');
+            if (hasIzanami && !combatant.izanamiUsed && !combatant.hasRevivedThisBattle) {
+                combatant.currentHealth = 1;
+                effectHandlers.cleanse(combatant);
+                combatant.izanamiUsed = true;
+                combatant.hasRevivedThisBattle = true;
+
+                // Set life drainer mode
+                combatant.activeEffects = combatant.activeEffects || [];
+                combatant.activeEffects.push({
+                    type: 'status',
+                    status: 'Life Drainer Active',
+                    replacesAttack: true,
+                    replaceWith: 'Life Drainer',
+                    duration: 999
+                });
+
+                return { type: 'izanami' };
+            }
+
             // Check if player has already revived in this battle
             if (combatant.hasRevivedThisBattle) {
                 return false;
@@ -2872,24 +2957,41 @@ async function runBattle(interaction, player1Id, player2Id, battleType, npcTempl
         if (player1.currentHealth <= 0) {
             const revived = tryApplyRevive(player1);
             if (revived) {
-                const reviveEmbed = new EmbedBuilder()
-                    .setTitle('**NOT YET!**')
-                    .setDescription(`${player1.name} was revived and returned to the battle!`)
-                    .setColor(0xFF0000)
-                    .setImage('https://media.tenor.com/6Z6Vn2K1C5kAAAAM/goku-transform.gif');
-                await battleChannel.send({ embeds: [reviveEmbed] });
-                // revive applied; allow the round to continue (summaries/actions will reflect it)
+                if (revived.type === 'izanami') {
+                    const izanamiRevive = new EmbedBuilder()
+                        .setTitle('**IZANAMI: LAST RESORT**')
+                        .setDescription(`${player1.name}'s death triggered Izanami! They return at 1 HP, cleansed of all ailments, and enter **LIFE DRAINER** mode!`)
+                        .setColor(0x000000)
+                        .setImage('https://media.tenor.com/_7iTq0Z3SjMAAAAM/itachi-izanami.gif');
+                    await battleChannel.send({ embeds: [izanamiRevive] });
+                } else {
+                    const reviveEmbed = new EmbedBuilder()
+                        .setTitle('**NOT YET!**')
+                        .setDescription(`${player1.name} was revived and returned to the battle!`)
+                        .setColor(0xFF0000)
+                        .setImage('https://media.tenor.com/6Z6Vn2K1C5kAAAAM/goku-transform.gif');
+                    await battleChannel.send({ embeds: [reviveEmbed] });
+                }
             }
         }
         if (player2.currentHealth <= 0) {
             const revived = tryApplyRevive(player2);
             if (revived) {
-                const reviveEmbed = new EmbedBuilder()
-                    .setTitle('**NOT YET!**')
-                    .setDescription(`${player2.name} was revived and returned to the battle!`)
-                    .setColor(0xFF0000)
-                    .setImage('https://media.tenor.com/6Z6Vn2K1C5kAAAAM/goku-transform.gif');
-                await battleChannel.send({ embeds: [reviveEmbed] });
+                if (revived.type === 'izanami') {
+                    const izanamiRevive = new EmbedBuilder()
+                        .setTitle('**IZANAMI: LAST RESORT**')
+                        .setDescription(`${player2.name}'s death triggered Izanami! They return at 1 HP, cleansed of all ailments, and enter **LIFE DRAINER** mode!`)
+                        .setColor(0x000000)
+                        .setImage('https://media.tenor.com/_7iTq0Z3SjMAAAAM/itachi-izanami.gif');
+                    await battleChannel.send({ embeds: [izanamiRevive] });
+                } else {
+                    const reviveEmbed = new EmbedBuilder()
+                        .setTitle('**NOT YET!**')
+                        .setDescription(`${player2.name} was revived and returned to the battle!`)
+                        .setColor(0xFF0000)
+                        .setImage('https://media.tenor.com/6Z6Vn2K1C5kAAAAM/goku-transform.gif');
+                    await battleChannel.send({ embeds: [reviveEmbed] });
+                }
             }
         }
 
@@ -3121,6 +3223,30 @@ async function runBattle(interaction, player1Id, player2Id, battleType, npcTempl
         applyRoundBasedEffects(player1ActiveJutsus, player1, player2, player1RoundBasedSummaries);
         applyRoundBasedEffects(player2ActiveJutsus, player2, player1, player2RoundBasedSummaries);
 
+        // --- IZANAMI PHASE MANAGEMENT & INFINITY ---
+        [player1, player2].forEach(p => {
+            if (p.izanamiActive) {
+                p.izanamiRound++;
+                if (p.izanamiRound <= 3) {
+                    p.izanamiPhase = "recording";
+                    p.currentHealth = 999999999;
+                    p.chakra = 999999999;
+                    const opp = (p === player1) ? player2 : player1;
+                    opp.currentHealth = 999999999;
+                    opp.chakra = 999999999;
+                    const pSummaries = (p === player1) ? player1RoundBasedSummaries : player2RoundBasedSummaries;
+                    pSummaries.push({ desc: "The Fate is Being Decided" });
+                } else if (p.izanamiRound <= 6) {
+                    p.izanamiPhase = "flow";
+                    const pSummaries = (p === player1) ? player1RoundBasedSummaries : player2RoundBasedSummaries;
+                    pSummaries.push({ desc: "The fate was already decided" });
+                } else {
+                    p.izanamiActive = false;
+                    p.izanamiPhase = "ended";
+                }
+            }
+        });
+
         // --- Determine Custom Background for Battle Image ---
         let customBgUrl = null;
         const getActiveCustomBg = (activeJutsus) => {
@@ -3224,11 +3350,48 @@ async function runBattle(interaction, player1Id, player2Id, battleType, npcTempl
                     }
 
                     if (i.customId.startsWith('move')) {
-                        const jutsuName = getJutsuByButton(i.customId, subPlayer);
+                        let jutsuName = getJutsuByButton(i.customId, subPlayer);
                         const jutsu = jutsuList[jutsuName];
                         // Calculate effective stats for THIS subplayer
                         const effectiveSub = getEffectiveStats(subPlayer);
                         const effectiveTarget = getEffectiveStats(player2);
+
+                        // IZANAMI LOGIC
+                        if (player1.izanamiActive || player2.izanamiActive) {
+                            const activeOwner = player1.izanamiActive ? player1 : player2;
+                            const isOwner = subPlayer.userId === activeOwner.userId;
+                            const phase = activeOwner.izanamiPhase;
+
+                            if (phase === "recording") {
+                                // Record move
+                                activeOwner.izanamiRecordedMoves[isOwner ? 'user' : 'target'].push(jutsuName);
+                                // Set result to "The Fate is Being Decided"
+                                resolve({
+                                    damage: 0, heal: 0,
+                                    description: "The Fate is Being Decided",
+                                    specialEffects: [isOwner ? "User move recorded" : "Target move recorded"],
+                                    hit: false, isStatusEffect: true, jutsuUsed: jutsuName
+                                });
+                                collector.stop();
+                                return;
+                            } else if (phase === "flow") {
+                                if (!isOwner) {
+                                    // Target forced to repeat
+                                    const recordedIdx = activeOwner.izanamiRound - 4; // Flow starts after Round 3
+                                    const expectedMove = activeOwner.izanamiRecordedMoves.target[recordedIdx];
+                                    if (jutsuName !== expectedMove) {
+                                        resolve({
+                                            damage: 0, heal: 0,
+                                            description: "You Cannot change fate.",
+                                            specialEffects: ["Failed to repeat fate"],
+                                            hit: false, isStatusEffect: true, jutsuUsed: jutsuName
+                                        });
+                                        collector.stop();
+                                        return;
+                                    }
+                                }
+                            }
+                        }
 
                         // Bloodline Activation Logic
                         if (subPlayer.pendingBloodline) {
@@ -3326,6 +3489,24 @@ async function runBattle(interaction, player1Id, player2Id, battleType, npcTempl
                 break;
             }
             if (subAction && subAction.fled) {
+            }
+
+            // --- IZANAMI AUTO-REPEAT LOGIC (Consolidated) ---
+            if (player1.izanamiActive || player2.izanamiActive) {
+                const activeOwner = player1.izanamiActive ? player1 : player2;
+                if (activeOwner.userId === subPlayer.userId && activeOwner.izanamiPhase === "flow") {
+                    const recordedIdx = activeOwner.izanamiRound - 4;
+                    const repeatedMove = activeOwner.izanamiRecordedMoves.user[recordedIdx];
+                    if (repeatedMove) {
+                        const effectiveSub = getEffectiveStats(subPlayer);
+                        const effectiveTarget = getEffectiveStats(player2);
+                        const repeatedResult = executeJutsu(subPlayer, player2, effectiveSub, effectiveTarget, repeatedMove);
+                        subAction.damage = (subAction.damage || 0) + (repeatedResult.damage || 0);
+                        subAction.heal = (subAction.heal || 0) + (repeatedResult.heal || 0);
+                        subAction.description = (subAction.description || "") + `\n**Izanami Repeat:** ${repeatedResult.description}`;
+                        subAction.specialEffects = (subAction.specialEffects || []).concat(repeatedResult.specialEffects || []);
+                    }
+                }
             }
 
             // --- NEW: Decrement duration AFTER acting ---
@@ -3824,6 +4005,17 @@ async function runBattle(interaction, player1Id, player2Id, battleType, npcTempl
             player1RoundBasedSummaries, player2RoundBasedSummaries
         );
         await battleChannel.send({ embeds: [summaryEmbed] });
+
+        // --- Save Raid Boss HP after each round ---
+        if (isRaidBoss && player2.name === 'Deidara') {
+            const raidBossPath = path.resolve(__dirname, '../../menma/data/deidara_raid.json');
+            try {
+                const raidData = { currentHP: Math.max(0, player2.currentHealth) };
+                fs.writeFileSync(raidBossPath, JSON.stringify(raidData, null, 2));
+            } catch (e) {
+                console.error("Error saving Deidara raid HP:", e);
+            }
+        }
 
         if (player1.currentHealth <= 0 || player2.currentHealth <= 0) {
             battleActive = false;
