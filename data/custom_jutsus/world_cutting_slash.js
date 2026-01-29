@@ -12,7 +12,8 @@ function execute({
     effectiveTarget,
     jutsuData,
     jutsuList,
-    effectHandlers
+    effectHandlers,
+    getEffectiveStats
 }) {
     const result = {
         damage: 0,
@@ -34,10 +35,35 @@ function execute({
     baseUser.chakra -= cost;
     result.chakraUsed = cost;
 
-    // --- B. DAMAGE CALCULATION ---
-    // Formula: 3000 * user.power / target.defense
+    // --- B.5 CLEANSE EFFECT (BEFORE BUFF) ---
+    const cleansed = effectHandlers.cleanse(baseUser);
+    if (cleansed && cleansed.length > 0) {
+        result.specialEffects.push(`${baseUser.name} cleanses: ${cleansed.join(', ')}`);
+    }
+
+    // --- C. APPLY POWER BUFF FIRST ---
+    const powerDelta = Math.floor(effectiveUser.power * 40);
+    baseUser.activeEffects = baseUser.activeEffects || [];
+    baseUser.activeEffects.push({
+        type: 'buff',
+        stats: {
+            power: powerDelta
+        },
+        duration: 3,
+        source: jutsuData.name,
+        isNew: true
+    });
+    result.specialEffects.push(`${baseUser.name}'s Power is multiplied!`);
+
+    // --- D. RECALCULATE EFFECTIVE STATS WITH BUFF ---
+    if (getEffectiveStats) {
+        effectiveUser = getEffectiveStats(baseUser);
+    }
+
+    // --- E. DAMAGE CALCULATION (WITH BUFFED STATS) ---
+    // Formula: 5000 * user.power / target.defense
     try {
-        const formula = "3000 * user.power / target.defense";
+        const formula = "5000 * user.power / target.defense";
         const rawDamage = math.evaluate(formula, {
             user: effectiveUser,
             target: effectiveTarget,
@@ -55,25 +81,6 @@ function execute({
         console.error("Error in World Cutting Slash damage calculation:", e);
         result.specialEffects.push("The slash failed to tear space correctly.");
     }
-
-    // --- B.5 CLEANSE EFFECT ---
-    const cleansed = effectHandlers.cleanse(baseUser);
-    if (cleansed && cleansed.length > 0) {
-        result.specialEffects.push(`${baseUser.name} cleanses: ${cleansed.join(', ')}`);
-    }
-
-    const powerDelta = Math.floor(effectiveUser.power * 20);
-    baseUser.activeEffects = baseUser.activeEffects || [];
-    baseUser.activeEffects.push({
-        type: 'buff',
-        stats: {
-            power: powerDelta
-        },
-        duration: 3,
-        source: jutsuData.name,
-        isNew: true
-    });
-    result.specialEffects.push(`${baseUser.name}'s Power is multiplied!`);
 
 
     baseTarget.activeEffects = baseTarget.activeEffects || [];

@@ -12,7 +12,8 @@ function execute({
     effectiveUser,
     effectiveTarget,
     jutsuData,
-    effectHandlers
+    effectHandlers,
+    getEffectiveStats
 }) {
     const result = {
         damage: 0,
@@ -35,36 +36,37 @@ function execute({
     baseUser.chakra -= cost;
     result.chakraUsed = cost;
 
-    // --- 2. MASSIVE DAMAGE (Effect 1) ---
+    // --- 2. BASE DAMAGE CALCULATION ---
     // Using a high multiplier (2000) for "massive damage"
     const damageFormula = "user.power * 2000 / target.defense";
-    let finalDamage = 0;
+    let baseDamage = 0;
     try {
         const rawDamage = math.evaluate(damageFormula, {
             user: effectiveUser,
             target: effectiveTarget
         });
-        finalDamage = Math.max(1, Math.floor(rawDamage));
-
-        baseTarget.currentHealth = Math.max(0, (baseTarget.currentHealth || 0) - finalDamage);
-        result.damage = finalDamage;
-        result.description += `\n**Violent Fierce God Slicer** tears through the target for ${finalDamage} damage!`;
+        baseDamage = Math.max(1, Math.floor(rawDamage));
     } catch (e) {
         console.error("Error calculating damage for God Slicer:", e);
+        baseDamage = 1;
     }
 
-    // --- 3. CLONES (Effect 3: 4x Power total for 3 turns) ---
-    // To reach 4x Power, we add 3x current Power as a buff.
-    const clonePowerBuff = Math.floor(effectiveUser.power * 3);
-    if (!baseUser.activeEffects) baseUser.activeEffects = [];
-    baseUser.activeEffects.push({
-        type: 'buff',
-        stats: { power: clonePowerBuff },
-        duration: 3,
-        source: "Clones",
-        isNew: true
-    });
-    result.specialEffects.push(`${baseUser.name} creates 3 Clones and attacks the target for ${finalDamage} damage!`);
+    // --- 3. CLONES (3 clones each deal equal damage) ---
+    // Each clone deals the same damage as the base attack
+    const clone1Damage = baseDamage;
+    const clone2Damage = baseDamage;
+    const clone3Damage = baseDamage;
+    const totalDamage = baseDamage + clone1Damage + clone2Damage + clone3Damage;
+
+    // Apply total damage to target
+    baseTarget.currentHealth = Math.max(0, (baseTarget.currentHealth || 0) - totalDamage);
+    result.damage = totalDamage;
+
+    result.description += `\n**Violent Fierce God Slicer** tears through the target!`;
+    result.specialEffects.push(`${baseUser.name} deals ${baseDamage} damage!`);
+    result.specialEffects.push(`Clone 1 deals: ${clone1Damage} damage!`);
+    result.specialEffects.push(`Clone 2 deals: ${clone2Damage} damage!`);
+    result.specialEffects.push(`Clone 3 deals: ${clone3Damage} damage!`);
 
     // --- 4. DEFENSE DEBUFF (Effect 4: Max debuff) ---
     const defenseReduction = -Math.floor(effectiveTarget.defense * 0.05);
@@ -90,9 +92,9 @@ function execute({
     });
 
     // Healing the user based on the bleed damage (Simulated with healPerTurn on user)
-    // Since we know the bleed is 15% of total target health, we heal the user for that amount.
-    const targetMaxHP = baseTarget.maxHealth || baseTarget.health || 1000;
-    const estimatedHeal = Math.floor(targetMaxHP * 0.05);
+    // Since we know the bleed is 5% of current target health, we heal the user for that amount.
+    const targetCurrentHP = baseTarget.currentHealth || baseTarget.health || 1000;
+    const estimatedHeal = Math.floor(targetCurrentHP * 0.05);
 
     baseUser.activeEffects.push({
         type: 'status',

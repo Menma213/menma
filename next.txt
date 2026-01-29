@@ -1,0 +1,7 @@
+next we need to make a new command called
+refer.js
+The command is built like this:
+/refer opens up a small embed with 5 digit code(letters and text we need to randomly generate it)
+but /refer <code> is special 
+it can only be used by new people who enrolled. 
+So that means we add a handler inside enroll.js NOW so that whoever enrolled before this will not get this and abuse it. But the point is that rewards. How much rewards should the new guy get and how much should the guy who invited get. Well the new guy is obviously having fun, he gets 100 ramen, 1000 exp, 350k money and a title called Newbie. The inviter on the other hand gets 10 levels worth of exp and 1 million ryo and 100 ramen. To get how much exp we need to gift, check his level and his exp bar. That'll decide

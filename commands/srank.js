@@ -38,15 +38,10 @@ if (fs.existsSync(jutsusPath)) jutsuList = JSON.parse(fs.readFileSync(jutsusPath
 if (fs.existsSync(jutsuPath)) jutsuData = JSON.parse(fs.readFileSync(jutsuPath, 'utf8'));
 if (fs.existsSync(combosPath)) COMBOS = JSON.parse(fs.readFileSync(combosPath, 'utf8'));
 
-/**
- * Deletes all webhooks in the channel managed by the bot if the webhook limit is reached (15).
- * This is crucial to prevent the Discord API's webhook limit (15) from being reached.
- * @param {object} interaction The Discord interaction object.
- */
 async function cleanupWebhooks(interaction) {
     try {
         const webhooks = await interaction.channel.fetchWebhooks();
-        if (webhooks.size < 15) return; // Only clean up if at limit
+        if (webhooks.size < 15) return;
         for (const webhook of webhooks.values()) {
             if (webhook.owner && webhook.owner.id === interaction.client.user.id) {
                 await webhook.delete();
@@ -62,7 +57,7 @@ const KURENAIPANIC = 'https://i.postimg.cc/mgNWykpN/image.png';
 const KURENAIRIGHT = 'https://i.postimg.cc/bN2hspX8/image.png';
 const ASUMASCARED = 'https://i.postimg.cc/CxDQVx3B/image.png';
 const ASUMA_AVATAR = 'https://i.pinimg.com/originals/d9/b6/1a/d9b61a4328fd5986574164a3d40e430f.png';
-const HAKU_AVATAR = 'https://i.pinimg.com/736x/b3/f3/3f/b3f33f1fc611822295c4fa439e5c653a.jpg';
+const HAKU_AVATAR = 'https://i.pinimg.com/736x/b3/f3/3f/b3f33f19eWJh8J6Mx9DrGXKEv3ojKmqw8Cv9pscK.jpg';
 const KAGAMI_AVATAR = 'https://i.postimg.cc/Jzr9bXRx/image.png';
 const HAKU_CORRUPT_AVATAR = 'https://i.postimg.cc/c1kJqHXq/image.png';
 const ZABUZA_AVATAR = 'https://i.postimg.cc/6pn0FP6j/image.png';
@@ -75,9 +70,13 @@ const KURENAI_MEMORY_1 = 'https://i.postimg.cc/8kqtMCvG/image.png';
 const KURENAI_MEMORY_2 = 'https://i.postimg.cc/gksLdSGP/image.png';
 const KURENAI_MEMORY_3 = 'https://i.postimg.cc/6pGKzqjT/image3.jpg';
 const OROCHIMARU_BG = 'https://i.postimg.cc/wj29bZQG/image.png';
-const KURENAI_AVATAR = 'https://static.wikia.nocookie.net/naruto/images/6/67/Kurenai_Part_I.png/revision/latest?cb=20150207094753'; // Add Kurenai avatar
+const KURENAI_AVATAR = 'https://static.wikia.nocookie.net/naruto/images/6/67/Kurenai_Part_I.png/revision/latest?cb=20150207094753';
 const VILLAGE_BG = 'https://i.ytimg.com/vi/pRV3lo7eJkM/maxresdefault.jpg?sqp=-oaymwEmCIAKENAF8quKqQMa8AEB-AHUBoAC4AOKAgwIABABGDsgYChlMA8=&rs=AOn4CLB7pjqRrgA4Facq_yOjd_bg_X3VgQ'
-// Define S-rank bosses with progression requirements
+const HIDEOUT_BG = 'https://i.pinimg.com/originals/90/7d/8e/907d8e2f3f4e4c6f4e4c6f4e4c6f4c6f.jpg';
+const SKY_REVEAL_IMG = 'https://files.idyllic.app/files/static/3948049';
+const ANCESTOR_STONE_IMG = 'https://i.pinimg.com/736x/8e/9e/8e/8e9e8e2f3f4e4c6f4e4c6f4e4c6f4c6f.jpg';
+
+
 const srankBosses = {
     "haku": {
         name: "Haku",
@@ -147,7 +146,7 @@ const srankBosses = {
     "ten_tails": {
         name: "Ten Tails",
         image: "https://static.wikia.nocookie.net/naruto/images/7/7c/Ten-Tails.png/revision/latest?cb=20141009144120",
-        health: 1, // Very low HP for plot twist
+        health: 1,
         power: 1,
         defense: 1,
         jutsu: ["Attack"],
@@ -162,7 +161,7 @@ const srankBosses = {
         name: "Corrupted Orochimaru",
         image: OROCHIMARU_AVATAR,
         health: 600,
-        power: 20,
+        power: 2300,
         defense: 150,
         jutsu: ["Attack", "Serpents Wrath", "Poison Mist"],
         reward: null,
@@ -174,7 +173,7 @@ const srankBosses = {
     },
     "corrupted_kurenai": {
         name: "Corrupted Kurenai",
-        image: "https://i.postimg.cc/MHXsJD7Z/image.png", // Use Kurenai image
+        image: "https://i.postimg.cc/MHXsJD7Z/image.png",
         health: 400,
         power: 1800,
         defense: 100,
@@ -185,34 +184,47 @@ const srankBosses = {
         baseExp: 0,
         money: 60000,
         lore: ["Kurenai possessed by Kagami"],
-        survivalRounds: 5 // Special objective
+        survivalRounds: 5
     },
-    "kagami": {
-        name: "Kagami",
-        image: KAGAMI_AVATAR,
-        health: 800,
-        power: 3000,
-        defense: 200,
-        jutsu: ["Attack"],
-        reward: null,
-        accuracy: 98,
-        dodge: 40,
-        baseExp: 1100,
+    "bandit_group": {
+        name: "Bandit Trio",
+        image: "https://static.wikia.nocookie.net/naruto/images/4/41/Bandits.png/revision/latest?cb=20150704143438",
+        health: 450,
+        power: 1200,
+        defense: 60,
+        jutsu: ["Attack", "Sword Slash"],
+        baseExp: 200,
+        money: 15000,
+        lore: ["A group of bandits blocking the path to the hideout."]
+    },
+    "kabuto": {
+        name: "Kabuto Yakushi",
+        image: "https://static.wikia.nocookie.net/non-aliencreatures/images/a/a1/Kabuto.png/revision/latest?cb=20131030035514",
+        health: 700,
+        power: 2500,
+        defense: 100,
+        jutsu: ["Attack", "Chakra Scalpel", "Medical Jutsu"],
+        baseExp: 500,
+        money: 40000,
+        lore: ["The expert medic and spy guarding the inner entrance."]
+    },
+    "mysterious_figure": {
+        name: "???",
+        image: "https://files.idyllic.app/files/static/3948049",
+        health: 1500,
+        power: 3500,
+        defense: 300,
+        jutsu: ["Attack", "Serpents Wrath", "Fireball Jutsu", "Demonic Illusion"],
+        baseExp: 1000,
         money: 100000,
-        lore: ["The mysterious witch Kagami"]
+        lore: ["He who resurrected the Sky. His power is beyond measurement."]
     }
 };
 
-// Function to calculate scaled EXP for S-rank bosses
 function getSrankExpReward(playerLevel, baseExp) {
-    // Base EXP + (playerLevel * a multiplier)
-    // Adjust the multiplier as needed for desired difficulty/grind
     return Math.floor(baseExp + (Number(playerLevel) * 2));
 }
 
-// Define S-rank bosses with progression requirements
-
-// Effect handlers (updated from brank.js)
 const effectHandlers = {
     damage: (user, target, formula, effect = {}) => {
         try {
@@ -360,7 +372,6 @@ const BLOODLINE_DEPARTMENTS = {
     Senju: "Your body pulses with ancient vitality.",
     Nara: "Your mind sharpens, calculating every move."
 };
-
 
 async function getCharacterWebhook(channel, name, avatar) {
     const webhooks = await channel.fetchWebhooks();
@@ -520,7 +531,6 @@ class BattleUtils {
     }
 }
 
-// Generate the moves embed for the current player
 function createMovesEmbed(player, roundNum, userId, jutsuList) {
     const { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } = require('discord.js');
     const embed = new EmbedBuilder()
@@ -551,13 +561,13 @@ function createMovesEmbed(player, roundNum, userId, jutsuList) {
         });
 
     const rows = [];
-    // First row: up to 5 jutsu buttons
+
     if (jutsuButtons.length > 0) {
         const row1 = new ActionRowBuilder();
         jutsuButtons.slice(0, 5).forEach(btn => row1.addComponents(btn));
         rows.push(row1);
     }
-    // Second row: 6th jutsu (if any), rest, flee
+
     if (jutsuButtons.length > 5) {
         const row2 = new ActionRowBuilder();
         row2.addComponents(jutsuButtons[5]);
@@ -573,7 +583,7 @@ function createMovesEmbed(player, roundNum, userId, jutsuList) {
         );
         rows.push(row2);
     } else {
-        // If 5 or fewer jutsu, put rest/flee on a new row
+
         const row2 = new ActionRowBuilder();
         row2.addComponents(
             new ButtonBuilder()
@@ -591,7 +601,6 @@ function createMovesEmbed(player, roundNum, userId, jutsuList) {
     return { embed, components: rows.slice(0, 5) };
 }
 
-// Execute a jutsu
 function executeJutsu(baseUser, baseTarget, effectiveUser, effectiveTarget, jutsuName) {
     const jutsu = jutsuList[jutsuName];
     if (!jutsu) {
@@ -698,7 +707,6 @@ function executeJutsu(baseUser, baseTarget, effectiveUser, effectiveTarget, juts
     return result;
 }
 
-// Process player move
 async function processPlayerMove(customId, basePlayer, baseNpc, effectivePlayer, effectiveNpc) {
     const action = customId.split('-')[0];
     if (action === 'rest') {
@@ -722,7 +730,6 @@ async function processPlayerMove(customId, basePlayer, baseNpc, effectivePlayer,
     return executeJutsu(basePlayer, baseNpc, effectivePlayer, effectiveNpc, jutsuName);
 }
 
-// NPC chooses move
 function npcChooseMove(baseNpc, basePlayer, effectiveNpc, effectivePlayer) {
     const stunnedEffect = baseNpc.activeEffects.find(e => e.type === 'status' && e.status === 'stun');
     if (stunnedEffect) {
@@ -754,7 +761,6 @@ function npcChooseMove(baseNpc, basePlayer, effectiveNpc, effectivePlayer) {
     return executeJutsu(baseNpc, basePlayer, effectiveNpc, effectivePlayer, randomJutsu);
 }
 
-// Create battle summary
 function createBattleSummary(player, npc, playerAction, npcAction, roundNum, comboState) {
     const { EmbedBuilder } = require('discord.js');
     const getEffectEmojis = (entity) => {
@@ -827,13 +833,12 @@ function createBattleSummary(player, npc, playerAction, npcAction, roundNum, com
             name: 'Battle Status',
             value: `${player.username} | ${Math.round(player.health)} HP | ${player.chakra} Chakra\n${npc.name} | ${Math.round(npc.currentHealth ?? npc.health)} HP | ${npc.chakra} Chakra`
         });
-    // Show jutsu image/gif if any (player or npc)
+
     if (playerAction.image_url) embed.setImage(playerAction.image_url);
     else if (npcAction.image_url) embed.setImage(npcAction.image_url);
     return embed;
 }
 
-// Main S-rank battle function
 async function runAnbuTenTailsBattle(interaction, users, userId, players) {
     const anbuTeam = {
         name: "Anbu Black Ops Team",
@@ -859,11 +864,10 @@ async function runAnbuTenTailsBattle(interaction, users, userId, players) {
     let roundNum = 1;
 
     while (anbuTeam.currentHealth > 0 && tenTails.currentHealth > 0) {
-        // Anbu always attacks first in this special battle
-        const anbuDamage = Math.floor(anbuTeam.power * 0.1); // Massive damage
+
+        const anbuDamage = Math.floor(anbuTeam.power * 0.1);
         tenTails.currentHealth -= anbuDamage;
 
-        // Create battle summary
         const summaryEmbed = new EmbedBuilder()
             .setTitle(`Round ${roundNum} - Anbu Team vs Ten Tails`)
             .setColor('#006400')
@@ -918,7 +922,6 @@ async function runSurvivalBattle(interaction, users, userId, players, jutsuList,
 
             const { embed, components } = createMovesEmbed(player, roundNum, userId, jutsuList);
 
-            // Modify components to remove lethal options or add survival instructions
             const survivalEmbed = new EmbedBuilder()
                 .setTitle(`SURVIVE! Round ${survivedRounds + 1}/${survivalRounds}`)
                 .setColor('#FF0000')
@@ -955,16 +958,14 @@ async function runSurvivalBattle(interaction, users, userId, players, jutsuList,
                 return "loss";
             }
 
-            // Apply player action (but don't kill NPC)
             if (playerAction.damage) {
-                npc.currentHealth = Math.max(1, npc.currentHealth - playerAction.damage); // Never let NPC die
+                npc.currentHealth = Math.max(1, npc.currentHealth - playerAction.damage);
             }
 
             if (playerAction.heal) {
                 player.health = Math.min(player.health + playerAction.heal, player.maxHealth);
             }
 
-            // NPC attacks
             let npcAction = { damage: 0, heal: 0, description: `${npc.name} attacks`, specialEffects: [], hit: false };
             if (npc.currentHealth > 0) {
                 npcAction = npcChooseMove(npc, player, effectiveNpc, effectivePlayer);
@@ -988,7 +989,6 @@ async function runSurvivalBattle(interaction, users, userId, players, jutsuList,
                 return "win";
             }
 
-            // Regenerate chakra and process effects
             player.chakra += CHAKRA_REGEN[player.rank] || 1;
             npc.chakra += 2;
 
@@ -1009,7 +1009,7 @@ async function runSurvivalBattle(interaction, users, userId, players, jutsuList,
     }
 }
 
-async function runSrankBattle(interaction, users, userId, players, jutsuList, bossConfig, bgUrl, npcImgUrl, bossName) {
+async function runSrankBattle(interaction, users, userId, players, jutsuList, bossConfig, bgUrl, npcImgUrl, bossName, silent = false) {
     let npc = {
         ...bossConfig,
         activeEffects: [],
@@ -1048,7 +1048,7 @@ async function runSrankBattle(interaction, users, userId, players, jutsuList, bo
                 components: components,
                 fetchReply: true
             });
-            // Pass the current player health (after any damage taken)
+
             const battleImage = new AttachmentBuilder(await BattleUtils.generateBattleImage(interaction, player, player.health, npc, bgUrl, npcImgUrl));
             await interaction.followUp({ files: [battleImage] });
             const playerAction = await new Promise(resolve => {
@@ -1093,7 +1093,7 @@ async function runSrankBattle(interaction, users, userId, players, jutsuList, bo
             let npcAction = { damage: 0, heal: 0, description: `${npc.name} is defeated`, specialEffects: [], hit: false, image_url: null };
             if (npc.currentHealth > 0) {
                 npcAction = npcChooseMove(npc, player, effectiveNpc, effectivePlayer);
-                // FIX: Register NPC's damage to player
+
                 player.health -= npcAction.damage || 0;
                 if (npcAction.heal) {
                     npc.currentHealth = Math.min(npc.currentHealth + npcAction.heal, npc.health);
@@ -1120,6 +1120,7 @@ async function runSrankBattle(interaction, users, userId, players, jutsuList, bo
                 return "loss";
             }
             if (npc.currentHealth <= 0) {
+                if (silent) return "win";
                 const playerLevel = player.level || 1;
                 const expReward = getSrankExpReward(playerLevel, bossConfig.baseExp);
                 const moneyReward = bossConfig.money;
@@ -1145,7 +1146,6 @@ async function runSrankBattle(interaction, users, userId, players, jutsuList, bo
                     }
                 });
 
-                // Update Mentor EXP
                 await mentorMutex.runExclusive(async () => {
                     let me = {};
                     try {
@@ -1165,7 +1165,6 @@ async function runSrankBattle(interaction, users, userId, players, jutsuList, bo
                     .setColor('#006400');
                 await interaction.followUp({ embeds: [rewardEmbed] });
 
-                // Reward scroll drop chance
                 if (bossConfig.reward && Math.random() < bossConfig.rewardChance) {
                     await jutsuMutex.runExclusive(async () => {
                         const jutsuData = JSON.parse(fs.readFileSync(jutsuPath, 'utf8'));
@@ -1197,9 +1196,184 @@ async function runSrankBattle(interaction, users, userId, players, jutsuList, bo
     }
 }
 
-// Remove waitForContinue function (no longer needed for Kurenai battle button logic)
+async function waitForParry(interaction, userId) {
+    const buttonId = 'parry_' + Date.now();
+    const row = new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+            .setCustomId(buttonId)
+            .setLabel('PARRY!')
+            .setStyle(ButtonStyle.Danger)
+    );
 
-// Story handler for Haku
+    const msg = await interaction.followUp({
+        content: "⚠️ **QUICK! PARRY KABUTO'S ATTACK!** (Click within 2 seconds!)",
+        components: [row]
+    });
+
+    return new Promise(resolve => {
+        const c = msg.createMessageComponentCollector({
+            filter: btn => btn.user.id === userId && btn.customId === buttonId,
+            time: 2000,
+            max: 1
+        });
+        c.on('collect', async btn => {
+            await btn.update({ content: "✅ **SUCCESSFUL PARRY!**", components: [] });
+            resolve(true);
+        });
+        c.on('end', async (collected) => {
+            if (collected.size === 0) {
+                await msg.edit({ content: "❌ **FAILED TO PARRY!**", components: [] }).catch(() => { });
+                resolve(false);
+            }
+        });
+    });
+}
+
+async function runKagamisHideoutStory(interaction, users, userId, players, jutsuList) {
+    try {
+        const asumaWebhook = await getCharacterWebhook(interaction.channel, "Asuma", ASUMA_AVATAR);
+        const userWebhook = await getCharacterWebhook(interaction.channel, interaction.user.username, interaction.user.displayAvatarURL());
+        const kabutoWebhook = await getCharacterWebhook(interaction.channel, "Kabuto", "https://static.wikia.nocookie.net/non-aliencreatures/images/a/a1/Kabuto.png/revision/latest?cb=20131030035514");
+        const mysteriousWebhook = await getCharacterWebhook(interaction.channel, "???", "https://files.idyllic.app/files/static/3948049");
+
+        // Stage 1: Asuma's Gift
+        await asumaWebhook.send({
+            content: "We're nearing Kagami's hideout. Take this stone. It's an heirloom from a very old ancestor for protection. Grasp it tightly when you truly need it.",
+            embeds: [new EmbedBuilder().setTitle("Ancestor's Stone").setImage(ANCESTOR_STONE_IMG).setColor('#FFD700')]
+        });
+        await waitForContinue(interaction, userId);
+
+        // Stage 2: Bandit Ambush
+        await interaction.followUp({ content: "**On the way to the hideout, a group of bandits ambushes you!**" });
+        let banditResult = await runSrankBattle(interaction, users, userId, players, jutsuList, srankBosses.bandit_group, VILLAGE_BG, srankBosses.bandit_group.image, "Bandit Trio", true);
+        if (banditResult !== "win") return "loss";
+
+        await asumaWebhook.send({ content: "Those were just small fry. The hideout is just ahead. I can feel the dark chakra from here." });
+        await waitForContinue(interaction, userId);
+
+        // Stage 3: Kabuto's Guard
+        await interaction.followUp({ content: "**You enter the hideout and see Kabuto guarding the inner entrance.**" });
+        await kabutoWebhook.send({ content: "You shouldn't have come here. My master's experiments are not for your eyes." });
+        await waitForContinue(interaction, userId);
+
+        let lives = 2;
+        let kabutoFights = 3;
+
+        for (let i = 1; i <= kabutoFights; i++) {
+            await interaction.followUp({ content: `**Fight ${i}/${kabutoFights}: Engaging Kabuto!**` });
+            let result = await runSrankBattle(interaction, users, userId, players, jutsuList, srankBosses.kabuto, HIDEOUT_BG, srankBosses.kabuto.image, "Kabuto Yakushi", true);
+            if (result !== "win") return "loss";
+
+            if (i < 3) {
+                // Parry Phase
+                let success = await waitForParry(interaction, userId);
+                if (!success) {
+                    lives--;
+                    await interaction.followUp({ content: `⚠️ **You took a hit! Remaining Lives: ${lives}**` });
+                    if (lives <= 0) {
+                        await interaction.followUp({ content: "❌ **You were overwhelmed by Kabuto's precise strikes! Retreating...**" });
+                        return "loss";
+                    }
+                }
+            } else {
+                // Final Quiz
+                const quizEmbed = new EmbedBuilder()
+                    .setTitle("TACTICAL ANALYSIS")
+                    .setDescription("Kabuto is preparing a lethal Chakra Scalpel strike to your vitals! What is the best defense method?")
+                    .setColor('#00FFFF');
+
+                const quizRow = new ActionRowBuilder().addComponents(
+                    new ButtonBuilder().setCustomId('quiz_a').setLabel('Raw Defense').setStyle(ButtonStyle.Primary),
+                    new ButtonBuilder().setCustomId('quiz_b').setLabel('Chakra Counter').setStyle(ButtonStyle.Primary),
+                    new ButtonBuilder().setCustomId('quiz_c').setLabel('Medical Dispersion').setStyle(ButtonStyle.Primary),
+                    new ButtonBuilder().setCustomId('quiz_d').setLabel('Evasion').setStyle(ButtonStyle.Primary)
+                );
+
+                const quizMsg = await interaction.followUp({ embeds: [quizEmbed], components: [quizRow], fetchReply: true });
+
+                const choice = await new Promise(resolve => {
+                    const collector = quizMsg.createMessageComponentCollector({ filter: ii => ii.user.id === userId, time: 30000, max: 1 });
+                    collector.on('collect', async ii => {
+                        await ii.deferUpdate();
+                        resolve(ii.customId);
+                    });
+                    collector.on('end', (collected, reason) => { if (reason === 'time') resolve(null); });
+                });
+
+                if (choice === 'quiz_c') {
+                    await interaction.followUp({ content: "✅ **Correct! You dispersed his chakra before it could sever your nerves!**" });
+                    await interaction.followUp({ content: "**You land a CRITICAL FINAL BLOW on Kabuto!**", embeds: [new EmbedBuilder().setImage(srankBosses.kabuto.image)] });
+                } else {
+                    lives--;
+                    await interaction.followUp({ content: `❌ **Incorrect! Kabuto's strike partially severs your chakra network! Remaining Lives: ${lives}**` });
+                    if (lives <= 0) {
+                        await interaction.followUp({ content: "❌ **You were overwhelmed by Kabuto's precision! Retreating...**" });
+                        return "loss";
+                    }
+                    await interaction.followUp({ content: "**You managed to land a finishing blow despite the injury!**" });
+                }
+            }
+        }
+
+        // Stage 4: The Cure
+        await interaction.followUp({ content: "**Kabuto retreats, dropping a small vial...**" });
+        await asumaWebhook.send({ content: "This... this is the cure to the corruption! Kurenai needs this. I must head back to the village immediately." });
+        await userWebhook.send({ content: "Go, Asuma. I'll stay back and investigate why Kagami is doing this." });
+        await asumaWebhook.send({ content: "Be careful. That power... it's not and then..." });
+        await waitForContinue(interaction, userId);
+
+        // Stage 5: The Reveal
+        await interaction.followUp({ content: "**Suddenly, a blinding beam of light shoots down from above!**" });
+        await interaction.followUp({
+            embeds: [new EmbedBuilder()
+                .setDescription("**In a moment of overwhelming energy, you clench the Ancestor's Stone with all your might. The ancient relic cannot withstand the pressure and SHATTERS into a thousand pieces!**")
+                .setImage(SKY_REVEAL_IMG)
+                .setColor('#FFFFFF')]
+        });
+        await new Promise(res => setTimeout(res, 3000));
+
+        await mysteriousWebhook.send({ content: "I thank you for resurrecting... THE SKY." });
+        await interaction.followUp({ content: "**The mysterious figure, known only as ???, vanishes back into the clouds, leaving a massive crater where you once stood.**" });
+
+        // Grant reward
+        const playerLevel = players[0].level || 1;
+        const expReward = getSrankExpReward(playerLevel, 2000);
+        const moneyReward = 150000;
+
+        await userMutex.runExclusive(async () => {
+            const u = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
+            const p = JSON.parse(fs.readFileSync(playersPath, 'utf8'));
+
+            if (u[userId]) {
+                u[userId].srankResult = "win";
+                u[userId].srankDefeats = u[userId].srankDefeats || {};
+                u[userId].srankDefeats.kagamis_hideout = (u[userId].srankDefeats.kagamis_hideout || 0) + 1;
+                fs.writeFileSync(usersPath, JSON.stringify(u, null, 2));
+            }
+
+            if (p[userId]) {
+                p[userId].exp += expReward;
+                p[userId].money += moneyReward;
+                fs.writeFileSync(playersPath, JSON.stringify(p, null, 2));
+            }
+        });
+
+        await interaction.followUp({
+            embeds: [new EmbedBuilder()
+                .setTitle("MISSION COMPLETE: KAGAMI'S HIDEOUT")
+                .setDescription(`You uncovered the truth behind the corruption and survived the arrival of the Sky dweller.\n\n**Rewards:**\n+${expReward} EXP\n$${moneyReward.toLocaleString()} Money`)
+                .setColor('#00FF00')
+            ]
+        });
+
+        return "win";
+
+    } catch (error) {
+        console.error(`[SRank Error - runKagamisHideoutStory]:`, error);
+        throw error;
+    }
+}
+
 async function runHakuStory(interaction, users, userId, players, jutsuList) {
     try {
         const asumaWebhook = await getCharacterWebhook(interaction.channel, "Asuma", ASUMA_AVATAR);
@@ -1341,7 +1515,6 @@ async function runHakuStory(interaction, users, userId, players, jutsuList) {
     }
 }
 
-// Story handler for Zabuza
 async function runZabuzaStory(interaction, users, userId, players, jutsuList) {
     try {
         const asumaWebhook = await getCharacterWebhook(interaction.channel, "Asuma", ASUMA_AVATAR);
@@ -1430,7 +1603,6 @@ async function runZabuzaStory(interaction, users, userId, players, jutsuList) {
     }
 }
 
-// Story handler for Orochimaru
 async function runOrochimaruStory(interaction, users, userId, players, jutsuList) {
     try {
         const asumaWebhook = await getCharacterWebhook(interaction.channel, "Asuma", ASUMA_AVATAR);
@@ -1545,7 +1717,6 @@ async function runOrochimaruStory(interaction, users, userId, players, jutsuList
     }
 }
 
-// Special battle for Orochimaru with Execute option
 async function runOrochimaruBattle(interaction, users, userId, players, jutsuList) {
     let npc = {
         ...srankBosses.orochimaru,
@@ -1579,9 +1750,9 @@ async function runOrochimaruBattle(interaction, users, userId, players, jutsuLis
         while (player.health > 0 && npc.currentHealth > 0) {
             const effectivePlayer = BattleUtils.getEffectiveStats(player);
             const effectiveNpc = BattleUtils.getEffectiveStats(npc);
-            // Check if Execute should be available (when Orochimaru is below 30% health)
+
             const { embed, components } = createMovesEmbed(player, roundNum, userId, jutsuList);
-            // Add Execute option if available
+
             if (executeAvailable) {
                 const executeRow = new ActionRowBuilder().addComponents(
                     new ButtonBuilder()
@@ -1597,7 +1768,7 @@ async function runOrochimaruBattle(interaction, users, userId, players, jutsuLis
                 components: components,
                 fetchReply: true
             });
-            // Pass the current player health (after any damage taken)
+
             const battleImage = new AttachmentBuilder(await BattleUtils.generateBattleImage(interaction, player, player.health, npc, OROCHIMARU_BG, OROCHIMARU_AVATAR));
             await interaction.followUp({ files: [battleImage] });
             await interaction.followUp({ files: [battleImage] });
@@ -1609,7 +1780,7 @@ async function runOrochimaruBattle(interaction, users, userId, players, jutsuLis
                 collector.on('collect', async ii => {
                     await ii.deferUpdate();
                     if (ii.customId.startsWith('execute')) {
-                        // Instant kill if Execute is used at the right time
+
                         if (executeAvailable) {
                             resolve({
                                 damage: npc.currentHealth,
@@ -1649,7 +1820,7 @@ async function runOrochimaruBattle(interaction, users, userId, players, jutsuLis
             if (playerAction.heal) {
                 player.health = Math.min(player.health + playerAction.heal, player.maxHealth);
             }
-            // If player used Execute successfully, end battle
+
             if (playerAction.isExecute && playerAction.hit) {
                 npc.currentHealth = 0;
             }
@@ -1779,13 +1950,13 @@ async function runCorruptedOrochimaruBattle(interaction, users, userId, players,
         while (player.health > 0 && npc.currentHealth > 0) {
             const effectivePlayer = BattleUtils.getEffectiveStats(player);
             const effectiveNpc = BattleUtils.getEffectiveStats(npc);
-            // Check if Execute should be available (when Orochimaru is below 30% health)
+
             if (npc.currentHealth / npc.health <= 0.3) {
                 executeAvailable = true;
             }
 
             const { embed, components } = createMovesEmbed(player, roundNum, userId, jutsuList);
-            // Add Execute option if available
+
             if (executeAvailable) {
                 const executeRow = new ActionRowBuilder().addComponents(
                     new ButtonBuilder()
@@ -1801,7 +1972,7 @@ async function runCorruptedOrochimaruBattle(interaction, users, userId, players,
                 components: components,
                 fetchReply: true
             });
-            // Pass the current player health (after any damage taken)
+
             const battleImage = new AttachmentBuilder(await BattleUtils.generateBattleImage(interaction, player, player.health, npc, VILLAGE_BG, CORRUPTED_OROCHIMARU));
             await interaction.followUp({ files: [battleImage] });
             const playerAction = await new Promise(resolve => {
@@ -1812,7 +1983,7 @@ async function runCorruptedOrochimaruBattle(interaction, users, userId, players,
                 collector.on('collect', async ii => {
                     await ii.deferUpdate();
                     if (ii.customId.startsWith('execute')) {
-                        // Instant kill if Execute is used at the right time
+
                         if (executeAvailable) {
                             resolve({
                                 damage: npc.currentHealth,
@@ -1852,7 +2023,7 @@ async function runCorruptedOrochimaruBattle(interaction, users, userId, players,
             if (playerAction.heal) {
                 player.health = Math.min(player.health + playerAction.heal, player.maxHealth);
             }
-            // If player used Execute successfully, end battle
+
             if (playerAction.isExecute && playerAction.hit) {
                 npc.currentHealth = 0;
             }
@@ -1926,8 +2097,7 @@ async function runCorruptedOrochimaruBattle(interaction, users, userId, players,
 }
 
 async function waitForContinue(interaction, userId, content = "\u200b") {
-    // This function must handle sending a message with a "Continue" button
-    // and use a collector to await the click, then delete the button.
+
     const buttonId = 'story_continue_' + Date.now();
     const continueButton = new ButtonBuilder()
         .setCustomId(buttonId)
@@ -2019,20 +2189,16 @@ module.exports = {
                 }
             ];
 
-            // --- S-Rank Boss Selection Logic ---
             const availableBosses = {};
             const userDefeats = users[userId].srankDefeats || {};
             const userUnlocked = users[userId].unlockedSrank || [];
 
-            // Helper function to check if a boss should be unlocked
             const isBossUnlocked = (bossId, boss) => {
-                // Always unlocked if explicitly in unlockedSrank
+
                 if (userUnlocked.includes(bossId)) return true;
 
-                // Haku is always available (requiredDefeats: 0)
                 if (boss.requiredDefeats === 0) return true;
 
-                // For other bosses, check if any boss that unlocks this one has been defeated
                 for (const [otherBossId, otherBoss] of Object.entries(srankBosses)) {
                     if (otherBoss.unlocks === bossId && (userDefeats[otherBossId] > 0 || userUnlocked.includes(otherBossId))) {
                         return true;
@@ -2048,14 +2214,12 @@ module.exports = {
                 }
             }
 
-            // Always allow Haku if nothing else unlocked
             if (Object.keys(availableBosses).length === 0) {
                 availableBosses.haku = srankBosses.haku;
             }
 
-            // --- Add Kurenai S-Rank if Orochimaru is defeated ---
             if ((userDefeats.orochimaru > 0 || userUnlocked.includes("orochimaru")) && !availableBosses.kurenai) {
-                // Add a dummy boss for selection, actual logic is in the switch below
+
                 availableBosses.kurenai = {
                     name: "Kurenai",
                     health: 4000,
@@ -2064,14 +2228,22 @@ module.exports = {
                     jutsu: ["Attack", "Fireball Jutsu", "Summon Ninken", "Infused Chakra"],
                     description: "Back at the village..",
                 };
+
+                availableBosses.kagamis_hideout = {
+                    name: "Kagami's Hideout",
+                    health: 0,
+                    power: 0,
+                    description: "Investigate the source of corruption.",
+                };
             }
 
-            // --- Boss Selection Menu ---
-            const bossOptions = Object.entries(availableBosses).map(([bossId, boss]) => ({
-                label: boss.name,
-                value: bossId,
-                description: boss.description || `Health: ${boss.health} | Power: ${boss.power}`
-            }));
+            const bossOptions = Object.entries(availableBosses)
+                .filter(([bossId]) => !['bandit_group', 'kabuto', 'mysterious_figure'].includes(bossId))
+                .map(([bossId, boss]) => ({
+                    label: boss.name,
+                    value: bossId,
+                    description: boss.description || `Health: ${boss.health} | Power: ${boss.power}`
+                }));
 
             const selectMenu = new StringSelectMenuBuilder()
                 .setCustomId('srank_boss_selection')
@@ -2114,9 +2286,11 @@ module.exports = {
                         case "orochimaru":
                             result = await runOrochimaruStory(interaction, users, userId, players, jutsuList);
                             break;
+                        case "kagamis_hideout":
+                            result = await runKagamisHideoutStory(interaction, users, userId, players, jutsuList);
+                            break;
                         case "kurenai":
-                            // --- Kurenai Storyline ---
-                            // Helper for sending a webhook message with a Continue button and awaiting click
+
                             async function sendWebhookWithContinue(webhook, options, userId) {
                                 const row = new ActionRowBuilder().addComponents(
                                     new ButtonBuilder().setCustomId('continue_' + Date.now()).setLabel('Continue').setStyle(ButtonStyle.Secondary)
@@ -2133,7 +2307,6 @@ module.exports = {
                                 });
                             }
 
-                            // Helper for sending a normal message with a Continue button and awaiting click
                             async function sendMsgWithContinue(interaction, options, userId) {
                                 const row = new ActionRowBuilder().addComponents(
                                     new ButtonBuilder().setCustomId('continue_' + Date.now()).setLabel('Continue').setStyle(ButtonStyle.Secondary)
@@ -2150,7 +2323,6 @@ module.exports = {
                                 });
                             }
 
-                            // --- Begin Kurenai storyline ---
                             await sendMsgWithContinue(interaction, {
                                 embeds: [new EmbedBuilder()
                                     .setTitle("Back at the village:")
@@ -2164,20 +2336,17 @@ module.exports = {
                                 embeds: [new EmbedBuilder().setDescription("**hours pass by and nothing happens**").setColor('#FF0000')]
                             }, userId);
 
-                            // Asuma and Kurenai image embed
                             const asumaWebhook = await getCharacterWebhook(interaction.channel, "Asuma", ASUMA_AVATAR);
                             await sendWebhookWithContinue(asumaWebhook, {
                                 content: `Asuma and Kurenai`,
                                 embeds: [new EmbedBuilder().setImage(ASUMAANDKURENAI).setColor('#FF0000')]
                             }, userId);
 
-                            // User webhook
                             const userWebhook = await getCharacterWebhook(interaction.channel, interaction.user.username, interaction.user.displayAvatarURL());
                             await sendWebhookWithContinue(userWebhook, {
                                 content: "Dont jinx it, you fool!"
                             }, userId);
 
-                            // Kurenai
                             const kurenaiWebhook = await getCharacterWebhook(interaction.channel, "Kurenai", KURENAI_AVATAR);
 
                             await sendMsgWithContinue(interaction, {
@@ -2202,7 +2371,6 @@ module.exports = {
                                 embeds: [new EmbedBuilder().setImage(KURENAIPANIC).setColor('#FF0000')]
                             }, userId);
 
-                            // Distract button for Ten Tails battle (uses its own button logic)
                             const distractRow = new ActionRowBuilder().addComponents(
                                 new ButtonBuilder()
                                     .setCustomId('distract_ten_tails')
@@ -2242,7 +2410,6 @@ module.exports = {
                                 embeds: [new EmbedBuilder().setDescription("**The anbu report that one of the walls got breached while this was happening, number of intruders is unknown.**").setColor('#FF0000')]
                             }, userId);
 
-                            // Switch to webhook messages from here
                             const kagamiWebhook = await getCharacterWebhook(interaction.channel, "Kagami", KAGAMI_AVATAR);
                             await sendWebhookWithContinue(kagamiWebhook, {
                                 content: "Well, Well."
@@ -2260,7 +2427,6 @@ module.exports = {
                                 content: "My back hurts from the traveling I've done to get here. Let's wrap it up. Go Orochimaru!"
                             }, userId);
 
-                            // Battle with Corrupted Orochimaru (uses its own button logic)
                             const orochimaruFightRow = new ActionRowBuilder().addComponents(
                                 new ButtonBuilder()
                                     .setCustomId('fight_orochimaru')
@@ -2309,7 +2475,6 @@ module.exports = {
                                     content: "**Kurenai then attacks and wounds Asuma.**"
                                 }, userId);
 
-                                // Survival battle against corrupted Kurenai (uses its own button logic)
                                 const kurenaiFightRow = new ActionRowBuilder().addComponents(
                                     new ButtonBuilder()
                                         .setCustomId('survive_kurenai')
@@ -2339,7 +2504,6 @@ module.exports = {
                                         content: "Kurenai...do you remember?"
                                     }, userId);
 
-                                    // Show series of images embed with Next/Continue buttons
                                     const memoryImages = [
                                         KURENAI_MEMORY_1,
                                         KURENAI_MEMORY_2,
@@ -2348,7 +2512,6 @@ module.exports = {
                                     let currentImageIndex = 0;
                                     let memoryMsg;
 
-                                    // Make embeds for Kurenai and Asuma image 1,2,3
                                     const memoryEmbeds = [
                                         new EmbedBuilder().setTitle("Back when life was peaceful..").setImage(KURENAI_MEMORY_1).setColor('#FF69B4'),
                                         new EmbedBuilder().setTitle("Back when we were young..").setImage(KURENAI_MEMORY_2).setColor('#FF69B4'),
@@ -2406,7 +2569,6 @@ module.exports = {
                                         content: "*sees kurenai* it seems like she's about to rage!"
                                     }, userId);
 
-                                    // Final battle: Kurenai vs Kagami (user plays as Kurenai)
                                     const finalFightRow = new ActionRowBuilder().addComponents(
                                         new ButtonBuilder()
                                             .setCustomId('final_fight')
@@ -2426,7 +2588,6 @@ module.exports = {
                                         c.on('end', (_, reason) => { if (reason === 'time') resolve(); });
                                     });
 
-                                    // For this final battle, user plays as Kurenai
                                     const kurenaiPlayer = {
                                         ...players[0],
                                         username: "Kurenai",
@@ -2450,9 +2611,9 @@ module.exports = {
                                             content: "I will not forget this humiliation. I will be back soon, and this time, not alone. Good bye."
                                         }, userId);
 
-                                        const playerLevel = players[0].level || 1; // Get player's current level
-                                        const expReward = getSrankExpReward(playerLevel, srankBosses.kagami.baseExp); // Use Kagami's baseExp
-                                        const moneyReward = srankBosses.kagami.money; // Use Kagami's money
+                                        const playerLevel = players[0].level || 1;
+                                        const expReward = getSrankExpReward(playerLevel, srankBosses.kagami.baseExp);
+                                        const moneyReward = srankBosses.kagami.money;
 
                                         await userMutex.runExclusive(async () => {
                                             const playersData = JSON.parse(fs.readFileSync(playersPath, 'utf8'));

@@ -16,9 +16,9 @@ function execute({ baseUser, baseTarget, effectiveUser, effectiveTarget, jutsuDa
     baseUser.chakra -= cost;
     result.chakraUsed = cost;
 
-    // Add power and defense buffs
-    const powerBuff = 40000; // Example value
-    const defenseBuff = 40000; // Example value
+    
+    const powerBuff = 40000; 
+    const defenseBuff = 40000;
 
     baseUser.activeEffects = baseUser.activeEffects || [];
     baseUser.activeEffects.push({
@@ -36,7 +36,7 @@ function execute({ baseUser, baseTarget, effectiveUser, effectiveTarget, jutsuDa
 
     result.specialEffects.push(`${baseUser.name} gains a boost in power and defense!`);
 
-    // Steal buffs from target
+    
     baseTarget.activeEffects = baseTarget.activeEffects || [];
     const buffsToSteal = baseTarget.activeEffects.filter(e => e.type === 'buff');
     baseTarget.activeEffects = baseTarget.activeEffects.filter(e => e.type !== 'buff');

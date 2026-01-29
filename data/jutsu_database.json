@@ -1,0 +1,380 @@
+{
+  "fca3067963": {
+    "name": "Attack",
+    "chakra": "0",
+    "obtainment": "Starting Jutsu",
+    "description": "Your basic attack. A fundamental technique every shinobi starts with, dealing damage based on your power stat.",
+    "hash": "fca3067963"
+  },
+  "624146c2fc": {
+    "name": "Transformation Jutsu",
+    "chakra": "5",
+    "obtainment": "Starting Jutsu",
+    "description": "Transform, gaining a massive power boost for 3 rounds. Your power multiplies by 5x, making this a solid early-game buff.",
+    "hash": "624146c2fc"
+  },
+  "fcb042c476": {
+    "name": "Infused Chakra Blade",
+    "chakra": "6",
+    "obtainment": "Obtained during tutorial",
+    "description": "Strike with chakra-infused blades that cause bleeding and massively increase your power. Deals solid damage, applies a 15% bleed effect for 1 round, and boosts your power by 25x for 2 rounds.",
+    "hash": "fcb042c476"
+  },
+  "8f82e90141": {
+    "name": "Mystic Palm",
+    "chakra": "4",
+    "obtainment": "Obtained from Sakura mentor",
+    "description": "A healing technique that restores health based on your missing HP. The lower your health, the more effective this becomes. Heals 40% of your max health plus a flat 100 HP.",
+    "hash": "8f82e90141"
+  },
+  "0869a31136": {
+    "name": "Summon Ninken",
+    "chakra": "11",
+    "obtainment": "Obtained from Kakashi mentor",
+    "description": "Summon ninja dogs to pin down your opponent, stunning them for 2 rounds. Perfect for setting up devastating combos.",
+    "hash": "0869a31136"
+  },
+  "f44e85c4b8": {
+    "name": "Analysis",
+    "chakra": "0",
+    "obtainment": "Obtained from Shikamaru mentor",
+    "description": "Take a moment to strategize and regain chakra. Grants 5 chakra instantly with no cost - essentially a free chakra refill.",
+    "hash": "f44e85c4b8"
+  },
+  "030d7ab45c": {
+    "name": "Fireball Jutsu",
+    "chakra": "7",
+    "obtainment": "Obtained from Sasuke mentor",
+    "description": "Launch a massive fireball at your enemy. A classic Uchiha technique that deals respectable fire damage.",
+    "hash": "030d7ab45c"
+  },
+  "27a4b3cb07": {
+    "name": "Shadow Clone Jutsu",
+    "chakra": "5",
+    "obtainment": "Obtained from Naruto mentor",
+    "description": "Summon clones to overwhelm your opponent with numbers. Your clones attack together, dealing heavy damage in a coordinated assault.",
+    "hash": "27a4b3cb07"
+  },
+  "2854c463d8": {
+    "name": "One Thousand Years of Death",
+    "chakra": "1",
+    "obtainment": "Obtained during Kakashi Hokage trials",
+    "description": "The legendary technique... you poke the enemy's butt. Surprisingly effective for its low cost, though the damage is minimal.",
+    "hash": "2854c463d8"
+  },
+  "e686331541": {
+    "name": "Burning Ash",
+    "chakra": "5",
+    "obtainment": "Obtained during Hiruzen Hokage trials",
+    "description": "Spew ash across the battlefield that ignites, burning your opponent. Deals damage and applies a burn effect that chips away 10% of their health per round for 2 rounds.",
+    "hash": "e686331541"
+  },
+  "aae1fa80cc": {
+    "name": "Sexy Jutsu",
+    "chakra": "3",
+    "obtainment": "Obtained from Naruto mentor at Chuunin rank",
+    "description": "Transform into a dazzling figure that distracts your opponent, causing them to flinch for 2 rounds. Don't underestimate the power of distraction.",
+    "hash": "aae1fa80cc"
+  },
+  "91c16b8f04": {
+    "name": "Kirin",
+    "chakra": "7",
+    "obtainment": "Obtained from Sasuke mentor at Chuunin rank",
+    "description": "Summon a lightning bolt from the thunder clouds above, striking your enemy for massive damage. One of Sasuke's most devastating techniques.",
+    "hash": "91c16b8f04"
+  },
+  "5ed73fffa7": {
+    "name": "Lightning Blade",
+    "chakra": "6",
+    "obtainment": "Obtained from Kakashi mentor at Chuunin rank",
+    "description": "Gather chakra into a thunderous blade of lightning and strike your opponent. Kakashi's signature move that delivers consistent damage.",
+    "hash": "5ed73fffa7"
+  },
+  "d251722080": {
+    "name": "Cherry Blossom Impact",
+    "chakra": "4",
+    "obtainment": "Obtained from Sakura mentor at Chuunin rank",
+    "description": "Attack with cherry blossoms. Don't let the pretty name fool you - Sakura's monstrous strength makes this hit hard.",
+    "hash": "d251722080"
+  },
+  "73748aae1e": {
+    "name": "Infused Chakra Blade: Enhanced",
+    "chakra": "8",
+    "obtainment": "Obtained from Asuma at Chuunin mentor rank",
+    "description": "An upgraded version of the basic chakra blade. Deals more damage, applies stronger bleeding (5% per round for 2 rounds), and boosts your power by 25x for 3 rounds.",
+    "hash": "73748aae1e"
+  },
+  "625a61216a": {
+    "name": "Rasengan",
+    "chakra": "3",
+    "obtainment": "Obtained from Naruto at Jounin rank",
+    "description": "Naruto's trademark spiraling sphere of chakra. Why are you even reading this description? You know what the Rasengan does - it hits like a truck.",
+    "hash": "625a61216a"
+  },
+  "f36847b5a5": {
+    "name": "Lightning Blade: All Out",
+    "chakra": "10",
+    "obtainment": "Obtained from Kakashi at Jounin mentor rank",
+    "description": "An enhanced Lightning Blade performed with pure rage. Lightning engulfs the battlefield, dealing massive damage, reducing enemy stats by 5%, and causing bleeding.",
+    "hash": "f36847b5a5"
+  },
+  "50eee08b3f": {
+    "name": "Shadow Strangle",
+    "chakra": "8",
+    "obtainment": "Obtained from Shikamaru at Jounin mentor rank",
+    "description": "Use your shadow to strangle your opponent, dealing damage and stunning them for 2 rounds. A brutal technique that shows Shikamaru's dark side.",
+    "hash": "50eee08b3f"
+  },
+  "8a60b10809": {
+    "name": "Mystic Palm Enhanced",
+    "chakra": "7",
+    "obtainment": "Obtained from Sakura at Jounin mentor rank",
+    "description": "An enhanced healing technique that restores 70% of your max health. When you absolutely need to stay in the fight.",
+    "hash": "8a60b10809"
+  },
+  "8341425caf": {
+    "name": "Ephemeral",
+    "chakra": "12",
+    "obtainment": "Obtained from Sasuke mentor at Jounin rank",
+    "description": "A genjutsu that puts your target to sleep, stunning them for 2 rounds. Perfect for controlling the flow of battle.",
+    "hash": "8341425caf"
+  },
+  "e3bc519fa2": {
+    "name": "Creation Rebirth",
+    "chakra": "5",
+    "obtainment": "Obtained from Tsunade during Hokage trials",
+    "description": "A powerful healing technique that continuously restores health. Heals 27% of your max health - Tsunade's legendary medical ninjutsu at work.",
+    "hash": "e3bc519fa2"
+  },
+  "9cf5176370": {
+    "name": "Water Dragon Jutsu",
+    "chakra": "4",
+    "obtainment": "Obtained from Tobirama during Hokage trials",
+    "description": "Summon a massive water dragon that crashes into your opponent, dealing heavy damage. The Second Hokage's signature technique.",
+    "hash": "9cf5176370"
+  },
+  "f8a26e605e": {
+    "name": "Flying Raijin Jutsu",
+    "chakra": "15",
+    "obtainment": "Obtained from Minato during Hokage trials",
+    "description": "The Yellow Flash's legendary technique. Dodge all incoming attacks with 1000 dodge for 1 round while dealing massive damage. Untouchable and deadly.",
+    "hash": "f8a26e605e"
+  },
+  "0def780428": {
+    "name": "Great Forest Crumbling",
+    "chakra": "6",
+    "obtainment": "Obtained from Hashirama during Hokage trials",
+    "description": "Summon a barrage of wooden branches that crush your enemy and stun them for 2 rounds. The First Hokage's wood style in action.",
+    "hash": "0def780428"
+  },
+  "e7a116cb42": {
+    "name": "Rasenshuriken",
+    "chakra": "10",
+    "obtainment": "Obtained from Naruto during Hokage trials",
+    "description": "A massive spiraling shuriken of wind chakra that deals devastating damage and causes severe bleeding (5% per round for 3 rounds). Naruto's ultimate technique.",
+    "hash": "e7a116cb42"
+  },
+  "64090843ab": {
+    "name": "Needle Assault",
+    "chakra": "4",
+    "obtainment": "Obtained from Haku S-Rank mission",
+    "description": "Launch senbon needles that inflict bleeding and deal damage. The needles cause 10% bleed damage per round for 2 rounds.",
+    "hash": "64090843ab"
+  },
+  "df6166d157": {
+    "name": "Silent Assassination",
+    "chakra": "4",
+    "obtainment": "Obtained from Zabuza S-Rank mission",
+    "description": "Get into your opponent's blind spot and strike them down. Deals damage and reduces their power and defense by 5% for 3 rounds.",
+    "hash": "df6166d157"
+  },
+  "815f82fd08": {
+    "name": "Serpents Wrath",
+    "chakra": "5",
+    "obtainment": "Obtained from Orochimaru S-Rank mission",
+    "description": "Unleash a devastating serpent attack that deals massive damage and poisons your opponent for 3 rounds. Orochimaru's sinister power.",
+    "hash": "815f82fd08"
+  },
+  "6bec04d09b": {
+    "name": "Corrupted Ice Prison",
+    "chakra": "8",
+    "obtainment": "Cannot obtain right now",
+    "description": "Trap your opponent in a cursed ice prison, stunning them for 2 rounds and draining 3 chakra per round.",
+    "hash": "6bec04d09b"
+  },
+  "a28d91b997": {
+    "name": "Kirin: Lightning Storm",
+    "chakra": "12",
+    "obtainment": "Obtained from the Raikage event",
+    "description": "Summon a lightning storm that deals devastating damage to your target. An enhanced version of the regular Kirin.",
+    "hash": "a28d91b997"
+  },
+  "615b0e96bf": {
+    "name": "9th Form: Rengoku",
+    "chakra": "15",
+    "obtainment": "Obtained from scroll dungeons",
+    "description": "Fire Breathing 9th Form - cut through your target with flames of determination. A technique that embodies the spirit of a flame hashira.",
+    "hash": "615b0e96bf"
+  },
+  "845aa1cc84": {
+    "name": "Guillotine Drop",
+    "chakra": "12",
+    "obtainment": "Obtained from the Raikage event",
+    "description": "Leap high into the air and slam down on your target, shattering their defense. Deals massive damage that ignores most defense, stuns for 2 rounds, and boosts your power and defense by 20x for 4 rounds.",
+    "hash": "845aa1cc84"
+  },
+  "c7aae6cb96": {
+    "name": "Asura's Blade of Execution",
+    "chakra": "10",
+    "obtainment": "Obtained after completing the Naruto quest in scroll missions",
+    "description": "Unleash god-like power that deals massive damage, boosts your stats by 20x, reduces enemy stats by 50%, and stuns them for 2 rounds. An absolute game-changer.",
+    "hash": "c7aae6cb96"
+  },
+  "f22fab4d68": {
+    "name": "Explosive Paper Clone",
+    "chakra": "4",
+    "obtainment": "Obtained from the Raikage event",
+    "description": "Tag your target with an explosive tag that detonates after 1 round, dealing 20% of their max health as damage.",
+    "hash": "f22fab4d68"
+  },
+  "3fddb56e69": {
+    "name": "Shadow Clone Jutsu: 1000 Clones",
+    "chakra": "11",
+    "obtainment": "Obtained from the Raikage event",
+    "description": "Create 1000 clones to overwhelm and confuse your target. The sheer numbers cause flinching and deal heavy damage.",
+    "hash": "3fddb56e69"
+  },
+  "c6f8813c6a": {
+    "name": "Lightning Hound",
+    "chakra": "6",
+    "obtainment": "Obtained from the Raikage event",
+    "description": "Summon a giant hound made of lightning to attack your target, dealing damage and stunning them for 1 round.",
+    "hash": "c6f8813c6a"
+  },
+  "ed5c8abcdf": {
+    "name": "Twin Rising Dragons",
+    "chakra": "7",
+    "obtainment": "Event Jutsu",
+    "description": "Soar into the air and barrage your enemy with ninja tools, causing both bleeding and burning (10% per round for 5 rounds each).",
+    "hash": "ed5c8abcdf"
+  },
+  "ad076ef038": {
+    "name": "Primary Lotus",
+    "chakra": "5",
+    "obtainment": "Event Jutsu",
+    "description": "Kick your target into the air, then spiral them back down to the ground. A taijutsu technique that deals solid damage.",
+    "hash": "ad076ef038"
+  },
+  "a7bc6314bd": {
+    "name": "Planetary Devastation",
+    "chakra": "15",
+    "obtainment": "Event Jutsu",
+    "description": "Trap your target in a black sphere that takes 10 rounds to form. When it detonates, it deals damage equal to 10x their max health - an instant kill if they can't escape.",
+    "hash": "a7bc6314bd"
+  },
+  "e595278524": {
+    "name": "Black Flash: Deaths Awakened Itself",
+    "chakra": "8",
+    "obtainment": "Shop",
+    "description": "Unleash a devastating upward strike into your opponent's gut with overwhelming force. Deals massive damage, causes bleeding (5% per round for 2 rounds), and stuns for 1 round.",
+    "hash": "e595278524"
+  },
+  "d953c9f5e7": {
+    "name": "Puppet Kazekage",
+    "chakra": "15",
+    "obtainment": "Shop",
+    "description": "Summon a puppet that stays with you until you die, attacking every round. The puppet deals consistent damage turn after turn.",
+    "hash": "d953c9f5e7"
+  },
+  "915f4a517d": {
+    "name": "Amaterasu",
+    "chakra": "10",
+    "obtainment": "Obtained from scroll dungeons",
+    "description": "Summon black flames that burn anything in their path. The flames persist for 30 rounds, dealing 15% of target's health per round. These flames never go out.",
+    "hash": "915f4a517d"
+  },
+  "7526733d4f": {
+    "name": "Summon Manda",
+    "chakra": "12",
+    "obtainment": "Obtained from scroll dungeons",
+    "description": "Summon the giant snake Manda to crush your enemy, dealing damage and stunning them for 2 rounds.",
+    "hash": "7526733d4f"
+  },
+  "728942494c": {
+    "name": "Kamehameha",
+    "chakra": "5",
+    "obtainment": "Obtained from scroll dungeons",
+    "description": "Unleash a powerful energy wave at your enemy. Yes, that Kamehameha. It somehow made its way into the shinobi world.",
+    "hash": "728942494c"
+  },
+  "d0140705e6": {
+    "name": "Dynamic Entry",
+    "chakra": "5",
+    "obtainment": "Gai Mentor",
+    "description": "Leap into the air and crash down on your target with a powerful kick. Has a 50% chance to make them flinch.",
+    "hash": "d0140705e6"
+  },
+  "28a1d940c0": {
+    "name": "Thirty Two Palms",
+    "chakra": "10",
+    "obtainment": "Hinata Hyuga Mentor",
+    "description": "Strike your target 32 times in rapid succession, dealing damage and draining 30% of their chakra. Byakugan precision at its finest.",
+    "hash": "28a1d940c0"
+  },
+  "78c6d0db38": {
+    "name": "Sixty Four Palms",
+    "chakra": "15",
+    "obtainment": "Hinata Hyuga Mentor",
+    "description": "Strike your target 64 times in rapid succession, dealing even more damage and draining 50% of their chakra. The ultimate Gentle Fist technique.",
+    "hash": "78c6d0db38"
+  },
+  "05677a7714": {
+    "name": "Eight Gates",
+    "chakra": "20 (20% of max health)",
+    "obtainment": "A special jutsu",
+    "description": "Open one of the Eight Gates, boosting your power at the cost of health. Each use opens a new gate, up to the 7th gate. Each gate costs 20% of your max health but grants immense power.",
+    "hash": "05677a7714"
+  },
+  "389afaa88b": {
+    "name": "Crystal Palace",
+    "chakra": "13",
+    "obtainment": "Christmas Event Summon",
+    "description": "Create a massive palace of ice crystals that crashes down with devastating force. This technique ignores 75% of enemy armor, deals massive damage, has a 90% chance to apply frost for 2 rounds, and reduces enemy defense by 75% for 2 rounds.",
+    "hash": "389afaa88b"
+  },
+  "c9936dda9a": {
+    "name": "Ice Prison",
+    "chakra": "10",
+    "obtainment": "Christmas Event Summon",
+    "description": "Trap your target in a prison of ice, dealing damage with a 50% chance to stun for 2 rounds and causing bleeding (10% per round for 5 rounds).",
+    "hash": "c9936dda9a"
+  },
+  "d6029e7b52": {
+    "name": "Blizzard Strike",
+    "chakra": "10",
+    "obtainment": "Christmas Event Summon",
+    "description": "Create a blizzard that damages your target with a 50% chance to apply frost for 2 rounds, slowing them down.",
+    "hash": "d6029e7b52"
+  },
+  "d64d7d1bfe": {
+    "name": "Tenseigan Chakra Mode",
+    "chakra": "20",
+    "obtainment": "Otsutsuki clan exclusive",
+    "description": "Enter Tenseigan Chakra Mode for 5 rounds. Greatly increases power and defense by 20x, and Tenseigan Orbs attack each round dealing 15% of target's max health. After 5 rounds, you exit the mode.",
+    "hash": "d64d7d1bfe"
+  },
+  "7bee01fcd9": {
+    "name": "Izanami",
+    "chakra": "0",
+    "obtainment": "Akatsuki Event (Currently unobtainable)",
+    "description": "A forbidden technique that controls space and time. Sets your HP and Chakra to infinity for 3 rounds (Recording Phase). After recording, the Flow Phase starts where your target MUST repeat moves or deal 0 damage, while you auto-repeat moves. Can only be used once. If you're dying without using it, you revive at 1 HP, cleanse all debuffs, and activate Life Drainer mode.",
+    "hash": "7bee01fcd9"
+  },
+  "4fcee5864a": {
+    "name": "Life Drainer",
+    "chakra": "0",
+    "obtainment": "Triggered by Izanami Last Resort",
+    "description": "Drain the very life essence of your target. Deals massive damage and steals 50% of their max HP, adding it to yours.",
+    "hash": "4fcee5864a"
+  }
+}

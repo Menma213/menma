@@ -9,7 +9,8 @@ function execute({
     effectiveUser,
     effectiveTarget,
     jutsuData,
-    effectHandlers
+    effectHandlers,
+    getEffectiveStats
 }) {
     const result = {
         damage: 0,

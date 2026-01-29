@@ -860,7 +860,7 @@ module.exports = {
 
         // 4. Ask user to do /brank and explain combo
         await safeWebhookSend(interaction.channel, asumaWebhook, {
-            content: `Before everything! Remember that every mission except for drank sends the rewards to your /gift inventory.\n Good job, now start a brank. Brank Ninjas are fairly weak, but since you're new too, I'd recommend using the basic combo: Attack then Transform.`,
+            content: `Good job, now start a brank. Brank Ninjas are fairly weak, but since you're new too, I'd recommend using the basic combo: Attack then Transform.`,
             components: [createContinueRow()]
         });
 

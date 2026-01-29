@@ -69,7 +69,7 @@ module.exports.execute = ({
     baseUser.activeEffects.push({
         type: 'buff',
         stats: buff,
-        duration: 99, 
+        duration: 99,
         source: 'Eight Gates'
     });
 

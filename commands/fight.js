@@ -10,10 +10,19 @@ module.exports = {
     data: new SlashCommandBuilder()
         .setName('fight')
         .setDescription('Challenge another user to a PvP fight')
-        .addUserOption(opt => opt.setName('user').setDescription('User to challenge').setRequired(true)),
+        .addUserOption(opt => opt.setName('user').setDescription('User to challenge').setRequired(true))
+        .addStringOption(opt => opt.setName('mode')
+            .setDescription('Battle Mode')
+            .setRequired(false)
+            .addChoices(
+                { name: 'Standard', value: 'standard' },
+                { name: 'Friendly', value: 'friendly_preset' }
+            )),
 
     async execute(interaction) {
         const userId = interaction.user.id;
+        const mode = interaction.options.getString('mode') || 'standard';
+
         const users = fs.existsSync(usersPath) ? JSON.parse(fs.readFileSync(usersPath, 'utf8')) : {};
         if (!users[userId]) {
             return interaction.reply({ content: "You need to enroll first!", ephemeral: true });
@@ -27,10 +36,12 @@ module.exports = {
             return interaction.reply({ content: "The challenged user must be enrolled.", ephemeral: true });
         }
 
+        const modeDisplay = mode === 'friendly_preset' ? "Friendly" : "Standard";
+
         const embed = new EmbedBuilder()
             .setColor('#ff0000')
             .setTitle('Fight Invitation!')
-            .setDescription(`<@${opponent.id}>, do you accept <@${userId}>'s challenge?`)
+            .setDescription(`<@${opponent.id}>, do you accept <@${userId}>'s **${modeDisplay}** challenge?`)
             .setFooter({ text: 'You have 60 seconds to respond' });
 
         const row = new ActionRowBuilder()
@@ -56,7 +67,7 @@ module.exports = {
                 let battleResult;
                 try {
                     // Capture the result of the battle
-                    battleResult = await runBattle(interaction, userId, opponent.id, 'fight');
+                    battleResult = await runBattle(interaction, userId, opponent.id, 'fight', null, mode);
                 } catch (err) {
                     console.error('runBattle error (fight command):', err);
                     await interaction.followUp({ content: 'An error occurred while starting the fight.', ephemeral: true }).catch(() => { });

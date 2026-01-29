@@ -660,25 +660,57 @@ module.exports = {
                     await i.update({ embeds: [generateEmbed(page)] });
                 } else if (i.customId === 'lab_craft') {
                     const bp = blueprints[page];
-                    const missing = [];
-                    for (const mat of bp.materials) {
-                        const clanHas = userClan.materials[mat.item] || 0;
-                        if (clanHas < mat.qty) missing.push(`${mat.item} (${clanHas}/${mat.qty})`);
+
+                    const modal = new ModalBuilder()
+                        .setCustomId('craft_qty_modal')
+                        .setTitle(`Craft ${bp.name}`);
+
+                    const qtyInput = new TextInputBuilder()
+                        .setCustomId('qty')
+                        .setLabel('Quantity')
+                        .setStyle(TextInputStyle.Short)
+                        .setPlaceholder('1')
+                        .setValue('1')
+                        .setRequired(true);
+
+                    modal.addComponents(new ActionRowBuilder().addComponents(qtyInput));
+
+                    await i.showModal(modal);
+
+                    try {
+                        const submission = await i.awaitModalSubmit({ time: 60000, filter: s => s.user.id === userId });
+                        const qty = parseInt(submission.fields.getTextInputValue('qty'));
+
+                        if (isNaN(qty) || qty < 1) {
+                            return submission.reply({ content: 'Invalid quantity.', ephemeral: true });
+                        }
+
+                        // Check materials for TOTAL quantity
+                        const missing = [];
+                        for (const mat of bp.materials) {
+                            const clanHas = userClan.materials[mat.item] || 0;
+                            const needed = mat.qty * qty;
+                            if (clanHas < needed) missing.push(`${mat.item} (${clanHas}/${needed})`);
+                        }
+
+                        if (missing.length > 0) {
+                            return submission.reply({ content: `Missing materials for ${qty}x ${bp.name}:\n${missing.join('\n')}`, ephemeral: true });
+                        }
+
+                        // Deduct materials
+                        for (const mat of bp.materials) {
+                            userClan.materials[mat.item] -= mat.qty * qty;
+                        }
+
+                        if (!userClan.weapons) userClan.weapons = {};
+                        userClan.weapons[bp.name] = (userClan.weapons[bp.name] || 0) + qty;
+
+                        await saveJson(CLANS_FILE, clans);
+                        await submission.reply({ content: `Crafted **${qty}x ${bp.name}**!` });
+
+                    } catch (e) {
+                        // Modal timeout or error
                     }
-
-                    if (missing.length > 0) {
-                        return i.reply({ content: `Missing materials:\n${missing.join('\n')}`, ephemeral: true });
-                    }
-
-                    for (const mat of bp.materials) {
-                        userClan.materials[mat.item] -= mat.qty;
-                    }
-
-                    if (!userClan.weapons) userClan.weapons = {};
-                    userClan.weapons[bp.name] = (userClan.weapons[bp.name] || 0) + 1;
-
-                    await saveJson(CLANS_FILE, clans);
-                    await i.reply({ content: `Crafted **${bp.name}**!` });
                 }
             });
             return;
@@ -768,10 +800,7 @@ module.exports = {
 
             // Calculate Tier and Rewards
             const territoryCount = userClan.controlledTerritories.length;
-            const tier = Math.max(1, territoryCount); // Minimum Tier 1? Or 0 if no territories? User said "tier 1 rewards when only 1 territory is captured".
-            // Let's assume Tier = Territory Count. If 0 territories, maybe no rewards?
-            // "This is tier 1 rewards when only 1 territory is captured."
-            // If 0 territories, tier 0?
+            const tier = Math.max(1, territoryCount);
 
             if (tier === 0 && territoryCount === 0) {
                 return interaction.reply({ content: 'Your clan needs to capture at least 1 territory to receive rewards.', ephemeral: true });
@@ -784,6 +813,10 @@ module.exports = {
 
             let memberCount = 0;
 
+            // Load gift data
+            const GIFT_FILE = path.join(__dirname, '../data/gift.json');
+            let giftData = await loadJson(GIFT_FILE);
+
             // Distribute
             for (const memberId of userClan.members) {
                 // Ensure players[memberId] and players[memberId].money exist
@@ -791,11 +824,20 @@ module.exports = {
                 if (typeof players[memberId].money !== 'number') players[memberId].money = 0;
                 players[memberId].money = (players[memberId].money || 0) + rewardMoney;
 
-                // Add Ramen
-                if (users[memberId]) { // Check if user exists before accessing inventory
-                    if (!users[memberId].inventory) users[memberId].inventory = [];
-                    for (let i = 0; i < rewardRamen; i++) users[memberId].inventory.push('ramen');
-                }
+                // Send Ramen as Gift
+                if (!giftData[memberId]) giftData[memberId] = [];
+
+                // Simple ID generation: Timestamp + random to avoid collisions in this batch
+                let giftId = Date.now() + Math.floor(Math.random() * 10000);
+
+                giftData[memberId].push({
+                    id: giftId,
+                    type: 'ramen',
+                    amount: rewardRamen,
+                    from: userClan.name, // Marked as from Clan
+                    date: Date.now(),
+                    desc: `Clan Distribution Reward (Tier ${tier})`
+                });
 
                 if (players[memberId]) {
                     players[memberId].ss = (players[memberId].ss || 0) + rewardSS;
@@ -812,6 +854,7 @@ module.exports = {
             await saveJson(PLAYERS_FILE, players);
             await saveJson(CLAN_TOKENS_FILE, clanTokens);
             await saveJson(CLANS_FILE, clans);
+            await saveJson(GIFT_FILE, giftData);
 
             const embed = new EmbedBuilder()
                 .setTitle('Clan Rewards Distributed!')

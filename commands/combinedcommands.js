@@ -368,7 +368,17 @@ const effectHandlers = {
                 max: Math.max,
                 min: Math.min
             };
-            return Math.floor(math.evaluate(formula, context));
+            const healAmount = Math.floor(math.evaluate(formula, context));
+
+            // Cap healing so it doesn't exceed max HP
+            const currentHP = user.currentHealth || 0;
+            const maxHP = user.maxHealth || user.health || 0;
+
+            if (currentHP + healAmount > maxHP) {
+                return Math.max(0, maxHP - currentHP);
+            }
+
+            return healAmount;
         } catch (err) {
             console.error(`Heal formula error: ${formula}`, err);
             return 0;
@@ -535,7 +545,7 @@ const effectHandlers = {
             }
 
             // Handle Damage-over-Time effects
-            const isDoTEffect = ['bleed', 'poison', 'burn', 'drown', 'curse', 'darkness', 'zap'].includes(effect.status);
+            const isDoTEffect = ['bleed', 'poison', 'burn', 'drown', 'curse', 'darkness', 'zap', 'siphon'].includes(effect.status);
             if (isDoTEffect) {
                 let dotDamage;
                 // Custom logic for darkness
@@ -556,6 +566,15 @@ const effectHandlers = {
                         }
                         result.specialEffects.push(`**DARKNESS ERUPTS!** ${combatant.name} takes a burst of ${dotDamage} damage!`);
                     }
+                } else if (effect.status === 'siphon') {
+                    const currentHp = Number(combatant.currentHealth) || 0;
+                    const currentDefense = Number(combatant.defense) || 0;
+
+                    dotDamage = Math.floor(currentHp * 0.10);
+                    const defDrain = Math.floor(currentDefense * 0.10);
+
+                    combatant.defense = Math.max(0, currentDefense - defDrain);
+                    result.specialEffects.push(`${combatant.name} is being siphoned! Lost ${dotDamage} HP and ${defDrain} Defense!`);
                 } else {
                     dotDamage = effectHandlers.calculateDoTDamage(combatant, effect);
                     result.specialEffects.push(`${combatant.name} is ${effect.status}, taking ${dotDamage} damage.`);
@@ -572,8 +591,13 @@ const effectHandlers = {
                     max: Math.max,
                     min: Math.min
                 }));
-                combatant.currentHealth = combatant.currentHealth + healAmount;
-                result.specialEffects.push(`${combatant.name} heals ${healAmount} HP from ${effect.status}.`);
+
+                const maxHP = combatant.maxHealth || combatant.health || 0;
+                const currentHP = combatant.currentHealth || 0;
+                const actualHeal = Math.min(healAmount, Math.max(0, maxHP - currentHP));
+
+                combatant.currentHealth = currentHP + actualHeal;
+                result.specialEffects.push(`${combatant.name} heals ${actualHeal} HP from ${effect.status}.`);
             }
 
             // In processActiveEffects, add these cases:
@@ -833,6 +857,27 @@ const applyEffect = (effect, user, target, effectiveUser, effectiveTarget, resul
                 Object.assign(effect.applyToTarget ? effectiveTarget : effectiveUser, getEffectiveStats(targetEntity));
                 return { type: 'cleanse', value: cleansed };
             }
+            case 'chakra_drain': {
+                const amount = Number(effect.amount) || 0;
+                if (effect.duration) {
+                    const targetEntity = effect.applyToUser ? user : target;
+                    targetEntity.activeEffects = targetEntity.activeEffects || [];
+                    targetEntity.activeEffects.push({
+                        type: 'chakra_drain',
+                        amount: amount,
+                        duration: effect.duration,
+                        source: jutsuName,
+                        isNew: true
+                    });
+                    if (result.specialEffects) result.specialEffects.push(`Applied Chakra Drain`);
+                } else {
+                    const actualDrain = Math.min(target.chakra || 0, Math.abs(amount));
+                    target.chakra = Math.max(0, (target.chakra || 0) - actualDrain);
+                    user.chakra = Math.min(999, (user.chakra || 0) + actualDrain);
+                    if (result.specialEffects) result.specialEffects.push(`Drained ${actualDrain} Chakra!`);
+                }
+                return { type: 'chakra_drain', value: amount };
+            }
             case 'chakra_gain': {
                 const chakraGain = effectHandlers.chakraGain(effectiveUser, effect.formula || effect.amount || "0");
                 user.chakra = Math.min(999, (user.chakra || 0) + chakraGain);
@@ -1035,7 +1080,7 @@ function bloodlineCanActivate(player, state, opponent) {
             return hp <= maxHp * 0.5;
         case "Hyuga":
             // Activation: enough chakra and enemy has chakra
-            return chakra >= 15 && (opponent?.chakra || 0) > 0;
+            return chakra >= 30 && (opponent?.chakra || 0) > 0;
         case "Uchiha":
             // Activation: hp <= 50%
             return hp <= maxHp * 0.5;
@@ -1677,7 +1722,8 @@ function executeJutsu(baseUser, baseTarget, effectiveUser, effectiveTarget, juts
                     round,
                     isFirstActivation,
                     jutsuList,
-                    effectHandlers
+                    effectHandlers,
+                    getEffectiveStats // Pass function to recalculate stats mid-execution
                 });
 
                 // 3. Return the result directly
@@ -2461,18 +2507,25 @@ function applyDamageWithReflection(attacker, defender, damageAmount, actionResul
     if (reflectEffectIndex !== -1) {
         const initialDefenderHealth = defender.currentHealth;
         let tookOverwhelmingDamage = false;
-        attacker.currentHealth = attacker.currentHealth - damageAmount;
+
+        // Check if damage is overwhelming (breaks the shield)
         if (damageAmount > initialDefenderHealth) {
-            defender.currentHealth = defender.currentHealth - damageAmount;
             tookOverwhelmingDamage = true;
+            // Shield breaks: Defender takes full damage, Attacker takes NONE
+            defender.currentHealth = defender.currentHealth - damageAmount;
+        } else {
+            // Shield holds: Attacker takes the damage
+            attacker.currentHealth = attacker.currentHealth - damageAmount;
+            // Defender heals (absorbs the hit) - capped at max HP handled by health assignment usually, ensuring no overheal loop logic here
+            const maxHP = defender.maxHealth || defender.health || 0;
+            defender.currentHealth = Math.min(maxHP, defender.currentHealth + damageAmount);
         }
 
         let reflectMsg = "";
         if (tookOverwhelmingDamage) {
-            reflectMsg = `${defender.name}'s Shield reflects ${damageAmount} damage back to ${attacker.name}, but the force is overwhelming and they also take ${damageAmount} damage!`;
+            reflectMsg = `${defender.name}'s Shield SHATTERS from the overwhelming force! They take ${damageAmount} damage and fail to reflect!`;
         } else {
-            defender.currentHealth = Math.min(defender.maxHealth, defender.currentHealth + damageAmount);
-            reflectMsg = `${defender.name}'s Shield reflects ${damageAmount} damage back to ${attacker.name} and heals them for the same amount!`;
+            reflectMsg = `${defender.name}'s Shield reflects ${damageAmount} damage back to ${attacker.name} and heals them!`;
         }
 
         actionResult.specialEffects = actionResult.specialEffects || [];
@@ -2752,8 +2805,20 @@ async function runBattle(interaction, player1Id, player2Id, battleType, npcTempl
             roles: player2Member ? player2Member.roles.cache.map(r => r.id) : []
         };
 
-        // Ensure all required fields exist
         if (!player2.activeEffects) player2.activeEffects = [];
+
+        // --- FRIENDLY MODE PRESET ---
+        if (mode === 'friendly_preset') {
+            const presetStats = {
+                health: 15000,
+                maxHealth: 15000,
+                currentHealth: 15000,
+                power: 15000,
+                defense: 15000
+            };
+            Object.assign(player1, presetStats);
+            Object.assign(player2, presetStats);
+        }
         if (!player2.jutsu) player2.jutsu = { 0: 'Attack' };
 
     }
@@ -2781,6 +2846,17 @@ async function runBattle(interaction, player1Id, player2Id, battleType, npcTempl
     let battleResult = null;
     // Register Battle
     if (interaction.id) {
+        // Fix: Cleanup previous battles for this user in this channel
+        // This ensures commands like /multiplayer grab the CURRENT battle, not a stale one.
+        for (const [id, state] of activeBattles.entries()) {
+            if (state.player1 && state.player1.userId === player1Id && state.channel && state.channel.id === interaction.channel.id) {
+                if (state.collector && !state.collector.ended) {
+                    try { state.collector.stop('replaced'); } catch (e) { }
+                }
+                activeBattles.delete(id);
+            }
+        }
+
         activeBattles.set(interaction.id, {
             player1,
             player2,
@@ -2791,1343 +2867,1345 @@ async function runBattle(interaction, player1Id, player2Id, battleType, npcTempl
     }
 
     // Passive chakra regen at the start of each round
-    while (battleActive) {
-        // Check for new players joining
-        if (interaction.id && activeBattles.has(interaction.id)) {
-            const battleState = activeBattles.get(interaction.id);
-            if (battleState.newPlayersQueue && battleState.newPlayersQueue.length > 0) {
-                const newUsers = battleState.newPlayersQueue;
-                battleState.newPlayersQueue = []; // Clear queue
+    try {
+        while (battleActive) {
+            // Check for new players joining
+            if (interaction.id && activeBattles.has(interaction.id)) {
+                const battleState = activeBattles.get(interaction.id);
+                if (battleState.newPlayersQueue && battleState.newPlayersQueue.length > 0) {
+                    const newUsers = battleState.newPlayersQueue;
+                    battleState.newPlayersQueue = []; // Clear queue
 
-                for (const newUser of newUsers) {
-                    // Check if already in
-                    if (player1.subPlayers.find(p => p.userId === newUser.id)) continue;
+                    for (const newUser of newUsers) {
+                        // Check if already in
+                        if (player1.subPlayers.find(p => p.userId === newUser.id)) continue;
 
-                    // Fetch User Data
-                    const memberData = users[newUser.id] || {};
-                    const newPlayerData = {
-                        ...memberData,
-                        userId: newUser.id,
-                        name: newUser.username,
-                        avatar: newUser.avatar,
-                        discriminator: newUser.discriminator,
-                        health: Number(memberData.health) || 100,
-                        currentHealth: Number(memberData.health) || 100,
-                        maxHealth: Number(memberData.health) || 100,
-                        power: Number(memberData.power) || 10,
-                        defense: Number(memberData.defense) || 10,
-                        chakra: Number(memberData.chakra) || 10,
-                        activeEffects: [],
-                        accuracy: 80,
-                        dodge: 0,
-                        jutsu: memberData.jutsu || {},
-                        comboState: null,
-                        level: (playersData[newUser.id] && playersData[newUser.id].level) || 1,
-                        activeCustomRoundJutsus: [],
-                        roles: []
-                    };
+                        // Fetch User Data
+                        const memberData = users[newUser.id] || {};
+                        const newPlayerData = {
+                            ...memberData,
+                            userId: newUser.id,
+                            name: newUser.username,
+                            avatar: newUser.avatar,
+                            discriminator: newUser.discriminator,
+                            health: Number(memberData.health) || 100,
+                            currentHealth: Number(memberData.health) || 100,
+                            maxHealth: Number(memberData.health) || 100,
+                            power: Number(memberData.power) || 10,
+                            defense: Number(memberData.defense) || 10,
+                            chakra: Number(memberData.chakra) || 10,
+                            activeEffects: [],
+                            accuracy: 80,
+                            dodge: 0,
+                            jutsu: memberData.jutsu || {},
+                            comboState: null,
+                            level: (playersData[newUser.id] && playersData[newUser.id].level) || 1,
+                            activeCustomRoundJutsus: [],
+                            roles: []
+                        };
 
-                    player1.subPlayers.push(newPlayerData);
+                        player1.subPlayers.push(newPlayerData);
 
-                    // Add to Team Health - Actually we calc dynmically but init helps
-                    // player1.maxHealth += newPlayerData.maxHealth; 
+                        // Add to Team Health - Actually we calc dynmically but init helps
+                        // player1.maxHealth += newPlayerData.maxHealth; 
 
-                    // Init bloodline state
-                    bloodlineState[newUser.id] = { active: false, roundsLeft: 0, used: false };
+                        // Init bloodline state
+                        bloodlineState[newUser.id] = { active: false, roundsLeft: 0, used: false };
+                    }
+
+                    await battleChannel.send({
+                        embeds: [new EmbedBuilder().setDescription(`**${player1.name} has summoned their allies!**`).setColor('#006400')]
+                    });
+                }
+            }
+
+
+
+
+
+            player1.chakra = Math.min(player1.chakra + 2, 999);
+            player2.chakra = Math.min(player2.chakra + 2, 999);
+
+            // Use centralized processor so chakra_per_round / health_per_round / DoT / status messages are applied
+            [player1, player2].forEach(entity => {
+                const res = effectHandlers.processActiveEffects(entity);
+                if (res.damage) {
+                    entity.currentHealth = (entity.currentHealth || 0) - res.damage;
+                }
+                if (res.chakraDrain) {
+                    entity.chakra = Math.max(0, (entity.chakra || 0) - res.chakraDrain);
+                }
+                // Append any special messages to round summaries
+                const summaries = (res.specialEffects || []).map(s => ({ desc: s }));
+                if (entity.userId === player1.userId) player1RoundBasedSummaries.push(...summaries);
+                else player2RoundBasedSummaries.push(...summaries);
+
+                // Handle Perfect Susanoo cooldown
+                const psActiveIndex = (entity.activeEffects || []).findIndex(e => e.type === 'status' && e.status === 'Perfect Susanoo Active');
+                if (psActiveIndex !== -1 && entity.activeEffects[psActiveIndex].duration <= 0) {
+                    entity.activeEffects.splice(psActiveIndex, 1); // Remove active effect
+                    entity.activeEffects.push({
+                        type: 'status',
+                        status: 'Perfect Susanoo Cooldown',
+                        duration: 2, // 2 rounds cooldown
+                        source: 'Perfect Susanoo'
+                    });
+                    if (entity.userId === player1.userId) player1RoundBasedSummaries.push({ desc: `${entity.name}'s Perfect Susanoo has ended and is now on cooldown!` });
+                    else player2RoundBasedSummaries.push({ desc: `${entity.name}'s Perfect Susanoo has ended and is now on cooldown!` });
+                }
+            });
+
+            // Role-based regeneration
+            if (player1Member) applyRoleBuffs(player1, player1Member, player1RoundBasedSummaries);
+            if (player2Member) applyRoleBuffs(player2, player2Member, player2RoundBasedSummaries);
+
+            // Helper to check and apply revive if someone drops to zero
+            const tryApplyRevive = (combatant) => {
+                if (!combatant || (combatant.currentHealth || 0) > 0) return false;
+
+                // --- IZANAMI LAST RESORT ---
+                const hasIzanami = Object.values(combatant.jutsu || {}).some(j => j === 'Izanami');
+                if (hasIzanami && !combatant.izanamiUsed && !combatant.hasRevivedThisBattle) {
+                    combatant.currentHealth = 1;
+                    effectHandlers.cleanse(combatant);
+                    combatant.izanamiUsed = true;
+                    combatant.hasRevivedThisBattle = true;
+
+                    // Set life drainer mode
+                    combatant.activeEffects = combatant.activeEffects || [];
+                    combatant.activeEffects.push({
+                        type: 'status',
+                        status: 'Life Drainer Active',
+                        replacesAttack: true,
+                        replaceWith: 'Life Drainer',
+                        duration: 999
+                    });
+
+                    return { type: 'izanami' };
                 }
 
-                await battleChannel.send({
-                    embeds: [new EmbedBuilder().setDescription(`**${player1.name} has summoned their allies!**`).setColor('#006400')]
-                });
-            }
-        }
+                // Check if player has already revived in this battle
+                if (combatant.hasRevivedThisBattle) {
+                    return false;
+                }
 
+                const idx = (combatant.activeEffects || []).findIndex(e => ((e.type === 'status' && e.status === 'revive') || e.type === 'revive'));
+                if (idx === -1) return false;
+                const effect = combatant.activeEffects[idx];
+                // determine heal amount
+                let healAmount = 0;
+                try {
+                    if (typeof effect.heal_amount === 'number') healAmount = effect.heal_amount;
+                    else if (typeof effect.heal_amount === 'string' && effect.heal_amount.trim()) {
+                        healAmount = Math.floor(math.evaluate(effect.heal_amount, {
+                            user: combatant,
+                            max: Math.max,
+                            min: Math.min
+                        }));
+                    } else if (typeof effect.amount === 'number') healAmount = effect.amount;
+                    else if (effect.revive_to_max_health) {
+                        healAmount = Number(combatant.maxHealth || combatant.health || 100);
+                    } else if (typeof effect.healPercent === 'number') {
+                        // healPercent can be 1.0 for 100% or 100 for 100
+                        const pct = effect.healPercent > 1 ? (effect.healPercent / 100) : effect.healPercent;
+                        healAmount = Math.floor((combatant.maxHealth || combatant.health || 100) * (pct || 0));
+                    }
+                } catch (err) {
+                    console.error('Revive heal formula error:', err);
+                    healAmount = Number(effect.heal_amount) || Number(effect.amount) || 0;
+                }
+                if (healAmount <= 0) healAmount = Math.max(1, Math.floor((combatant.maxHealth || combatant.health || 100) * 0.25));
+                combatant.currentHealth = Math.min(Number(combatant.maxHealth || combatant.health || 100), healAmount);
 
-
-
-
-        player1.chakra = Math.min(player1.chakra + 2, 999);
-        player2.chakra = Math.min(player2.chakra + 2, 999);
-
-        // Use centralized processor so chakra_per_round / health_per_round / DoT / status messages are applied
-        [player1, player2].forEach(entity => {
-            const res = effectHandlers.processActiveEffects(entity);
-            if (res.damage) {
-                entity.currentHealth = (entity.currentHealth || 0) - res.damage;
-            }
-            if (res.chakraDrain) {
-                entity.chakra = Math.max(0, (entity.chakra || 0) - res.chakraDrain);
-            }
-            // Append any special messages to round summaries
-            const summaries = (res.specialEffects || []).map(s => ({ desc: s }));
-            if (entity.userId === player1.userId) player1RoundBasedSummaries.push(...summaries);
-            else player2RoundBasedSummaries.push(...summaries);
-
-            // Handle Perfect Susanoo cooldown
-            const psActiveIndex = (entity.activeEffects || []).findIndex(e => e.type === 'status' && e.status === 'Perfect Susanoo Active');
-            if (psActiveIndex !== -1 && entity.activeEffects[psActiveIndex].duration <= 0) {
-                entity.activeEffects.splice(psActiveIndex, 1); // Remove active effect
-                entity.activeEffects.push({
-                    type: 'status',
-                    status: 'Perfect Susanoo Cooldown',
-                    duration: 2, // 2 rounds cooldown
-                    source: 'Perfect Susanoo'
-                });
-                if (entity.userId === player1.userId) player1RoundBasedSummaries.push({ desc: `${entity.name}'s Perfect Susanoo has ended and is now on cooldown!` });
-                else player2RoundBasedSummaries.push({ desc: `${entity.name}'s Perfect Susanoo has ended and is now on cooldown!` });
-            }
-        });
-
-        // Role-based regeneration
-        if (player1Member) applyRoleBuffs(player1, player1Member, player1RoundBasedSummaries);
-        if (player2Member) applyRoleBuffs(player2, player2Member, player2RoundBasedSummaries);
-
-        // Helper to check and apply revive if someone drops to zero
-        const tryApplyRevive = (combatant) => {
-            if (!combatant || (combatant.currentHealth || 0) > 0) return false;
-
-            // --- IZANAMI LAST RESORT ---
-            const hasIzanami = Object.values(combatant.jutsu || {}).some(j => j === 'Izanami');
-            if (hasIzanami && !combatant.izanamiUsed && !combatant.hasRevivedThisBattle) {
-                combatant.currentHealth = 1;
-                effectHandlers.cleanse(combatant);
-                combatant.izanamiUsed = true;
+                // Set flag to prevent future revives in this battle
                 combatant.hasRevivedThisBattle = true;
 
-                // Set life drainer mode
-                combatant.activeEffects = combatant.activeEffects || [];
-                combatant.activeEffects.push({
-                    type: 'status',
-                    status: 'Life Drainer Active',
-                    replacesAttack: true,
-                    replaceWith: 'Life Drainer',
-                    duration: 999
-                });
-
-                return { type: 'izanami' };
-            }
-
-            // Check if player has already revived in this battle
-            if (combatant.hasRevivedThisBattle) {
-                return false;
-            }
-
-            const idx = (combatant.activeEffects || []).findIndex(e => ((e.type === 'status' && e.status === 'revive') || e.type === 'revive'));
-            if (idx === -1) return false;
-            const effect = combatant.activeEffects[idx];
-            // determine heal amount
-            let healAmount = 0;
-            try {
-                if (typeof effect.heal_amount === 'number') healAmount = effect.heal_amount;
-                else if (typeof effect.heal_amount === 'string' && effect.heal_amount.trim()) {
-                    healAmount = Math.floor(math.evaluate(effect.heal_amount, {
-                        user: combatant,
-                        max: Math.max,
-                        min: Math.min
-                    }));
-                } else if (typeof effect.amount === 'number') healAmount = effect.amount;
-                else if (effect.revive_to_max_health) {
-                    healAmount = Number(combatant.maxHealth || combatant.health || 100);
-                } else if (typeof effect.healPercent === 'number') {
-                    // healPercent can be 1.0 for 100% or 100 for 100
-                    const pct = effect.healPercent > 1 ? (effect.healPercent / 100) : effect.healPercent;
-                    healAmount = Math.floor((combatant.maxHealth || combatant.health || 100) * (pct || 0));
-                }
-            } catch (err) {
-                console.error('Revive heal formula error:', err);
-                healAmount = Number(effect.heal_amount) || Number(effect.amount) || 0;
-            }
-            if (healAmount <= 0) healAmount = Math.max(1, Math.floor((combatant.maxHealth || combatant.health || 100) * 0.25));
-            combatant.currentHealth = Math.min(Number(combatant.maxHealth || combatant.health || 100), healAmount);
-
-            // Set flag to prevent future revives in this battle
-            combatant.hasRevivedThisBattle = true;
-
-            // Remove or consume revive
-            if (effect.once_per_battle) {
-                // mark consumed by removing effect
-                combatant.activeEffects.splice(idx, 1);
-            } else {
-                // if duration exists we'll let normal duration decrement remove it later; otherwise remove
-                if (!effect.duration) combatant.activeEffects.splice(idx, 1);
-            }
-            return true;
-        };
-        // Attempt to revive if someone would otherwise die
-        if (player1.currentHealth <= 0) {
-            const revived = tryApplyRevive(player1);
-            if (revived) {
-                if (revived.type === 'izanami') {
-                    const izanamiRevive = new EmbedBuilder()
-                        .setTitle('**IZANAMI: LAST RESORT**')
-                        .setDescription(`${player1.name}'s death triggered Izanami! They return at 1 HP, cleansed of all ailments, and enter **LIFE DRAINER** mode!`)
-                        .setColor(0x000000)
-                        .setImage('https://media.tenor.com/_7iTq0Z3SjMAAAAM/itachi-izanami.gif');
-                    await battleChannel.send({ embeds: [izanamiRevive] });
+                // Remove or consume revive
+                if (effect.once_per_battle) {
+                    // mark consumed by removing effect
+                    combatant.activeEffects.splice(idx, 1);
                 } else {
-                    const reviveEmbed = new EmbedBuilder()
-                        .setTitle('**NOT YET!**')
-                        .setDescription(`${player1.name} was revived and returned to the battle!`)
-                        .setColor(0xFF0000)
-                        .setImage('https://media.tenor.com/6Z6Vn2K1C5kAAAAM/goku-transform.gif');
-                    await battleChannel.send({ embeds: [reviveEmbed] });
+                    // if duration exists we'll let normal duration decrement remove it later; otherwise remove
+                    if (!effect.duration) combatant.activeEffects.splice(idx, 1);
                 }
-            }
-        }
-        if (player2.currentHealth <= 0) {
-            const revived = tryApplyRevive(player2);
-            if (revived) {
-                if (revived.type === 'izanami') {
-                    const izanamiRevive = new EmbedBuilder()
-                        .setTitle('**IZANAMI: LAST RESORT**')
-                        .setDescription(`${player2.name}'s death triggered Izanami! They return at 1 HP, cleansed of all ailments, and enter **LIFE DRAINER** mode!`)
-                        .setColor(0x000000)
-                        .setImage('https://media.tenor.com/_7iTq0Z3SjMAAAAM/itachi-izanami.gif');
-                    await battleChannel.send({ embeds: [izanamiRevive] });
-                } else {
-                    const reviveEmbed = new EmbedBuilder()
-                        .setTitle('**NOT YET!**')
-                        .setDescription(`${player2.name} was revived and returned to the battle!`)
-                        .setColor(0xFF0000)
-                        .setImage('https://media.tenor.com/6Z6Vn2K1C5kAAAAM/goku-transform.gif');
-                    await battleChannel.send({ embeds: [reviveEmbed] });
-                }
-            }
-        }
-
-        // ...existing code continues...
-        player1.chakra = Math.min(player1.chakra + 2, 999);
-        player2.chakra = Math.min(player2.chakra + 2, 999);
-        // --- Apply and Update Effects (Buffs, Debuffs, Statuses) ---
-        // Snapshot effects at round start to ensure simultaneous turn resolution
-        // (Prevents P1's moves from incapacitating P2 in the same round)
-        player1.roundStartEffects = JSON.parse(JSON.stringify(player1.activeEffects || []));
-        player2.roundStartEffects = JSON.parse(JSON.stringify(player2.activeEffects || []));
-
-        // Process recurring effects (Bleed, Poison, Burn, etc.)
-        [player1, player2].forEach(p => {
-            const effectResult = effectHandlers.processActiveEffects(p);
-            if (effectResult.hasStunOrFlinch) {
-                p.roundStartEffects = p.roundStartEffects || [];
-                // Add a transient stun status to the snapshot so move-selection skips them
-                p.roundStartEffects.push({ type: 'status', status: 'stun', source: 'Active Status' });
-            }
-            if (effectResult.specialEffects.length > 0) {
-                const summaryArray = (p.userId === player1.userId) ? player1RoundBasedSummaries : player2RoundBasedSummaries;
-                effectResult.specialEffects.forEach(msg => {
-                    summaryArray.push({ desc: msg });
-                });
-            }
-        });
-
-        // --- Bloodline Logic ---
-        for (const player of [player1, player2]) {
-            const opponent = player.userId === player1.userId ? player2 : player1;
-            const state = bloodlineState[player.userId];
-            if (!player || !player.bloodline) continue;
-
-            // Ensure state exists
-            if (!state) bloodlineState[player.userId] = { active: false, roundsLeft: 0, used: false };
-
-            // Passive effects (applied every round)
-            switch (player.bloodline) {
-                // ...existing code...
-                case "Senju": {
-                    // Passive: heals 1% of max HP each round (minimum 1)
-                    const maxHp = Number(player.maxHealth || player.health || 100);
-                    const healAmount = Math.max(1, Math.floor(maxHp * 0.01)); // 1% per round
-                    player.currentHealth = (Number(player.currentHealth) || Number(player.health) || 0) + healAmount;
-                    (player._roundMessages = player._roundMessages || []).push(`${player.name}'s Hyper Regeneration heals ${healAmount} HP (passive).`);
-                    // Passive: 8% life-steal each round — drains 8% of opponent max HP and heals the user for same amount (min 1)
-                    try {
-                        const opponentMax = Number(opponent?.maxHealth || opponent?.health || 100);
-                        const stealAmount = Math.max(1, Math.floor(opponentMax * 0.08)); // 8% of opponent max HP
-
-                        // Apply drain to opponent and heal to player (clamped)
-                        if (opponent) {
-                            opponent.currentHealth = (opponent.currentHealth || opponent.health || 0) - stealAmount;
-                        }
-                        const maxHp = Number(player.maxHealth || player.health || 100);
-                        player.currentHealth = Math.min(maxHp, (Number(player.currentHealth) || 0) + stealAmount);
-
-                        (player._roundMessages = player._roundMessages || []).push(
-                            `${player.name}'s Hyper Regeneration steals ${stealAmount} HP (${Math.round(8)}%) from ${opponent?.name || 'the foe'} and heals ${stealAmount} HP (passive).`
-                        );
-                        if (opponent) {
-                            (opponent._roundMessages = opponent._roundMessages || []).push(
-                                `${opponent.name} lost ${stealAmount} HP to ${player.name}'s Hyper Regeneration.`
-                            );
-                        }
-                    } catch (err) {
-                        console.error('Error applying Senju passive lifesteal:', err);
-                    }
-                    break;
-                }
-
-                case "Uzumaki": {
-                    // Passive: restores 10% of max HP each round
-                    const maxHp = Number(player.maxHealth || player.health || 100);
-                    const healAmount = Math.max(1, Math.floor(maxHp * 0.10));
-                    player.currentHealth = Math.min(maxHp, (player.currentHealth || 0) + healAmount);
-                    (player._roundMessages = player._roundMessages || []).push(`${player.name}'s Uzumaki Will restores ${healAmount} HP (passive).`);
-                    break;
-                }
-                case "Hyuga": {
-                    // Passive: steal up to 5 chakra from opponent each round
-                    // NERF: Reduced from 5 to 3, then to 1
-                    const steal = Math.min(1, Math.max(0, Number(opponent?.chakra || 0)));
-                    if (steal > 0) {
-                        opponent.chakra = Math.max(0, (opponent.chakra || 0) - steal);
-                        player.chakra = Math.min(999, (player.chakra || 0) + steal);
-                        (player._roundMessages = player._roundMessages || []).push(`${player.name}'s Byakugan passively drains ${steal} Chakra from ${opponent.name}.`);
-                    }
-                    break;
-                }
-                case "Uchiha": {
-                    // Passive: increase dodge by 50% of base dodge, min +5 to be meaningful
-                    const baseDodge = Number(player.dodge || 0);
-                    const dodgeBonus = Math.max(5, Math.floor(baseDodge * 0.5));
-                    player.activeEffects = player.activeEffects || [];
-                    player.activeEffects.push({
-                        type: 'buff',
-                        stats: { dodge: dodgeBonus },
-                        duration: 1,
-                        source: 'bloodline_passive'
-                    });
-                    (player._roundMessages = player._roundMessages || []).push(`${player.name}'s Sharingan sharpens reflexes (passive +${dodgeBonus} dodge).`);
-                    break;
-                }
-                case "Nara": {
-                    // Passive: +3 chakra each round (kept from previous implementation)
-                    player.chakra = Math.min(player.chakra + 3, 999);
-                    (player._roundMessages = player._roundMessages || []).push(`${player.name}'s Battle IQ grants +3 Chakra (passive).`);
-                    break;
-                }
-                default:
-                    break;
-            }
-
-            // Decrement any active bloodline durations (for activation-mode bloodlines like Uchiha susanoo)
-            if (state && state.active && typeof state.roundsLeft === 'number') {
-                state.roundsLeft--;
-                if (state.roundsLeft <= 0) {
-                    state.active = false;
-                    // If Uchiha susanoo wore off, remove susanoo effects (we stored them as activeEffects.source when applied)
-                    player.activeEffects = (player.activeEffects || []).filter(e => e.source !== `${player.userId}-bloodline-awaken`);
-                    (player._roundMessages = player._roundMessages || []).push(`${player.name}'s bloodline effect has ended.`);
-                }
-            }
-        }
-
-        // Set canActivateBloodline flags for UI before showing move buttons (must be done for both players)
-        player1.canActivateBloodline = bloodlineCanActivate(player1, bloodlineState[player1.userId], player2);
-        player2.canActivateBloodline = bloodlineCanActivate(player2, bloodlineState[player2.userId], player1);
-
-        // --- If there are any passive bloodline messages, display them now as a short embed ---
-        const passiveMsgs = [];
-        [player1, player2].forEach(p => {
-            if (p._roundMessages && p._roundMessages.length) {
-                passiveMsgs.push(...p._roundMessages.map(m => `${m}`));
-                p._roundMessages = [];
-            }
-        });
-        if (passiveMsgs.length > 0) {
-            const passiveEmbed = new EmbedBuilder()
-                .setTitle('Bloodline Passives')
-                .setDescription(passiveMsgs.join('\n'))
-                .setColor(0x8B4513);
-            await battleChannel.send({ embeds: [passiveEmbed] });
-        }
-
-        // --- Round-Based Jutsu Logic ---
-        player1RoundBasedSummaries = [];
-        player2RoundBasedSummaries = [];
-
-        // Helper to get round-based description and apply effects
-        const applyRoundBasedEffects = (activeJutsus, user, target, summariesArray) => {
-            for (const jutsuName in activeJutsus) {
-                const data = activeJutsus[jutsuName];
-                const jutsu = jutsuList[jutsuName];
-                if (jutsu?.roundBased) {
-                    const currentRound = data.round + 1; // Round number for the effect
-                    let roundEffect = null;
-                    for (const key of Object.keys(jutsu.roundEffects || {})) {
-                        if (key.includes('-')) {
-                            const [start, end] = key.split('-').map(Number);
-                            if (currentRound >= start && currentRound <= end) {
-                                roundEffect = jutsu.roundEffects[key];
-                                break;
-                            }
-                        } else if (parseInt(key) === currentRound) {
-                            roundEffect = jutsu.roundEffects[key];
-                            break;
-                        }
-                    }
-
-                    if (roundEffect) {
-                        const effectiveUser = getEffectiveStats(user);
-                        const effectiveTarget = getEffectiveStats(target);
-                        let desc = roundEffect.description || "";
-                        desc = desc
-                            .replace(/undefined/g, user.name)
-                            .replace(/\buser\b/gi, user.name)
-                            .replace(/\btarget\b/gi, target.name);
-
-                        // Collect effect values for summary
-                        const effectSummary = [];
-                        const dummyResult = { damage: 0, heal: 0, specialEffects: [] };
-
-                        // Apply effects for this round of the active jutsu
-                        if (Array.isArray(roundEffect.effects)) {
-                            roundEffect.effects.forEach(effect => {
-                                applyEffect(effect, user, target, effectiveUser, effectiveTarget, dummyResult, jutsuName, effectHandlers, true);
-                            });
-                        } else if (roundEffect.effects && typeof roundEffect.effects === 'object') {
-                            // Support for single object effect
-                            applyEffect(roundEffect.effects, user, target, effectiveUser, effectiveTarget, dummyResult, jutsuName, effectHandlers, true);
-                        }
-
-                        // Legacy support for old roundEffect keys
-                        if (roundEffect.damage) applyEffect({ type: 'damage', ...roundEffect.damage }, user, target, effectiveUser, effectiveTarget, dummyResult, jutsuName, effectHandlers, true);
-                        if (roundEffect.heal) applyEffect({ type: 'heal', ...roundEffect.heal }, user, target, effectiveUser, effectiveTarget, dummyResult, jutsuName, effectHandlers, true);
-                        if (roundEffect.status) applyEffect({ type: 'status', status: roundEffect.status, duration: roundEffect.duration || 1 }, user, target, effectiveUser, effectiveTarget, dummyResult, jutsuName, effectHandlers, true);
-                        if (roundEffect.debuff) applyEffect({ type: 'debuff', stats: roundEffect.debuff.stats, duration: roundEffect.duration || 1 }, user, target, effectiveUser, effectiveTarget, dummyResult, jutsuName, effectHandlers, true);
-                        if (roundEffect.buff) applyEffect({ type: 'buff', stats: roundEffect.buff.stats, duration: roundEffect.duration || 1 }, user, target, effectiveUser, effectiveTarget, dummyResult, jutsuName, effectHandlers, true);
-                        if (roundEffect.chakra_gain) applyEffect({ type: 'chakra_gain', ...roundEffect.chakra_gain }, user, target, effectiveUser, effectiveTarget, dummyResult, jutsuName, effectHandlers, true);
-
-                        if (dummyResult.damage > 0) effectSummary.push({ type: 'damage', value: dummyResult.damage });
-                        if (dummyResult.heal > 0) effectSummary.push({ type: 'heal', value: dummyResult.heal });
-                        if (dummyResult.specialEffects) {
-                            dummyResult.specialEffects.forEach(msg => {
-                                if (!msg.includes('damage') && !msg.includes('heal')) {
-                                    effectSummary.push({ type: 'text', value: msg });
-                                }
-                            });
-                        }
-
-                        summariesArray.push({ desc, effects: effectSummary });
-                    }
-                    activeJutsus[jutsuName].round++;
-                    // Remove completed jutsu
-                    const maxRound = Math.max(...Object.keys(jutsu.roundEffects || {}).map(k => {
-                        const parts = k.split('-');
-                        return parts.length > 1 ? parseInt(parts[1]) : parseInt(parts[0]);
-                    }));
-                    if (data.round >= maxRound) {
-                        delete activeJutsus[jutsuName];
-                    }
-                }
-            }
-        };
-
-        applyRoundBasedEffects(player1ActiveJutsus, player1, player2, player1RoundBasedSummaries);
-        applyRoundBasedEffects(player2ActiveJutsus, player2, player1, player2RoundBasedSummaries);
-
-        // --- IZANAMI PHASE MANAGEMENT & INFINITY ---
-        [player1, player2].forEach(p => {
-            if (p.izanamiActive) {
-                p.izanamiRound++;
-                if (p.izanamiRound <= 3) {
-                    p.izanamiPhase = "recording";
-                    p.currentHealth = 999999999;
-                    p.chakra = 999999999;
-                    const opp = (p === player1) ? player2 : player1;
-                    opp.currentHealth = 999999999;
-                    opp.chakra = 999999999;
-                    const pSummaries = (p === player1) ? player1RoundBasedSummaries : player2RoundBasedSummaries;
-                    pSummaries.push({ desc: "The Fate is Being Decided" });
-                } else if (p.izanamiRound <= 6) {
-                    p.izanamiPhase = "flow";
-                    const pSummaries = (p === player1) ? player1RoundBasedSummaries : player2RoundBasedSummaries;
-                    pSummaries.push({ desc: "The fate was already decided" });
-                } else {
-                    p.izanamiActive = false;
-                    p.izanamiPhase = "ended";
-                }
-            }
-        });
-
-        // --- Determine Custom Background for Battle Image ---
-        let customBgUrl = null;
-        const getActiveCustomBg = (activeJutsus) => {
-            for (const jName in activeJutsus) {
-                const jutsu = jutsuList[jName];
-                if (jutsu?.custombackground && activeJutsus[jName].round >= jutsu.custombackground.round) {
-                    return jutsu.custombackground.url;
-                }
-            }
-            return null;
-        };
-        const p1Bg = getActiveCustomBg(player1ActiveJutsus);
-        const p2Bg = getActiveCustomBg(player2ActiveJutsus);
-        customBgUrl = p1Bg || p2Bg; // Player 1's background takes precedence if both apply
-        if (!customBgUrl && npcData?.background) {
-            customBgUrl = npcData.background;
-        }
-
-        // Create and Send Moves Embed for P1
-        const mainPlayer = player1.subPlayers[0];
-        const { embed: embed1, components: components1 } = createMovesEmbed(mainPlayer, roundNum);
-        // Force color
-        embed1.setColor('#006400');
-
-        const moveMessage1 = await battleChannel.send({
-            content: `<@${mainPlayer.userId}>`,
-            embeds: [embed1],
-            components: components1,
-            fetchReply: true
-        });
-
-        // --- Generate and Send Battle Image Immediately ---
-        // (Shared)
-        const battleImagePath = await generateBattleImage(player1, player2, customBgUrl);
-        const battleImage = new AttachmentBuilder(battleImagePath);
-        await battleChannel.send({ files: [battleImage] });
-
-        // --- Player 1 (or Team) Turn ---
-        let player1Action = { damage: 0, heal: 0, specialEffects: [], description: "", hit: false };
-        let teamActions = [];
-        let multiplayerInterrupted = false;
-
-        // Ensure subPlayers initialized (fallback)
-        if (!player1.subPlayers) player1.subPlayers = [player1];
-
-        // Sequential Move Collection Loop
-        // We already sent P1's embed. We process P1 first, then others.
-
-        for (let i = 0; i < player1.subPlayers.length; i++) {
-            const subPlayer = player1.subPlayers[i];
-
-            // If it's NOT P1 (i > 0), we need to send their embed now (AFTER battle image)
-            let currentMessage;
-            let currentComponents;
-
-            if (i === 0) {
-                currentMessage = moveMessage1; // Already sent
-                currentComponents = components1;
-            } else {
-                if (multiplayerInterrupted) break;
-                const { embed: embedSub, components: componentsSub } = createMovesEmbed(subPlayer, roundNum);
-                embedSub.setColor('#006400');
-                currentComponents = componentsSub;
-                currentMessage = await battleChannel.send({
-                    content: `<@${subPlayer.userId}>`,
-                    embeds: [embedSub],
-                    components: componentsSub,
-                    fetchReply: true
-                });
-            }
-
-            // Wait for action
-            const subAction = await new Promise(resolve => {
-                const collector = currentMessage.createMessageComponentCollector({
-                    filter: i => i.user.id === subPlayer.userId && i.customId.endsWith(`-${subPlayer.userId}-${roundNum}`),
-                    time: 75000
-                });
-
-                // Save collector for external interruption
-                if (interaction.id && activeBattles.has(interaction.id)) {
-                    activeBattles.get(interaction.id).collector = collector;
-                }
-
-                collector.on('collect', async i => {
-                    try { await i.deferUpdate(); } catch (e) { }
-
-                    if (i.customId.startsWith('awaken')) {
-                        subPlayer.pendingBloodline = true;
-                        try {
-                            const disabledRows = currentComponents.map(row => {
-                                const r = ActionRowBuilder.from(row);
-                                r.components.forEach(c => {
-                                    if (c.data.custom_id && c.data.custom_id.startsWith('awaken')) c.setDisabled(true);
-                                });
-                                return r;
-                            });
-                            await currentMessage.edit({ components: disabledRows }).catch(() => { });
-                        } catch (e) { }
-                        try { await i.followUp({ content: 'Awaken selected. Now choose a normal jutsu to use.', ephemeral: true }); } catch (e) { }
-                        return;
-                    }
-
-                    if (i.customId.startsWith('move')) {
-                        let jutsuName = getJutsuByButton(i.customId, subPlayer);
-                        const jutsu = jutsuList[jutsuName];
-                        // Calculate effective stats for THIS subplayer
-                        const effectiveSub = getEffectiveStats(subPlayer);
-                        const effectiveTarget = getEffectiveStats(player2);
-
-                        // IZANAMI LOGIC
-                        if (player1.izanamiActive || player2.izanamiActive) {
-                            const activeOwner = player1.izanamiActive ? player1 : player2;
-                            const isOwner = subPlayer.userId === activeOwner.userId;
-                            const phase = activeOwner.izanamiPhase;
-
-                            if (phase === "recording") {
-                                // Record move
-                                activeOwner.izanamiRecordedMoves[isOwner ? 'user' : 'target'].push(jutsuName);
-                                // Set result to "The Fate is Being Decided"
-                                resolve({
-                                    damage: 0, heal: 0,
-                                    description: "The Fate is Being Decided",
-                                    specialEffects: [isOwner ? "User move recorded" : "Target move recorded"],
-                                    hit: false, isStatusEffect: true, jutsuUsed: jutsuName
-                                });
-                                collector.stop();
-                                return;
-                            } else if (phase === "flow") {
-                                if (!isOwner) {
-                                    // Target forced to repeat
-                                    const recordedIdx = activeOwner.izanamiRound - 4; // Flow starts after Round 3
-                                    const expectedMove = activeOwner.izanamiRecordedMoves.target[recordedIdx];
-                                    if (jutsuName !== expectedMove) {
-                                        resolve({
-                                            damage: 0, heal: 0,
-                                            description: "You Cannot change fate.",
-                                            specialEffects: ["Failed to repeat fate"],
-                                            hit: false, isStatusEffect: true, jutsuUsed: jutsuName
-                                        });
-                                        collector.stop();
-                                        return;
-                                    }
-                                }
-                            }
-                        }
-
-                        // Bloodline Activation Logic
-                        if (subPlayer.pendingBloodline) {
-                            const state = bloodlineState[subPlayer.userId];
-                            const activationMsgs = applyBloodlineActivation(subPlayer, player2, state);
-
-                            // Send Awaken Embed
-                            try {
-                                const gif = BLOODLINE_GIFS[subPlayer.bloodline] || null;
-                                const title = `${subPlayer.name} awakens ${BLOODLINE_NAMES[subPlayer.bloodline] || subPlayer.bloodline}`;
-                                const desc = `${BLOODLINE_DEPARTMENTS[subPlayer.bloodline] || ''}\n\n${activationMsgs.join('\n')}`;
-                                const awakenEmbed = new EmbedBuilder().setTitle(title).setDescription(desc).setColor('#006400');
-                                if (gif) awakenEmbed.setImage(gif);
-                                await battleChannel.send({ embeds: [awakenEmbed] }).catch(() => { });
-                            } catch (e) { }
-
-                            const result = executeJutsu(subPlayer, player2, effectiveSub, effectiveTarget, jutsuName);
-                            result.specialEffects.unshift(...activationMsgs);
-                            if (subPlayer.comboState && subPlayer.comboState.combo.requiredJutsus.includes(jutsuName)) {
-                                subPlayer.comboState.usedJutsus.add(jutsuName);
-                            }
-                            subPlayer.pendingBloodline = false;
-                            resolve(result);
-                            collector.stop();
-                            return;
-                        }
-
-                        // Round-Based
-                        if (jutsu?.roundBased && !player1ActiveJutsus[jutsuName]) {
-                            // TODO: activeJutsus is currently shared. This is simplified.
-                            const result = executeJutsu(subPlayer, player2, effectiveSub, effectiveTarget, jutsuName, 1, true);
-                            if (!result.hit && result.specialEffects?.includes("Not enough chakra!")) {
-                                resolve(result);
-                                collector.stop();
-                                return;
-                            }
-                            player1ActiveJutsus[jutsuName] = { round: 1 }; // Shared tracking for now
-                            resolve(result);
-                            collector.stop();
-                            return;
-                        }
-
-                        const result = executeJutsu(subPlayer, player2, effectiveSub, effectiveTarget, jutsuName);
-                        if (subPlayer.comboState && subPlayer.comboState.combo.requiredJutsus.includes(jutsuName)) {
-                            subPlayer.comboState.usedJutsus.add(jutsuName);
-                        }
-
-                        // Stun check (using round start snapshot)
-                        const statusEffect = (subPlayer.roundStartEffects || []).find(e =>
-                            e.type === 'status' && ['stun', 'flinch', 'drown'].includes(e.status)
-                        );
-                        if (statusEffect && jutsuName !== 'World Cutting Slash') {
-                            resolve({
-                                damage: 0, heal: 0,
-                                description: `${subPlayer.name} is ${statusEffect.status} and can't move!`,
-                                specialEffects: [statusEffect.status.toUpperCase() + " active"],
-                                hit: false, isStatusEffect: true, jutsuUsed: null
-                            });
-                            collector.stop();
-                            return;
-                        }
-                        resolve(result);
-                        collector.stop();
-
-                    } else {
-                        // Inventory, etc.
-                        try {
-                            resolve(await processPlayerMove(i.customId, subPlayer));
-                        } catch (err) {
-                            resolve({ damage: 0, heal: 0, description: "Error processing move.", hit: false });
-                        }
-                        collector.stop();
-                    }
-                });
-
-                collector.on('end', (collected, reason) => {
-                    if (reason === 'multiplayer_joined') {
-                        resolve({ interrupted: true });
-                    }
-                    if (reason === 'time') {
-                        resolve({
-                            damage: 0, heal: 0,
-                            description: `${subPlayer.name} missed their chance!`,
-                            specialEffects: ["Missed opportunity!"],
-                            hit: false, fled: true, isRest: true
-                        });
-                    }
-                    if (subPlayer.pendingBloodline) delete subPlayer.pendingBloodline;
-                    currentMessage.edit({ components: [] }).catch(() => { });
-                });
-            });
-
-            if (subAction && subAction.interrupted) {
-                multiplayerInterrupted = true;
-                break;
-            }
-            if (subAction && subAction.fled) {
-            }
-
-            // --- IZANAMI AUTO-REPEAT LOGIC (Consolidated) ---
-            if (player1.izanamiActive || player2.izanamiActive) {
-                const activeOwner = player1.izanamiActive ? player1 : player2;
-                if (activeOwner.userId === subPlayer.userId && activeOwner.izanamiPhase === "flow") {
-                    const recordedIdx = activeOwner.izanamiRound - 4;
-                    const repeatedMove = activeOwner.izanamiRecordedMoves.user[recordedIdx];
-                    if (repeatedMove) {
-                        const effectiveSub = getEffectiveStats(subPlayer);
-                        const effectiveTarget = getEffectiveStats(player2);
-                        const repeatedResult = executeJutsu(subPlayer, player2, effectiveSub, effectiveTarget, repeatedMove);
-                        subAction.damage = (subAction.damage || 0) + (repeatedResult.damage || 0);
-                        subAction.heal = (subAction.heal || 0) + (repeatedResult.heal || 0);
-                        subAction.description = (subAction.description || "") + `\n**Izanami Repeat:** ${repeatedResult.description}`;
-                        subAction.specialEffects = (subAction.specialEffects || []).concat(repeatedResult.specialEffects || []);
-                    }
-                }
-            }
-
-            // --- NEW: Decrement duration AFTER acting ---
-            const wornOffMsgs = effectHandlers.checkDurationAndRemove(subPlayer);
-            if (wornOffMsgs && wornOffMsgs.length > 0) {
-                // We can add these to the action's special effects or just log them
-                subAction.specialEffects = (subAction.specialEffects || []).concat(wornOffMsgs);
-            }
-
-            teamActions.push(subAction);
-
-            // Short delay between players?
-            if (i < player1.subPlayers.length - 1) {
-                // If there are next players, maybe small delay
-                await new Promise(r => setTimeout(r, 1000));
-            }
-        }
-
-        if (multiplayerInterrupted) {
-            continue; // Break the 'while (battleActive)' loop's current iteration, restarting it (re-drawing image etc)
-        }
-
-        // Aggregate
-        for (const act of teamActions) {
-            if (act.fled && !player1Action.fled) {
-                player1Action.fled = true; // One flees, battle ends? Or just that player leaves? 
-                // Current engine ends battle on flee.
-            }
-            player1Action.damage += (act.damage || 0);
-            player1Action.heal += (act.heal || 0);
-            if (act.specialEffects) player1Action.specialEffects.push(...act.specialEffects);
-            player1Action.description += (player1Action.description ? "\n" : "") + (act.description || "");
-            if (act.hit) player1Action.hit = true;
-            if (act.isCrit) player1Action.isCrit = true;
-            if (act.jutsuUsed) player1Action.jutsuUsed = act.jutsuUsed; // Just take the last one
-        }
-
-        // Check for Flee
-        if (player1Action.fled) {
-            battleActive = false;
-            await handleFlee(battleChannel, player1, player2, users, roundNum, {
-                winnerDealt: totalDamageDealt2,
-                winnerTaken: totalDamageTaken2,
-                loserDealt: totalDamageDealt1,
-                loserTaken: totalDamageTaken1
-            }, battleType, isPlayer2NPC, client);
-            return { winner: player2, loser: player1 };
-        }
-
-        // --- Player 2's Turn (NPC or Player) ---
-        let player2Action;
-        if (isPlayer2NPC) {
-            // --- BOSS ENRAGE LOGIC ---
-            if (isRaidBoss && player2.currentHealth < (player2.maxHealth * 0.75) && !player2.enraged) {
-                player2.enraged = true;
-                player2.activeEffects = player2.activeEffects || [];
-                player2.activeEffects.push({ type: 'buff', stats: { power: Math.floor(player2.power * 0.5) }, duration: 99, source: 'Enrage' });
-                try { await battleChannel.send(`⚠️ **${player2.name} IS ENRAGED!** Power increased massively!`); } catch (e) { }
-            }
-            const effective1 = getEffectiveStats(player1);
-            const effective2 = getEffectiveStats(player2);
-            player2Action = npcChooseMove(player2, player1, effective2, effective1);
-            if (player2Action.isRoundActivation && player2Action.jutsuUsed) {
-                player2ActiveJutsus[player2Action.jutsuUsed] = { round: 1 };
-            }
-            // --- Shadow possession copy logic for NPC path ---
-            try {
-                // If player1 is shadow-possessed, copy player2's (NPC) action into player1Action
-                // Check snapshot to ensure simultaneous resolution
-                const p1Poss = (player1.roundStartEffects || []).find(e => e.type === 'status' && (e.status === 'possessed' || e.status === 'shadow_possession'));
-                if (p1Poss && typeof p1Poss.source === 'string') {
-                    const possessorId = p1Poss.source.split('-')[0];
-                    if (possessorId === player2.userId) {
-                        player1Action = JSON.parse(JSON.stringify(player2Action));
-                        player1Action.specialEffects = [`(Shadow-possessed — action copied from ${player2.name})`].concat(player1Action.specialEffects || []);
-                    }
-                }
-
-                // If NPC is shadow-possessed (rare), copy player1Action into player2Action
-                const p2Poss = (player2.roundStartEffects || []).find(e => e.type === 'status' && (e.status === 'possessed' || e.status === 'shadow_possession'));
-                if (p2Poss && typeof p2Poss.source === 'string') {
-                    const possessorId = p2Poss.source.split('-')[0];
-                    if (possessorId === player1.userId) {
-                        // If NPC is possessed by player1, they are incapacitated.
-                        // We modify the description to reflect the "copying" aspect,
-                        // but the action itself remains an incapacitated one (damage/heal 0).
-                        player2Action.description = `(Shadow-possessed — ${player2.name} would have copied ${player1.name}'s action, but is incapacitated!)`;
-                        player2Action.specialEffects = [`(Shadow-possessed — action copied from ${player1.name})`].concat(player2Action.specialEffects || []);
-                        player2Action.damage = 0; // Ensure no damage is dealt
-                        player2Action.heal = 0;   // Ensure no healing occurs
-                        player2Action.hit = false; // Ensure no hit is registered
-                        player2Action.isStatusEffect = true; // Mark as status effect
-                        player2Action.jutsuUsed = null; // No jutsu was actually used
-                    }
-                }
-            } catch (err) {
-                console.error('Error applying shadow possession copy (NPC path):', err);
-            }
-        } else {
-            // If player2 is shadow-possessed, show the possessor
-            let displayPlayer2 = { ...player2 };
-            try {
-                const p2Poss = (player2.activeEffects || []).find(e => e.type === 'status' && e.status === 'shadow_possession');
-                if (p2Poss && typeof p2Poss.source === 'string') {
-                    const possessorId = p2Poss.source.split('-')[0];
-                    if (possessorId === player1.userId) {
-                        displayPlayer2 = { ...player2, name: `${player2.name} (Possessed — using ${player1.name}'s jutsus)`, jutsu: player1.jutsu };
-                    }
-                }
-            } catch (err) {
-                console.error('Error preparing displayPlayer2 for shadow possession:', err);
-            }
-            const { embed: embed2, components: components2 } = createMovesEmbed(displayPlayer2, roundNum);
-            const moveMessage2 = await battleChannel.send({
-                content: `<@${player2.userId}>`,
-                embeds: [embed2],
-                components: components2,
-                fetchReply: true
-            });
-
-            player2Action = await new Promise(resolve => {
-                const collector = moveMessage2.createMessageComponentCollector({
-                    filter: i => i.user.id === player2.userId && i.customId.endsWith(`-${player2.userId}-${roundNum}`),
-                    time: 75000 // 1 minute 15 seconds
-                });
-
-                collector.on('collect', async i => {
-                    try {
-                        await i.deferUpdate();
-                    } catch (err) {
-                        console.error("Error in deferUpdate (player2):", err);
-                        try {
-                            await i.reply({ content: "Your action could not be processed (expired interaction).", ephemeral: true });
-                        } catch (e) { }
-                    }
-
-                    // --- Awaken handling for player2 ---
-                    if (i.customId.startsWith('awaken')) {
-                        player2.pendingBloodline = true;
-                        try {
-                            const disabledRows = components2.map(row => {
-                                const r = ActionRowBuilder.from(row);
-                                r.components.forEach(c => {
-                                    if (c.data.custom_id && c.data.custom_id.startsWith('awaken')) c.setDisabled(true);
-                                });
-                                return r;
-                            });
-                            await moveMessage2.edit({ components: disabledRows }).catch(() => { });
-                        } catch (e) { }
-                        try { await i.followUp({ content: 'Awaken selected. Now choose a normal jutsu to use with your bloodline activation.', ephemeral: true }); } catch (e) { }
-                        return;
-                    }
-
-                    if (i.customId.startsWith('move')) {
-                        // Read the selected jutsu from the displayPlayer (may be possessor's jutsus if possessed)
-                        const jutsuName = getJutsuByButton(i.customId, displayPlayer2);
-                        const jutsu = jutsuList[jutsuName];
-                        const effective1 = getEffectiveStats(player1);
-                        const effective2 = getEffectiveStats(player2);
-
-                        // If player2 had activated Awaken previously, apply activation now
-                        if (player2.pendingBloodline) {
-                            const state = bloodlineState[player2.userId];
-                            const activationMsgs = applyBloodlineActivation(player2, player1, state);
-                            try {
-                                const gif = BLOODLINE_GIFS[player2.bloodline] || null;
-                                const title = `${player2.name} awakens ${BLOODLINE_NAMES[player2.bloodline] || player2.bloodline}`;
-                                const desc = `${BLOODLINE_DEPARTMENTS[player2.bloodline] || ''}\n\n${activationMsgs.join('\n')}`;
-                                const awakenEmbed = new EmbedBuilder().setTitle(title).setDescription(desc).setColor(0x8B0000);
-                                if (gif) awakenEmbed.setImage(gif);
-                                await battleChannel.send({ embeds: [awakenEmbed] }).catch(() => { });
-                            } catch (e) { console.error('Failed to send awaken embed (player2):', e); }
-                            const result = executeJutsu(player2, player1, effective2, effective1, jutsuName);
-                            result.specialEffects.unshift(...activationMsgs);
-                            if (player2.comboState && player2.comboState.combo.requiredJutsus.includes(jutsuName)) {
-                                player2.comboState.usedJutsus.add(jutsuName);
-                            }
-                            player2.pendingBloodline = false;
-                            resolve(result);
-                            collector.stop();
-                            return;
-                        }
-
-                        // Handle round-based jutsu activation (first cast)
-                        if (jutsu?.roundBased && !player2ActiveJutsus[jutsuName]) {
-                            const result = executeJutsu(player2, player1, effective2, effective1, jutsuName, 1, true);
-                            if (!result.hit && result.specialEffects?.includes("Not enough chakra!")) {
-                                resolve(result); // Resolve with chakra error
-                                collector.stop();
-                                return;
-                            }
-                            player2ActiveJutsus[jutsuName] = { round: 1 };
-                            resolve(result);
-                            collector.stop();
-                            return;
-                        }
-                        const result = executeJutsu(player2, player1, effective2, effective1, jutsuName);
-                        if (player2.comboState && player2.comboState.combo.requiredJutsus.includes(jutsuName)) {
-                            player2.comboState.usedJutsus.add(jutsuName);
-                        }
-                        // Check for status effects on player2 (stun/flinch/drown) - USE SNAPSHOT
-                        const statusEffect = (player2.roundStartEffects || []).find(e =>
-                            e.type === 'status' && ['stun', 'flinch', 'drown'].includes(e.status)
-                        );
-
-                        // --- Shadow possession copy logic ---
-                        // Use roundStartEffects to decide IF action should be copied
-                        try {
-                            // If player1 is shadow-possessed, copy player2's (this result) action to player1Action
-                            const p1Poss = (player1.roundStartEffects || []).find(e => e.type === 'status' && (e.status === 'possessed' || e.status === 'shadow_possession'));
-                            if (p1Poss && typeof p1Poss.source === 'string') {
-                                const possessorId = p1Poss.source.split('-')[0];
-                                if (possessorId === player2.userId) {
-                                    player1Action = JSON.parse(JSON.stringify(result));
-                                    player1Action.specialEffects = [`(Shadow-possessed — action copied from ${player2.name})`].concat(player1Action.specialEffects || []);
-                                }
-                            }
-
-                            // If player2 is shadow-possessed, copy player1Action into player2's action (result)
-                            const p2Poss = (player2.roundStartEffects || []).find(e => e.type === 'status' && (e.status === 'possessed' || e.status === 'shadow_possession'));
-                            if (p2Poss && typeof p2Poss.source === 'string') {
-                                const possessorId = p2Poss.source.split('-')[0];
-                                if (possessorId === player1.userId) {
-                                    // copy player1's already-selected action into result (player2Action)
-                                    const copied = JSON.parse(JSON.stringify(player1Action || { damage: 0, heal: 0, description: `${player2.name} did nothing.` }));
-                                    copied.specialEffects = [`(Shadow-possessed — action copied from ${player1.name})`].concat(copied.specialEffects || []);
-                                    // overwrite result so the resolved player2Action is the copied one
-                                    Object.keys(result).forEach(k => delete result[k]);
-                                    Object.assign(result, copied);
-                                }
-                            }
-                        } catch (err) {
-                            console.error('Error applying shadow possession copy:', err);
-                        }
-
-                        // If player2 is incapacitated by a status, prevent their action
-                        if (statusEffect && jutsuName !== 'World Cutting Slash') {
-                            resolve({
-                                damage: 0,
-                                heal: 0,
-                                description: `${player2.name} is ${statusEffect.status} and can't move!`,
-                                specialEffects: [statusEffect.status.charAt(0).toUpperCase() + statusEffect.status.slice(1) + " active"],
-                                hit: false,
-                                isStatusEffect: true,
-                                jutsuUsed: null
-                            });
-                            collector.stop();
-                            return;
-                        }
-                        resolve(result);
-                    } else {
-                        try {
-                            resolve(await processPlayerMove(i.customId, player2));
-                        } catch (err) {
-                            console.error("Error processing player move (player2):", err);
-                            resolve({ damage: 0, heal: 0, description: "Error processing move.", hit: false });
-                        }
-                    }
-                    collector.stop();
-                });
-
-                collector.on('end', (collected, reason) => {
-                    if (reason === 'time') {
-                        resolve({
-                            damage: 0,
-                            heal: 0,
-                            description: `${player2.name} did not make a move.`,
-                            specialEffects: ["Missed opportunity!"],
-                            hit: false,
-                            fled: true,
-                            isRest: true
-                        });
-                    }
-                    if (player2.pendingBloodline) delete player2.pendingBloodline;
-                    moveMessage2.edit({
-                        components: components2.map(row => {
-                            const disabledRow = ActionRowBuilder.from(row);
-                            disabledRow.components.forEach(c => c.setDisabled(true));
-                            return disabledRow;
-                        })
-                    }).catch(() => { });
-                });
-            });
-
-            if (player2Action.fled) {
-                battleActive = false;
-                await handleFlee(battleChannel, player2, player1, users, roundNum, {
-                    winnerDealt: totalDamageDealt1,
-                    winnerTaken: totalDamageTaken1,
-                    loserDealt: totalDamageDealt2,
-                    loserTaken: totalDamageTaken2
-                }, battleType, false, client); // isPlayer2NPC is always false here
-                return { winner: player1, loser: player2 };
-            }
-        }
-
-        // --- NEW: Decrement P2 duration AFTER acting ---
-        const p2WornOffMsgs = effectHandlers.checkDurationAndRemove(player2);
-        if (p2WornOffMsgs && p2WornOffMsgs.length > 0) {
-            player2Action.specialEffects = (player2Action.specialEffects || []).concat(p2WornOffMsgs);
-        }
-
-        // --- Apply Player Actions and Update Health/Chakra ---
-        // Apply damage with reflection checks
-        if (isRaidBoss) {
-            // Anti-Kori Weakness Check: If Fireball is used against King Kori, skip his turn (he melts)
-            if (player2.name === 'King Kori' && player1Action.jutsuUsed === 'Fireball Jutsu') {
-                // Skip boss attack
-                if (player1.currentHealth > 0) {
-                    applyDamageWithReflection(player1, player2, player1Action.damage || 0, player1Action);
-                }
-            } else {
-                // Boss attacks first!
-                applyDamageWithReflection(player2, player1, player2Action.damage || 0, player2Action);
-                // If player survives, they attack back
-                if (player1.currentHealth > 0) {
-                    applyDamageWithReflection(player1, player2, player1Action.damage || 0, player1Action);
-                }
-            }
-        } else {
-            // Normal speed tie / Simultaneous
-            applyDamageWithReflection(player1, player2, player1Action.damage || 0, player1Action);
-            applyDamageWithReflection(player2, player1, player2Action.damage || 0, player2Action);
-        }
-
-        // Apply healing after damage (healing is not reflected)
-        player1.currentHealth = Math.min(player1.currentHealth + (player1Action.heal || 0), player1.maxHealth);
-        player2.currentHealth = Math.min(player2.currentHealth + (player2Action.heal || 0), player2.health);
-        // Immediately attempt to apply revive if a jutsu dropped someone to 0 during the round
-        try {
+                return true;
+            };
+            // Attempt to revive if someone would otherwise die
             if (player1.currentHealth <= 0) {
                 const revived = tryApplyRevive(player1);
                 if (revived) {
-                    const reviveEmbed = new EmbedBuilder()
-                        .setTitle('**NOT YET!**')
-                        .setDescription(`${player1.name} was revived and returned to the battle!`)
-                        .setColor(0xFF0000)
-                        .setImage('https://media.tenor.com/6Z6Vn2K1C5kAAAAM/goku-transform.gif');
-                    await battleChannel.send({ embeds: [reviveEmbed] });
-                    // ensure health clamps to max
-                    player1.currentHealth = Math.min(player1.currentHealth, Number(player1.maxHealth || player1.health || 100));
+                    if (revived.type === 'izanami') {
+                        const izanamiRevive = new EmbedBuilder()
+                            .setTitle('**IZANAMI: LAST RESORT**')
+                            .setDescription(`${player1.name}'s death triggered Izanami! They return at 1 HP, cleansed of all ailments, and enter **LIFE DRAINER** mode!`)
+                            .setColor(0x000000)
+                            .setImage('https://media.tenor.com/_7iTq0Z3SjMAAAAM/itachi-izanami.gif');
+                        await battleChannel.send({ embeds: [izanamiRevive] });
+                    } else {
+                        const reviveEmbed = new EmbedBuilder()
+                            .setTitle('**NOT YET!**')
+                            .setDescription(`${player1.name} was revived and returned to the battle!`)
+                            .setColor(0xFF0000)
+                            .setImage('https://media.tenor.com/6Z6Vn2K1C5kAAAAM/goku-transform.gif');
+                        await battleChannel.send({ embeds: [reviveEmbed] });
+                    }
                 }
             }
             if (player2.currentHealth <= 0) {
                 const revived = tryApplyRevive(player2);
                 if (revived) {
-                    const reviveEmbed = new EmbedBuilder()
-                        .setTitle('**NOT YET!**')
-                        .setDescription(`${player2.name} was revived and returned to the battle!`)
-                        .setColor(0xFF0000)
-                        .setImage('https://media.tenor.com/6Z6Vn2K1C5kAAAAM/goku-transform.gif');
-                    await battleChannel.send({ embeds: [reviveEmbed] });
-                    player2.currentHealth = Math.min(player2.currentHealth, Number(player2.maxHealth || player2.health || 100));
+                    if (revived.type === 'izanami') {
+                        const izanamiRevive = new EmbedBuilder()
+                            .setTitle('**IZANAMI: LAST RESORT**')
+                            .setDescription(`${player2.name}'s death triggered Izanami! They return at 1 HP, cleansed of all ailments, and enter **LIFE DRAINER** mode!`)
+                            .setColor(0x000000)
+                            .setImage('https://media.tenor.com/_7iTq0Z3SjMAAAAM/itachi-izanami.gif');
+                        await battleChannel.send({ embeds: [izanamiRevive] });
+                    } else {
+                        const reviveEmbed = new EmbedBuilder()
+                            .setTitle('**NOT YET!**')
+                            .setDescription(`${player2.name} was revived and returned to the battle!`)
+                            .setColor(0xFF0000)
+                            .setImage('https://media.tenor.com/6Z6Vn2K1C5kAAAAM/goku-transform.gif');
+                        await battleChannel.send({ embeds: [reviveEmbed] });
+                    }
                 }
             }
-        } catch (err) {
-            console.error('Error while applying immediate revive after actions:', err);
-        }
 
-        // --- Adaptation Nullification Embed ---
-        if (player1Action.adaptationEmbed || (player2Action && player2Action.adaptationEmbed)) {
-            const adaptationEmbed = new EmbedBuilder()
-                .setDescription("**With a final spin, there is no escape**")
-                .setImage("https://www.icegif.com/wp-content/uploads/2024/01/icegif-406.gif")
-                .setColor("Orange");
+            // ...existing code continues...
+            player1.chakra = Math.min(player1.chakra + 2, 999);
+            player2.chakra = Math.min(player2.chakra + 2, 999);
+            // --- Apply and Update Effects (Buffs, Debuffs, Statuses) ---
+            // Snapshot effects at round start to ensure simultaneous turn resolution
+            // (Prevents P1's moves from incapacitating P2 in the same round)
+            player1.roundStartEffects = JSON.parse(JSON.stringify(player1.activeEffects || []));
+            player2.roundStartEffects = JSON.parse(JSON.stringify(player2.activeEffects || []));
 
-            await battleChannel.send({ embeds: [adaptationEmbed] });
-        }
+            // Process recurring effects (Bleed, Poison, Burn, etc.)
+            [player1, player2].forEach(p => {
+                const effectResult = effectHandlers.processActiveEffects(p);
+                if (effectResult.hasStunOrFlinch) {
+                    p.roundStartEffects = p.roundStartEffects || [];
+                    // Add a transient stun status to the snapshot so move-selection skips them
+                    p.roundStartEffects.push({ type: 'status', status: 'stun', source: 'Active Status' });
+                }
+                if (effectResult.specialEffects.length > 0) {
+                    const summaryArray = (p.userId === player1.userId) ? player1RoundBasedSummaries : player2RoundBasedSummaries;
+                    effectResult.specialEffects.forEach(msg => {
+                        summaryArray.push({ desc: msg });
+                    });
+                }
+            });
 
-        // --- Combo Logic ---
-        let comboCompleted1 = false, comboDamageText1 = "";
-        if (player1.comboState && player1.comboState.combo.requiredJutsus.every(jutsu => player1.comboState.usedJutsus.has(jutsu))) {
-            const combo = player1.comboState.combo;
-            let comboResult = {
-                damage: combo.damage || 0,
-                heal: 0,
-                specialEffects: [],
-                hit: true
-            };
+            // --- Bloodline Logic ---
+            for (const player of [player1, player2]) {
+                const opponent = player.userId === player1.userId ? player2 : player1;
+                const state = bloodlineState[player.userId];
+                if (!player || !player.bloodline) continue;
 
-            if (combo.effects && Array.isArray(combo.effects)) {
-                combo.effects.forEach(effect => {
-                    switch (effect.type) {
-                        case 'damage':
-                            comboResult.damage += effect.value || 0;
-                            comboResult.specialEffects.push(`Dealt ${effect.value || 0} damage`);
-                            break;
-                        case 'heal':
-                            const healAmount = effectHandlers.heal(player1, effect.formula || "0");
-                            comboResult.heal += healAmount;
-                            comboResult.specialEffects.push(`Healed ${healAmount} HP`);
-                            break;
-                        case 'status':
-                            if (!player2.activeEffects) player2.activeEffects = [];
-                            player2.activeEffects.push({
-                                type: 'status',
-                                status: effect.status,
-                                duration: effect.duration || 1
-                            });
-                            comboResult.specialEffects.push(`Applied ${effect.status} for ${effect.duration || 1} turns`);
-                            break;
-                        case 'debuff':
-                            const debuffChanges = effectHandlers.debuff(player2, effect.stats);
-                            if (!player2.activeEffects) player2.activeEffects = [];
-                            player2.activeEffects.push({
-                                type: 'debuff',
-                                stats: debuffChanges,
-                                duration: effect.duration || 1
-                            });
-                            comboResult.specialEffects.push(`Applied debuffs: ${Object.entries(debuffChanges)
-                                .map(([k, v]) => `${k}: ${v}`)
-                                .join(', ')} for ${effect.duration || 1} turns`);
-                            break;
+                // Ensure state exists
+                if (!state) bloodlineState[player.userId] = { active: false, roundsLeft: 0, used: false };
+
+                // Passive effects (applied every round)
+                switch (player.bloodline) {
+                    // ...existing code...
+                    case "Senju": {
+                        // Passive: heals 1% of max HP each round (minimum 1)
+                        const maxHp = Number(player.maxHealth || player.health || 100);
+                        const healAmount = Math.max(1, Math.floor(maxHp * 0.01)); // 1% per round
+                        player.currentHealth = (Number(player.currentHealth) || Number(player.health) || 0) + healAmount;
+                        (player._roundMessages = player._roundMessages || []).push(`${player.name}'s Hyper Regeneration heals ${healAmount} HP (passive).`);
+                        // Passive: 8% life-steal each round — drains 8% of opponent max HP and heals the user for same amount (min 1)
+                        try {
+                            const opponentMax = Number(opponent?.maxHealth || opponent?.health || 100);
+                            const stealAmount = Math.max(1, Math.floor(opponentMax * 0.08)); // 8% of opponent max HP
+
+                            // Apply drain to opponent and heal to player (clamped)
+                            if (opponent) {
+                                opponent.currentHealth = (opponent.currentHealth || opponent.health || 0) - stealAmount;
+                            }
+                            const maxHp = Number(player.maxHealth || player.health || 100);
+                            player.currentHealth = Math.min(maxHp, (Number(player.currentHealth) || 0) + stealAmount);
+
+                            (player._roundMessages = player._roundMessages || []).push(
+                                `${player.name}'s Hyper Regeneration steals ${stealAmount} HP (${Math.round(8)}%) from ${opponent?.name || 'the foe'} and heals ${stealAmount} HP (passive).`
+                            );
+                            if (opponent) {
+                                (opponent._roundMessages = opponent._roundMessages || []).push(
+                                    `${opponent.name} lost ${stealAmount} HP to ${player.name}'s Hyper Regeneration.`
+                                );
+                            }
+                        } catch (err) {
+                            console.error('Error applying Senju passive lifesteal:', err);
+                        }
+                        break;
                     }
-                });
-            }
 
-            comboResult.comboUsed = combo.name;
-            applyDamageWithReflection(player1, player2, comboResult.damage || 0, comboResult);
-
-            if (comboResult.heal) {
-                player1.currentHealth = Math.min(player1.currentHealth + comboResult.heal, player1.maxHealth);
-            }
-            comboCompleted1 = true;
-            comboDamageText1 = `\n${player1.name} lands a **${combo.name}**! ${comboResult.specialEffects.join(' ')}`;
-            if (comboResult.reflectedDamageMessage) comboDamageText1 += `\n${comboResult.reflectedDamageMessage}`;
-            player1.comboState.usedJutsus.clear(); // Reset combo progress
-            totalDamageDealt1 += comboResult.damage || 0;
-        }
-
-        let comboCompleted2 = false, comboDamageText2 = "";
-        if (!isPlayer2NPC && player2.comboState && player2.comboState.combo.requiredJutsus.every(jutsu => player2.comboState.usedJutsus.has(jutsu))) {
-            const combo = player2.comboState.combo;
-            let comboResult = {
-                damage: combo.damage || 0,
-                heal: 0,
-                specialEffects: [],
-                hit: true
-            };
-
-            if (combo.effects && Array.isArray(combo.effects)) {
-                combo.effects.forEach(effect => {
-                    switch (effect.type) {
-                        case 'damage':
-                            comboResult.damage += effect.value || 0;
-                            comboResult.specialEffects.push(`Dealt ${effect.value || 0} damage`);
-                            break;
-                        case 'heal':
-                            const healAmount = effectHandlers.heal(player2, effect.formula || "0");
-                            comboResult.heal += healAmount;
-                            comboResult.specialEffects.push(`Healed ${healAmount} HP`);
-                            break;
-                        case 'status':
-                            if (!player1.activeEffects) player1.activeEffects = [];
-                            player1.activeEffects.push({
-                                type: 'status',
-                                status: effect.status,
-                                duration: effect.duration || 1
-                            });
-                            comboResult.specialEffects.push(`Applied ${effect.status} for ${effect.duration || 1} turns`);
-                            break;
-                        case 'debuff':
-                            const debuffChanges = effectHandlers.debuff(player1, effect.stats);
-                            if (!player1.activeEffects) player1.activeEffects = [];
-                            player1.activeEffects.push({
-                                type: 'debuff',
-                                stats: debuffChanges,
-                                duration: effect.duration || 1
-                            });
-                            comboResult.specialEffects.push(`Applied debuffs: ${Object.entries(debuffChanges)
-                                .map(([k, v]) => `${k}: ${v}`)
-                                .join(', ')} for ${effect.duration || 1} turns`);
-                            break;
+                    case "Uzumaki": {
+                        // Passive: restores 10% of max HP each round
+                        const maxHp = Number(player.maxHealth || player.health || 100);
+                        const healAmount = Math.max(1, Math.floor(maxHp * 0.10));
+                        player.currentHealth = Math.min(maxHp, (player.currentHealth || 0) + healAmount);
+                        (player._roundMessages = player._roundMessages || []).push(`${player.name}'s Uzumaki Will restores ${healAmount} HP (passive).`);
+                        break;
                     }
-                });
-            }
-
-            comboResult.comboUsed = combo.name;
-            applyDamageWithReflection(player2, player1, comboResult.damage || 0, comboResult);
-
-            if (comboResult.heal) {
-                player2.currentHealth = Math.min(player2.currentHealth + comboResult.heal, player2.maxHealth);
-            }
-            comboCompleted2 = true;
-            comboDamageText2 = `\n${player2.name} lands a **${combo.name}**! ${comboResult.specialEffects.join(' ')}`;
-            if (comboResult.reflectedDamageMessage) comboDamageText2 += `\n${comboResult.reflectedDamageMessage}`;
-            player2.comboState.usedJutsus.clear(); // Reset combo progress
-            totalDamageDealt2 += comboResult.damage || 0;
-        }
-
-        // --- Global Round Summary ---
-        roundNum++;
-        const summaryEmbed = createBattleSummary(
-            player1Action, player2Action, player1, player2, roundNum,
-            comboCompleted1, comboDamageText1, comboCompleted2, comboDamageText2,
-            player1RoundBasedSummaries, player2RoundBasedSummaries
-        );
-        await battleChannel.send({ embeds: [summaryEmbed] });
-
-        // --- Save Raid Boss HP after each round ---
-        if (isRaidBoss && player2.name === 'Deidara') {
-            const raidBossPath = path.resolve(__dirname, '../../menma/data/deidara_raid.json');
-            try {
-                const raidData = { currentHP: Math.max(0, player2.currentHealth) };
-                fs.writeFileSync(raidBossPath, JSON.stringify(raidData, null, 2));
-            } catch (e) {
-                console.error("Error saving Deidara raid HP:", e);
-            }
-        }
-
-        if (player1.currentHealth <= 0 || player2.currentHealth <= 0) {
-            battleActive = false;
-            let winner = null;
-            let loser = null;
-
-            if (player1.currentHealth > 0 && player2.currentHealth <= 0) {
-                winner = player1;
-                loser = player2;
-            } else if (player2.currentHealth > 0 && player1.currentHealth <= 0) {
-                winner = player2;
-                loser = player1;
-            }
-
-            if (winner) {
-                // ... (existing reward logic) ...
-                // Ensure only host gets rewards. subPlayers are ignored.
-                if (winner.userId !== player1.userId && player1.subPlayers && player1.subPlayers.find(sp => sp.userId === winner.userId)) {
-                    // If for some reason a subplayer is marked as winner (unlikely with shared health logic), revert to host.
-                    winner = player1;
+                    case "Hyuga": {
+                        // Passive: steal up to 5 chakra from opponent each round
+                        // NERF: Reduced from 5 to 3, then to 1
+                        const steal = Math.min(1, Math.max(0, Number(opponent?.chakra || 0)));
+                        if (steal > 0) {
+                            opponent.chakra = Math.max(0, (opponent.chakra || 0) - steal);
+                            player.chakra = Math.min(999, (player.chakra || 0) + steal);
+                            (player._roundMessages = player._roundMessages || []).push(`${player.name}'s Byakugan passively drains ${steal} Chakra from ${opponent.name}.`);
+                        }
+                        break;
+                    }
+                    case "Uchiha": {
+                        // Passive: increase dodge by 50% of base dodge, min +5 to be meaningful
+                        const baseDodge = Number(player.dodge || 0);
+                        const dodgeBonus = Math.max(5, Math.floor(baseDodge * 0.5));
+                        player.activeEffects = player.activeEffects || [];
+                        player.activeEffects.push({
+                            type: 'buff',
+                            stats: { dodge: dodgeBonus },
+                            duration: 1,
+                            source: 'bloodline_passive'
+                        });
+                        (player._roundMessages = player._roundMessages || []).push(`${player.name}'s Sharingan sharpens reflexes (passive +${dodgeBonus} dodge).`);
+                        break;
+                    }
+                    case "Nara": {
+                        // Passive: +3 chakra each round (kept from previous implementation)
+                        player.chakra = Math.min(player.chakra + 3, 999);
+                        (player._roundMessages = player._roundMessages || []).push(`${player.name}'s Battle IQ grants +3 Chakra (passive).`);
+                        break;
+                    }
+                    default:
+                        break;
                 }
 
-                let bountyReward = 0;
-                try {
-                    const anbuPath = path.resolve(__dirname, '../data/anbu.json');
-                    const akatsukiPath = path.resolve(__dirname, '../data/akatsuki.json');
-                    const bountyPath = path.resolve(__dirname, '../data/bounty.json');
+                // Decrement any active bloodline durations (for activation-mode bloodlines like Uchiha susanoo)
+                if (state && state.active && typeof state.roundsLeft === 'number') {
+                    state.roundsLeft--;
+                    if (state.roundsLeft <= 0) {
+                        state.active = false;
+                        // If Uchiha susanoo wore off, remove susanoo effects (we stored them as activeEffects.source when applied)
+                        player.activeEffects = (player.activeEffects || []).filter(e => e.source !== `${player.userId}-bloodline-awaken`);
+                        (player._roundMessages = player._roundMessages || []).push(`${player.name}'s bloodline effect has ended.`);
+                    }
+                }
+            }
 
-                    if (fs.existsSync(anbuPath) && fs.existsSync(akatsukiPath) && fs.existsSync(bountyPath)) {
-                        const anbuData = JSON.parse(fs.readFileSync(anbuPath, 'utf8'));
-                        const akatsukiData = JSON.parse(fs.readFileSync(akatsukiPath, 'utf8'));
+            // Set canActivateBloodline flags for UI before showing move buttons (must be done for both players)
+            player1.canActivateBloodline = bloodlineCanActivate(player1, bloodlineState[player1.userId], player2);
+            player2.canActivateBloodline = bloodlineCanActivate(player2, bloodlineState[player2.userId], player1);
 
-                        if (anbuData.members && akatsukiData.members &&
-                            anbuData.members[winner.userId] && akatsukiData.members[loser.userId]) {
-                            const bountyData = JSON.parse(fs.readFileSync(bountyPath, 'utf8'));
-                            const loserBounty = bountyData[loser.userId] ? bountyData[loser.userId].bounty : 0;
+            // --- If there are any passive bloodline messages, display them now as a short embed ---
+            const passiveMsgs = [];
+            [player1, player2].forEach(p => {
+                if (p._roundMessages && p._roundMessages.length) {
+                    passiveMsgs.push(...p._roundMessages.map(m => `${m}`));
+                    p._roundMessages = [];
+                }
+            });
+            if (passiveMsgs.length > 0) {
+                const passiveEmbed = new EmbedBuilder()
+                    .setTitle('Bloodline Passives')
+                    .setDescription(passiveMsgs.join('\n'))
+                    .setColor(0x8B4513);
+                await battleChannel.send({ embeds: [passiveEmbed] });
+            }
 
-                            if (loserBounty > 0) {
-                                bountyReward = loserBounty;
-                                if (!anbuData.members[winner.userId] || typeof anbuData.members[winner.userId] !== 'object') {
-                                    anbuData.members[winner.userId] = {};
+            // --- Round-Based Jutsu Logic ---
+            player1RoundBasedSummaries = [];
+            player2RoundBasedSummaries = [];
+
+            // Helper to get round-based description and apply effects
+            const applyRoundBasedEffects = (activeJutsus, user, target, summariesArray) => {
+                for (const jutsuName in activeJutsus) {
+                    const data = activeJutsus[jutsuName];
+                    const jutsu = jutsuList[jutsuName];
+                    if (jutsu?.roundBased) {
+                        const currentRound = data.round + 1; // Round number for the effect
+                        let roundEffect = null;
+                        for (const key of Object.keys(jutsu.roundEffects || {})) {
+                            if (key.includes('-')) {
+                                const [start, end] = key.split('-').map(Number);
+                                if (currentRound >= start && currentRound <= end) {
+                                    roundEffect = jutsu.roundEffects[key];
+                                    break;
                                 }
-                                anbuData.members[winner.userId].honor = (anbuData.members[winner.userId].honor || 0) + bountyReward;
-
-                                if (bountyData[loser.userId]) {
-                                    bountyData[loser.userId].bounty = 0;
-                                }
-
-                                fs.writeFileSync(anbuPath, JSON.stringify(anbuData, null, 4));
-                                fs.writeFileSync(bountyPath, JSON.stringify(bountyData, null, 4));
+                            } else if (parseInt(key) === currentRound) {
+                                roundEffect = jutsu.roundEffects[key];
+                                break;
                             }
                         }
+
+                        if (roundEffect) {
+                            const effectiveUser = getEffectiveStats(user);
+                            const effectiveTarget = getEffectiveStats(target);
+                            let desc = roundEffect.description || "";
+                            desc = desc
+                                .replace(/undefined/g, user.name)
+                                .replace(/\buser\b/gi, user.name)
+                                .replace(/\btarget\b/gi, target.name);
+
+                            // Collect effect values for summary
+                            const effectSummary = [];
+                            const dummyResult = { damage: 0, heal: 0, specialEffects: [] };
+
+                            // Apply effects for this round of the active jutsu
+                            if (Array.isArray(roundEffect.effects)) {
+                                roundEffect.effects.forEach(effect => {
+                                    applyEffect(effect, user, target, effectiveUser, effectiveTarget, dummyResult, jutsuName, effectHandlers, true);
+                                });
+                            } else if (roundEffect.effects && typeof roundEffect.effects === 'object') {
+                                // Support for single object effect
+                                applyEffect(roundEffect.effects, user, target, effectiveUser, effectiveTarget, dummyResult, jutsuName, effectHandlers, true);
+                            }
+
+                            // Legacy support for old roundEffect keys
+                            if (roundEffect.damage) applyEffect({ type: 'damage', ...roundEffect.damage }, user, target, effectiveUser, effectiveTarget, dummyResult, jutsuName, effectHandlers, true);
+                            if (roundEffect.heal) applyEffect({ type: 'heal', ...roundEffect.heal }, user, target, effectiveUser, effectiveTarget, dummyResult, jutsuName, effectHandlers, true);
+                            if (roundEffect.status) applyEffect({ type: 'status', status: roundEffect.status, duration: roundEffect.duration || 1 }, user, target, effectiveUser, effectiveTarget, dummyResult, jutsuName, effectHandlers, true);
+                            if (roundEffect.debuff) applyEffect({ type: 'debuff', stats: roundEffect.debuff.stats, duration: roundEffect.duration || 1 }, user, target, effectiveUser, effectiveTarget, dummyResult, jutsuName, effectHandlers, true);
+                            if (roundEffect.buff) applyEffect({ type: 'buff', stats: roundEffect.buff.stats, duration: roundEffect.duration || 1 }, user, target, effectiveUser, effectiveTarget, dummyResult, jutsuName, effectHandlers, true);
+                            if (roundEffect.chakra_gain) applyEffect({ type: 'chakra_gain', ...roundEffect.chakra_gain }, user, target, effectiveUser, effectiveTarget, dummyResult, jutsuName, effectHandlers, true);
+
+                            if (dummyResult.damage > 0) effectSummary.push({ type: 'damage', value: dummyResult.damage });
+                            if (dummyResult.heal > 0) effectSummary.push({ type: 'heal', value: dummyResult.heal });
+                            if (dummyResult.specialEffects) {
+                                dummyResult.specialEffects.forEach(msg => {
+                                    if (!msg.includes('damage') && !msg.includes('heal')) {
+                                        effectSummary.push({ type: 'text', value: msg });
+                                    }
+                                });
+                            }
+
+                            summariesArray.push({ desc, effects: effectSummary });
+                        }
+                        activeJutsus[jutsuName].round++;
+                        // Remove completed jutsu
+                        const maxRound = Math.max(...Object.keys(jutsu.roundEffects || {}).map(k => {
+                            const parts = k.split('-');
+                            return parts.length > 1 ? parseInt(parts[1]) : parseInt(parts[0]);
+                        }));
+                        if (data.round >= maxRound) {
+                            delete activeJutsus[jutsuName];
+                        }
                     }
-                } catch (e) {
-                    console.error("Error processing bounty reward:", e);
+                }
+            };
+
+            applyRoundBasedEffects(player1ActiveJutsus, player1, player2, player1RoundBasedSummaries);
+            applyRoundBasedEffects(player2ActiveJutsus, player2, player1, player2RoundBasedSummaries);
+
+            // --- IZANAMI PHASE MANAGEMENT & INFINITY ---
+            [player1, player2].forEach(p => {
+                if (p.izanamiActive) {
+                    p.izanamiRound++;
+                    if (p.izanamiRound <= 3) {
+                        p.izanamiPhase = "recording";
+                        p.currentHealth = 999999999;
+                        p.chakra = 999999999;
+                        const opp = (p === player1) ? player2 : player1;
+                        opp.currentHealth = 999999999;
+                        opp.chakra = 999999999;
+                        const pSummaries = (p === player1) ? player1RoundBasedSummaries : player2RoundBasedSummaries;
+                        pSummaries.push({ desc: "The Fate is Being Decided" });
+                    } else if (p.izanamiRound <= 6) {
+                        p.izanamiPhase = "flow";
+                        const pSummaries = (p === player1) ? player1RoundBasedSummaries : player2RoundBasedSummaries;
+                        pSummaries.push({ desc: "The fate was already decided" });
+                    } else {
+                        p.izanamiActive = false;
+                        p.izanamiPhase = "ended";
+                    }
+                }
+            });
+
+            // --- Determine Custom Background for Battle Image ---
+            let customBgUrl = null;
+            const getActiveCustomBg = (activeJutsus) => {
+                for (const jName in activeJutsus) {
+                    const jutsu = jutsuList[jName];
+                    if (jutsu?.custombackground && activeJutsus[jName].round >= jutsu.custombackground.round) {
+                        return jutsu.custombackground.url;
+                    }
+                }
+                return null;
+            };
+            const p1Bg = getActiveCustomBg(player1ActiveJutsus);
+            const p2Bg = getActiveCustomBg(player2ActiveJutsus);
+            customBgUrl = p1Bg || p2Bg; // Player 1's background takes precedence if both apply
+            if (!customBgUrl && npcData?.background) {
+                customBgUrl = npcData.background;
+            }
+
+            // Create and Send Moves Embed for P1
+            const mainPlayer = player1.subPlayers[0];
+            const { embed: embed1, components: components1 } = createMovesEmbed(mainPlayer, roundNum);
+            // Force color
+            embed1.setColor('#006400');
+
+            const moveMessage1 = await battleChannel.send({
+                content: `<@${mainPlayer.userId}>`,
+                embeds: [embed1],
+                components: components1,
+                fetchReply: true
+            });
+
+            // --- Generate and Send Battle Image Immediately ---
+            // (Shared)
+            const battleImagePath = await generateBattleImage(player1, player2, customBgUrl);
+            const battleImage = new AttachmentBuilder(battleImagePath);
+            await battleChannel.send({ files: [battleImage] });
+
+            // --- Player 1 (or Team) Turn ---
+            let player1Action = { damage: 0, heal: 0, specialEffects: [], description: "", hit: false };
+            let teamActions = [];
+            let multiplayerInterrupted = false;
+
+            // Ensure subPlayers initialized (fallback)
+            if (!player1.subPlayers) player1.subPlayers = [player1];
+
+            // Sequential Move Collection Loop
+            // We already sent P1's embed. We process P1 first, then others.
+
+            for (let i = 0; i < player1.subPlayers.length; i++) {
+                const subPlayer = player1.subPlayers[i];
+
+                // If it's NOT P1 (i > 0), we need to send their embed now (AFTER battle image)
+                let currentMessage;
+                let currentComponents;
+
+                if (i === 0) {
+                    currentMessage = moveMessage1; // Already sent
+                    currentComponents = components1;
+                } else {
+                    if (multiplayerInterrupted) break;
+                    const { embed: embedSub, components: componentsSub } = createMovesEmbed(subPlayer, roundNum);
+                    embedSub.setColor('#006400');
+                    currentComponents = componentsSub;
+                    currentMessage = await battleChannel.send({
+                        content: `<@${subPlayer.userId}>`,
+                        embeds: [embedSub],
+                        components: componentsSub,
+                        fetchReply: true
+                    });
                 }
 
-                const winnerEmbed = new EmbedBuilder()
-                    .setTitle('Battle Over!')
-                    .setDescription(`${winner.name} is victorious!`)
-                    .setColor('#006400');
+                // Wait for action
+                const subAction = await new Promise(resolve => {
+                    const collector = currentMessage.createMessageComponentCollector({
+                        filter: i => i.user.id === subPlayer.userId && i.customId.endsWith(`-${subPlayer.userId}-${roundNum}`),
+                        time: 75000
+                    });
 
-                if (bountyReward > 0) {
-                    winnerEmbed.addFields({ name: 'Bounty Claimed', value: `${winner.name} has claimed a bounty of ${bountyReward} and converted it to Honor!` });
-                }
-
-                if (battleType !== 'arank' && battleType !== 'brank' && battleType !== 'trials') {
-                    await battleChannel.send({ embeds: [winnerEmbed] });
-                }
-
-                if (mode === 'challenger') {
-                    const giftPath = path.resolve(__dirname, '../../menma/data/gift.json');
-                    const giftData = fs.existsSync(giftPath) ? JSON.parse(fs.readFileSync(giftPath, 'utf8')) : {};
-
-                    if (!giftData[winner.userId]) {
-                        giftData[winner.userId] = [];
+                    // Save collector for external interruption
+                    if (interaction.id && activeBattles.has(interaction.id)) {
+                        activeBattles.get(interaction.id).collector = collector;
                     }
 
-                    giftData[winner.userId].push('elo');
-                    fs.writeFileSync(giftPath, JSON.stringify(giftData, null, 2));
+                    collector.on('collect', async i => {
+                        try { await i.deferUpdate(); } catch (e) { }
 
-                    await battleChannel.send(`${winner.name} has received 1 elo for winning the challenger match!`);
+                        if (i.customId.startsWith('awaken')) {
+                            subPlayer.pendingBloodline = true;
+                            try {
+                                const disabledRows = currentComponents.map(row => {
+                                    const r = ActionRowBuilder.from(row);
+                                    r.components.forEach(c => {
+                                        if (c.data.custom_id && c.data.custom_id.startsWith('awaken')) c.setDisabled(true);
+                                    });
+                                    return r;
+                                });
+                                await currentMessage.edit({ components: disabledRows }).catch(() => { });
+                            } catch (e) { }
+                            try { await i.followUp({ content: 'Awaken selected. Now choose a normal jutsu to use.', ephemeral: true }); } catch (e) { }
+                            return;
+                        }
+
+                        if (i.customId.startsWith('move')) {
+                            let jutsuName = getJutsuByButton(i.customId, subPlayer);
+                            const jutsu = jutsuList[jutsuName];
+                            // Calculate effective stats for THIS subplayer
+                            const effectiveSub = getEffectiveStats(subPlayer);
+                            const effectiveTarget = getEffectiveStats(player2);
+
+                            // IZANAMI LOGIC
+                            if (player1.izanamiActive || player2.izanamiActive) {
+                                const activeOwner = player1.izanamiActive ? player1 : player2;
+                                const isOwner = subPlayer.userId === activeOwner.userId;
+                                const phase = activeOwner.izanamiPhase;
+
+                                if (phase === "recording") {
+                                    // Record move
+                                    activeOwner.izanamiRecordedMoves[isOwner ? 'user' : 'target'].push(jutsuName);
+                                    // Set result to "The Fate is Being Decided"
+                                    resolve({
+                                        damage: 0, heal: 0,
+                                        description: "The Fate is Being Decided",
+                                        specialEffects: [isOwner ? "User move recorded" : "Target move recorded"],
+                                        hit: false, isStatusEffect: true, jutsuUsed: jutsuName
+                                    });
+                                    collector.stop();
+                                    return;
+                                } else if (phase === "flow") {
+                                    if (!isOwner) {
+                                        // Target forced to repeat
+                                        const recordedIdx = activeOwner.izanamiRound - 4; // Flow starts after Round 3
+                                        const expectedMove = activeOwner.izanamiRecordedMoves.target[recordedIdx];
+                                        if (jutsuName !== expectedMove) {
+                                            resolve({
+                                                damage: 0, heal: 0,
+                                                description: "You Cannot change fate.",
+                                                specialEffects: ["Failed to repeat fate"],
+                                                hit: false, isStatusEffect: true, jutsuUsed: jutsuName
+                                            });
+                                            collector.stop();
+                                            return;
+                                        }
+                                    }
+                                }
+                            }
+
+                            // Bloodline Activation Logic
+                            if (subPlayer.pendingBloodline) {
+                                const state = bloodlineState[subPlayer.userId];
+                                const activationMsgs = applyBloodlineActivation(subPlayer, player2, state);
+
+                                // Send Awaken Embed
+                                try {
+                                    const gif = BLOODLINE_GIFS[subPlayer.bloodline] || null;
+                                    const title = `${subPlayer.name} awakens ${BLOODLINE_NAMES[subPlayer.bloodline] || subPlayer.bloodline}`;
+                                    const desc = `${BLOODLINE_DEPARTMENTS[subPlayer.bloodline] || ''}\n\n${activationMsgs.join('\n')}`;
+                                    const awakenEmbed = new EmbedBuilder().setTitle(title).setDescription(desc).setColor('#006400');
+                                    if (gif) awakenEmbed.setImage(gif);
+                                    await battleChannel.send({ embeds: [awakenEmbed] }).catch(() => { });
+                                } catch (e) { }
+
+                                const result = executeJutsu(subPlayer, player2, effectiveSub, effectiveTarget, jutsuName);
+                                result.specialEffects.unshift(...activationMsgs);
+                                if (subPlayer.comboState && subPlayer.comboState.combo.requiredJutsus.includes(jutsuName)) {
+                                    subPlayer.comboState.usedJutsus.add(jutsuName);
+                                }
+                                subPlayer.pendingBloodline = false;
+                                resolve(result);
+                                collector.stop();
+                                return;
+                            }
+
+                            // Round-Based
+                            if (jutsu?.roundBased && !player1ActiveJutsus[jutsuName]) {
+                                // TODO: activeJutsus is currently shared. This is simplified.
+                                const result = executeJutsu(subPlayer, player2, effectiveSub, effectiveTarget, jutsuName, 1, true);
+                                if (!result.hit && result.specialEffects?.includes("Not enough chakra!")) {
+                                    resolve(result);
+                                    collector.stop();
+                                    return;
+                                }
+                                player1ActiveJutsus[jutsuName] = { round: 1 }; // Shared tracking for now
+                                resolve(result);
+                                collector.stop();
+                                return;
+                            }
+
+                            const result = executeJutsu(subPlayer, player2, effectiveSub, effectiveTarget, jutsuName);
+                            if (subPlayer.comboState && subPlayer.comboState.combo.requiredJutsus.includes(jutsuName)) {
+                                subPlayer.comboState.usedJutsus.add(jutsuName);
+                            }
+
+                            // Stun check (using round start snapshot)
+                            const statusEffect = (subPlayer.roundStartEffects || []).find(e =>
+                                e.type === 'status' && ['stun', 'flinch', 'drown'].includes(e.status)
+                            );
+                            if (statusEffect && jutsuName !== 'World Cutting Slash') {
+                                resolve({
+                                    damage: 0, heal: 0,
+                                    description: `${subPlayer.name} is ${statusEffect.status} and can't move!`,
+                                    specialEffects: [statusEffect.status.toUpperCase() + " active"],
+                                    hit: false, isStatusEffect: true, jutsuUsed: null
+                                });
+                                collector.stop();
+                                return;
+                            }
+                            resolve(result);
+                            collector.stop();
+
+                        } else {
+                            // Inventory, etc.
+                            try {
+                                resolve(await processPlayerMove(i.customId, subPlayer));
+                            } catch (err) {
+                                resolve({ damage: 0, heal: 0, description: "Error processing move.", hit: false });
+                            }
+                            collector.stop();
+                        }
+                    });
+
+                    collector.on('end', (collected, reason) => {
+                        if (reason === 'multiplayer_joined') {
+                            resolve({ interrupted: true });
+                        }
+                        if (reason === 'time') {
+                            resolve({
+                                damage: 0, heal: 0,
+                                description: `${subPlayer.name} missed their chance!`,
+                                specialEffects: ["Missed opportunity!"],
+                                hit: false, fled: true, isRest: true
+                            });
+                        }
+                        if (subPlayer.pendingBloodline) delete subPlayer.pendingBloodline;
+                        currentMessage.edit({ components: [] }).catch(() => { });
+                    });
+                });
+
+                if (subAction && subAction.interrupted) {
+                    multiplayerInterrupted = true;
+                    break;
+                }
+                if (subAction && subAction.fled) {
+                }
+
+                // --- IZANAMI AUTO-REPEAT LOGIC (Consolidated) ---
+                if (player1.izanamiActive || player2.izanamiActive) {
+                    const activeOwner = player1.izanamiActive ? player1 : player2;
+                    if (activeOwner.userId === subPlayer.userId && activeOwner.izanamiPhase === "flow") {
+                        const recordedIdx = activeOwner.izanamiRound - 4;
+                        const repeatedMove = activeOwner.izanamiRecordedMoves.user[recordedIdx];
+                        if (repeatedMove) {
+                            const effectiveSub = getEffectiveStats(subPlayer);
+                            const effectiveTarget = getEffectiveStats(player2);
+                            const repeatedResult = executeJutsu(subPlayer, player2, effectiveSub, effectiveTarget, repeatedMove);
+                            subAction.damage = (subAction.damage || 0) + (repeatedResult.damage || 0);
+                            subAction.heal = (subAction.heal || 0) + (repeatedResult.heal || 0);
+                            subAction.description = (subAction.description || "") + `\n**Izanami Repeat:** ${repeatedResult.description}`;
+                            subAction.specialEffects = (subAction.specialEffects || []).concat(repeatedResult.specialEffects || []);
+                        }
+                    }
+                }
+
+                // --- NEW: Decrement duration AFTER acting ---
+                const wornOffMsgs = effectHandlers.checkDurationAndRemove(subPlayer);
+                if (wornOffMsgs && wornOffMsgs.length > 0) {
+                    // We can add these to the action's special effects or just log them
+                    subAction.specialEffects = (subAction.specialEffects || []).concat(wornOffMsgs);
+                }
+
+                teamActions.push(subAction);
+
+                // Short delay between players?
+                if (i < player1.subPlayers.length - 1) {
+                    // If there are next players, maybe small delay
+                    await new Promise(r => setTimeout(r, 1000));
+                }
+            }
+
+            if (multiplayerInterrupted) {
+                continue; // Break the 'while (battleActive)' loop's current iteration, restarting it (re-drawing image etc)
+            }
+
+            // Aggregate
+            for (const act of teamActions) {
+                if (act.fled && !player1Action.fled) {
+                    player1Action.fled = true; // One flees, battle ends? Or just that player leaves? 
+                    // Current engine ends battle on flee.
+                }
+                player1Action.damage += (act.damage || 0);
+                player1Action.heal += (act.heal || 0);
+                if (act.specialEffects) player1Action.specialEffects.push(...act.specialEffects);
+                player1Action.description += (player1Action.description ? "\n" : "") + (act.description || "");
+                if (act.hit) player1Action.hit = true;
+                if (act.isCrit) player1Action.isCrit = true;
+                if (act.jutsuUsed) player1Action.jutsuUsed = act.jutsuUsed; // Just take the last one
+            }
+
+            // Check for Flee
+            if (player1Action.fled) {
+                battleActive = false;
+                await handleFlee(battleChannel, player1, player2, users, roundNum, {
+                    winnerDealt: totalDamageDealt2,
+                    winnerTaken: totalDamageTaken2,
+                    loserDealt: totalDamageDealt1,
+                    loserTaken: totalDamageTaken1
+                }, battleType, isPlayer2NPC, client);
+                return { winner: player2, loser: player1 };
+            }
+
+            // --- Player 2's Turn (NPC or Player) ---
+            let player2Action;
+            if (isPlayer2NPC) {
+                // --- BOSS ENRAGE LOGIC ---
+                if (isRaidBoss && player2.currentHealth < (player2.maxHealth * 0.75) && !player2.enraged) {
+                    player2.enraged = true;
+                    player2.activeEffects = player2.activeEffects || [];
+                    player2.activeEffects.push({ type: 'buff', stats: { power: Math.floor(player2.power * 0.5) }, duration: 99, source: 'Enrage' });
+                    try { await battleChannel.send(`⚠️ **${player2.name} IS ENRAGED!** Power increased massively!`); } catch (e) { }
+                }
+                const effective1 = getEffectiveStats(player1);
+                const effective2 = getEffectiveStats(player2);
+                player2Action = npcChooseMove(player2, player1, effective2, effective1);
+                if (player2Action.isRoundActivation && player2Action.jutsuUsed) {
+                    player2ActiveJutsus[player2Action.jutsuUsed] = { round: 1 };
+                }
+                // --- Shadow possession copy logic for NPC path ---
+                try {
+                    // If player1 is shadow-possessed, copy player2's (NPC) action into player1Action
+                    // Check snapshot to ensure simultaneous resolution
+                    const p1Poss = (player1.roundStartEffects || []).find(e => e.type === 'status' && (e.status === 'possessed' || e.status === 'shadow_possession'));
+                    if (p1Poss && typeof p1Poss.source === 'string') {
+                        const possessorId = p1Poss.source.split('-')[0];
+                        if (possessorId === player2.userId) {
+                            player1Action = JSON.parse(JSON.stringify(player2Action));
+                            player1Action.specialEffects = [`(Shadow-possessed — action copied from ${player2.name})`].concat(player1Action.specialEffects || []);
+                        }
+                    }
+
+                    // If NPC is shadow-possessed (rare), copy player1Action into player2Action
+                    const p2Poss = (player2.roundStartEffects || []).find(e => e.type === 'status' && (e.status === 'possessed' || e.status === 'shadow_possession'));
+                    if (p2Poss && typeof p2Poss.source === 'string') {
+                        const possessorId = p2Poss.source.split('-')[0];
+                        if (possessorId === player1.userId) {
+                            // If NPC is possessed by player1, they are incapacitated.
+                            // We modify the description to reflect the "copying" aspect,
+                            // but the action itself remains an incapacitated one (damage/heal 0).
+                            player2Action.description = `(Shadow-possessed — ${player2.name} would have copied ${player1.name}'s action, but is incapacitated!)`;
+                            player2Action.specialEffects = [`(Shadow-possessed — action copied from ${player1.name})`].concat(player2Action.specialEffects || []);
+                            player2Action.damage = 0; // Ensure no damage is dealt
+                            player2Action.heal = 0;   // Ensure no healing occurs
+                            player2Action.hit = false; // Ensure no hit is registered
+                            player2Action.isStatusEffect = true; // Mark as status effect
+                            player2Action.jutsuUsed = null; // No jutsu was actually used
+                        }
+                    }
+                } catch (err) {
+                    console.error('Error applying shadow possession copy (NPC path):', err);
                 }
             } else {
-                await battleChannel.send(`It's a draw!`);
-            }
+                // If player2 is shadow-possessed, show the possessor
+                let displayPlayer2 = { ...player2 };
+                try {
+                    const p2Poss = (player2.activeEffects || []).find(e => e.type === 'status' && e.status === 'shadow_possession');
+                    if (p2Poss && typeof p2Poss.source === 'string') {
+                        const possessorId = p2Poss.source.split('-')[0];
+                        if (possessorId === player1.userId) {
+                            displayPlayer2 = { ...player2, name: `${player2.name} (Possessed — using ${player1.name}'s jutsus)`, jutsu: player1.jutsu };
+                        }
+                    }
+                } catch (err) {
+                    console.error('Error preparing displayPlayer2 for shadow possession:', err);
+                }
+                const { embed: embed2, components: components2 } = createMovesEmbed(displayPlayer2, roundNum);
+                const moveMessage2 = await battleChannel.send({
+                    content: `<@${player2.userId}>`,
+                    embeds: [embed2],
+                    components: components2,
+                    fetchReply: true
+                });
 
-            if (battleType === 'trials' || battleType === 'otsutsuki' || battleType === 'akatsuki_trial') {
-                if (winner && winner.userId === player1.userId) {
+                player2Action = await new Promise(resolve => {
+                    const collector = moveMessage2.createMessageComponentCollector({
+                        filter: i => i.user.id === player2.userId && i.customId.endsWith(`-${player2.userId}-${roundNum}`),
+                        time: 75000 // 1 minute 15 seconds
+                    });
+
+                    collector.on('collect', async i => {
+                        try {
+                            await i.deferUpdate();
+                        } catch (err) {
+                            console.error("Error in deferUpdate (player2):", err);
+                            try {
+                                await i.reply({ content: "Your action could not be processed (expired interaction).", ephemeral: true });
+                            } catch (e) { }
+                        }
+
+                        // --- Awaken handling for player2 ---
+                        if (i.customId.startsWith('awaken')) {
+                            player2.pendingBloodline = true;
+                            try {
+                                const disabledRows = components2.map(row => {
+                                    const r = ActionRowBuilder.from(row);
+                                    r.components.forEach(c => {
+                                        if (c.data.custom_id && c.data.custom_id.startsWith('awaken')) c.setDisabled(true);
+                                    });
+                                    return r;
+                                });
+                                await moveMessage2.edit({ components: disabledRows }).catch(() => { });
+                            } catch (e) { }
+                            try { await i.followUp({ content: 'Awaken selected. Now choose a normal jutsu to use with your bloodline activation.', ephemeral: true }); } catch (e) { }
+                            return;
+                        }
+
+                        if (i.customId.startsWith('move')) {
+                            // Read the selected jutsu from the displayPlayer (may be possessor's jutsus if possessed)
+                            const jutsuName = getJutsuByButton(i.customId, displayPlayer2);
+                            const jutsu = jutsuList[jutsuName];
+                            const effective1 = getEffectiveStats(player1);
+                            const effective2 = getEffectiveStats(player2);
+
+                            // If player2 had activated Awaken previously, apply activation now
+                            if (player2.pendingBloodline) {
+                                const state = bloodlineState[player2.userId];
+                                const activationMsgs = applyBloodlineActivation(player2, player1, state);
+                                try {
+                                    const gif = BLOODLINE_GIFS[player2.bloodline] || null;
+                                    const title = `${player2.name} awakens ${BLOODLINE_NAMES[player2.bloodline] || player2.bloodline}`;
+                                    const desc = `${BLOODLINE_DEPARTMENTS[player2.bloodline] || ''}\n\n${activationMsgs.join('\n')}`;
+                                    const awakenEmbed = new EmbedBuilder().setTitle(title).setDescription(desc).setColor(0x8B0000);
+                                    if (gif) awakenEmbed.setImage(gif);
+                                    await battleChannel.send({ embeds: [awakenEmbed] }).catch(() => { });
+                                } catch (e) { console.error('Failed to send awaken embed (player2):', e); }
+                                const result = executeJutsu(player2, player1, effective2, effective1, jutsuName);
+                                result.specialEffects.unshift(...activationMsgs);
+                                if (player2.comboState && player2.comboState.combo.requiredJutsus.includes(jutsuName)) {
+                                    player2.comboState.usedJutsus.add(jutsuName);
+                                }
+                                player2.pendingBloodline = false;
+                                resolve(result);
+                                collector.stop();
+                                return;
+                            }
+
+                            // Handle round-based jutsu activation (first cast)
+                            if (jutsu?.roundBased && !player2ActiveJutsus[jutsuName]) {
+                                const result = executeJutsu(player2, player1, effective2, effective1, jutsuName, 1, true);
+                                if (!result.hit && result.specialEffects?.includes("Not enough chakra!")) {
+                                    resolve(result); // Resolve with chakra error
+                                    collector.stop();
+                                    return;
+                                }
+                                player2ActiveJutsus[jutsuName] = { round: 1 };
+                                resolve(result);
+                                collector.stop();
+                                return;
+                            }
+                            const result = executeJutsu(player2, player1, effective2, effective1, jutsuName);
+                            if (player2.comboState && player2.comboState.combo.requiredJutsus.includes(jutsuName)) {
+                                player2.comboState.usedJutsus.add(jutsuName);
+                            }
+                            // Check for status effects on player2 (stun/flinch/drown) - USE SNAPSHOT
+                            const statusEffect = (player2.roundStartEffects || []).find(e =>
+                                e.type === 'status' && ['stun', 'flinch', 'drown'].includes(e.status)
+                            );
+
+                            // --- Shadow possession copy logic ---
+                            // Use roundStartEffects to decide IF action should be copied
+                            try {
+                                // If player1 is shadow-possessed, copy player2's (this result) action to player1Action
+                                const p1Poss = (player1.roundStartEffects || []).find(e => e.type === 'status' && (e.status === 'possessed' || e.status === 'shadow_possession'));
+                                if (p1Poss && typeof p1Poss.source === 'string') {
+                                    const possessorId = p1Poss.source.split('-')[0];
+                                    if (possessorId === player2.userId) {
+                                        player1Action = JSON.parse(JSON.stringify(result));
+                                        player1Action.specialEffects = [`(Shadow-possessed — action copied from ${player2.name})`].concat(player1Action.specialEffects || []);
+                                    }
+                                }
+
+                                // If player2 is shadow-possessed, copy player1Action into player2's action (result)
+                                const p2Poss = (player2.roundStartEffects || []).find(e => e.type === 'status' && (e.status === 'possessed' || e.status === 'shadow_possession'));
+                                if (p2Poss && typeof p2Poss.source === 'string') {
+                                    const possessorId = p2Poss.source.split('-')[0];
+                                    if (possessorId === player1.userId) {
+                                        // copy player1's already-selected action into result (player2Action)
+                                        const copied = JSON.parse(JSON.stringify(player1Action || { damage: 0, heal: 0, description: `${player2.name} did nothing.` }));
+                                        copied.specialEffects = [`(Shadow-possessed — action copied from ${player1.name})`].concat(copied.specialEffects || []);
+                                        // overwrite result so the resolved player2Action is the copied one
+                                        Object.keys(result).forEach(k => delete result[k]);
+                                        Object.assign(result, copied);
+                                    }
+                                }
+                            } catch (err) {
+                                console.error('Error applying shadow possession copy:', err);
+                            }
+
+                            // If player2 is incapacitated by a status, prevent their action
+                            if (statusEffect && jutsuName !== 'World Cutting Slash') {
+                                resolve({
+                                    damage: 0,
+                                    heal: 0,
+                                    description: `${player2.name} is ${statusEffect.status} and can't move!`,
+                                    specialEffects: [statusEffect.status.charAt(0).toUpperCase() + statusEffect.status.slice(1) + " active"],
+                                    hit: false,
+                                    isStatusEffect: true,
+                                    jutsuUsed: null
+                                });
+                                collector.stop();
+                                return;
+                            }
+                            resolve(result);
+                        } else {
+                            try {
+                                resolve(await processPlayerMove(i.customId, player2));
+                            } catch (err) {
+                                console.error("Error processing player move (player2):", err);
+                                resolve({ damage: 0, heal: 0, description: "Error processing move.", hit: false });
+                            }
+                        }
+                        collector.stop();
+                    });
+
+                    collector.on('end', (collected, reason) => {
+                        if (reason === 'time') {
+                            resolve({
+                                damage: 0,
+                                heal: 0,
+                                description: `${player2.name} did not make a move.`,
+                                specialEffects: ["Missed opportunity!"],
+                                hit: false,
+                                fled: true,
+                                isRest: true
+                            });
+                        }
+                        if (player2.pendingBloodline) delete player2.pendingBloodline;
+                        moveMessage2.edit({
+                            components: components2.map(row => {
+                                const disabledRow = ActionRowBuilder.from(row);
+                                disabledRow.components.forEach(c => c.setDisabled(true));
+                                return disabledRow;
+                            })
+                        }).catch(() => { });
+                    });
+                });
+
+                if (player2Action.fled) {
+                    battleActive = false;
+                    await handleFlee(battleChannel, player2, player1, users, roundNum, {
+                        winnerDealt: totalDamageDealt1,
+                        winnerTaken: totalDamageTaken1,
+                        loserDealt: totalDamageDealt2,
+                        loserTaken: totalDamageTaken2
+                    }, battleType, false, client); // isPlayer2NPC is always false here
                     return { winner: player1, loser: player2 };
-                } else if (winner && winner.userId === player2.userId) {
-                    return { winner: player2, loser: player1 };
-                } else {
-                    return { winner: null, loser: null };
                 }
             }
 
-            if (users[player1Id]) {
-                users[player1Id].eightGatesLevel = 0;
-            }
-            if (users[player2Id] && !isPlayer2NPC) {
-                users[player2Id].eightGatesLevel = 0;
+            // --- NEW: Decrement P2 duration AFTER acting ---
+            const p2WornOffMsgs = effectHandlers.checkDurationAndRemove(player2);
+            if (p2WornOffMsgs && p2WornOffMsgs.length > 0) {
+                player2Action.specialEffects = (player2Action.specialEffects || []).concat(p2WornOffMsgs);
             }
 
-            if (winner && winner.userId === player1.userId) {
-                // Raid/Mission progression removed (handled in event.js / travel.js now)
+            // --- Apply Player Actions and Update Health/Chakra ---
+            // Apply damage with reflection checks
+            if (isRaidBoss) {
+                // Anti-Kori Weakness Check: If Fireball is used against King Kori, skip his turn (he melts)
+                if (player2.name === 'King Kori' && player1Action.jutsuUsed === 'Fireball Jutsu') {
+                    // Skip boss attack
+                    if (player1.currentHealth > 0) {
+                        applyDamageWithReflection(player1, player2, player1Action.damage || 0, player1Action);
+                    }
+                } else {
+                    // Boss attacks first!
+                    applyDamageWithReflection(player2, player1, player2Action.damage || 0, player2Action);
+                    // If player survives, they attack back
+                    if (player1.currentHealth > 0) {
+                        applyDamageWithReflection(player1, player2, player1Action.damage || 0, player1Action);
+                    }
+                }
+            } else {
+                // Normal speed tie / Simultaneous
+                applyDamageWithReflection(player1, player2, player1Action.damage || 0, player1Action);
+                applyDamageWithReflection(player2, player1, player2Action.damage || 0, player2Action);
             }
-            if (interaction.id) activeBattles.delete(interaction.id);
-            return { winner, loser };
+
+            // Apply healing after damage (healing is not reflected)
+            player1.currentHealth = Math.min(player1.currentHealth + (player1Action.heal || 0), player1.maxHealth);
+            player2.currentHealth = Math.min(player2.currentHealth + (player2Action.heal || 0), player2.health);
+            // Immediately attempt to apply revive if a jutsu dropped someone to 0 during the round
+            try {
+                if (player1.currentHealth <= 0) {
+                    const revived = tryApplyRevive(player1);
+                    if (revived) {
+                        const reviveEmbed = new EmbedBuilder()
+                            .setTitle('**NOT YET!**')
+                            .setDescription(`${player1.name} was revived and returned to the battle!`)
+                            .setColor(0xFF0000)
+                            .setImage('https://media.tenor.com/6Z6Vn2K1C5kAAAAM/goku-transform.gif');
+                        await battleChannel.send({ embeds: [reviveEmbed] });
+                        // ensure health clamps to max
+                        player1.currentHealth = Math.min(player1.currentHealth, Number(player1.maxHealth || player1.health || 100));
+                    }
+                }
+                if (player2.currentHealth <= 0) {
+                    const revived = tryApplyRevive(player2);
+                    if (revived) {
+                        const reviveEmbed = new EmbedBuilder()
+                            .setTitle('**NOT YET!**')
+                            .setDescription(`${player2.name} was revived and returned to the battle!`)
+                            .setColor(0xFF0000)
+                            .setImage('https://media.tenor.com/6Z6Vn2K1C5kAAAAM/goku-transform.gif');
+                        await battleChannel.send({ embeds: [reviveEmbed] });
+                        player2.currentHealth = Math.min(player2.currentHealth, Number(player2.maxHealth || player2.health || 100));
+                    }
+                }
+            } catch (err) {
+                console.error('Error while applying immediate revive after actions:', err);
+            }
+
+            // --- Adaptation Nullification Embed ---
+            if (player1Action.adaptationEmbed || (player2Action && player2Action.adaptationEmbed)) {
+                const adaptationEmbed = new EmbedBuilder()
+                    .setDescription("**With a final spin, there is no escape**")
+                    .setImage("https://www.icegif.com/wp-content/uploads/2024/01/icegif-406.gif")
+                    .setColor("Orange");
+
+                await battleChannel.send({ embeds: [adaptationEmbed] });
+            }
+
+            // --- Combo Logic ---
+            let comboCompleted1 = false, comboDamageText1 = "";
+            if (player1.comboState && player1.comboState.combo.requiredJutsus.every(jutsu => player1.comboState.usedJutsus.has(jutsu))) {
+                const combo = player1.comboState.combo;
+                let comboResult = {
+                    damage: combo.damage || 0,
+                    heal: 0,
+                    specialEffects: [],
+                    hit: true
+                };
+
+                if (combo.effects && Array.isArray(combo.effects)) {
+                    combo.effects.forEach(effect => {
+                        switch (effect.type) {
+                            case 'damage':
+                                comboResult.damage += effect.value || 0;
+                                comboResult.specialEffects.push(`Dealt ${effect.value || 0} damage`);
+                                break;
+                            case 'heal':
+                                const healAmount = effectHandlers.heal(player1, effect.formula || "0");
+                                comboResult.heal += healAmount;
+                                comboResult.specialEffects.push(`Healed ${healAmount} HP`);
+                                break;
+                            case 'status':
+                                if (!player2.activeEffects) player2.activeEffects = [];
+                                player2.activeEffects.push({
+                                    type: 'status',
+                                    status: effect.status,
+                                    duration: effect.duration || 1
+                                });
+                                comboResult.specialEffects.push(`Applied ${effect.status} for ${effect.duration || 1} turns`);
+                                break;
+                            case 'debuff':
+                                const debuffChanges = effectHandlers.debuff(player2, effect.stats);
+                                if (!player2.activeEffects) player2.activeEffects = [];
+                                player2.activeEffects.push({
+                                    type: 'debuff',
+                                    stats: debuffChanges,
+                                    duration: effect.duration || 1
+                                });
+                                comboResult.specialEffects.push(`Applied debuffs: ${Object.entries(debuffChanges)
+                                    .map(([k, v]) => `${k}: ${v}`)
+                                    .join(', ')} for ${effect.duration || 1} turns`);
+                                break;
+                        }
+                    });
+                }
+
+                comboResult.comboUsed = combo.name;
+                applyDamageWithReflection(player1, player2, comboResult.damage || 0, comboResult);
+
+                if (comboResult.heal) {
+                    player1.currentHealth = Math.min(player1.currentHealth + comboResult.heal, player1.maxHealth);
+                }
+                comboCompleted1 = true;
+                comboDamageText1 = `\n${player1.name} lands a **${combo.name}**! ${comboResult.specialEffects.join(' ')}`;
+                if (comboResult.reflectedDamageMessage) comboDamageText1 += `\n${comboResult.reflectedDamageMessage}`;
+                player1.comboState.usedJutsus.clear(); // Reset combo progress
+                totalDamageDealt1 += comboResult.damage || 0;
+            }
+
+            let comboCompleted2 = false, comboDamageText2 = "";
+            if (!isPlayer2NPC && player2.comboState && player2.comboState.combo.requiredJutsus.every(jutsu => player2.comboState.usedJutsus.has(jutsu))) {
+                const combo = player2.comboState.combo;
+                let comboResult = {
+                    damage: combo.damage || 0,
+                    heal: 0,
+                    specialEffects: [],
+                    hit: true
+                };
+
+                if (combo.effects && Array.isArray(combo.effects)) {
+                    combo.effects.forEach(effect => {
+                        switch (effect.type) {
+                            case 'damage':
+                                comboResult.damage += effect.value || 0;
+                                comboResult.specialEffects.push(`Dealt ${effect.value || 0} damage`);
+                                break;
+                            case 'heal':
+                                const healAmount = effectHandlers.heal(player2, effect.formula || "0");
+                                comboResult.heal += healAmount;
+                                comboResult.specialEffects.push(`Healed ${healAmount} HP`);
+                                break;
+                            case 'status':
+                                if (!player1.activeEffects) player1.activeEffects = [];
+                                player1.activeEffects.push({
+                                    type: 'status',
+                                    status: effect.status,
+                                    duration: effect.duration || 1
+                                });
+                                comboResult.specialEffects.push(`Applied ${effect.status} for ${effect.duration || 1} turns`);
+                                break;
+                            case 'debuff':
+                                const debuffChanges = effectHandlers.debuff(player1, effect.stats);
+                                if (!player1.activeEffects) player1.activeEffects = [];
+                                player1.activeEffects.push({
+                                    type: 'debuff',
+                                    stats: debuffChanges,
+                                    duration: effect.duration || 1
+                                });
+                                comboResult.specialEffects.push(`Applied debuffs: ${Object.entries(debuffChanges)
+                                    .map(([k, v]) => `${k}: ${v}`)
+                                    .join(', ')} for ${effect.duration || 1} turns`);
+                                break;
+                        }
+                    });
+                }
+
+                comboResult.comboUsed = combo.name;
+                applyDamageWithReflection(player2, player1, comboResult.damage || 0, comboResult);
+
+                if (comboResult.heal) {
+                    player2.currentHealth = Math.min(player2.currentHealth + comboResult.heal, player2.maxHealth);
+                }
+                comboCompleted2 = true;
+                comboDamageText2 = `\n${player2.name} lands a **${combo.name}**! ${comboResult.specialEffects.join(' ')}`;
+                if (comboResult.reflectedDamageMessage) comboDamageText2 += `\n${comboResult.reflectedDamageMessage}`;
+                player2.comboState.usedJutsus.clear(); // Reset combo progress
+                totalDamageDealt2 += comboResult.damage || 0;
+            }
+
+            // --- Global Round Summary ---
+            roundNum++;
+            const summaryEmbed = createBattleSummary(
+                player1Action, player2Action, player1, player2, roundNum,
+                comboCompleted1, comboDamageText1, comboCompleted2, comboDamageText2,
+                player1RoundBasedSummaries, player2RoundBasedSummaries
+            );
+            await battleChannel.send({ embeds: [summaryEmbed] });
+
+            // --- Save Raid Boss HP after each round ---
+            if (isRaidBoss && player2.name === 'Deidara') {
+                const raidBossPath = path.resolve(__dirname, '../../menma/data/deidara_raid.json');
+                try {
+                    const raidData = { currentHP: Math.max(0, player2.currentHealth) };
+                    fs.writeFileSync(raidBossPath, JSON.stringify(raidData, null, 2));
+                } catch (e) {
+                    console.error("Error saving Deidara raid HP:", e);
+                }
+            }
+
+            if (player1.currentHealth <= 0 || player2.currentHealth <= 0) {
+                battleActive = false;
+                let winner = null;
+                let loser = null;
+
+                if (player1.currentHealth > 0 && player2.currentHealth <= 0) {
+                    winner = player1;
+                    loser = player2;
+                } else if (player2.currentHealth > 0 && player1.currentHealth <= 0) {
+                    winner = player2;
+                    loser = player1;
+                }
+
+                if (winner) {
+                    // ... (existing reward logic) ...
+                    // Ensure only host gets rewards. subPlayers are ignored.
+                    if (winner.userId !== player1.userId && player1.subPlayers && player1.subPlayers.find(sp => sp.userId === winner.userId)) {
+                        // If for some reason a subplayer is marked as winner (unlikely with shared health logic), revert to host.
+                        winner = player1;
+                    }
+
+                    let bountyReward = 0;
+                    try {
+                        const anbuPath = path.resolve(__dirname, '../data/anbu.json');
+                        const akatsukiPath = path.resolve(__dirname, '../data/akatsuki.json');
+                        const bountyPath = path.resolve(__dirname, '../data/bounty.json');
+
+                        if (fs.existsSync(anbuPath) && fs.existsSync(akatsukiPath) && fs.existsSync(bountyPath)) {
+                            const anbuData = JSON.parse(fs.readFileSync(anbuPath, 'utf8'));
+                            const akatsukiData = JSON.parse(fs.readFileSync(akatsukiPath, 'utf8'));
+
+                            if (anbuData.members && akatsukiData.members &&
+                                anbuData.members[winner.userId] && akatsukiData.members[loser.userId]) {
+                                const bountyData = JSON.parse(fs.readFileSync(bountyPath, 'utf8'));
+                                const loserBounty = bountyData[loser.userId] ? bountyData[loser.userId].bounty : 0;
+
+                                if (loserBounty > 0 && mode !== 'friendly_preset' && battleType !== 'practice') {
+                                    bountyReward = loserBounty;
+                                    if (!anbuData.members[winner.userId] || typeof anbuData.members[winner.userId] !== 'object') {
+                                        anbuData.members[winner.userId] = {};
+                                    }
+                                    anbuData.members[winner.userId].honor = (anbuData.members[winner.userId].honor || 0) + bountyReward;
+
+                                    if (bountyData[loser.userId]) {
+                                        bountyData[loser.userId].bounty = 0;
+                                    }
+
+                                    fs.writeFileSync(anbuPath, JSON.stringify(anbuData, null, 4));
+                                    fs.writeFileSync(bountyPath, JSON.stringify(bountyData, null, 4));
+                                }
+                            }
+                        }
+                    } catch (e) {
+                        console.error("Error processing bounty reward:", e);
+                    }
+
+                    const winnerEmbed = new EmbedBuilder()
+                        .setTitle('Battle Over!')
+                        .setDescription(`${winner.name} is victorious!`)
+                        .setColor('#006400');
+
+                    if (bountyReward > 0) {
+                        winnerEmbed.addFields({ name: 'Bounty Claimed', value: `${winner.name} has claimed a bounty of ${bountyReward} and converted it to Honor!` });
+                    }
+
+                    if (battleType !== 'arank' && battleType !== 'brank' && battleType !== 'trials') {
+                        await battleChannel.send({ embeds: [winnerEmbed] });
+                    }
+
+                    if (mode === 'challenger') {
+                        const giftPath = path.resolve(__dirname, '../../menma/data/gift.json');
+                        const giftData = fs.existsSync(giftPath) ? JSON.parse(fs.readFileSync(giftPath, 'utf8')) : {};
+
+                        if (!giftData[winner.userId]) {
+                            giftData[winner.userId] = [];
+                        }
+
+                        giftData[winner.userId].push('elo');
+                        fs.writeFileSync(giftPath, JSON.stringify(giftData, null, 2));
+
+                        await battleChannel.send(`${winner.name} has received 1 elo for winning the challenger match!`);
+                    }
+                } else {
+                    await battleChannel.send(`It's a draw!`);
+                }
+
+                if (battleType === 'trials' || battleType === 'otsutsuki' || battleType === 'akatsuki_trial') {
+                    if (winner && winner.userId === player1.userId) {
+                        return { winner: player1, loser: player2 };
+                    } else if (winner && winner.userId === player2.userId) {
+                        return { winner: player2, loser: player1 };
+                    } else {
+                        return { winner: null, loser: null };
+                    }
+                }
+
+                if (users[player1Id]) {
+                    users[player1Id].eightGatesLevel = 0;
+                }
+                if (users[player2Id] && !isPlayer2NPC) {
+                    users[player2Id].eightGatesLevel = 0;
+                }
+
+                if (winner && winner.userId === player1.userId) {
+                    // Raid/Mission progression removed (handled in event.js / travel.js now)
+                }
+                return { winner, loser };
+            }
         }
+    } finally {
+        if (interaction.id) activeBattles.delete(interaction.id);
     }
-    if (interaction.id) activeBattles.delete(interaction.id);
 }
 
 /**

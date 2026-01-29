@@ -954,8 +954,8 @@
     "chakra": 10,
     "jutsu": {
       "slot_0": "Attack",
-      "slot_1": "Transformation Jutsu",
-      "slot_2": "None",
+      "slot_1": "Carnage",
+      "slot_2": "Ninpo: Ascetic Blaze",
       "slot_3": "None",
       "slot_4": "None",
       "slot_5": "None"
@@ -963,9 +963,24 @@
     "money": 20205,
     "ramen": 51,
     "Combo": "Basic Combo",
-    "LastTrials": 1757188171312,
+    "LastTrials": null,
     "trialsResult": "lose",
-    "title": "None"
+    "title": "None",
+    "lastbrank": 1769719083948,
+    "brankWon": true,
+    "unlockedSrank": [
+      "zabuza",
+      "kurenai"
+    ],
+    "lastsrank": 1769719445537,
+    "srankResult": "win",
+    "srankDefeats": {
+      "orochimaru": 1,
+      "kagamis_hideout": 1
+    },
+    "lastdrank": null,
+    "lastDungeon": null,
+    "lastArank": null
   },
   "420101737173483541": {
     "level": 3,
@@ -1180,13 +1195,13 @@
     "mentor": "None",
     "rank": "Academy Student",
     "occupation": "Village",
-    "health": 500,
-    "power": 100,
-    "defense": 50,
+    "health": 628,
+    "power": 280,
+    "defense": 129,
     "chakra": 10,
     "jutsu": {
       "slot_0": "Attack",
-      "slot_1": "Transformation Jutsu",
+      "slot_1": "Carnage",
       "slot_2": "None",
       "slot_3": "None",
       "slot_4": "None",
@@ -1194,14 +1209,23 @@
     },
     "Combo": "Basic Combo",
     "bloodlineTuto": true,
-    "lastbrank": 1761674925259,
+    "lastbrank": null,
     "brankWon": true,
     "lastdrank": null,
-    "lastsrank": null,
+    "lastsrank": 1769718411643,
     "LastTrials": null,
     "lastDungeon": null,
     "lastArank": null,
-    "title": "None"
+    "title": "None",
+    "unlockedSrank": [
+      "zabuza",
+      "kurenai"
+    ],
+    "srankResult": "win",
+    "srankDefeats": {
+      "orochimaru": 1,
+      "kagamis_hideout": 1
+    }
   },
   "1132693590066331828": {
     "wins": 1,
@@ -1250,7 +1274,7 @@
     "chakra": 10,
     "jutsu": {
       "slot_0": "Attack",
-      "slot_1": "Transformation Jutsu",
+      "slot_1": "Carnage",
       "slot_2": "None",
       "slot_3": "None",
       "slot_4": "None",

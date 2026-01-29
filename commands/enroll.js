@@ -159,7 +159,8 @@ module.exports = {
                                     slot_4: 'None',
                                     slot_5: 'None'
                                 },
-                                Combo: "Basic Combo"
+                                Combo: "Basic Combo",
+                                referralEligible: true // New users are eligible for referral rewards
                             };
 
                             fs.writeFileSync(playersPath, JSON.stringify(players, null, 2));
