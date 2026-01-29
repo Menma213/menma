@@ -36,7 +36,7 @@ function execute({
     result.chakraUsed = cost;
 
     // --- 2. MASSIVE DAMAGE (Effect 1) ---
-    // Using a high multiplier (4500) for "massive damage"
+    // Using a high multiplier (2000) for "massive damage"
     const damageFormula = "user.power * 2000 / target.defense";
     let finalDamage = 0;
     try {
@@ -64,7 +64,7 @@ function execute({
         source: "Clones",
         isNew: true
     });
-    result.specialEffects.push(`${baseUser.name} creates 3 Clones and attacks the target for ${finalDamage * 3} damage!`);
+    result.specialEffects.push(`${baseUser.name} creates 3 Clones and attacks the target for ${finalDamage} damage!`);
 
     // --- 4. DEFENSE DEBUFF (Effect 4: Max debuff) ---
     const defenseReduction = -Math.floor(effectiveTarget.defense * 0.05);
@@ -79,7 +79,7 @@ function execute({
     result.specialEffects.push(`${baseTarget.name}'s defense is reduced!`);
 
     // --- 5. MASSIVE BLEEDING & HEAL (Effect 2: 3 rounds) ---
-    // Massive bleed (15% of max health per turn)
+
     baseTarget.activeEffects.push({
         type: 'status',
         status: 'bleed',

@@ -150,7 +150,7 @@ module.exports = {
         async function logSSGift(gifterId, recipientId, amount, giftId, isGlobal = false) {
             const logChannel = interaction.client.channels.cache.get(GIFT_LOG_CHANNEL_ID);
             if (!logChannel) return;
-            
+
             const embed = new EmbedBuilder()
                 .setTitle('🎁 Shinobi Shards Gift Log')
                 .setColor(0x00FF00)
@@ -334,6 +334,14 @@ module.exports = {
             });
             saveGiftData(giftData);
 
+            interaction.client.addLog('gift', {
+                type: 'money',
+                gifter: userId,
+                recipient: target.id,
+                amount,
+                id
+            });
+
             return interaction.reply({ content: `Gifted ${amount} money to <@${target.id}>! They can claim it from /gift inventory.` });
         }
 
@@ -363,6 +371,13 @@ module.exports = {
 
             // Log the SS gift
             await logSSGift(userId, target.id, amount, giftId, false);
+            interaction.client.addLog('gift', {
+                type: 'ss',
+                gifter: userId,
+                recipient: target.id,
+                amount,
+                id: giftId
+            });
 
             return interaction.reply({ content: `Gifted ${amount} Shinobi Shards (SS) to <@${target.id}>! They can claim it from /gift inventory.` });
         }
@@ -398,6 +413,13 @@ module.exports = {
 
             // Log the global SS gift
             await logSSGift(userId, 'ALL', amount, giftId, true);
+            interaction.client.addLog('gift', {
+                type: 'ss_global',
+                gifter: userId,
+                amount,
+                id: giftId,
+                userCount
+            });
 
             return interaction.reply({ content: `Gifted ${amount} Shinobi Shards (SS) to ${userCount} users globally! They can claim it from /gift inventory.` });
         }
@@ -423,6 +445,14 @@ module.exports = {
                 date: Date.now()
             });
             saveGiftData(giftData);
+
+            interaction.client.addLog('gift', {
+                type: 'combo',
+                gifter: userId,
+                recipient: target.id,
+                name: comboName,
+                id: giftId
+            });
 
             return interaction.reply({ content: `Gifted combo **${comboName}** to <@${target.id}>! They can claim it from /gift inventory.` });
         }
@@ -455,6 +485,14 @@ module.exports = {
             }
             saveGiftData(giftData);
 
+            interaction.client.addLog('gift', {
+                type: 'combo_global',
+                gifter: userId,
+                name: comboName,
+                id: giftId,
+                userCount
+            });
+
             return interaction.reply({ content: `Gifted combo **${comboName}** to ${userCount} users globally! They can claim it from /gift inventory.` });
         }
 
@@ -480,6 +518,14 @@ module.exports = {
                 date: Date.now()
             });
             saveGiftData(giftData);
+
+            interaction.client.addLog('gift', {
+                type: 'ramen',
+                gifter: userId,
+                recipient: target.id,
+                amount,
+                id: giftId
+            });
 
             return interaction.reply({ content: `Gifted ${amount} ramen ticket(s) to <@${target.id}>! They can claim it from /gift inventory.` });
         }
@@ -512,6 +558,14 @@ module.exports = {
                 }
             }
             saveGiftData(giftData);
+
+            interaction.client.addLog('gift', {
+                type: 'ramen_global',
+                gifter: userId,
+                amount,
+                id: giftId,
+                userCount
+            });
 
             return interaction.reply({ content: `Gifted ${amount} ramen ticket(s) to ${userCount} users globally! They can claim it from /gift inventory.` });
         }

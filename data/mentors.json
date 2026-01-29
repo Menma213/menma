@@ -2,95 +2,138 @@
     "Genin": {
         "Naruto": {
             "jutsu": [
-                { "name": "Shadow Clone Jutsu", "required_exp": 10 }
+                {
+                    "name": "Shadow Clone Jutsu",
+                    "required_exp": 10
+                }
             ],
             "clan": "Any"
         },
         "Sasuke": {
             "jutsu": [
-                { "name": "Fireball Jutsu", "required_exp": 10 }
+                {
+                    "name": "Fireball Jutsu",
+                    "required_exp": 10
+                }
             ],
             "clan": "Any"
         },
         "Sakura": {
             "jutsu": [
-                { "name": "Mystic Palm", "required_exp": 10 }
+                {
+                    "name": "Mystic Palm",
+                    "required_exp": 10
+                }
             ],
             "clan": "Any"
         },
         "Kakashi": {
             "jutsu": [
-                { "name": "Summon Ninken", "required_exp": 10 }
+                {
+                    "name": "Summon Ninken",
+                    "required_exp": 10
+                }
             ],
             "clan": "Any"
         },
         "Hinata Hyuga": {
             "jutsu": [
-                { "name": "Thirty Two Palms", "required_exp": 10 }
+                {
+                    "name": "Thirty Two Palms",
+                    "required_exp": 10
+                }
             ],
             "clan": "Any"
         },
         "Shikamaru": {
             "jutsu": [
-                { "name": "Analysis", "required_exp": 10 }
+                {
+                    "name": "Analysis",
+                    "required_exp": 10
+                }
             ],
             "clan": "Any"
         }
-       
     },
     "Chuunin": {
         "Naruto": {
             "jutsu": [
-                { "name": "Sexy Jutsu", "required_exp": 30 }
+                {
+                    "name": "Sexy Jutsu",
+                    "required_exp": 30
+                }
             ],
             "clan": "Any"
         },
         "Sasuke": {
             "jutsu": [
-                { "name": "Kirin", "required_exp": 30 }
+                {
+                    "name": "Kirin",
+                    "required_exp": 30
+                }
             ],
             "clan": "Any"
         },
         "Sakura": {
             "jutsu": [
-                { "name": "Cherry Blossom Impact", "required_exp": 30 }
+                {
+                    "name": "Cherry Blossom Impact",
+                    "required_exp": 30
+                }
             ],
             "clan": "Any"
         },
         "Kakashi": {
             "jutsu": [
-                { "name": "Lightning Blade", "required_exp": 30 }
+                {
+                    "name": "Lightning Blade",
+                    "required_exp": 30
+                }
             ],
             "clan": "Any"
         },
         "Hinata Hyuga": {
             "jutsu": [
-                { "name": "Sixty Four Palms", "required_exp": 30 }
+                {
+                    "name": "Sixty Four Palms",
+                    "required_exp": 30
+                }
             ],
             "clan": "Any"
         },
         "Shikamaru": {
             "jutsu": [
-                { "name": "Shadow Strangle", "required_exp": 30 }
+                {
+                    "name": "Shadow Strangle",
+                    "required_exp": 30
+                }
             ],
             "clan": "Any"
         },
         "Rock Lee": {
             "jutsu": [
-                { "name": "Leaf Whirlwind", "required_exp": 30 }
+                {
+                    "name": "Leaf Whirlwind",
+                    "required_exp": 30
+                }
             ],
             "clan": "Any"
         },
         "Asuma": {
             "jutsu": [
-                { "name": "Infused Chakra Blade: Enhanced", "required_exp": 20 }
-               
+                {
+                    "name": "Infused Chakra Blade: Enhanced",
+                    "required_exp": 20
+                }
             ],
             "clan": "Any"
         },
         "Guy": {
             "jutsu": [
-                { "name": "Dynamic Entry", "required_exp": 30 }
+                {
+                    "name": "Dynamic Entry",
+                    "required_exp": 30
+                }
             ],
             "clan": "Any"
         }
@@ -98,49 +141,73 @@
     "Jounin": {
         "Naruto Uzumaki": {
             "jutsu": [
-                { "name": "Rasengan", "required_exp": 50 }
+                {
+                    "name": "Rasengan",
+                    "required_exp": 50
+                }
             ],
             "clan": "Any"
         },
         "Sasuke Uchiha": {
             "jutsu": [
-                { "name": "Ephemeral", "required_exp": 50 }
+                {
+                    "name": "Ephemeral",
+                    "required_exp": 50
+                }
             ],
             "clan": "Any"
         },
         "Sakura": {
             "jutsu": [
-                { "name": "Improved Mystic Palm", "required_exp": 50 }
+                {
+                    "name": "Mystic Palm Enhanced",
+                    "required_exp": 50
+                }
             ],
             "clan": "Any"
         },
         "Kakashi": {
             "jutsu": [
-                { "name": "Lightning Blade: All Out", "required_exp": 50 }
+                {
+                    "name": "Lightning Blade: All Out",
+                    "required_exp": 50
+                }
             ],
             "clan": "Any"
         },
         "Hinata Hyuga": {
             "jutsu": [
-                { "name": "Twin Lion Fist", "required_exp": 50 }
+                {
+                    "name": "Twin Lion Fist",
+                    "required_exp": 50
+                }
             ],
             "clan": "Any"
         },
         "Shikamaru Nara": {
             "jutsu": [
-                { "name": "Shadow Strangle", "required_exp": 50 }
+                {
+                    "name": "Shadow Strangle",
+                    "required_exp": 50
+                }
             ],
             "clan": "Any"
         },
         "Rock Lee": {
             "jutsu": [
-                { "name": "Primary Lotus", "required_exp": 50 }
+                {
+                    "name": "Primary Lotus",
+                    "required_exp": 50
+                }
             ],
             "clan": "Any"
         },
         "Guy": {
             "jutsu": [
-                { "name": "Eight Gates", "required_exp": 50 }
+                {
+                    "name": "Eight Gates",
+                    "required_exp": 50
+                }
             ],
             "clan": "Any"
         }

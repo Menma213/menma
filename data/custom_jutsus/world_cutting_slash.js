@@ -62,9 +62,7 @@ function execute({
         result.specialEffects.push(`${baseUser.name} cleanses: ${cleansed.join(', ')}`);
     }
 
-    // --- C. BUFFS (20x Power) ---
-    // Multiply Power by 20x for 3 rounds
-    const powerDelta = Math.floor(effectiveUser.power * 19);
+    const powerDelta = Math.floor(effectiveUser.power * 20);
     baseUser.activeEffects = baseUser.activeEffects || [];
     baseUser.activeEffects.push({
         type: 'buff',
@@ -75,10 +73,9 @@ function execute({
         source: jutsuData.name,
         isNew: true
     });
-    result.specialEffects.push(`${baseUser.name}'s Power is multiplied by 20x for 3 rounds!`);
+    result.specialEffects.push(`${baseUser.name}'s Power is multiplied!`);
 
-    // --- D. STATUS EFFECTS ---
-    // Apply a 2-turn stun
+
     baseTarget.activeEffects = baseTarget.activeEffects || [];
     baseTarget.activeEffects.push({
         type: 'status',

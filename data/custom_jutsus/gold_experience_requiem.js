@@ -28,9 +28,9 @@ function execute({
     };
 
     // --- 1. HP COST CALCULATION ---
-    // The user requested a 45% Max Health cost.
+    // The user requested a 20% Max Health cost.
     const maxHealth = Number(baseUser.maxHealth || baseUser.health) || 1000;
-    const hpCost = Math.floor(maxHealth * 0.40);
+    const hpCost = Math.floor(maxHealth * 0.20);
 
     // Deduct HP cost
     const currentHP = (baseUser.currentHealth !== undefined && baseUser.currentHealth !== null)
@@ -67,7 +67,7 @@ function execute({
             type: 'status',
             status: 'revive',
             duration: 99,
-            heal_amount: Math.floor(maxHealth * 0.5),
+            heal_amount: Math.floor(maxHealth * 0.25),
             revive_to_max_health: false,
             once_per_battle: true,
             source: jutsuData.name
@@ -79,14 +79,14 @@ function execute({
             targetId: baseUser.id || baseUser.userId || null,
             type: 'revive',
             trigger: 'onDeath',
-            healPercent: 0.5,
-            heal_amount: Math.floor(maxHealth * 0.5),
+            healPercent: 0.25,
+            heal_amount: Math.floor(maxHealth * 0.25),
             once: true,
             duration: 99,
             source: jutsuData.name
         });
 
-        result.specialEffects.push(`**Endless Life:** ${baseUser.name} will revive to 50% HP if defeated!`);
+        result.specialEffects.push(`**Endless Life:** ${baseUser.name} will revive to 25% HP if defeated!`);
     } else {
         result.specialEffects.push(`**Endless Life:** ${baseUser.name} has already revived this battle and cannot do it again.`);
     }
