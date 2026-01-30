@@ -1577,7 +1577,7 @@
     "obtainment": "unobtainable",
     "description": "**Fortyfold power… let’s push beyond the limits!**\n user’s body ignites in a blazing crimson aura, their power surging beyond comprehension. The ground trembles as energy erupts outward, pushing their strength, speed, and spirit past mortal limits. ",
     "chakraCostType": "percent_health",
-    "image_url": "https://media.tenor.com/_pPE0lFvezoAAAAM/goku-kaioken.gif",
+    "image_url": "https://i.pinimg.com/originals/81/65/9e/819eWJh8J6Mx9DrGXKEv3ojKmqw8Cv9pscK.gif",
     "effects": [
       {
         "type": "chakra_gain",
@@ -2924,11 +2924,50 @@
   "Ninpo: Ascetic Blaze": {
     "name": "Ninpo: Ascetic Blaze",
     "description": "Nothing will ever be allowed to have any say in how we live…not even death itself\n user  reinforced their punches with a godly blaze, a fire hot enough to make immortals flinch. ",
-    "chakraCost": 30,
+    "chakraCost": 25,
+    "image_url": "https://i.pinimg.com/originals/68/33/5c/68335cdb98a16999ae55eef1575e80b5.gif",
     "category": "Mentor jutsu",
     "obtainment": "Mentor",
     "obtainable": true,
     "effects": [],
     "scriptFile": "ninpo_ascetic_blaze.js"
+  },
+  "Dragonic Roar": {
+    "name": "Dragonic Roar",
+    "description": "The user unleashes a massive roar that shakes the heavens",
+    "info": "A high damage jutsu used in memories.",
+    "chakraCost": 0,
+    "category": "Memory",
+    "effects": [
+      {
+        "type": "damage",
+        "formula": "5000 * user.power / target.defense"
+      }
+    ]
+  },
+  "Emperor of the skies": {
+    "name": "Emperor of the skies",
+    "description": "Zephyr commands the sky to protect him",
+    "info": "A defensive jutsu used in memories.",
+    "chakraCost": 0,
+    "category": "Memory",
+    "effects": [
+      {
+        "type": "buff",
+        "stats": {
+          "defense": "user.defense * 10"
+        },
+        "duration": 1
+      }
+    ]
+  },
+  "Indra's Arrow": {
+    "name": "Indra's Arrow",
+    "description": "**This is the strongest attack in my arsenal. Right now, I am the most powerful being in the world!**\n user  manifests the Perfect Susanoo as a vessel, channeling the chakra of all nine Tailed Beasts into a singular, divine lightning bolt to pierce the soul",
+    "image_url": "https://i.pinimg.com/originals/8d/7c/55/8d7c55de7de9be2201cf06d53b9e31fa.gif",
+    "chakraCost": 15,
+    "category": "Memory",
+    "effects": [],
+    "scriptFile": "indra_arrow.js"
   }
 }

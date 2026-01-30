@@ -20,6 +20,7 @@ async function getBufferFromResponse(response) {
 }
 
 const { BLOODLINES } = require('./bloodline.js');
+const { runMemorySequence } = require('../utils/memory.js');
 const activeBattles = new Map(); // Exported for multiplayer commands
 
 // =======================================================================================
@@ -434,8 +435,7 @@ const effectHandlers = {
         if (statusName !== 'Wheel of Fate Adaptation' && target.activeEffects?.some(e => e.status === 'Wheel of Fate Adaptation')) {
             return false;
         }
-        // Flowing Red Scale Immunity
-        if (target.activeEffects?.some(e => e.status === 'Flowing Red Scale' || e.status === 'Perfect Sage' || e.status === 'Gold Experience Requiem')) {
+        if (target.activeEffects?.some(e => e.status === 'Flowing Red Scale' || e.status === 'Perfect Sage' || e.status === 'Gold Experience Requiem' || e.status === 'Indra\'s Arrow')) {
             return false;
         }
         return Math.random() * 100 <= chance;
@@ -766,6 +766,16 @@ const applyEffect = (effect, user, target, effectiveUser, effectiveTarget, resul
                 break;
             }
             case 'buff': {
+                const statsToApply = Object.keys(effect.stats || effect.statsDefinition || {});
+                const alreadyHasBuff = (user.activeEffects || []).some(e =>
+                    e.type === 'buff' && Object.keys(e.stats || {}).some(s => statsToApply.includes(s))
+                );
+
+                if (alreadyHasBuff) {
+                    if (result.specialEffects) result.specialEffects.push(`${user.name} already had this buff active!`);
+                    return;
+                }
+
                 const buffChanges = effectHandlers.buff(user, effect.stats || effect.statsDefinition);
                 user.activeEffects = user.activeEffects || [];
                 user.activeEffects.push({
@@ -780,6 +790,16 @@ const applyEffect = (effect, user, target, effectiveUser, effectiveTarget, resul
                 return { type: 'buff', value: buffChanges };
             }
             case 'debuff': {
+                const statsToApply = Object.keys(effect.stats || effect.statsDefinition || {});
+                const alreadyHasDebuff = (target.activeEffects || []).some(e =>
+                    e.type === 'debuff' && Object.keys(e.stats || {}).some(s => statsToApply.includes(s))
+                );
+
+                if (alreadyHasDebuff) {
+                    if (result.specialEffects) result.specialEffects.push(`${target.name} already had this debuff active!`);
+                    return;
+                }
+
                 const debuffChanges = effectHandlers.debuff(target, effect.stats || effect.statsDefinition);
                 target.activeEffects = target.activeEffects || [];
                 target.activeEffects.push({
@@ -823,9 +843,9 @@ const applyEffect = (effect, user, target, effectiveUser, effectiveTarget, resul
                     );
                     const canStack = effect.can_stack === true;
 
-                    if (existingStatusIndex !== -1 && !canStack) {
-                        targetEntity.activeEffects[existingStatusIndex].duration = effect.duration || 1;
-                        if (result.specialEffects) result.specialEffects.push(`Refreshed ${effect.status} duration on ${targetEntity.name}`);
+                    if (existingStatusIndex !== -1) {
+                        if (result.specialEffects) result.specialEffects.push(`${targetEntity.name} already had this effect active!`);
+                        return;
                     } else {
                         const stored = {
                             type: 'status',
@@ -862,6 +882,14 @@ const applyEffect = (effect, user, target, effectiveUser, effectiveTarget, resul
                 if (effect.duration) {
                     const targetEntity = effect.applyToUser ? user : target;
                     targetEntity.activeEffects = targetEntity.activeEffects || [];
+                    const alreadyHasDrain = (targetEntity.activeEffects || []).some(e =>
+                        e.type === 'chakra_drain' && (e.source === jutsuName || e.source === 'chakra_drain_effect')
+                    );
+                    if (alreadyHasDrain) {
+                        if (result.specialEffects) result.specialEffects.push(`${targetEntity.name} already had this chakra drain active!`);
+                        return;
+                    }
+
                     targetEntity.activeEffects.push({
                         type: 'chakra_drain',
                         amount: amount,
@@ -1003,34 +1031,39 @@ function getEffectiveStats(entity) {
         });
     }
 
+    const appliedStats = new Set();
+    const appliedStatuses = new Set();
+
     (entity.activeEffects || []).forEach(effect => {
         // Apply buff/debuff numeric deltas produced by effectHandlers.buff/debuff
         if ((effect.type === 'buff' || effect.type === 'debuff') && effect.stats && typeof effect.stats === 'object') {
             for (const [stat, value] of Object.entries(effect.stats)) {
+                if (appliedStats.has(stat)) continue; // Limit to one buff/debuff per stat
                 const numeric = Number(value);
                 if (Number.isFinite(numeric)) {
-                    // Additive application (this matches how executeJutsu stores buff changes)
                     effectiveStats[stat] = (effectiveStats[stat] || 0) + numeric;
+                    appliedStats.add(stat);
                 }
             }
         }
 
-        // Status effect modifiers (keep existing behavior)
+        // Status effect modifiers
         if (effect.type === 'status') {
+            if (appliedStatuses.has(effect.status)) return;
+            appliedStatuses.add(effect.status);
+
             // Frost status: reduces power and defense by 15%
             if (effect.status === 'frost') {
                 effectiveStats.power = Math.floor(effectiveStats.power * 0.85);
                 effectiveStats.defense = Math.floor(effectiveStats.defense * 0.85);
             }
 
-            // example: status might add dodge or prevent attack etc.
             if (effect.dodge) {
                 effectiveStats.dodge = (effectiveStats.dodge || 0) + Number(effect.dodge);
             }
             if (effect.accuracyModifier) {
                 effectiveStats.accuracy = (effectiveStats.accuracy || 0) + Number(effect.accuracyModifier);
             }
-            // other status-driven adjustments kept as before...
         }
     });
 
@@ -1111,18 +1144,24 @@ function applyBloodlineActivation(user, opponent, state) {
             user.chakra = Math.max(user.chakra || 0, 15);
             if (opponent) {
                 opponent.activeEffects = opponent.activeEffects || [];
-                opponent.activeEffects.push({
-                    type: 'status',
-                    status: 'stun',
-                    duration: 2,
-                    source: `${user.userId}-UzumakiAwaken`
-                });
-                opponent.activeEffects.push({
-                    type: 'debuff',
-                    stats: { defense: -Math.floor((opponent.defense || 1) * 0.6) },
-                    duration: 2,
-                    source: `${user.userId}-UzumakiAwaken`
-                });
+                const alreadyStunned = opponent.activeEffects.some(e => e.status === 'stun');
+                if (!alreadyStunned) {
+                    opponent.activeEffects.push({
+                        type: 'status',
+                        status: 'stun',
+                        duration: 2,
+                        source: `${user.userId}-UzumakiAwaken`
+                    });
+                }
+                const alreadyDebuffed = opponent.activeEffects.some(e => e.type === 'debuff' && e.stats?.defense);
+                if (!alreadyDebuffed) {
+                    opponent.activeEffects.push({
+                        type: 'debuff',
+                        stats: { defense: -Math.floor((opponent.defense || 1) * 0.6) },
+                        duration: 2,
+                        source: `${user.userId}-UzumakiAwaken`
+                    });
+                }
                 msgs.push(`${user.name} awakens Uzumaki: Sealing Chains stun and reduce ${opponent.name}'s defense!`);
             } else {
                 msgs.push(`${user.name} awakens Uzumaki Will!`);
@@ -1154,21 +1193,26 @@ function applyBloodlineActivation(user, opponent, state) {
             // Activate multi-turn defensive susanoo-like state and stun opponent for 2 rounds
             if (opponent) {
                 opponent.activeEffects = opponent.activeEffects || [];
-                opponent.activeEffects.push({
-                    type: 'status',
-                    status: 'stun',
-                    duration: 2,
-                    source: `${user.userId}-UchihaAwaken`
-                });
+                const alreadyStunned = opponent.activeEffects.some(e => e.status === 'stun');
+                if (!alreadyStunned) {
+                    opponent.activeEffects.push({
+                        type: 'status',
+                        status: 'stun',
+                        duration: 2,
+                        source: `${user.userId}-UchihaAwaken`
+                    });
+                }
             }
             user.activeEffects = user.activeEffects || [];
-            // Add a strong but bounded buff; mark source so we can remove when roundsLeft ends
-            user.activeEffects.push({
-                type: 'buff',
-                stats: { defense: Math.floor((user.defense || 1) * 5) }, // big flat bonus
-                duration: 2,
-                source: `${user.userId}-bloodline-awaken`
-            });
+            const alreadyBuffed = user.activeEffects.some(e => e.type === 'buff' && e.stats?.defense);
+            if (!alreadyBuffed) {
+                user.activeEffects.push({
+                    type: 'buff',
+                    stats: { defense: Math.floor((user.defense || 1) * 5) },
+                    duration: 2,
+                    source: `${user.userId}-bloodline-awaken`
+                });
+            }
             msgs.push(`${user.name} awakens Sharingan: mighty protective surge and ${opponent?.name || 'the foe'} is stunned!`);
             state.used = true;
             state.active = true;
@@ -1966,7 +2010,31 @@ function executeJutsu(baseUser, baseTarget, effectiveUser, effectiveTarget, juts
         }
     }
 
-    effectsToProcess.forEach(effect => {
+    // Global Patch: Sort effects to ensure buffs/debuffs are applied BEFORE damage/heal
+    // This ensures that the current action's damage correctly reflects new stats.
+    const effectPriority = {
+        'remove_buffs': 0,
+        'cleanse': 1,
+        'buff': 2,
+        'debuff': 2,
+        'status': 3,
+        'chakra_drain': 4,
+        'chakra_gain': 4,
+        'damage': 10,
+        'heal': 10,
+        'instantKill': 11,
+        'OHKO': 11,
+        'ohko': 11,
+        'lifesteal_max_hp': 12
+    };
+
+    const sortedEffects = [...effectsToProcess].sort((a, b) => {
+        const pA = effectPriority[a.type] ?? 5;
+        const pB = effectPriority[b.type] ?? 5;
+        return pA - pB;
+    });
+
+    sortedEffects.forEach(effect => {
         applyEffect(effect, baseUser, baseTarget, effectiveUser, effectiveTarget, result, jutsuName, effectHandlers, false);
     });
 
@@ -2636,6 +2704,18 @@ async function handleFlee(battleChannel, player, opponent, users, roundNum, dama
 // Accept npcTemplate as an optional parameter for custom NPCs (like Hokage Trials)
 async function runBattle(interaction, player1Id, player2Id, battleType, npcTemplate = null, mode = 'friendly', isRaidBoss = false) {
     const users = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
+
+    // --- 0.1% Memory Trigger for progression ---
+    const eligibleRanks = ['Academy Student', 'Genin', 'Chuunin'];
+    if (users[player1Id] && eligibleRanks.includes(users[player1Id].rank) && Math.random() < 0.001) {
+        try {
+            return await runMemorySequence(interaction, player1Id);
+        } catch (err) {
+            console.error('Error in Memory Sequence:', err);
+            // Fall through to normal battle if memory fails
+        }
+    }
+
     // Load players.json (levels and persistent player stats)
     const PLAYERS_FILE_PATH = path.resolve(__dirname, '../../menma/data/players.json');
     const playersData = fs.existsSync(PLAYERS_FILE_PATH) ? JSON.parse(fs.readFileSync(PLAYERS_FILE_PATH, 'utf8')) : {};
@@ -4299,6 +4379,7 @@ function npcChooseMove(baseNpc, basePlayer, effectiveNpc, effectivePlayer) {
     result.jutsuUsed = randomJutsuName;
     return result;
 }
+
 
 module.exports = {
     data: new SlashCommandBuilder()
