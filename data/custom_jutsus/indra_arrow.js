@@ -119,8 +119,7 @@ function execute({
     const damage = Math.floor(damageMultiplier * (power / defense) * chakraMultiplier);
     result.damage = damage;
 
-    // Apply damage directly
-    baseTarget.currentHealth = Math.max(0, (baseTarget.currentHealth || 0) - damage);
+    // DO NOT manually deduct health here; return result.damage so the engine can handle it (avoids double damage)
 
     result.description += `\n**The arrow of absolute lightning shatters the atmosphere!** Dealt ${damage} damage to ${baseTarget.name}!`;
 

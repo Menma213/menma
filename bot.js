@@ -52,6 +52,8 @@ const MONEY_LOG_LIMIT = 2000000;
 const MONEY_LOG_CHANNEL = '1381278641144467637';
 const MONEY_LOG_FILE = path.join(__dirname, 'data', 'money_gain_logs.txt');
 const PLAYERS_FILE = path.join(__dirname, 'data', 'players.json');
+const AD_TRACKING_FILE = path.join(__dirname, 'data', 'ad_tracking.json');
+const LOGS_FILE = path.join(__dirname, 'data', 'logs.json');
 let lastPlayersState = {};
 
 // Initial load of players state
@@ -155,7 +157,20 @@ const rest = new REST({ version: '10' }).setToken(TOKEN);
 
 // Handle slash commands
 client.on('interactionCreate', async interaction => {
-    if (!interaction.isCommand()) return;
+    // Handle Autocomplete
+    if (interaction.isAutocomplete()) {
+        const command = client.commands.get(interaction.commandName);
+        if (!command) return;
+
+        try {
+            await command.autocomplete(interaction);
+        } catch (error) {
+            console.error(`❌ Error in autocomplete for "${interaction.commandName}":`, error);
+        }
+        return;
+    }
+
+    if (!interaction.isChatInputCommand()) return;
 
     const command = client.commands.get(interaction.commandName);
     if (!command) return;
@@ -245,6 +260,86 @@ const webApp = express();
 const cors = require('cors');
 webApp.use(cors());
 webApp.use(express.json());
+
+// API: Reward Ad
+webApp.post('/api/reward-ad', async (req, res) => {
+    console.log(`[API] Reward request received: ${req.body.userId}`);
+    const { userId } = req.body;
+    if (!userId) return res.status(400).json({ error: 'Missing userId' });
+
+    try {
+        let players = {};
+        if (fs.existsSync(PLAYERS_FILE)) players = JSON.parse(fs.readFileSync(PLAYERS_FILE, 'utf8'));
+
+        let adTracking = {};
+        if (fs.existsSync(AD_TRACKING_FILE)) adTracking = JSON.parse(fs.readFileSync(AD_TRACKING_FILE, 'utf8'));
+
+        if (!players[userId]) players[userId] = { money: 1000, ramen: 1, ss: 0, level: 1, exp: 0 };
+        if (!adTracking[userId]) adTracking[userId] = { count: 0, total: 0 };
+
+        adTracking[userId].count++;
+        adTracking[userId].total++;
+
+        const rewardChart = [
+            { name: '1,000 Shards (SS)', weight: 0.1, type: 'ss', amount: 1000 },
+            { name: '500 Shards (SS)', weight: 1.0, type: 'ss', amount: 500 },
+            { name: '350 Shards (SS)', weight: 2.0, type: 'ss', amount: 350 },
+            { name: '250 Shards (SS)', weight: 10.0, type: 'ss', amount: 250 },
+            { name: '100 Shards (SS)', weight: 30.0, type: 'ss', amount: 100 },
+            { name: '100 Ramen', weight: 20.0, type: 'ramen', amount: 100 },
+            { name: '250 Ramen', weight: 10.0, type: 'ramen', amount: 250 },
+            { name: '300 Ramen', weight: 5.0, type: 'ramen', amount: 300 },
+            { name: '5 Million Ryo', weight: 20.0, type: 'money', amount: 5000000 },
+            { name: '10 Million Ryo', weight: 10.0, type: 'money', amount: 10000000 },
+            { name: '35 Million Ryo', weight: 2.0, type: 'money', amount: 35000000 },
+            { name: '50 Million Ryo', weight: 1.0, type: 'money', amount: 50000000 },
+            { name: '100 Million Ryo', weight: 0.1, type: 'money', amount: 100000000 },
+            { name: 'NO REWARD (Bad Luck)', weight: 20.0, type: 'none', amount: 0 }
+        ];
+
+        const totalWeight = 131.2;
+        let roll = Math.random() * totalWeight;
+        let selectedReward = rewardChart[rewardChart.length - 1];
+
+        let weightSum = 0;
+        for (const r of rewardChart) {
+            weightSum += r.weight;
+            if (roll <= weightSum) {
+                selectedReward = r;
+                break;
+            }
+        }
+
+        let multiplier = 1;
+        let doubleNote = "";
+        if (adTracking[userId].count >= 10) {
+            multiplier = 2;
+            adTracking[userId].count = 0;
+            doubleNote = " (DOUBLE REWARD!)";
+        }
+
+        const actualAmount = selectedReward.amount * multiplier;
+        if (selectedReward.type !== 'none') {
+            players[userId][selectedReward.type] = (players[userId][selectedReward.type] || 0) + actualAmount;
+        }
+
+        players[userId].akatsuki_tickets = (players[userId].akatsuki_tickets || 0) + 5;
+
+        fs.writeFileSync(PLAYERS_FILE, JSON.stringify(players, null, 2));
+        fs.writeFileSync(AD_TRACKING_FILE, JSON.stringify(adTracking, null, 2));
+
+        client.users.fetch(userId).then(user => {
+            const rewardMsg = selectedReward.type === 'none' ? "No extra reward" : `**${actualAmount.toLocaleString()} ${selectedReward.name}**${doubleNote}`;
+            user.send(`**Daily Reward Claimed!**\nYou received:\n🎁 ${rewardMsg}\n✨ **5x Akatsuki Summon Tickets**\n\nTotal ads watched: **${adTracking[userId].total}**`);
+        }).catch(err => console.error(`[DM Error] ${userId}:`, err.message));
+
+        res.json({ success: true, rewardText: selectedReward.type === 'none' ? "No extra reward" : `${actualAmount.toLocaleString()} ${selectedReward.name}${doubleNote}` });
+
+    } catch (e) {
+        console.error('Reward API Error:', e);
+        res.status(500).json({ success: false, error: 'Internal server error' });
+    }
+});
 
 // Load web server environment variables
 // Load environment variables

@@ -49,39 +49,30 @@ function execute({
     }
 
     // --- 3. DAMAGE CALCULATION ---
-    // Formula: user.power * 2500 / target.defense * (user.chakra - 5)
+    // Formula: (2500 * user.power / target.defense) * (user.chakra - 5)
     try {
         const chakraMultiplier = Math.max(1, currentChakra - 5); // Ensure at least 1
-        const damageFormula = `(2500 * ${effectiveUser.power} / ${Math.max(1, effectiveTarget.defense)}) * ${chakraMultiplier}`;
-        const rawDamage = math.evaluate(damageFormula);
-        const finalDamage = Math.max(1, Math.floor(rawDamage));
+        const baseDamageValue = 2500 * (Number(effectiveUser.power) || 1) / Math.max(1, Number(effectiveTarget.defense) || 1);
+        const finalDamage = Math.floor(baseDamageValue * chakraMultiplier);
 
-        // Apply damage to target's current health
-        const targetCurrentHP = (baseTarget.currentHealth !== undefined && baseTarget.currentHealth !== null)
-            ? baseTarget.currentHealth
-            : (baseTarget.health || 0);
-
-        baseTarget.currentHealth = Math.max(0, targetCurrentHP - finalDamage);
+        // DO NOT manually deduct health here; return result.damage so the engine can handle it (avoids double damage)
         result.damage = finalDamage;
-        result.specialEffects.push(`Nature's strike dealt ${finalDamage} damage (scaled by ${currentChakra} Chakra)!`);
+        result.specialEffects.push(`Nature's strike dealt ${finalDamage} damage (x${chakraMultiplier.toFixed(1)} chakra multiplier)!`);
     } catch (e) {
         console.error("Error calculating damage in Perfect Sage:", e);
         // Robust fallback calculation
         const chakraMultiplier = Math.max(1, currentChakra - 5);
         const fallbackDamage = Math.floor((2500 * (effectiveUser.power || 1) / Math.max(1, effectiveTarget.defense || 1)) * chakraMultiplier);
-        baseTarget.currentHealth = Math.max(0, (baseTarget.currentHealth || baseTarget.health || 0) - fallbackDamage);
         result.damage = fallbackDamage;
     }
 
-    // --- 4. BUFFS (5x Power and Defense) ---
-    // Engine treats numeric stat values as additive deltas.
-    // To achieve a 5x multiplier, we add (Stat * 4).
+
     const powerDelta = Math.floor(effectiveUser.power * 19);
     const defenseDelta = Math.floor(effectiveUser.defense * 19);
 
     if (!baseUser.activeEffects) baseUser.activeEffects = [];
 
-    // Apply the 5x Buff for 3 rounds
+
     baseUser.activeEffects.push({
         type: 'buff',
         stats: {
@@ -95,7 +86,6 @@ function execute({
     result.specialEffects.push(`${baseUser.name}'s Power and Defense are multiplied!`);
 
     // --- 5. STATUS IMMUNITY (Cleanse effect for 3 rounds) ---
-    // This status name must be registered in combinedcommands.js immunity logic
     baseUser.activeEffects.push({
         type: 'status',
         status: 'Perfect Sage',

@@ -25,27 +25,50 @@ module.exports = {
         const sourceMedia = character.media.nodes[0]?.title.romaji || 'Unknown Anime';
         const charRarity = character.rarity;
         const charColor = character.color;
-        const charOvr = character.ovr;
+        const charHp = character.hp;
+        const charPower = character.power;
+        const charDefense = character.defense;
+
+        // Helper to get rarity weight
+        const getRarityWeight = (rarity) => {
+            switch (rarity) {
+                case 'Mythic': return 6;
+                case 'Legendary': return 5;
+                case 'Epic': return 4;
+                case 'Rare': return 3;
+                case 'Uncommon': return 2;
+                case 'Common': return 1;
+                default: return 0;
+            }
+        };
 
         // Save character to collection with metadata for the collection command
         if (playerData.collection[charName]) {
             playerData.collection[charName].count++;
-            // Optionally update OVR if the newly summoned one is somehow better (not possible with current logic but for future)
-            if (charOvr > (playerData.collection[charName].ovr || 0)) {
-                playerData.collection[charName].ovr = charOvr;
+
+            const currentRarityWeight = getRarityWeight(playerData.collection[charName].rarity);
+            const newRarityWeight = getRarityWeight(charRarity);
+
+            // If new card is better rarity, upgrade the stats
+            if (newRarityWeight > currentRarityWeight) {
                 playerData.collection[charName].rarity = charRarity;
                 playerData.collection[charName].color = charColor;
                 playerData.collection[charName].source = sourceMedia;
+                playerData.collection[charName].hp = charHp;
+                playerData.collection[charName].power = charPower;
+                playerData.collection[charName].defense = charDefense;
             }
         } else {
             playerData.collection[charName] = {
                 count: 1,
                 rarity: charRarity,
-                ovr: charOvr,
                 color: charColor,
                 source: sourceMedia,
                 image: charImage,
-                id: character.id
+                id: character.id,
+                hp: charHp,
+                power: charPower,
+                defense: charDefense
             };
         }
 
@@ -58,11 +81,11 @@ module.exports = {
         // Build the result embed
         const embed = new EmbedBuilder()
             .setTitle(`SUMMON SUCCESSFUL`)
-            .setDescription(`You have summoned **${charName}**!\n\n**Source:** ${sourceMedia}\n**Overall (OVR):** \`${charOvr}\``)
+            .setDescription(`You have summoned **${charName}**!\n\n**Source:** ${sourceMedia}\n**Rarity:** ${charRarity}`)
             .setImage(charImage)
             .setColor(charColor)
             .addFields(
-                { name: 'Rarity', value: `**${charRarity}**`, inline: true },
+                { name: 'Stats', value: `💪 Power: ${charPower}\n🛡️ Defense: ${charDefense}\n❤️ HP: ${charHp}`, inline: false },
                 { name: 'Unique Cards', value: `${Object.keys(playerData.collection).length}`, inline: true }
             )
             .setFooter({ text: `Character ID: ${character.id} • Collection: ${Object.values(playerData.collection).reduce((acc, curr) => acc + (typeof curr === 'object' ? curr.count : curr), 0)} total` });

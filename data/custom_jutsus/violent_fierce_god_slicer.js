@@ -58,8 +58,7 @@ function execute({
     const clone3Damage = baseDamage;
     const totalDamage = baseDamage + clone1Damage + clone2Damage + clone3Damage;
 
-    // Apply total damage to target
-    baseTarget.currentHealth = Math.max(0, (baseTarget.currentHealth || 0) - totalDamage);
+    // DO NOT manually deduct health; return totalDamage to engine
     result.damage = totalDamage;
 
     result.description += `\n**Violent Fierce God Slicer** tears through the target!`;

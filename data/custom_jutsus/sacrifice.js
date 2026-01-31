@@ -37,37 +37,30 @@ function execute({
     baseUser.chakra -= cost;
     result.chakraUsed = cost;
 
-    // --- B. DAMAGE CALCULATION (Formula: user.power * 4000 / target.defense) ---
-    // Note: You must use the effective stats for damage calc.
+    // --- B. DAMAGE CALCULATION (Formula: user.power * 2500 / target.defense) ---
     try {
-        const formula = "user.power * 2500 / target.defense";
-        const damageValue = math.evaluate(formula, {
-            'user': effectiveUser,
-            'target': effectiveTarget
-        });
+        const damageValue = 2500 * (Number(effectiveUser.power) || 1) / Math.max(1, (Number(effectiveTarget.defense) || 1));
+        const finalDamage = Math.max(1, Math.floor(damageValue));
 
-        // Assume damage calculation always hits unless you add custom hit/miss logic
-        const finalDamage = Math.max(1, Math.floor(damageValue)); // Ensure at least 1 damage
-
-        // Apply damage to the target's base health object
-        baseTarget.currentHealth = Math.max(0, baseTarget.currentHealth - finalDamage);
+        // Return damage to engine
         result.damage = finalDamage;
         result.specialEffects.push(`A surge of rage dealt ${finalDamage} damage.`);
 
     } catch (e) {
-        console.error("Error evaluating damage formula in custom script:", e);
+        console.error("Error evaluating damage formula in Sacrifice:", e);
     }
 
     // --- C. DEBUFF APPLICATION (Defense: target.defense * 0.4 for 3 turns) ---
-    const defenseDebuff = Math.floor(effectiveTarget.defense * 0.4);
+    // Ensure the value is negative for a debuff
+    const defenseReduction = -Math.floor(effectiveTarget.defense * 0.4);
     baseTarget.activeEffects = baseTarget.activeEffects || [];
     baseTarget.activeEffects.push({
         type: 'debuff',
-        stats: { 'defense': defenseDebuff }, // Apply the raw value of the stat change
+        stats: { 'defense': defenseReduction },
         duration: 3,
         source: jutsuData.name
     });
-    result.specialEffects.push(`${baseTarget.name}'s Defense was weakened by ${defenseDebuff} for 3 turns.`);
+    result.specialEffects.push(`${baseTarget.name}'s Defense was weakened!`);
 
     // --- D. BUFF APPLICATION (Power: +10000, Defense: +15000 for 5 turns) ---
     baseUser.activeEffects = baseUser.activeEffects || [];

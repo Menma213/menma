@@ -103,8 +103,8 @@
     "perks": "Jinchuriki",
     "lastguard": 1750175065990,
     "lastdrank": null,
-    "lastbrank": 1769597693758,
-    "lastsrank": null,
+    "lastbrank": 1769795668111,
+    "lastsrank": 1769797158105,
     "role": "Bruiser",
     "lastrob": 1757615299049,
     "elo": 80,
@@ -948,16 +948,16 @@
     "bloodline": "Unknown",
     "mentor": "None",
     "rank": "Academy Student",
-    "health": 1000,
-    "power": 100,
-    "defense": 50,
+    "health": 1099900,
+    "power": 109999990,
+    "defense": 599999990,
     "chakra": 10,
     "jutsu": {
       "slot_0": "Attack",
       "slot_1": "Carnage",
       "slot_2": "Ninpo: Ascetic Blaze",
-      "slot_3": "None",
-      "slot_4": "None",
+      "slot_3": "Emperor of the skies",
+      "slot_4": "Izanami",
       "slot_5": "None"
     },
     "money": 20205,
@@ -966,21 +966,22 @@
     "LastTrials": null,
     "trialsResult": "lose",
     "title": "None",
-    "lastbrank": 1769719083948,
+    "lastbrank": 1769799407824,
     "brankWon": true,
     "unlockedSrank": [
       "zabuza",
       "kurenai"
     ],
-    "lastsrank": 1769719445537,
-    "srankResult": "win",
+    "lastsrank": 1769797545805,
+    "srankResult": "loss",
     "srankDefeats": {
       "orochimaru": 1,
       "kagamis_hideout": 1
     },
     "lastdrank": null,
     "lastDungeon": null,
-    "lastArank": null
+    "lastArank": null,
+    "usedMysteryBox": true
   },
   "420101737173483541": {
     "level": 3,
@@ -1275,12 +1276,88 @@
     "jutsu": {
       "slot_0": "Attack",
       "slot_1": "Carnage",
+      "slot_2": "Heaven's Supremacy",
+      "slot_3": "None",
+      "slot_4": "None",
+      "slot_5": "None"
+    },
+    "Combo": "Basic Combo",
+    "title": "None",
+    "lastsrank": 1769797552938
+  },
+  "799979545046155284": {
+    "wins": 0,
+    "losses": 0,
+    "rankedPoints": 0,
+    "clan": "None",
+    "bloodline": "Unknown",
+    "mentor": "None",
+    "rank": "Academy Student",
+    "occupation": "Village",
+    "health": 1000,
+    "power": 100,
+    "defense": 50,
+    "chakra": 10,
+    "jutsu": {
+      "slot_0": "Attack",
+      "slot_1": "Transformation Jutsu",
+      "slot_2": "Carnage",
+      "slot_3": "Izanami",
+      "slot_4": "Dragonic Roar",
+      "slot_5": "Kamui"
+    },
+    "Combo": "Basic Combo",
+    "referralEligible": true,
+    "lastsrank": null,
+    "srankResult": "win",
+    "srankDefeats": {
+      "haku": 1,
+      "orochimaru": 1,
+      "kagamis_hideout": 1
+    },
+    "usedMysteryBox": true,
+    "lastdrank": null,
+    "lastbrank": 1769800228412,
+    "LastTrials": null,
+    "unlockedSrank": [
+      "zabuza",
+      "kurenai"
+    ],
+    "lastDungeon": null,
+    "lastArank": null,
+    "brankWon": true
+  },
+  "766465809639669840": {
+    "wins": 1,
+    "losses": 1,
+    "rankedPoints": 0,
+    "clan": "None",
+    "bloodline": "Unknown",
+    "mentor": "None",
+    "rank": "Academy Student",
+    "occupation": "Village",
+    "health": 1009990,
+    "power": 10999990,
+    "defense": 59999990,
+    "chakra": 10,
+    "jutsu": {
+      "slot_0": "Attack",
+      "slot_1": "Carnage",
       "slot_2": "None",
       "slot_3": "None",
       "slot_4": "None",
       "slot_5": "None"
     },
     "Combo": "Basic Combo",
-    "title": "None"
+    "referralEligible": true,
+    "lastbrank": 1769795744417,
+    "lastsrank": 1769796613630,
+    "lastdrank": null,
+    "LastTrials": 1769797015560,
+    "lastDungeon": null,
+    "lastArank": null,
+    "brankWon": true,
+    "srankResult": "loss",
+    "trialsResult": "lose"
   }
 }

@@ -76,7 +76,6 @@ const HIDEOUT_BG = 'https://i.pinimg.com/originals/90/7d/8e/907d8e2f3f4e4c6f4e4c
 const SKY_REVEAL_IMG = 'https://files.idyllic.app/files/static/3948049';
 const ANCESTOR_STONE_IMG = 'https://i.pinimg.com/736x/8e/9e/8e/8e9e8e2f3f4e4c6f4e4c6f4e4c6f4c6f.jpg';
 
-
 const srankBosses = {
     "haku": {
         name: "Haku",
@@ -151,6 +150,10 @@ const srankBosses = {
         defense: 1,
         jutsu: ["Attack"],
         reward: null,
+        power: 1,
+        defense: 1,
+        jutsu: ["Attack"],
+        reward: null,
         accuracy: 100,
         dodge: 0,
         baseExp: 0,
@@ -160,9 +163,9 @@ const srankBosses = {
     "corrupted_orochimaru": {
         name: "Corrupted Orochimaru",
         image: OROCHIMARU_AVATAR,
-        health: 600,
-        power: 2300,
-        defense: 150,
+        health: 550,
+        power: 2100,
+        defense: 130,
         jutsu: ["Attack", "Serpents Wrath", "Poison Mist"],
         reward: null,
         accuracy: 95,
@@ -185,6 +188,20 @@ const srankBosses = {
         money: 60000,
         lore: ["Kurenai possessed by Kagami"],
         survivalRounds: 5
+    },
+    "kagami": {
+        name: "Kagami",
+        image: KAGAMI_AVATAR,
+        health: 700,
+        power: 2400,
+        defense: 160,
+        jutsu: ["Attack", "Serpents Wrath", "Fireball Jutsu", "Demonic Illusion"],
+        reward: null,
+        accuracy: 98,
+        dodge: 40,
+        baseExp: 1100,
+        money: 100000,
+        lore: ["The mysterious witch Kagami"]
     },
     "bandit_group": {
         name: "Bandit Trio",
@@ -2218,8 +2235,16 @@ module.exports = {
                 availableBosses.haku = srankBosses.haku;
             }
 
-            if ((userDefeats.orochimaru > 0 || userUnlocked.includes("orochimaru")) && !availableBosses.kurenai) {
+            // Always allow Kagami's Hideout to be visible for testing/progression
+            availableBosses.kagamis_hideout = {
+                name: "Kagami's Hideout",
+                health: 0,
+                power: 0,
+                description: "Investigate the mysterious hideout of Kagami."
+            };
 
+            // --- Add Kurenai S-Rank if Orochimaru is defeated ---
+            if ((userDefeats.orochimaru > 0 || userUnlocked.includes("orochimaru")) && !availableBosses.kurenai) {
                 availableBosses.kurenai = {
                     name: "Kurenai",
                     health: 4000,
@@ -2660,3 +2685,24 @@ module.exports = {
     }
 
 };
+
+async function waitForContinue(interaction, userId, content = "\u200b") {
+    const buttonId = 'story_continue_' + Date.now();
+    const continueButton = new ButtonBuilder()
+        .setCustomId(buttonId)
+        .setLabel('Continue')
+        .setStyle(ButtonStyle.Secondary);
+    const row = new ActionRowBuilder().addComponents(continueButton);
+
+    const message = await interaction.followUp({ content, components: [row], ephemeral: false });
+
+    return new Promise(resolve => {
+        const c = message.createMessageComponentCollector({
+            filter: (btn) => btn.user.id === userId && btn.customId === buttonId,
+            time: 600000,
+            max: 1
+        });
+        c.on('collect', async (btn) => { await btn.update({ components: [] }); resolve(); });
+        c.on('end', async (_, reason) => { if (reason === 'time') await message.edit({ components: [] }).catch(() => { }); resolve(); });
+    });
+}

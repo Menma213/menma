@@ -22,8 +22,20 @@ module.exports = {
             return await interaction.reply({ content: "Your collection is empty! Use `/summon` to get your first card.", ephemeral: true });
         }
 
-        // Sort by OVR descending
-        cards.sort((a, b) => (b.ovr || 0) - (a.ovr || 0));
+        const getRarityWeight = (rarity) => {
+            switch (rarity) {
+                case 'Mythic': return 6;
+                case 'Legendary': return 5;
+                case 'Epic': return 4;
+                case 'Rare': return 3;
+                case 'Uncommon': return 2;
+                case 'Common': return 1;
+                default: return 0;
+            }
+        };
+
+        // Sort by Rarity descending
+        cards.sort((a, b) => getRarityWeight(b.rarity) - getRarityWeight(a.rarity));
 
         const ITEMS_PER_PAGE = 10;
         const totalPages = Math.ceil(cards.length / ITEMS_PER_PAGE);
@@ -42,10 +54,11 @@ module.exports = {
 
             const list = pageCards.map((card, index) => {
                 const rarityIcon = getRarityIcon(card.rarity);
-                return `**${start + index + 1}.** ${rarityIcon} \`[${card.ovr}]\` **${card.name}** x${card.count}`;
+                const stats = card.power ? ` [PWR: ${card.power}]` : '';
+                return `**${start + index + 1}.** ${rarityIcon}${stats} **${card.name}** x${card.count}`;
             }).join('\n');
 
-            embed.addFields({ name: 'Card List (Sorted by OVR)', value: list || 'No cards on this page.' });
+            embed.addFields({ name: 'Card List (Sorted by Rarity)', value: list || 'No cards on this page.' });
 
             return embed;
         };

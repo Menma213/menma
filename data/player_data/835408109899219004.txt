@@ -210,6 +210,33 @@
       "source": ".hack//Tasogare no Udewa Densetsu",
       "image": "https://s4.anilist.co/file/anilistcdn/character/large/2230.jpg",
       "id": 2230
+    },
+    "Gan Takada": {
+      "count": 1,
+      "rarity": "Common",
+      "ovr": 13,
+      "color": "#95a5a6",
+      "source": "Time Bokan Series: Yatterman",
+      "image": "https://s4.anilist.co/file/anilistcdn/character/large/4175.jpg",
+      "id": 4175
+    },
+    "Azusa Hinomori": {
+      "count": 1,
+      "rarity": "Common",
+      "ovr": 11,
+      "color": "#95a5a6",
+      "source": "Pia Carrot e Youkoso!! 2 DX",
+      "image": "https://s4.anilist.co/file/anilistcdn/character/large/197.jpg",
+      "id": 197
+    },
+    "Paraietta": {
+      "count": 1,
+      "rarity": "Common",
+      "ovr": 28,
+      "color": "#95a5a6",
+      "source": "Simoun",
+      "image": "https://s4.anilist.co/file/anilistcdn/character/large/3247.jpg",
+      "id": 3247
     }
   },
   "decks": [
@@ -227,5 +254,5 @@
     ""
   ],
   "selectedDeck": 0,
-  "lastSummon": 1769427954652
+  "lastSummon": 1769791004154
 }

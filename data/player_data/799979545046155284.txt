@@ -55,6 +55,24 @@
       "source": "Kaleido Star",
       "image": "https://s4.anilist.co/file/anilistcdn/character/large/b877-XzDsO5BuejlJ.jpg",
       "id": 877
+    },
+    "Suzaku no Rey": {
+      "count": 1,
+      "rarity": "Common",
+      "ovr": 17,
+      "color": "#95a5a6",
+      "source": "Otogi Story Tenshi no Shippo",
+      "image": "https://s4.anilist.co/file/anilistcdn/character/large/2417.jpg",
+      "id": 2417
+    },
+    "Izumi Maki": {
+      "count": 1,
+      "rarity": "Uncommon",
+      "ovr": 32,
+      "color": "#2ecc71",
+      "source": "Kidou Senkan Nadesico",
+      "image": "https://s4.anilist.co/file/anilistcdn/character/large/2466.jpg",
+      "id": 2466
     }
   },
   "decks": [
@@ -72,5 +90,5 @@
     ""
   ],
   "selectedDeck": 0,
-  "lastSummon": 1769428147892
+  "lastSummon": 1769791008288
 }

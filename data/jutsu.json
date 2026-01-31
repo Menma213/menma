@@ -73,7 +73,8 @@
       "PIERCING BLOOD: CONVERGENCE MAXIMUM",
       "FLOWING RED SCALE",
       "Pee Pee Poo Poo",
-      "Izanami"
+      "Izanami",
+      "Dragonic Roar"
     ],
     "combos": [
       "Basic Combo",
@@ -301,7 +302,9 @@
       "Transformation Jutsu",
       "Carnage",
       "Serpents Wrath",
-      "Ninpo: Ascetic Blaze"
+      "Ninpo: Ascetic Blaze",
+      "Emperor of the skies",
+      "Izanami"
     ]
   },
   "420101737173483541": {
@@ -350,7 +353,44 @@
   "961918563382362122": {
     "usersjutsu": [
       "Transformation Jutsu",
+      "Carnage",
+      "Heaven's Supremacy"
+    ]
+  },
+  "799979545046155284": {
+    "usersjutsu": [
+      "Attack",
+      "Transformation Jutsu",
+      "Needle Assault",
+      "Carnage",
+      "Seventh Form: Haze Dance",
+      "Dragonic Roar",
+      "Almighty Push",
+      "Praise Jashin",
+      "Izanami",
+      "Kamui"
+    ],
+    "combos": [],
+    "scrolls": [],
+    "items": {},
+    "rankeditems": []
+  },
+  "766465809639669840": {
+    "usersjutsu": [
+      "Attack",
+      "Transformation Jutsu",
       "Carnage"
+    ],
+    "combos": [],
+    "scrolls": [
+      "Tenseigan Scroll"
+    ],
+    "items": {},
+    "rankeditems": []
+  },
+  "1279746527127932968": {
+    "usersjutsu": [
+      "Izanami"
     ]
   }
 }

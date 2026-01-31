@@ -27,17 +27,16 @@ function execute({
         chakraUsed: 0
     };
 
-    // --- 1. HP COST CALCULATION ---
-    // The user requested a 20% Max Health cost.
-    const maxHealth = Number(baseUser.maxHealth || baseUser.health) || 1000;
-    const hpCost = Math.floor(maxHealth * 0.20);
 
-    // Deduct HP cost
-    const currentHP = (baseUser.currentHealth !== undefined && baseUser.currentHealth !== null)
-        ? baseUser.currentHealth
-        : (baseUser.health || 0);
+    const power = Number(effectiveUser.power) || 1;
+    const defense = Number(effectiveTarget.defense) || 1;
+    const maxHealth = baseUser.maxHealth || baseUser.health || 100;
+    const damageMultiplier = 2500;
+    const finalDamage = Math.floor(damageMultiplier * (power / defense));
 
-    baseUser.currentHealth = currentHP - hpCost;
+    // DO NOT manually deduct health; return result.damage
+    result.damage = finalDamage;
+    result.specialEffects.push(`Gold Experience Requiem strikes for ${finalDamage} damage!`);
 
     // --- 2. CHAKRA GAIN (+10) ---
     baseUser.chakra = (baseUser.chakra || 0) + 10;
@@ -73,7 +72,6 @@ function execute({
             source: jutsuData.name
         });
 
-        // Immediate engine notification
         result.appliedEffects = result.appliedEffects || [];
         result.appliedEffects.push({
             targetId: baseUser.id || baseUser.userId || null,
@@ -86,7 +84,7 @@ function execute({
             source: jutsuData.name
         });
 
-        result.specialEffects.push(`**Endless Life:** ${baseUser.name} will revive to 25% HP if defeated!`);
+        result.specialEffects.push(`**Endless Life:** ${baseUser.name} will revive to 50% HP if defeated!`);
     } else {
         result.specialEffects.push(`**Endless Life:** ${baseUser.name} has already revived this battle and cannot do it again.`);
     }

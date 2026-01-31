@@ -49,8 +49,7 @@ function execute({
 
         const finalDamage = Math.max(1, Math.floor(damageValue));
 
-        // Use the combatant currentHealth directly
-        baseTarget.currentHealth = (baseTarget.currentHealth || 0) - finalDamage;
+        // DO NOT manually deduct health; return result.damage to engine
         result.damage = finalDamage;
         result.description += `\n**Direct Erase:** Dealing ${finalDamage} pure destruction damage!`;
 

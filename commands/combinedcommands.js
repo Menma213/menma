@@ -2703,6 +2703,23 @@ async function handleFlee(battleChannel, player, opponent, users, roundNum, dama
 
 // Accept npcTemplate as an optional parameter for custom NPCs (like Hokage Trials)
 async function runBattle(interaction, player1Id, player2Id, battleType, npcTemplate = null, mode = 'friendly', isRaidBoss = false) {
+    // --- WORLD EVENT CHECK ---
+    const worldEventPath = path.resolve(__dirname, '../data/worldEvent.json');
+    if (fs.existsSync(worldEventPath)) {
+        try {
+            const eventData = JSON.parse(fs.readFileSync(worldEventPath, 'utf8'));
+            if (eventData.active && eventData.message) {
+                // Check if interaction is deferred or replied
+                if (interaction.deferred || interaction.replied) {
+                    await interaction.editReply({ content: eventData.message, embeds: [], components: [] });
+                } else {
+                    await interaction.reply({ content: eventData.message, ephemeral: true });
+                }
+                return;
+            }
+        } catch (e) { console.error("Error reading world event:", e); }
+    }
+
     const users = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
 
     // --- 0.1% Memory Trigger for progression ---

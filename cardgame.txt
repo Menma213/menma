@@ -1,0 +1,5 @@
+We're restarting: 
+First thing we're gonna do is generate a .json file consisting all the available chars of the top 100 anime. 
+that alone is our base of operations, our main game.
+
+the summon command will depend on how many characters we get from the top 100 anime, so lets generate that first. 

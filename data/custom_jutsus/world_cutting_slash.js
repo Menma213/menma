@@ -73,8 +73,8 @@ function execute({
 
         const damage = Math.max(1, Math.floor(rawDamage));
         result.damage = damage;
-        // Apply damage directly since scripts handle their own resolution in this version
-        baseTarget.currentHealth = Math.max(0, (baseTarget.currentHealth || 0) - damage);
+        // DO NOT manually deduct health; let the engine handle it
+
 
         result.description += `\n **World Cutting Slash!** The slash tears through the dimensions...`;
     } catch (e) {

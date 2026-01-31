@@ -37,7 +37,7 @@ async function runMemorySequence(interaction, userId) {
         return await runGeninMemory(interaction, userId, users);
     } else {
         // Placeholder for other memories
-        await interaction.reply({ content: "*The spirits of the past seem quiet for now.*", ephemeral: true }).catch(() => { });
+        await interaction.followUp({ content: "*The spirits of the past seem quiet for now.*", ephemeral: true }).catch(() => { });
         return;
     }
 }
@@ -60,7 +60,7 @@ async function runGeninMemory(interaction, userId, users) {
 
     const startRow = new ActionRowBuilder().addComponents(startBtn);
 
-    const startMsg = await interaction.reply({
+    const startMsg = await interaction.followUp({
         content: "You found a glowing orb",
         components: [startRow],
         ephemeral: false

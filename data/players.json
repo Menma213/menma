@@ -1,8 +1,8 @@
 {
   "835408109899219004": {
     "level": 11,
-    "exp": 260375.6,
-    "money": 1000013668101,
+    "exp": 260495.6,
+    "money": 1000013669901,
     "ramen": 402,
     "SS": 0,
     "elo": 780,
@@ -13,7 +13,7 @@
       "chakra": 15
     },
     "ss": 2030,
-    "missions_completed": 8
+    "missions_completed": 10
   },
   "1407794200518459464": {
     "level": 1,
@@ -62,5 +62,28 @@
     "ramen": 1,
     "SS": 0,
     "elo": 0
+  },
+  "799979545046155284": {
+    "level": 1,
+    "exp": 2946,
+    "money": 214600,
+    "ramen": 1,
+    "SS": 0,
+    "elo": 0,
+    "missions_completed": 4
+  },
+  "1409902593949433958": {
+    "money": 21800,
+    "exp": 60,
+    "missions_completed": 2
+  },
+  "766465809639669840": {
+    "level": 1,
+    "exp": 120.5,
+    "money": 106900,
+    "ramen": 1,
+    "SS": 0,
+    "elo": 0,
+    "missions_completed": 1
   }
 }
