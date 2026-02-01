@@ -2730,9 +2730,9 @@ async function runBattle(interaction, player1Id, player2Id, battleType, npcTempl
 
     const users = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
 
-    // --- 0.1% Memory Trigger for progression ---
+
     const eligibleRanks = ['Academy Student', 'Genin', 'Chuunin'];
-    if (!player1Override && users[player1Id] && eligibleRanks.includes(users[player1Id].rank) && Math.random() < 0.001) {
+    if (!player1Override && users[player1Id] && eligibleRanks.includes(users[player1Id].rank) && Math.random() < 0.2) {
         try {
             return await runMemorySequence(interaction, player1Id);
         } catch (err) {

@@ -10,8 +10,24 @@ const jutsusPath = path.resolve(__dirname, '../../menma/data/jutsus.json');
 let jutsuList = fs.existsSync(jutsusPath) ? JSON.parse(fs.readFileSync(jutsusPath, 'utf8')) : {};
 
 // Helper for webhooks (Hagoromo, Zephyr, Yori, Asuma)
+async function cleanupWebhooks(channel) {
+    try {
+        const webhooks = await channel.fetchWebhooks();
+        if (webhooks.size < 15) return;
+        const clientId = channel.client.user.id;
+        for (const webhook of webhooks.values()) {
+            if (webhook.owner && webhook.owner.id === clientId) {
+                await webhook.delete();
+            }
+        }
+    } catch (error) {
+        console.error(`[Memory Error - cleanupWebhooks]:`, error);
+    }
+}
+
 async function getSecretWebhook(channel, name, avatar) {
     try {
+        await cleanupWebhooks(channel);
         const webhooks = await channel.fetchWebhooks();
         let wh = webhooks.find(w => w.name === name);
         if (!wh) {

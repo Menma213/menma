@@ -1401,8 +1401,8 @@ async function runKagamisHideoutStory(interaction, users, userId, players, jutsu
 
         // Grant reward
         const playerLevel = players[0].level || 1;
-        const expReward = getSrankExpReward(playerLevel, 2000);
-        const moneyReward = 150000;
+        const expReward = getSrankExpReward(playerLevel, 1000);
+        const moneyReward = 90000;
 
         await userMutex.runExclusive(async () => {
             const u = JSON.parse(fs.readFileSync(usersPath, 'utf8'));

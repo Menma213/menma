@@ -1,53 +1,251 @@
 {
-    "_comment": "Clan data storage. Each clan has a unique ID (key)",
-    "_example": {
-        "name": "The Rising Demons",
-        "tag": "[TRD]",
-        "color": "#8B0000",
-        "leader": "123456789",
-        "elders": [],
-        "members": [],
-        "treasury": 0,
-        "level": 1,
-        "xp": 0,
-        "createdAt": 1234567890,
-        "specialization": null,
-        "controlledTerritories": []
-    },
-    "e": {
-        "name": "e",
-        "image": "3",
-        "leader": "1132693590066331828",
+    "Popeyes": {
+        "name": "Popeyes",
+        "image": "https://upload.wikimedia.org/wikipedia/commons/6/66/Popeyes_Louisiana_Kitchen_%2851195358373%29.jpg",
+        "leader": "835408109899219004",
         "coLeader": null,
         "elders": [],
         "members": [
-            "1132693590066331828"
+            "835408109899219004"
+        ],
+        "treasury": 2,
+        "level": 1,
+        "xp": 0,
+        "controlledTerritories": [],
+        "rules": "GRIND 24/7",
+        "materials": {
+            "rope": 12,
+            "metal": 27,
+            "gun_powder": 30,
+            "iron": 9,
+            "wood": 15,
+            "copper": 6
+        },
+        "weapons": {},
+        "contributions": {},
+        "power": 0
+    },
+    "Team Blank": {
+        "name": "Team Blank",
+        "image": "https://cdn.discordapp.com/attachments/1381268583107264605/1444022577377968288/c6019eWJh8J6Mx9DrGXKEv3ojKmqw8Cv9pscK.jpg?ex=692b3253&is=6929e0d3&hm=72b5fb60d64e4414aa219ea1de9eeef8a8420dd435f657d7550d0e7e48841cef&",
+        "leader": "961918563382362122",
+        "coLeader": null,
+        "elders": [],
+        "members": [
+            "961918563382362122"
         ],
         "treasury": 0,
         "level": 1,
         "xp": 0,
         "controlledTerritories": [],
-        "rules": "No rules set.",
+        "rules": "only cool people allowed",
         "materials": {},
         "weapons": {},
         "contributions": {}
     },
-    "eeggggaaa": {
-        "name": "eeggggaaa",
-        "image": "4",
-        "leader": "1132693590066331828",
-        "coLeader": null,
+    "Kamizuru": {
+        "name": "Kamizuru",
+        "image": "https://cdn.discordapp.com/attachments/999072671855804499/1445312598089269248/82861b6a962a0c113dc547ee86d004c4.jpg?ex=692fe3bf&is=692e923f&hm=56f356a29959f5e500c30654100966d45a94f4fd18c98d41d72541958d9ee98e&",
+        "leader": "799979545046155284",
+        "coLeader": "818893461881094175",
+        "elders": [
+            "766465809639669840"
+        ],
+        "members": [
+            "799979545046155284",
+            "1128111341903818752",
+            "616710232206475271",
+            "1123162433507311677",
+            "1309017261645758484",
+            "135275438556708873",
+            "766465809639669840",
+            "818893461881094175",
+            "1453436128483868713",
+            "1453436128483868713"
+        ],
+        "treasury": 402681843,
+        "level": 4,
+        "xp": 100,
+        "controlledTerritories": [
+            "village_of_sand",
+            "village_of_sound"
+        ],
+        "rules": "Join us and we'll be great than all clan",
+        "materials": {
+            "rope": 76,
+            "gun_powder": 6097,
+            "copper": 3393,
+            "iron": 8111,
+            "metal": 4935,
+            "wood": 6845,
+            "rare_resin": 44,
+            "lightning_resin": 1,
+            "mythical_sand": 0
+        },
+        "weapons": {
+            "Chakra Blade": 2448,
+            "Chakra Canon": 113,
+            "Ninjutsu Drones": 128,
+            "Jutsu Absorption Arm": 3,
+            "Sand Mines": 1
+        },
+        "contributions": {},
+        "buffs": {
+            "tier": 1,
+            "active": true,
+            "multiplier": 20
+        },
+        "power": 0,
+        "lastDistribution": 1769599288139,
+        "power_penalty": 0
+    },
+    "Divine Demon Cult": {
+        "name": "Divine Demon Cult",
+        "image": "https://tenor.com/view/vermelho-gif-6895727708364745387",
+        "leader": "961918563382362122",
+        "coLeader": "835408109899219004",
         "elders": [],
         "members": [
-            "1132693590066331828"
+            "961918563382362122",
+            "835408109899219004"
         ],
-        "treasury": 0,
-        "level": 1,
+        "treasury": 1079996669998,
+        "level": 10,
+        "xp": 0,
+        "controlledTerritories": [
+            "land_of_wind",
+            "land_of_fire"
+        ],
+        "rules": "if you leave the clan you have to be yeeted",
+        "materials": {
+            "iron": 9,
+            "wood": 6,
+            "metal": 14,
+            "gun_powder": 16,
+            "rope": 11,
+            "copper": 4
+        },
+        "weapons": {
+            "Chakra Canon": 3484042742
+        },
+        "contributions": {},
+        "power": 0,
+        "buffs": {
+            "tier": 1000,
+            "active": true,
+            "multiplier": 2000000
+        },
+        "lastDistribution": 1769187312780
+    },
+    "Rebellion : 真": {
+        "name": "Rebellion : 真",
+        "image": "https://ih1.redbubble.net/image.1423403541.8211/bg,f8f8f8-flat,750x,075,f-pad,750x1000,f8f8f8.jpg",
+        "leader": "1409902593949433958",
+        "coLeader": "820580034376105995",
+        "elders": [
+            "1409902593949433958",
+            "1303128250079383583"
+        ],
+        "members": [
+            "1409902593949433958",
+            "420101737173483541",
+            "615547555807494175",
+            "820580034376105995",
+            "1336261859224981594",
+            "1303128250079383583",
+            "787929150686101555",
+            "938325776883929108",
+            "791252443039924255",
+            "1448652877424758856",
+            "772230265565216798",
+            "1243438862139916308",
+            "930983759975706655",
+            "1442562014328127549"
+        ],
+        "treasury": 1008995,
+        "level": 5,
+        "xp": 1000,
+        "controlledTerritories": [
+            "village_of_sound",
+            "village_of_sand",
+            "land_of_water",
+            "valley_of_the_end",
+            "hidden_village_of_sand",
+            "country_of_rain",
+            "land_of_earth",
+            "hidden_village_of_sound",
+            "land_of_lightning"
+        ],
+        "rules": "Dear Member,\n\nIf you desire to join The 'Rebellion' Please follow the TOS. \n\nThe following Terms & Conditions are:\n•No sharing information with outsiders.\n•No leaving the clan in under 3 months of joining.\n•No inside sabatoging\n•No breaking these rules.\n\n__Consequences__\n\n• All stats lowered by 1/4.",
+        "materials": {
+            "wood": 15083,
+            "iron": 16860,
+            "rope": 1082,
+            "gun_powder": 13151,
+            "copper": 8714,
+            "metal": 11206,
+            "rare_resin": 136,
+            "holy_waters": 2,
+            "a_piece_of_earth": 1,
+            "lightning_resin": 1
+        },
+        "weapons": {
+            "Chakra Blade": 3925,
+            "Ninjutsu Drones": 18
+        },
+        "contributions": {},
+        "power": 0,
+        "buffs": {
+            "tier": 1,
+            "active": true,
+            "multiplier": 20
+        },
+        "lastDistribution": 1769838955351,
+        "power_penalty": 0
+    },
+    "ℭ𝔯𝔢𝔢𝔡: 鬼": {
+        "name": "ℭ𝔯𝔢𝔢𝔡: 鬼",
+        "image": "https://share.google/2Ck1wZM6ZHMewqqbY",
+        "leader": "711146181794988064",
+        "coLeader": null,
+        "elders": [
+            "1215055297492819978"
+        ],
+        "members": [
+            "711146181794988064",
+            "1215055297492819978",
+            "811203159401693196",
+            "890669412917592114",
+            "890668763085672458"
+        ],
+        "treasury": 67000000,
+        "level": 3,
         "xp": 0,
         "controlledTerritories": [],
         "rules": "No rules set.",
-        "materials": {},
-        "weapons": {},
-        "contributions": {}
+        "materials": {
+            "rope": 320,
+            "copper": 1937,
+            "metal": 2098,
+            "gun_powder": 2584,
+            "iron": 3308,
+            "wood": 2992,
+            "rare_resin": 4,
+            "lightning_resin": 2
+        },
+        "weapons": {
+            "Chakra Canon": 88,
+            "Chakra Blade": 18,
+            "Ninjutsu Drones": 12,
+            "Jutsu Absorption Arm": 2
+        },
+        "contributions": {},
+        "power": 0,
+        "buffs": {
+            "tier": 1,
+            "active": true,
+            "multiplier": 20
+        },
+        "lastDistribution": 1769613075649
     }
 }

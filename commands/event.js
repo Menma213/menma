@@ -37,8 +37,56 @@ const ZORO_JUTSUS = [
 ];
 
 const FLOOR_NPCS = [
-    "Sasori", "Hidan", "Kabuto", "Konan", "Kakuzu",
-    "Kisame", "Sasuke Uchiha", "Jugo", "Suigetsu", "Obito Uchiha"
+    {
+        name: "Sasori",
+        image: "https://i.pinimg.com/474x/ee/59/d2/ee59d2e5b913b4852455d45cce75d7d4.jpg",
+        jutsu: ["Poison Mist", "Attack", "Puppet Kazekage"]
+    },
+    {
+        name: "Hidan",
+        image: "https://i.pinimg.com/736x/52/3f/b4/523fb4d06642379ef9176ac531ea7008.jpg",
+        jutsu: ["Praise Jashin", "Attack", "Rasengan"]
+    },
+    {
+        name: "Kabuto Yakushi",
+        image: "https://i.pinimg.com/736x/5d/cb/ee/5dcbeee3a37b58d155fb92ae78e35a61.jpg",
+        jutsu: ["Mystic Palm", "Attack", "Singularity Pulse: Requiem of the Stars"]
+    },
+    {
+        name: "Konan",
+        image: "https://i.pinimg.com/736x/69/72/f3/6972f349c73a637d61a3080d3f66168b.jpg",
+        jutsu: ["Explosive Paper Clone", "Attack", "Twin Rising Dragons"]
+    },
+    {
+        name: "Kakuzu",
+        image: "https://i.pinimg.com/736x/df/9d/eb/df9deb6faf8929050c8ab8b5a66471cb.jpg",
+        jutsu: ["Fireball Jutsu", "Attack", "Rasenshuriken"]
+    },
+    {
+        name: "Kisame Hoshigaki",
+        image: "https://i.pinimg.com/474x/22/34/66/223466b3540162ff41a117f2de96b5e5.jpg",
+        jutsu: ["Water Dragon Jutsu", "Attack", "Water Prison", "Water Clone"]
+    },
+    {
+        name: "Sasuke Uchiha",
+        image: "https://i.pinimg.com/474x/79/9e/0a/799e0ab57fbd2eeef6dfb9c46e61512f.jpg",
+        jutsu: ["Kirin", "Kirin: Lightning Storm", "Attack"]
+    },
+    {
+        name: "Jugo",
+        image: "https://i.pinimg.com/236x/0b/42/b6/0b42b6724e1ca15ee06502dcb10577b2.jpg",
+        jutsu: ["Attack", "Lightning Blade"]
+    },
+    {
+        name: "Suigetsu Hozuki",
+        image: "https://i.postimg.cc/LX73fc5q/image.png",
+        jutsu: ["Water Dragon Jutsu", "Attack", "Rasengan"]
+    },
+    {
+        name: "Obito Uchiha",
+        image: "",
+        jutsu: ["Kamui", "Lightning Blade: All Out", "Attack"]
+    }
 ];
 
 const SUMMON_POOL = [
@@ -90,7 +138,23 @@ function getZoroStats(level) {
     };
 }
 
+async function cleanupWebhooks(channel) {
+    try {
+        const webhooks = await channel.fetchWebhooks();
+        if (webhooks.size < 15) return;
+        const clientId = channel.client.user.id;
+        for (const webhook of webhooks.values()) {
+            if (webhook.owner && webhook.owner.id === clientId) {
+                await webhook.delete();
+            }
+        }
+    } catch (error) {
+        console.error(`[Event Error - cleanupWebhooks]:`, error);
+    }
+}
+
 async function getWebhook(channel, name, avatar) {
+    await cleanupWebhooks(channel);
     const webhooks = await channel.fetchWebhooks();
     let wh = webhooks.find(w => w.name === name);
     if (!wh) {
@@ -441,7 +505,8 @@ async function handleFight(interaction, userId, userEvent, eventData) {
     const floor = userEvent.zoro.currentFloor;
     const tier = Math.floor((floor - 1) / 10) + 1;
     const npcIdx = (floor - 1) % 10;
-    const npcName = FLOOR_NPCS[npcIdx];
+    const npcData = FLOOR_NPCS[npcIdx];
+    const npcName = npcData.name;
 
     const multiplier = Math.pow(5, tier - 1);
 
@@ -463,7 +528,7 @@ async function handleFight(interaction, userId, userEvent, eventData) {
     // Create NPC
     const npc = {
         name: npcName + ` (Floor ${floor})`,
-        image: "", // user said leave blank
+        image: npcData.image,
         health: 100 * multiplier * (1 + (floor - 1) * 0.1),
         currentHealth: 100 * multiplier * (1 + (floor - 1) * 0.1),
         power: 50 * multiplier * (1 + (floor - 1) * 0.1),
@@ -471,7 +536,7 @@ async function handleFight(interaction, userId, userEvent, eventData) {
         chakra: 1000,
         accuracy: 90 + floor,
         dodge: 10 + floor,
-        jutsu: ["Attack", "Fireball Jutsu", "Rasengan"], // Default strong jutsus
+        jutsu: npcData.jutsu || ["Attack", "Fireball Jutsu", "Rasengan"],
         statsType: "fixed",
         immunities: ["stun", "bleed", "burn", "status"]
     };

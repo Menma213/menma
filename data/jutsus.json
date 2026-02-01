@@ -3124,5 +3124,24 @@
         "chance": 100
       }
     ]
+  },
+  "Poison Mist": {
+    "name": "Poison Mist",
+    "description": "user releases a cloud of poisonous gas at the target",
+    "info": "Event Akatsuki Npc Jutsu",
+    "chakraCost": 10,
+    "category": "Event Jutsu Akatsuki",
+    "effects": [
+      {
+        "type": "damage",
+        "formula": "100 * user.power / target.defense"
+      },
+      {
+        "type": "status",
+        "status": "poison",
+        "duration": 3,
+        "chance": 100
+      }
+    ]
   }
 }

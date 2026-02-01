@@ -49,6 +49,20 @@ function formatName(name) {
     return name.replace(/_/g, ' ').split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
 }
 
+// Helper to calculate clan power
+function calculateClanPower(clan, blueprints) {
+    let rawPower = 0;
+    if (clan.weapons) {
+        for (const [wName, count] of Object.entries(clan.weapons)) {
+            const bp = blueprints.find(b => b.name === wName);
+            if (bp) rawPower += bp.power * count;
+        }
+    }
+    const penalty = clan.power_penalty || 0;
+    const finalPower = Math.max(0, rawPower - penalty);
+    return { rawPower, penalty, finalPower };
+}
+
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('clan')
@@ -171,15 +185,8 @@ module.exports = {
             }
 
             // Calculate clan power
-            let clanPower = 0;
-            if (userClan.weapons) {
-                for (const [wName, count] of Object.entries(userClan.weapons)) {
-                    const bp = blueprints.find(b => b.name === wName);
-                    if (bp) clanPower += bp.power * count;
-                }
-            }
-            // Apply Penalty
-            clanPower = Math.max(0, clanPower - (userClan.power_penalty || 0));
+            const { rawPower, penalty, finalPower } = calculateClanPower(userClan, blueprints);
+            const clanPower = finalPower; // Support existing variable name
 
             // Calculate total materials
             let totalMaterials = 0;
@@ -212,14 +219,14 @@ module.exports = {
                 tierProgress = `**Next Tier (${nextTier}) Requirements:**\n` +
                     `Members: ${userClan.members.length}/${req.members} ${userClan.members.length >= req.members ? '✅' : '❌'}\n` +
                     `Materials: ${totalMaterials}/${req.materials} ${totalMaterials >= req.materials ? '✅' : '❌'}\n` +
-                    `Power: ${clanPower}/${req.power} ${clanPower >= req.power ? '✅' : '❌'}`;
+                    `Power: ${finalPower}/${req.power} ${finalPower >= req.power ? '✅' : '❌'}`;
             } else {
                 tierProgress = '**Max Tier Reached!**';
             }
 
             const embed = new EmbedBuilder()
                 .setTitle(`${userClan.name} [Tier ${userClan.level}]`)
-                .setDescription(`**Leader:** <@${userClan.leader}>\n**Members:** ${userClan.members.length}\n**Treasury:** ${userClan.treasury.toLocaleString()} Ryo\n**Clan Power:** ${clanPower.toLocaleString()}`)
+                .setDescription(`**Leader:** <@${userClan.leader}>\n**Members:** ${userClan.members.length}\n**Treasury:** ${userClan.treasury.toLocaleString()} Ryo\n**Clan Power:** ${finalPower.toLocaleString()} (Raw: ${rawPower.toLocaleString()}, Penalty: ${penalty.toLocaleString()})`)
                 .addFields(
                     { name: 'Territories', value: userClan.controlledTerritories.length > 0 ? userClan.controlledTerritories.map(formatName).join(', ') : 'None', inline: true },
                     { name: 'Co-Leader', value: userClan.coLeader ? `<@${userClan.coLeader}>` : 'None', inline: true },
@@ -928,15 +935,7 @@ module.exports = {
                 clanContributions[userClan.name][userId].money = (clanContributions[userClan.name][userId].money || 0) + amountToAdd;
 
                 // Calculate Clan Power for tier requirements
-                let clanPower = 0;
-                if (userClan.weapons) {
-                    for (const [wName, count] of Object.entries(userClan.weapons)) {
-                        const bp = blueprints.find(b => b.name === wName);
-                        if (bp) clanPower += bp.power * count;
-                    }
-                }
-                // Apply Penalty
-                clanPower = Math.max(0, clanPower - (userClan.power_penalty || 0));
+                const { finalPower: clanPower } = calculateClanPower(userClan, blueprints);
 
                 // Calculate total materials gathered
                 let totalMaterials = 0;
@@ -1015,24 +1014,12 @@ module.exports = {
             const enemyClan = enemyClanName ? clans[enemyClanName] : null;
 
             // Calculate Power
-            let myPower = 0;
-            if (userClan.weapons) {
-                for (const [wName, count] of Object.entries(userClan.weapons)) {
-                    const bp = blueprints.find(b => b.name === wName);
-                    if (bp) myPower += bp.power * count;
-                }
-            }
-            // Apply Penalty to Attacker
-            myPower = Math.max(0, myPower - (userClan.power_penalty || 0));
+            const { finalPower: myPower } = calculateClanPower(userClan, blueprints);
 
             let enemyPower = 0;
-            if (enemyClan && enemyClan.weapons) {
-                for (const [wName, count] of Object.entries(enemyClan.weapons)) {
-                    const bp = blueprints.find(b => b.name === wName);
-                    if (bp) enemyPower += bp.power * count;
-                }
-                // Apply Penalty to Enemy
-                enemyPower = Math.max(0, enemyPower - (enemyClan.power_penalty || 0));
+            if (enemyClan) {
+                const { finalPower: ePow } = calculateClanPower(enemyClan, blueprints);
+                enemyPower = ePow;
             } else {
                 // Neutral territory base defense
                 enemyPower = 500;
@@ -1060,9 +1047,9 @@ module.exports = {
                     if (enemyClan) {
                         enemyClan.controlledTerritories = enemyClan.controlledTerritories.filter(t => t !== territory.name);
 
-                        // Apply Power Penalty to Defender (Defender Power = Defender Power - Attacker Power)
-                        // This means Penalty increases by Attacker Power
-                        enemyClan.power_penalty = (enemyClan.power_penalty || 0) + myPower;
+                        // Higher - Lower penalty: Loser gets penalized by the difference
+                        const penaltyIncrease = Math.max(0, myPower - enemyPower);
+                        enemyClan.power_penalty = (enemyClan.power_penalty || 0) + penaltyIncrease;
                     }
 
                     await saveJson(TERRITORIES_FILE, territories);
@@ -1071,10 +1058,11 @@ module.exports = {
                     await interaction.followUp({ content: `**Victory!** ${userClan.name} has captured ${territory.displayName}!\nThe **${enemyClanName || 'Neutral'}** forces have suffered a crushing defeat!` });
                 } else {
                     // Lose
-                    // Apply Power Penalty to Attacker? (Attacker Power = Attacker Power - Defender Power)
-                    // If the user wants symmetric penalties:
-                    // userClan.power_penalty = (userClan.power_penalty || 0) + enemyPower;
+                    // Higher - Lower penalty: Loser gets penalized by the difference
+                    const penaltyIncrease = Math.max(0, enemyPower - myPower);
+                    userClan.power_penalty = (userClan.power_penalty || 0) + penaltyIncrease;
 
+                    await saveJson(CLANS_FILE, clans);
                     await interaction.followUp({ content: `**Defeat!** ${userClan.name} failed to capture ${territory.displayName}.` });
                 }
             }, 5000);
