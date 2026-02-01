@@ -91,7 +91,7 @@
       "slot_5": "Carnage"
     },
     "money": 1068510,
-    "ramen": 119,
+    "ramen": 139,
     "lastClaim": "2025-04-24T08:51:48.586Z",
     "nextClaim": "2025-04-25T08:51:48.586Z",
     "lastArank": null,
@@ -103,8 +103,8 @@
     "perks": "Jinchuriki",
     "lastguard": 1750175065990,
     "lastdrank": null,
-    "lastbrank": 1769795668111,
-    "lastsrank": 1769797158105,
+    "lastbrank": null,
+    "lastsrank": 1769937045441,
     "role": "Bruiser",
     "lastrob": 1757615299049,
     "elo": 80,
@@ -170,7 +170,8 @@
       "haku": 2,
       "corrupted haku": 2,
       "zabuza": 4,
-      "orochimaru": 11
+      "orochimaru": 11,
+      "kagamis_hideout": 2
     },
     "unlockedSrank": [
       "zabuza",
@@ -972,7 +973,7 @@
       "zabuza",
       "kurenai"
     ],
-    "lastsrank": 1769797545805,
+    "lastsrank": 1769938843483,
     "srankResult": "loss",
     "srankDefeats": {
       "orochimaru": 1,
@@ -1351,7 +1352,7 @@
     "Combo": "Basic Combo",
     "referralEligible": true,
     "lastbrank": 1769795744417,
-    "lastsrank": 1769796613630,
+    "lastsrank": 1769937179113,
     "lastdrank": null,
     "LastTrials": 1769797015560,
     "lastDungeon": null,

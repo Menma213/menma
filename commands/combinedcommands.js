@@ -790,6 +790,12 @@ const applyEffect = (effect, user, target, effectiveUser, effectiveTarget, resul
                 return { type: 'buff', value: buffChanges };
             }
             case 'debuff': {
+                const targetImmunities = (target.immunities || []).map(String);
+                if (targetImmunities.includes('debuff') || targetImmunities.includes('all')) {
+                    if (result.specialEffects) result.specialEffects.push(`${target.name} is immune to stat drops!`);
+                    return;
+                }
+
                 const statsToApply = Object.keys(effect.stats || effect.statsDefinition || {});
                 const alreadyHasDebuff = (target.activeEffects || []).some(e =>
                     e.type === 'debuff' && Object.keys(e.stats || {}).some(s => statsToApply.includes(s))
@@ -831,7 +837,7 @@ const applyEffect = (effect, user, target, effectiveUser, effectiveTarget, resul
                 const targetEffective = effect.applyToUser ? effectiveUser : effectiveTarget;
 
                 const targetImmunities = (targetEntity.immunities || []).map(String);
-                if (effect.status && targetImmunities.includes(effect.status)) {
+                if (effect.status && (targetImmunities.includes(effect.status) || targetImmunities.includes('all'))) {
                     if (result.specialEffects) result.specialEffects.push(`${targetEntity.name} is immune to ${effect.status}.`);
                     break;
                 }
@@ -878,9 +884,15 @@ const applyEffect = (effect, user, target, effectiveUser, effectiveTarget, resul
                 return { type: 'cleanse', value: cleansed };
             }
             case 'chakra_drain': {
+                const targetEntity = effect.applyToUser ? user : target;
+                const targetImmunities = (targetEntity.immunities || []).map(String);
+                if (targetImmunities.includes('chakra_drain') || targetImmunities.includes('all')) {
+                    if (result.specialEffects) result.specialEffects.push(`${targetEntity.name} is immune to chakra drain!`);
+                    return;
+                }
+
                 const amount = Number(effect.amount) || 0;
                 if (effect.duration) {
-                    const targetEntity = effect.applyToUser ? user : target;
                     targetEntity.activeEffects = targetEntity.activeEffects || [];
                     const alreadyHasDrain = (targetEntity.activeEffects || []).some(e =>
                         e.type === 'chakra_drain' && (e.source === jutsuName || e.source === 'chakra_drain_effect')
@@ -1485,11 +1497,7 @@ async function generateBattleImage(player1, player2, customBgUrl = null) {
         let currentHealth = player.currentHealth;
         let maxHealth = player.maxHealth || player.health || 100;
 
-        // Combined HP Logic for Player 1 Team
-        if (isPlayer1 && player.subPlayers && player.subPlayers.length > 1) {
-            currentHealth = player.subPlayers.reduce((acc, p) => acc + (p.currentHealth || 0), 0);
-            maxHealth = player.subPlayers.reduce((acc, p) => acc + (p.maxHealth || p.health || 100), 0);
-        }
+
 
         const healthPercent = Math.max(currentHealth / maxHealth, 0);
 
@@ -2702,7 +2710,7 @@ async function handleFlee(battleChannel, player, opponent, users, roundNum, dama
 }
 
 // Accept npcTemplate as an optional parameter for custom NPCs (like Hokage Trials)
-async function runBattle(interaction, player1Id, player2Id, battleType, npcTemplate = null, mode = 'friendly', isRaidBoss = false) {
+async function runBattle(interaction, player1Id, player2Id, battleType, npcTemplate = null, mode = 'friendly', isRaidBoss = false, player1Override = null) {
     // --- WORLD EVENT CHECK ---
     const worldEventPath = path.resolve(__dirname, '../data/worldEvent.json');
     if (fs.existsSync(worldEventPath)) {
@@ -2724,7 +2732,7 @@ async function runBattle(interaction, player1Id, player2Id, battleType, npcTempl
 
     // --- 0.1% Memory Trigger for progression ---
     const eligibleRanks = ['Academy Student', 'Genin', 'Chuunin'];
-    if (users[player1Id] && eligibleRanks.includes(users[player1Id].rank) && Math.random() < 0.001) {
+    if (!player1Override && users[player1Id] && eligibleRanks.includes(users[player1Id].rank) && Math.random() < 0.001) {
         try {
             return await runMemorySequence(interaction, player1Id);
         } catch (err) {
@@ -2741,37 +2749,51 @@ async function runBattle(interaction, player1Id, player2Id, battleType, npcTempl
     // Initialize player1 (always a user)
     const player1User = await client.users.fetch(player1Id);
     // Fetch member for roles
-    const player1Member = await interaction.guild.members.fetch(player1Id).catch(() => null);
+    const player1Member = interaction.guild ? await interaction.guild.members.fetch(player1Id).catch(() => null) : null;
 
     const player1Data = users[player1Id] || {};
-    let player1 = {
-        ...player1Data,
-        userId: player1Id,
-        name: player1User.username,
-        avatar: player1User.avatar,
-        discriminator: player1User.discriminator,
-        // Initialize health, power, defense, etc. from top-level or 'backup'
-        health: Number(player1Data.health ?? player1Data.backup?.health) || 100,
-        currentHealth: Number(player1Data.health ?? player1Data.backup?.health) || 100,
-        power: Number(player1Data.power ?? player1Data.backup?.power) || 10,
-        defense: Number(player1Data.defense ?? player1Data.backup?.defense) || 10,
-        chakra: Number(player1Data.chakra ?? player1Data.backup?.chakra) || 10,
-        activeEffects: Array.isArray(player1Data.activeEffects) ? player1Data.activeEffects.slice() : [],
-        accuracy: Number(player1Data.accuracy ?? player1Data.backup?.accuracy) || 80, // Base accuracy is 80
-        dodge: Number(player1Data.dodge ?? player1Data.backup?.dodge) || 0, // Base dodge is 0
-        jutsu: users[player1Id].jutsu || {},
-        maxHealth: Number(player1Data.health ?? player1Data.backup?.health) || 100, // Store max health for healing calculations
-        comboState: users[player1Id].Combo && comboList[users[player1Id].Combo] ? { combo: comboList[users[player1Id].Combo], usedJutsus: new Set() } : null,
-        // Use level from players.json (fallback to users.json or default 1)
-        level: (playersData[player1Id] && typeof playersData[player1Id].level === 'number') ? playersData[player1Id].level : (users[player1Id] && users[player1Id].level ? users[player1Id].level : 1),
-        activeCustomRoundJutsus: [],
-        roles: player1Member ? player1Member.roles.cache.map(r => r.id) : []
-    };
-    player1.subPlayers = [player1];
+    let player1;
+    if (player1Override) {
+        player1 = {
+            ...player1Override,
+            userId: player1Id,
+            name: player1Override.name || player1User.username,
+            avatar: player1User.avatar,
+            discriminator: player1User.discriminator,
+            subPlayers: [player1Override],
+            roles: player1Member ? player1Member.roles.cache.map(r => r.id) : []
+        };
+        player1.subPlayers = [player1];
+    } else {
+        player1 = {
+            ...player1Data,
+            userId: player1Id,
+            name: player1User.username,
+            avatar: player1User.avatar,
+            discriminator: player1User.discriminator,
+            // Initialize health, power, defense, etc. from top-level or 'backup'
+            health: Number(player1Data.health ?? player1Data.backup?.health) || 100,
+            currentHealth: Number(player1Data.health ?? player1Data.backup?.health) || 100,
+            power: Number(player1Data.power ?? player1Data.backup?.power) || 10,
+            defense: Number(player1Data.defense ?? player1Data.backup?.defense) || 10,
+            chakra: Number(player1Data.chakra ?? player1Data.backup?.chakra) || 10,
+            activeEffects: Array.isArray(player1Data.activeEffects) ? player1Data.activeEffects.slice() : [],
+            accuracy: Number(player1Data.accuracy ?? player1Data.backup?.accuracy) || 80, // Base accuracy is 80
+            dodge: Number(player1Data.dodge ?? player1Data.backup?.dodge) || 0, // Base dodge is 0
+            jutsu: users[player1Id].jutsu || {},
+            maxHealth: Number(player1Data.health ?? player1Data.backup?.health) || 100, // Store max health for healing calculations
+            comboState: users[player1Id].Combo && comboList[users[player1Id].Combo] ? { combo: comboList[users[player1Id].Combo], usedJutsus: new Set() } : null,
+            // Use level from players.json (fallback to users.json or default 1)
+            level: (playersData[player1Id] && typeof playersData[player1Id].level === 'number') ? playersData[player1Id].level : (users[player1Id] && users[player1Id].level ? users[player1Id].level : 1),
+            activeCustomRoundJutsus: [],
+            roles: player1Member ? player1Member.roles.cache.map(r => r.id) : []
+        };
+        player1.subPlayers = [player1];
+    }
     // Initialize player2 (user or NPC)
     let player2;
     const isPlayer2NPC = player2Id.startsWith('NPC_');
-    const player2Member = !isPlayer2NPC ? await interaction.guild.members.fetch(player2Id).catch(() => null) : null;
+    const player2Member = !isPlayer2NPC && interaction.guild ? await interaction.guild.members.fetch(player2Id).catch(() => null) : null;
     let npcData = null;
     if (isPlayer2NPC) {
         const npcName = player2Id.replace('NPC_', '');
@@ -3003,8 +3025,13 @@ async function runBattle(interaction, player1Id, player2Id, battleType, npcTempl
 
                         player1.subPlayers.push(newPlayerData);
 
-                        // Add to Team Health - Actually we calc dynmically but init helps
-                        // player1.maxHealth += newPlayerData.maxHealth; 
+                        // Combined Stats Logic
+                        player1.maxHealth = (player1.maxHealth || player1.health) + (newPlayerData.maxHealth || newPlayerData.health);
+                        player1.health = (player1.health || 100) + (newPlayerData.health || 100);
+                        player1.currentHealth = (player1.currentHealth || player1.health) + (newPlayerData.currentHealth || newPlayerData.health);
+                        player1.power = (player1.power || 10) + (newPlayerData.power || 10);
+                        player1.defense = (player1.defense || 10) + (newPlayerData.defense || 10);
+                        player1.chakra = (player1.chakra || 10) + (newPlayerData.chakra || 10);
 
                         // Init bloodline state
                         bloodlineState[newUser.id] = { active: false, roundsLeft: 0, used: false };

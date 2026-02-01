@@ -132,7 +132,7 @@ module.exports = {
 
                 // 1. New User (Redeemer)
                 // 100 ramen, 1000 exp, 350k money and a title called Newbie
-                playerData.ramen = (playerData.ramen || 0) + 100;
+                playerData.ramen = (playerData.ramen || 0) + 50;
                 playerData.exp = (playerData.exp || 0) + 1000;
                 playerData.money = (playerData.money || 0) + 350000;
                 if (!userData.titles) userData.titles = [];
@@ -150,8 +150,8 @@ module.exports = {
                 const bonusExp = calculateTenLevelsExp(ownerLevel);
 
                 ownerPlayer.exp = (ownerPlayer.exp || 0) + bonusExp;
-                ownerPlayer.money = (ownerPlayer.money || 0) + 1000000;
-                ownerPlayer.ramen = (ownerPlayer.ramen || 0) + 100;
+                ownerPlayer.money = (ownerPlayer.money || 0) + 500000;
+                ownerPlayer.ramen = (ownerPlayer.ramen || 0) + 50;
 
                 referralData.uses++;
 
@@ -164,8 +164,8 @@ module.exports = {
                     .setTitle('Referral Successful!')
                     .setColor('#00ff00')
                     .addFields(
-                        { name: 'Redeemed by', value: `<@${userId}>\n+100 Ramen\n+1000 EXP\n+350,000 Ryo\n"Newbie" Title`, inline: true },
-                        { name: 'Inviter Reward', value: `<@${ownerId}>\n+${bonusExp.toLocaleString()} EXP (10 Levels worth)\n+1,000,000 Ryo\n+100 Ramen`, inline: true }
+                        { name: 'Redeemed by', value: `<@${userId}>\n+50 Ramen\n+1000 EXP\n+350,000 Ryo\n"Newbie" Title`, inline: true },
+                        { name: 'Inviter Reward', value: `<@${ownerId}>\n+${bonusExp.toLocaleString()} EXP (10 Levels worth)\n+500,000 Ryo\n+50 Ramen`, inline: true }
                     );
 
                 await interaction.reply({ embeds: [successEmbed] });

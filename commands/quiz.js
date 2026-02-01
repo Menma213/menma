@@ -146,10 +146,11 @@ async function startAkatsukiEvent(channel) {
             health: 5000000000,
             power: 20000000,
             defense: 20000000,
-            accuracy: 100,
+            accuracy: 100000,
             dodge: 50,
             jutsu: ["Explosive Bird", "C3"],
-            statsType: 'fixed'
+            statsType: 'fixed',
+            immunities: ["stun", "flinch", "drown", "possessed", "bleed", "poison", "burn", "curse", "frost", "shadow_possession", "mist", "blind", "confuse", "stumble", "zap", "siphon", "darkness", "debuff", "all"]
         };
 
         const result = await runBattle(i, i.user.id, "NPC_Deidara", "raid", deidaraTemplate, 'friendly', true);
@@ -168,13 +169,13 @@ async function startAkatsukiEvent(channel) {
 
     fightCollector.on('end', async () => {
         if (deidaraDefeated) {
-            await channel.send("🎉 **DEIDARA HAS BEEN DEFEATED!** Everyone who participated earns **250 Ramen Coupons**!");
+            await channel.send("🎉 **DEIDARA HAS BEEN DEFEATED!** Everyone who participated earns **100 Ramen Coupons**!");
 
             // Give Rewards
             const players = JSON.parse(fs.readFileSync(PLAYERS_PATH, 'utf8'));
             participants.forEach(userId => {
                 if (players[userId]) {
-                    players[userId].ramen = (players[userId].ramen || 0) + 250;
+                    players[userId].ramen = (players[userId].ramen || 0) + 100;
                 }
             });
             fs.writeFileSync(PLAYERS_PATH, JSON.stringify(players, null, 2));

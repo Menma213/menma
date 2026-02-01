@@ -3014,5 +3014,115 @@
     "category": "Event Jutsu Akatsuki",
     "effects": [],
     "scriptFile": "water_prison.js"
+  },
+  "Energy Blast": {
+    "name": "Energy Blast",
+    "description": "user shoots a beam of energy at the target",
+    "info": "Event Lore Jutsu",
+    "chakraCost": 10,
+    "category": "Event Jutsu Akatsuki",
+    "effects": [
+      {
+        "type": "damage",
+        "formula": "user.power * 2500 / target.defense"
+      }
+    ]
+  },
+  "Sword Slash": {
+    "name": "Sword Slash",
+    "description": "Zoro strikes with a quick blade draw.",
+    "info": "Zoro's starting move.",
+    "chakraCost": 2,
+    "category": "Zoro Event",
+    "effects": [
+      {
+        "type": "damage",
+        "formula": "50 * user.power / target.defense"
+      }
+    ]
+  },
+  "Oni Giri": {
+    "name": "Oni Giri",
+    "description": "Zoro crosses his swords to strike.",
+    "info": "Sequential Zoro move.",
+    "chakraCost": 4,
+    "category": "Zoro Event",
+    "effects": [
+      {
+        "type": "damage",
+        "formula": "100 * user.power / target.defense"
+      }
+    ]
+  },
+  "Tiger Hunt": {
+    "name": "Tiger Hunt",
+    "description": "A vertical strike like a pouncing tiger.",
+    "info": "Sequential Zoro move.",
+    "chakraCost": 6,
+    "category": "Zoro Event",
+    "effects": [
+      {
+        "type": "damage",
+        "formula": "250 * user.power / target.defense"
+      }
+    ]
+  },
+  "Bull Charge": {
+    "name": "Bull Charge",
+    "description": "A powerful forward thrust.",
+    "info": "Sequential Zoro move.",
+    "chakraCost": 8,
+    "category": "Zoro Event",
+    "effects": [
+      {
+        "type": "damage",
+        "formula": "500 * user.power / target.defense"
+      }
+    ]
+  },
+  "Three Thousand Worlds": {
+    "name": "Three Thousand Worlds",
+    "description": "Zoro spins his swords at high speed.",
+    "info": "Sequential Zoro move.",
+    "chakraCost": 12,
+    "category": "Zoro Event",
+    "effects": [
+      {
+        "type": "damage",
+        "formula": "1000 * user.power / target.defense"
+      }
+    ]
+  },
+  "Ashura: Makyusen": {
+    "name": "Ashura: Makyusen",
+    "description": "A nine-sword style ultimate technique.",
+    "info": "Sequential Zoro move.",
+    "chakraCost": 20,
+    "category": "Zoro Event",
+    "effects": [
+      {
+        "type": "damage",
+        "formula": "2500 * user.power / target.defense"
+      }
+    ]
+  },
+  "Tsukuyomi": {
+    "name": "Tsukuyomi",
+    "description": "Traps the target in a nightmare for eternity (3 rounds).",
+    "info": "Akatsuki Event Jutsu",
+    "chakraCost": 15,
+    "category": "Event Jutsu Akatsuki",
+    "effects": [
+      {
+        "type": "damage",
+        "formula": "1500 * user.power / target.defense"
+      },
+      {
+        "type": "status",
+        "status": "stun",
+        "duration": 3,
+        "chance": 100
+      }
+    ]
   }
 }

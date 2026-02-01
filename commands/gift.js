@@ -85,7 +85,7 @@ function addToJutsuJson(userId, type, name) {
     saveJutsuData(jutsuData);
 }
 
-const OWNER_ID = '835408109899219004';
+const ADMIN_ROLE_ID = '1381268854776529028';
 const GIFT_LOG_CHANNEL_ID = 'YOUR_GIFT_LOG_CHANNEL_ID_HERE'; // Set your gift log channel ID
 
 module.exports = {
@@ -146,6 +146,8 @@ module.exports = {
         const sub = interaction.options.getSubcommand();
         const userId = interaction.user.id;
 
+
+
         // Helper function to log SS gifts to the specific channel
         async function logSSGift(gifterId, recipientId, amount, giftId, isGlobal = false) {
             const logChannel = interaction.client.channels.cache.get(GIFT_LOG_CHANNEL_ID);
@@ -180,63 +182,7 @@ module.exports = {
             let playersData = fs.existsSync(playersPath) ? JSON.parse(fs.readFileSync(playersPath, 'utf8')) : {};
             if (!playersData[userDiscordId]) playersData[userDiscordId] = {};
 
-            if (gift.type === 'ranked_reward') {
-                const chosenReward = gift.reward.reward1;
-                if (chosenReward.box) {
-                    const boxResult = openMysteryBox(chosenReward.box);
-                    if (["jutsu", "combo", "scroll"].includes(boxResult.type)) {
-                        addToJutsuJson(userDiscordId, boxResult.type, boxResult.name);
-                        rewardMsg = `You received a **${boxResult.name}** from the mystery box!`;
-                    } else if (boxResult.type === "ramen") {
-                        playersData[userDiscordId].ramen = Number(playersData[userDiscordId].ramen || 0) + boxResult.amount;
-                        rewardMsg = `You received **${boxResult.amount} ramen ticket(s)** from the mystery box!`;
-                    } else if (boxResult.type === "money") {
-                        playersData[userDiscordId].money = Number(playersData[userDiscordId].money || 0) + boxResult.amount;
-                        rewardMsg = `You received **${boxResult.amount} Money** from the mystery box!`;
-                    } else if (boxResult.type === "ss") {
-                        playersData[userDiscordId].ss = Number(playersData[userDiscordId].ss || 0) + boxResult.amount;
-                        rewardMsg = `You received **${boxResult.amount} Shinobi Shards (SS)** from the mystery box!`;
-                    } else {
-                        rewardMsg = `You received a reward from the mystery box!`;
-                    }
-                } else if (chosenReward.name === 'Money' && chosenReward.amount) {
-                    let min = chosenReward.amount.min || 0;
-                    let max = chosenReward.amount.max || min;
-                    let amount = Math.floor(Math.random() * (max - min + 1)) + min;
-                    playersData[userDiscordId].money = Number(playersData[userDiscordId].money || 0) + amount;
-                    rewardMsg = `You received **${amount} Money**!`;
-                } else if (chosenReward.name.toLowerCase().includes('ramen')) {
-                    playersData[userDiscordId].ramen = Number(playersData[userDiscordId].ramen || 0) + 1;
-                    rewardMsg = `You received **1 ramen ticket**!`;
-                } else if (chosenReward.name.toLowerCase().includes('random jutsu')) {
-                    let jutsu = RANDOM_JUTSUS[Math.floor(Math.random() * RANDOM_JUTSUS.length)];
-                    addToJutsuJson(userDiscordId, "jutsu", jutsu);
-                    rewardMsg = `You received a **${jutsu}**!`;
-                } else if (chosenReward.name.toLowerCase().includes('random scroll')) {
-                    let scroll = RANDOM_SCROLLS[Math.floor(Math.random() * RANDOM_SCROLLS.length)];
-                    addToJutsuJson(userDiscordId, "scroll", scroll);
-                    rewardMsg = `You received a **${scroll}**!`;
-                } else if (chosenReward.name.toLowerCase().includes('random combo')) {
-                    let combo = RANDOM_COMBOS[Math.floor(Math.random() * RANDOM_COMBOS.length)];
-                    addToJutsuJson(userDiscordId, "combo", combo);
-                    rewardMsg = `You received a **${combo}**!`;
-                } else if (chosenReward.name.toLowerCase().startsWith('jutsu:')) {
-                    let jutsu = chosenReward.name.replace(/^jutsu:\s*/i, '');
-                    addToJutsuJson(userDiscordId, "jutsu", jutsu);
-                    rewardMsg = `You received **${jutsu}**!`;
-                } else if (chosenReward.name.toLowerCase().startsWith('scroll')) {
-                    let scroll = chosenReward.name_detail || chosenReward.name.replace(/^scroll:\s*/i, '');
-                    addToJutsuJson(userDiscordId, "scroll", scroll);
-                    rewardMsg = `You received **${scroll}**!`;
-                } else if (chosenReward.name.toLowerCase().startsWith('combo:')) {
-                    let combo = chosenReward.name.replace(/^combo:\s*/i, '');
-                    addToJutsuJson(userDiscordId, "combo", combo);
-                    rewardMsg = `You received **${combo}**!`;
-                } else {
-                    rewardMsg = `You received **${chosenReward.name}**!`;
-                }
-                fs.writeFileSync(playersPath, JSON.stringify(playersData, null, 2));
-            } else if (gift.type === 'money') {
+            if (gift.type === 'money') {
                 playersData[userDiscordId].money = Number(playersData[userDiscordId].money || 0) + gift.amount;
                 rewardMsg = `Claimed ${gift.amount} money.`;
                 fs.writeFileSync(playersPath, JSON.stringify(playersData, null, 2));
@@ -306,13 +252,14 @@ module.exports = {
         }
 
         if (sub === 'money') {
+            if (interaction.guildId !== '1381268582595297321') return interaction.reply({ content: "This command can only be used in the main server.", ephemeral: true });
             const target = interaction.options.getUser('user');
             const amount = interaction.options.getInteger('amount');
             if (amount <= 0) return interaction.reply({ content: "Amount must be positive.", ephemeral: true });
-            if (target.id === userId && userId !== OWNER_ID) return interaction.reply({ content: "You can't gift yourself.", ephemeral: true });
+            if (target.id === userId && !interaction.member.roles.cache.has(ADMIN_ROLE_ID)) return interaction.reply({ content: "You can't gift yourself.", ephemeral: true });
 
             let users = loadUserData();
-            if (userId !== OWNER_ID) {
+            if (!interaction.member.roles.cache.has(ADMIN_ROLE_ID)) {
                 if (!users[userId] || typeof users[userId].money !== 'number') {
                     return interaction.reply({ content: "You don't have a valid account or money balance.", ephemeral: true });
                 }
@@ -346,14 +293,15 @@ module.exports = {
         }
 
         if (sub === 'ss') {
-            if (!interaction.member.permissions.has('Administrator') && userId !== OWNER_ID) {
+            if (interaction.guildId !== '1381268582595297321') return interaction.reply({ content: "This command can only be used in the main server.", ephemeral: true });
+            if (!interaction.member.permissions.has('Administrator') && !interaction.member.roles.cache.has(ADMIN_ROLE_ID)) {
                 return interaction.reply({ content: "Only admins can gift Shinobi Shards.", ephemeral: true });
             }
             const target = interaction.options.getUser('user');
             const amount = interaction.options.getInteger('amount');
             const giftId = interaction.options.getInteger('id');
             if (amount <= 0) return interaction.reply({ content: "Amount must be positive.", ephemeral: true });
-            if (target.id === userId && userId !== OWNER_ID) return interaction.reply({ content: "You can't gift yourself.", ephemeral: true });
+            if (target.id === userId && !interaction.member.roles.cache.has(ADMIN_ROLE_ID)) return interaction.reply({ content: "You can't gift yourself.", ephemeral: true });
 
             let giftData = loadGiftData();
             if (!giftData[target.id]) giftData[target.id] = [];
@@ -383,7 +331,8 @@ module.exports = {
         }
 
         if (sub === 'ss_global') {
-            if (!interaction.member.permissions.has('Administrator') && userId !== OWNER_ID) {
+            if (interaction.guildId !== '1381268582595297321') return interaction.reply({ content: "This command can only be used in the main server.", ephemeral: true });
+            if (!interaction.member.permissions.has('Administrator') && !interaction.member.roles.cache.has(ADMIN_ROLE_ID)) {
                 return interaction.reply({ content: "Only admins can gift Shinobi Shards globally.", ephemeral: true });
             }
             const amount = interaction.options.getInteger('amount');
@@ -425,7 +374,8 @@ module.exports = {
         }
 
         if (sub === 'combo') {
-            if (!interaction.member.permissions.has('Administrator') && userId !== OWNER_ID) {
+            if (interaction.guildId !== '1381268582595297321') return interaction.reply({ content: "This command can only be used in the main server.", ephemeral: true });
+            if (!interaction.member.permissions.has('Administrator') && !interaction.member.roles.cache.has(ADMIN_ROLE_ID)) {
                 return interaction.reply({ content: "Only admins can gift Combos.", ephemeral: true });
             }
             const target = interaction.options.getUser('user');
@@ -458,7 +408,8 @@ module.exports = {
         }
 
         if (sub === 'combo_global') {
-            if (!interaction.member.permissions.has('Administrator') && userId !== OWNER_ID) {
+            if (interaction.guildId !== '1381268582595297321') return interaction.reply({ content: "This command can only be used in the main server.", ephemeral: true });
+            if (!interaction.member.permissions.has('Administrator') && !interaction.member.roles.cache.has(ADMIN_ROLE_ID)) {
                 return interaction.reply({ content: "Only admins can gift Combos globally.", ephemeral: true });
             }
             const comboName = interaction.options.getString('name');
@@ -497,7 +448,8 @@ module.exports = {
         }
 
         if (sub === 'ramen') {
-            if (!interaction.member.permissions.has('Administrator') && userId !== OWNER_ID) {
+            if (interaction.guildId !== '1381268582595297321') return interaction.reply({ content: "This command can only be used in the main server.", ephemeral: true });
+            if (!interaction.member.permissions.has('Administrator') && !interaction.member.roles.cache.has(ADMIN_ROLE_ID)) {
                 return interaction.reply({ content: "Only admins can gift Ramen Tickets.", ephemeral: true });
             }
             const target = interaction.options.getUser('user');
@@ -531,7 +483,8 @@ module.exports = {
         }
 
         if (sub === 'ramen_global') {
-            if (!interaction.member.permissions.has('Administrator') && userId !== OWNER_ID) {
+            if (interaction.guildId !== '1381268582595297321') return interaction.reply({ content: "This command can only be used in the main server.", ephemeral: true });
+            if (!interaction.member.permissions.has('Administrator') && !interaction.member.roles.cache.has(ADMIN_ROLE_ID)) {
                 return interaction.reply({ content: "Only admins can gift Ramen Tickets globally.", ephemeral: true });
             }
             const amount = interaction.options.getInteger('amount');
@@ -586,10 +539,8 @@ module.exports = {
             for (let i = 0; i < gifts.length; i++) {
                 let g = gifts[i];
                 let line = '';
-                if (g.type === 'ranked_reward' && g.reward) {
-                    const r1 = g.reward.reward1.display || g.reward.reward1.name;
-                    const r2 = g.reward.reward2.display || g.reward.reward2.name;
-                    line = `**ID:** ${g.id} | **Type:** Ranked Reward | **Choices:** ${r1} or ${r2}` + (g.from ? ` | **From:** <@${g.from}>` : '');
+                if (false) {
+                    // removed ranked display
                 } else {
                     line = `**ID:** ${g.id} | **Type:** ${g.type === 'ss' ? 'Shinobi Shard' : g.type === 'combo' ? 'Combo' : g.type === 'ramen' ? 'Ramen Ticket' : g.type}` +
                         (g.type === 'money' || g.type === 'ss' || g.type === 'ramen' ? ` | **Amount:** ${g.amount}` : '') +
@@ -676,22 +627,29 @@ module.exports = {
                     }
                     if (btnInt.customId === 'claim_all_gifts') {
                         let users = loadUserData();
+                        let currentGiftData = loadGiftData();
+                        let userGifts = currentGiftData[userId] || [];
                         let claimedMessages = [];
-                        let remainingGifts = [];
+
                         for (const gift of gifts) {
-                            if (gift.type === 'ranked_reward') {
-                                remainingGifts.push(gift);
-                                claimedMessages.push(`Skipped Ranked Reward (ID: ${gift.id}) - requires manual selection.`);
+                            const dbIdx = userGifts.findIndex(g => g.id === gift.id);
+                            if (dbIdx === -1) {
+                                claimedMessages.push(`ID: ${gift.id} - Already claimed or invalid.`);
                                 continue;
                             }
-                            const { message, claimedSuccessfully } = await claimSingleGift(gift, userId, users, giftData);
+                            if (gift.type === 'ranked_reward') {
+                                continue;
+                            }
+                            const { message, claimedSuccessfully } = await claimSingleGift(gift, userId, users, currentGiftData);
                             claimedMessages.push(`ID: ${gift.id} - ${message}`);
-                            if (!claimedSuccessfully) {
-                                remainingGifts.push(gift);
+                            if (claimedSuccessfully) {
+                                const idxToRemove = userGifts.findIndex(g => g.id === gift.id);
+                                if (idxToRemove !== -1) userGifts.splice(idxToRemove, 1);
                             }
                         }
-                        giftData[userId] = remainingGifts;
-                        saveGiftData(giftData);
+                        currentGiftData[userId] = userGifts;
+                        saveGiftData(currentGiftData);
+                        saveUserData(users);
                         saveUserData(users);
                         let replyContent = '';
                         if (claimedMessages.join('\n').length > 1800) {
@@ -699,10 +657,10 @@ module.exports = {
                         } else {
                             replyContent = claimedMessages.join('\n');
                         }
-                        if (remainingGifts.length > 0) {
-                            replyContent += "\n\nSome gifts could not be claimed automatically or require manual attention (e.g., Ranked Rewards, duplicate jutsu).";
+                        if (userGifts.length > 0) {
+                            replyContent += "\n\nSome gifts remaining (e.g. ranked rewards).";
                         } else {
-                            replyContent += "\n\nAll eligible gifts claimed!";
+                            replyContent += "\n\nAll gifts Claimed!";
                         }
                         try {
                             await btnInt.update({ content: replyContent, embeds: [], components: [] });
@@ -722,77 +680,44 @@ module.exports = {
                         const msgCollector = interaction.channel.createMessageCollector({ filter: msgFilter, time: 60000, max: 1 });
                         msgCollector.on('collect', async msg => {
                             const claimId = parseInt(msg.content.trim(), 10);
-                            const idx = gifts.findIndex(g => g.id === claimId);
-                            if (idx === -1) {
+                            let currentGiftData = loadGiftData();
+                            let userGifts = currentGiftData[userId] || [];
+                            const dbIdx = userGifts.findIndex(g => g.id === claimId);
+
+                            if (dbIdx === -1) {
                                 try {
-                                    await interaction.followUp({ content: "Invalid gift ID.", ephemeral: true });
+                                    await interaction.followUp({ content: "Invalid gift ID or already claimed.", ephemeral: true });
                                 } catch (err) {
                                     if (err.code !== 10062) console.error('FollowUp error:', err);
                                 }
                                 return;
                             }
-                            const gift = gifts[idx];
+                            const gift = userGifts[dbIdx];
                             let users = loadUserData();
+
                             if (gift.type === 'ranked_reward') {
-                                const reward1 = gift.reward.reward1;
-                                const reward2 = gift.reward.reward2;
-                                const selectMenu = new StringSelectMenuBuilder()
-                                    .setCustomId('ranked_reward_select')
-                                    .setPlaceholder('Choose your reward')
-                                    .addOptions([
-                                        {
-                                            label: reward1.name,
-                                            description: reward1.desc,
-                                            value: 'reward1'
-                                        },
-                                        {
-                                            label: reward2.name,
-                                            description: reward2.desc,
-                                            value: 'reward2'
-                                        }
-                                    ]);
-                                const rewardEmbed = new EmbedBuilder()
-                                    .setTitle('Choose Your Ranked Reward')
-                                    .setDescription('Select one of the rewards below:')
-                                    .setColor('#00BFFF');
-                                const rewardRow = new ActionRowBuilder().addComponents(selectMenu);
                                 try {
-                                    await interaction.followUp({ embeds: [rewardEmbed], components: [rewardRow], ephemeral: true });
+                                    await interaction.followUp({ content: "Ranked rewards are no longer supported.", ephemeral: true });
                                 } catch (err) {
                                     if (err.code !== 10062) console.error('FollowUp error:', err);
                                 }
-                                const selectFilter = i => i.customId === 'ranked_reward_select' && i.user.id === userId;
-                                const selectCollector = interaction.channel.createMessageComponentCollector({ filter: selectFilter, time: 60000, max: 1 });
-                                selectCollector.on('collect', async selectInt => {
-                                    const choice = selectInt.values[0];
-                                    let chosenReward = choice === 'reward1' ? reward1 : reward2;
-                                    let rewardMsg = '';
-                                    // ...existing code for reward logic...
-                                    gifts.splice(idx, 1);
-                                    giftData[userId] = gifts;
-                                    saveGiftData(giftData);
-                                    try {
-                                        await selectInt.update({ content: `You claimed your ranked reward! ${rewardMsg}`, embeds: [], components: [] });
-                                    } catch (err) {
-                                        if (err.code !== 10062) console.error('SelectInt update error:', err);
-                                    }
-                                    collector.stop();
-                                });
-                                selectCollector.on('end', collected => {
-                                    if (collected.size === 0) {
-                                        try {
-                                            interaction.followUp({ content: "Time out. Please try claiming again.", ephemeral: true });
-                                        } catch (err) {
-                                            if (err.code !== 10062) console.error('FollowUp error:', err);
-                                        }
-                                    }
-                                });
                                 return;
                             }
-                            const { message } = await claimSingleGift(gift, userId, users, giftData);
-                            gifts.splice(idx, 1);
-                            giftData[userId] = gifts;
-                            saveGiftData(giftData);
+
+                            const { message } = await claimSingleGift(gift, userId, users, currentGiftData);
+
+                            // Reload one last time to be atomic? 
+                            // We already checked dbIdx.
+                            // But claimSingleGift was async.
+                            // Re-read dbIdx just to be super safe? No, single user context usually fine.
+                            // But ensure we splice the REFRESHED list.
+
+                            const idxToRemove = userGifts.findIndex(g => g.id === claimId);
+                            if (idxToRemove !== -1) {
+                                userGifts.splice(idxToRemove, 1);
+                                currentGiftData[userId] = userGifts;
+                                saveGiftData(currentGiftData);
+                            }
                             try {
                                 await msg.reply({ content: message });
                             } catch (err) {

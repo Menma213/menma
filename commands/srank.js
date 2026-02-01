@@ -205,7 +205,7 @@ const srankBosses = {
     },
     "bandit_group": {
         name: "Bandit Trio",
-        image: "https://static.wikia.nocookie.net/naruto/images/4/41/Bandits.png/revision/latest?cb=20150704143438",
+        image: "https://i.postimg.cc/8zqTwX3M/image.png",
         health: 450,
         power: 1200,
         defense: 60,
@@ -216,7 +216,7 @@ const srankBosses = {
     },
     "kabuto": {
         name: "Kabuto Yakushi",
-        image: "https://static.wikia.nocookie.net/non-aliencreatures/images/a/a1/Kabuto.png/revision/latest?cb=20131030035514",
+        image: "https://i.pinimg.com/originals/10/b9/9a/10b99a69bded24c70649a5f9206bee21.jpg",
         health: 700,
         power: 2500,
         defense: 100,
@@ -546,6 +546,58 @@ class BattleUtils {
         ctx.restore();
         return canvas.toBuffer('image/png');
     }
+}
+
+async function sendWebhookWithContinue(webhook, options, userId) {
+    const buttonId = 'continue_' + Date.now() + Math.floor(Math.random() * 1000);
+    const row = new ActionRowBuilder().addComponents(
+        new ButtonBuilder().setCustomId(buttonId).setLabel('Continue').setStyle(ButtonStyle.Secondary)
+    );
+    const msg = await webhook.send({ ...options, components: [row] });
+    return new Promise(resolve => {
+        const c = msg.createMessageComponentCollector({
+            filter: btn => btn.user.id === userId && btn.customId === buttonId,
+            time: 600000,
+            max: 1
+        });
+        c.on('collect', async btn => {
+            try { await btn.update({ components: [] }); } catch (e) { }
+            resolve();
+            c.stop();
+        });
+        c.on('end', async (_, reason) => {
+            if (reason === 'time') {
+                try { await msg.edit({ components: [] }).catch(() => { }); } catch (e) { }
+            }
+            resolve();
+        });
+    });
+}
+
+async function sendMsgWithContinue(interaction, options, userId) {
+    const buttonId = 'continue_msg_' + Date.now() + Math.floor(Math.random() * 1000);
+    const row = new ActionRowBuilder().addComponents(
+        new ButtonBuilder().setCustomId(buttonId).setLabel('Continue').setStyle(ButtonStyle.Secondary)
+    );
+    const msg = await interaction.followUp({ ...options, components: [row], fetchReply: true });
+    return new Promise(resolve => {
+        const c = msg.createMessageComponentCollector({
+            filter: btn => btn.user.id === userId && btn.customId === buttonId,
+            time: 600000,
+            max: 1
+        });
+        c.on('collect', async btn => {
+            try { await btn.update({ components: [] }); } catch (e) { }
+            resolve();
+            c.stop();
+        });
+        c.on('end', async (_, reason) => {
+            if (reason === 'time') {
+                try { await msg.edit({ components: [] }).catch(() => { }); } catch (e) { }
+            }
+            resolve();
+        });
+    });
 }
 
 function createMovesEmbed(player, roundNum, userId, jutsuList) {
@@ -899,12 +951,12 @@ async function runAnbuTenTailsBattle(interaction, users, userId, players) {
         await interaction.followUp({ embeds: [summaryEmbed] });
 
         if (tenTails.currentHealth <= 0) {
-            await interaction.followUp("**The Ten Tails has been defeated!**");
+            await sendMsgWithContinue(interaction, { content: "**The Ten Tails has been defeated!**" }, userId);
             break;
         }
 
         roundNum++;
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        await new Promise(resolve => setTimeout(resolve, 1500));
     }
 
     return "win";
@@ -995,14 +1047,14 @@ async function runSurvivalBattle(interaction, users, userId, players, jutsuList,
             await interaction.followUp({ embeds: [summaryEmbed] });
 
             if (player.health <= 0) {
-                await interaction.followUp(`**You failed to survive! Game Over.**`);
+                await sendMsgWithContinue(interaction, { content: `**You failed to survive! Game Over.**` }, userId);
                 return "loss";
             }
 
             survivedRounds++;
 
             if (survivedRounds >= survivalRounds) {
-                await interaction.followUp(`**You survived ${survivalRounds} rounds! Objective complete!**`);
+                await sendMsgWithContinue(interaction, { content: `**You survived ${survivalRounds} rounds! Objective complete!**` }, userId);
                 return "win";
             }
 
@@ -1017,7 +1069,7 @@ async function runSurvivalBattle(interaction, users, userId, players, jutsuList,
             });
 
             roundNum++;
-            await new Promise(resolve => setTimeout(resolve, 3000));
+            await new Promise(resolve => setTimeout(resolve, 1500));
         }
 
         return "unknown";
@@ -1133,7 +1185,7 @@ async function runSrankBattle(interaction, users, userId, players, jutsuList, bo
                         fs.writeFileSync(usersPath, JSON.stringify(u, null, 2));
                     }
                 });
-                await interaction.followUp(`**You have been defeated by ${bossName}! Game Over.**`);
+                await sendMsgWithContinue(interaction, { content: `**You have been defeated by ${bossName}! Game Over.**` }, userId);
                 return "loss";
             }
             if (npc.currentHealth <= 0) {
@@ -1173,14 +1225,14 @@ async function runSrankBattle(interaction, users, userId, players, jutsuList, bo
                     fs.writeFileSync(mentorExpPath, JSON.stringify(me, null, 2));
                 });
 
-                await interaction.followUp(`**${bossName} has been defeated! You win!**`);
+                await sendMsgWithContinue(interaction, { content: `**${bossName} has been defeated! You win!**` }, userId);
                 const rewardEmbed = new EmbedBuilder()
                     .setTitle(`Battle End! ${player.username} has won!`)
                     .setDescription(
                         `<@${userId}> has earned ${expReward} exp!\n<@${userId}> has earned $${moneyReward.toLocaleString()}! (Rewards added to your account)`
                     )
                     .setColor('#006400');
-                await interaction.followUp({ embeds: [rewardEmbed] });
+                await sendMsgWithContinue(interaction, { embeds: [rewardEmbed] }, userId);
 
                 if (bossConfig.reward && Math.random() < bossConfig.rewardChance) {
                     await jutsuMutex.runExclusive(async () => {
@@ -1254,31 +1306,28 @@ async function runKagamisHideoutStory(interaction, users, userId, players, jutsu
         const mysteriousWebhook = await getCharacterWebhook(interaction.channel, "???", "https://files.idyllic.app/files/static/3948049");
 
         // Stage 1: Asuma's Gift
-        await asumaWebhook.send({
+        await sendWebhookWithContinue(asumaWebhook, {
             content: "We're nearing Kagami's hideout. Take this stone. It's an heirloom from a very old ancestor for protection. Grasp it tightly when you truly need it.",
             embeds: [new EmbedBuilder().setTitle("Ancestor's Stone").setImage(ANCESTOR_STONE_IMG).setColor('#FFD700')]
-        });
-        await waitForContinue(interaction, userId);
+        }, userId);
 
         // Stage 2: Bandit Ambush
         await interaction.followUp({ content: "**On the way to the hideout, a group of bandits ambushes you!**" });
         let banditResult = await runSrankBattle(interaction, users, userId, players, jutsuList, srankBosses.bandit_group, VILLAGE_BG, srankBosses.bandit_group.image, "Bandit Trio", true);
         if (banditResult !== "win") return "loss";
 
-        await asumaWebhook.send({ content: "Those were just small fry. The hideout is just ahead. I can feel the dark chakra from here." });
-        await waitForContinue(interaction, userId);
+        await sendWebhookWithContinue(asumaWebhook, { content: "Those were just small fry. The hideout is just ahead. I can feel the dark chakra from here." }, userId);
 
         // Stage 3: Kabuto's Guard
         await interaction.followUp({ content: "**You enter the hideout and see Kabuto guarding the inner entrance.**" });
-        await kabutoWebhook.send({ content: "You shouldn't have come here. My master's experiments are not for your eyes." });
-        await waitForContinue(interaction, userId);
+        await sendWebhookWithContinue(kabutoWebhook, { content: "You shouldn't have come here. My master's experiments are not for your eyes." }, userId);
 
         let lives = 2;
         let kabutoFights = 3;
 
         for (let i = 1; i <= kabutoFights; i++) {
             await interaction.followUp({ content: `**Fight ${i}/${kabutoFights}: Engaging Kabuto!**` });
-            let result = await runSrankBattle(interaction, users, userId, players, jutsuList, srankBosses.kabuto, HIDEOUT_BG, srankBosses.kabuto.image, "Kabuto Yakushi", true);
+            let result = await runSrankBattle(interaction, users, userId, players, jutsuList, srankBosses.kabuto, OROCHIMARU_BG, srankBosses.kabuto.image, "Kabuto Yakushi", true);
             if (result !== "win") return "loss";
 
             if (i < 3) {
@@ -1333,24 +1382,22 @@ async function runKagamisHideoutStory(interaction, users, userId, players, jutsu
         }
 
         // Stage 4: The Cure
-        await interaction.followUp({ content: "**Kabuto retreats, dropping a small vial...**" });
-        await asumaWebhook.send({ content: "This... this is the cure to the corruption! Kurenai needs this. I must head back to the village immediately." });
-        await userWebhook.send({ content: "Go, Asuma. I'll stay back and investigate why Kagami is doing this." });
-        await asumaWebhook.send({ content: "Be careful. That power... it's not and then..." });
-        await waitForContinue(interaction, userId);
+        await sendMsgWithContinue(interaction, { content: "**Kabuto retreats, dropping a small vial...**" }, userId);
+        await sendWebhookWithContinue(asumaWebhook, { content: "This... this is the cure to the corruption! Kurenai needs this. I must head back to the village immediately." }, userId);
+        await sendWebhookWithContinue(userWebhook, { content: "Go, Asuma. I'll stay back and investigate why Kagami is doing this." }, userId);
+        await sendWebhookWithContinue(asumaWebhook, { content: "Be careful. That power... it's not and then..." }, userId);
 
         // Stage 5: The Reveal
-        await interaction.followUp({ content: "**Suddenly, a blinding beam of light shoots down from above!**" });
-        await interaction.followUp({
+        await sendMsgWithContinue(interaction, { content: "**Suddenly, a blinding beam of light shoots down from above!**" }, userId);
+        await sendMsgWithContinue(interaction, {
             embeds: [new EmbedBuilder()
                 .setDescription("**In a moment of overwhelming energy, you clench the Ancestor's Stone with all your might. The ancient relic cannot withstand the pressure and SHATTERS into a thousand pieces!**")
                 .setImage(SKY_REVEAL_IMG)
                 .setColor('#FFFFFF')]
-        });
-        await new Promise(res => setTimeout(res, 3000));
+        }, userId);
 
-        await mysteriousWebhook.send({ content: "I thank you for resurrecting... THE SKY." });
-        await interaction.followUp({ content: "**The mysterious figure, known only as ???, vanishes back into the clouds, leaving a massive crater where you once stood.**" });
+        await sendWebhookWithContinue(mysteriousWebhook, { content: "I thank you for resurrecting... THE SKY." }, userId);
+        await sendMsgWithContinue(interaction, { content: "**The mysterious figure, known only as ???, vanishes back into the clouds, leaving a massive crater where you once stood.**" }, userId);
 
         // Grant reward
         const playerLevel = players[0].level || 1;
@@ -1375,13 +1422,13 @@ async function runKagamisHideoutStory(interaction, users, userId, players, jutsu
             }
         });
 
-        await interaction.followUp({
+        await sendMsgWithContinue(interaction, {
             embeds: [new EmbedBuilder()
                 .setTitle("MISSION COMPLETE: KAGAMI'S HIDEOUT")
                 .setDescription(`You uncovered the truth behind the corruption and survived the arrival of the Sky dweller.\n\n**Rewards:**\n+${expReward} EXP\n$${moneyReward.toLocaleString()} Money`)
                 .setColor('#00FF00')
             ]
-        });
+        }, userId);
 
         return "win";
 
@@ -1438,13 +1485,12 @@ async function runHakuStory(interaction, users, userId, players, jutsuList) {
             });
         } else {
             for (const loreLine of srankBosses.haku.lore) {
-                await asumaWebhook.send({ content: loreLine });
-                await new Promise(res => setTimeout(res, 2500));
+                await sendWebhookWithContinue(asumaWebhook, { content: loreLine }, userId);
             }
-            const fightRow = new ActionRowBuilder().addComponents(
+            const readyRow = new ActionRowBuilder().addComponents(
                 new ButtonBuilder().setCustomId('haku_story_ready').setLabel('Ready').setStyle(ButtonStyle.Primary)
             );
-            const readyMsg = await asumaWebhook.send({ content: "Look. That's Haku, ready?", components: [fightRow] });
+            const readyMsg = await asumaWebhook.send({ content: "Look. That's Haku, ready?", components: [readyRow] });
             await new Promise(resolve => {
                 const c = readyMsg.createMessageComponentCollector({
                     filter: btn => btn.user.id === userId && btn.customId === 'haku_story_ready',
@@ -1453,10 +1499,8 @@ async function runHakuStory(interaction, users, userId, players, jutsuList) {
                 c.on('collect', btn => { btn.deferUpdate(); resolve(); c.stop(); });
                 c.on('end', (_, reason) => { if (reason === 'time') resolve(); });
             });
-            await hakuWebhook.send({ content: "Nobody hurts Zabuza!" });
-            await new Promise(res => setTimeout(res, 2500));
-            await hakuWebhook.send({ content: "Another Shinobi attempting to kill Zabuza? I will kill you instead!" });
-            await new Promise(res => setTimeout(res, 2500));
+            await sendWebhookWithContinue(hakuWebhook, { content: "Nobody hurts Zabuza!" }, userId);
+            await sendWebhookWithContinue(hakuWebhook, { content: "Another Shinobi attempting to kill Zabuza? I will kill you instead!" }, userId);
             const fightRow2 = new ActionRowBuilder().addComponents(
                 new ButtonBuilder().setCustomId('haku_story_fight').setLabel('Fight').setStyle(ButtonStyle.Danger)
             );
@@ -1475,19 +1519,13 @@ async function runHakuStory(interaction, users, userId, players, jutsuList) {
             srankBosses.haku, HAKU_BG, HAKU_AVATAR, "Haku"
         );
         if (phase1Result === "win") {
-            await hakuWebhook.send({ content: "*coughs up blood* I...*cough*" });
-            await new Promise(res => setTimeout(res, 2500));
-            await asumaWebhook.send({ content: `<@${userId}> I feel a very strange power heading towards us, we should leave immediately.` });
-            await new Promise(res => setTimeout(res, 2500));
-            await interaction.channel.send({ content: "Suddenly, the area turns into a hellish place..." });
-            await kagamiWebhook.send({ content: "Oh? Look at this weakling being defeated by a mere Shinobi." });
-            await new Promise(res => setTimeout(res, 2500));
-            await kagamiWebhook.send({ content: "You think you can change fate? How amusing. My puppets will always rise again." });
-            await new Promise(res => setTimeout(res, 2500));
-            await kagamiWebhook.send({ content: "*extends a hand towards Haku, purplish energy swirls*" });
-            await new Promise(res => setTimeout(res, 2500));
-            await hakuCorruptWebhook.send({ content: "Master...Revenge." });
-            await new Promise(res => setTimeout(res, 2500));
+            await sendWebhookWithContinue(hakuWebhook, { content: "*coughs up blood* I...*cough*" }, userId);
+            await sendWebhookWithContinue(asumaWebhook, { content: `<@${userId}> I feel a very strange power heading towards us, we should leave immediately.` }, userId);
+            await sendMsgWithContinue(interaction, { content: "Suddenly, the area turns into a hellish place..." }, userId);
+            await sendWebhookWithContinue(kagamiWebhook, { content: "Oh? Look at this weakling being defeated by a mere Shinobi." }, userId);
+            await sendWebhookWithContinue(kagamiWebhook, { content: "You think you can change fate? How amusing. My puppets will always rise again." }, userId);
+            await sendWebhookWithContinue(kagamiWebhook, { content: "*extends a hand towards Haku, purplish energy swirls*" }, userId);
+            await sendWebhookWithContinue(hakuCorruptWebhook, { content: "Master...Revenge." }, userId);
             const fightRow = new ActionRowBuilder().addComponents(
                 new ButtonBuilder().setCustomId('haku_story_fight2').setLabel('Fight').setStyle(ButtonStyle.Danger)
             );
@@ -1566,15 +1604,11 @@ async function runZabuzaStory(interaction, users, userId, players, jutsuList) {
             await asumaWebhook.send({ content: "You skip the story and head straight into battle with Zabuza." });
         } else {
             for (const loreLine of srankBosses.zabuza.lore) {
-                await asumaWebhook.send({ content: loreLine });
-                await new Promise(res => setTimeout(res, 2500));
+                await sendWebhookWithContinue(asumaWebhook, { content: loreLine }, userId);
             }
-            await kagamiWebhook.send({ content: "Look who's back.. Get ready to face one of my special puppets. Come, Zabuza!" });
-            await new Promise(res => setTimeout(res, 2500));
-            await zabuzaWebhook.send({ content: "Hehehe... another little bug to crush..." });
-            await new Promise(res => setTimeout(res, 2500));
-            await zabuzaWebhook.send({ content: "You think you can defeat the Demon of the Mist? Hah!" });
-            await new Promise(res => setTimeout(res, 2500));
+            await sendWebhookWithContinue(kagamiWebhook, { content: "Look who's back.. Get ready to face one of my special puppets. Come, Zabuza!" }, userId);
+            await sendWebhookWithContinue(zabuzaWebhook, { content: "Hehehe... another little bug to crush..." }, userId);
+            await sendWebhookWithContinue(zabuzaWebhook, { content: "You think you can defeat the Demon of the Mist? Hah!" }, userId);
         }
         const fightRow = new ActionRowBuilder().addComponents(
             new ButtonBuilder().setCustomId('zabuza_story_fight').setLabel('Fight').setStyle(ButtonStyle.Danger)
@@ -1593,25 +1627,16 @@ async function runZabuzaStory(interaction, users, userId, players, jutsuList) {
             srankBosses.zabuza, ZABUZA_BG, ZABUZA_AVATAR, "Zabuza"
         );
         if (battleResult === "win") {
-            await zabuzaWebhook.send({ content: "*gurgling blood* How... how did..." });
-            await new Promise(res => setTimeout(res, 2500));
-            await kagamiWebhook.send({ content: "Impressive. Very impressive." });
-            await new Promise(res => setTimeout(res, 2500));
-            await kagamiWebhook.send({ content: "You have potential. Why waste it serving these weak villages?" });
-            await new Promise(res => setTimeout(res, 2500));
-            await kagamiWebhook.send({ content: "Join me. Together we could reshape this world." });
-            await new Promise(res => setTimeout(res, 2500));
-            await asumaWebhook.send({ content: "Don't listen to her! She's manipulating you!" });
-            await new Promise(res => setTimeout(res, 2500));
-            await kagamiWebhook.send({ content: "Oh, the monkey is still here. How... annoying." });
-            await new Promise(res => setTimeout(res, 2500));
-            await kagamiWebhook.send({ content: "*flicks wrist* Let me give you something to remember me by." });
-            await new Promise(res => setTimeout(res, 2500));
-            await asumaWebhook.send({ content: `Argh! Poison... <@${userId}>, we need to get back to the village, now!` });
-            await new Promise(res => setTimeout(res, 2500));
-            await kagamiWebhook.send({ content: "Run along little monkey. But remember my offer." });
-            await new Promise(res => setTimeout(res, 2500));
-            await asumaWebhook.send({ content: "We need to get back to the village and warn everyone. This is bigger than we thought." });
+            await sendWebhookWithContinue(zabuzaWebhook, { content: "*gurgling blood* How... how did..." }, userId);
+            await sendWebhookWithContinue(kagamiWebhook, { content: "Impressive. Very impressive." }, userId);
+            await sendWebhookWithContinue(kagamiWebhook, { content: "You have potential. Why waste it serving these weak villages?" }, userId);
+            await sendWebhookWithContinue(kagamiWebhook, { content: "Join me. Together we could reshape this world." }, userId);
+            await sendWebhookWithContinue(asumaWebhook, { content: "Don't listen to her! She's manipulating you!" }, userId);
+            await sendWebhookWithContinue(kagamiWebhook, { content: "Oh, the monkey is still here. How... annoying." }, userId);
+            await sendWebhookWithContinue(kagamiWebhook, { content: "*flicks wrist* Let me give you something to remember me by." }, userId);
+            await sendWebhookWithContinue(asumaWebhook, { content: `Argh! Poison... <@${userId}>, we need to get back to the village, now!` }, userId);
+            await sendWebhookWithContinue(kagamiWebhook, { content: "Run along little monkey. But remember my offer." }, userId);
+            await sendWebhookWithContinue(asumaWebhook, { content: "We need to get back to the village and warn everyone. This is bigger than we thought." }, userId);
         }
         return battleResult;
     } catch (error) {
@@ -1653,18 +1678,12 @@ async function runOrochimaruStory(interaction, users, userId, players, jutsuList
         if (skipStory) {
             await asumaWebhook.send({ content: "You skip the story and head straight into battle with Orochimaru." });
         } else {
-            await asumaWebhook.send({ content: "It's been a month since that witch poisoned me. I think I'll be tagging along with you on S-ranks." });
-            await new Promise(res => setTimeout(res, 2500));
-            await asumaWebhook.send({ content: "The witch we met the other day will keep an eye on you. We need to gather intel about the Akatsuki." });
-            await new Promise(res => setTimeout(res, 2500));
-            await orochimaruWebhook.send({ content: "Well, well... what do we have here? More Konoha insects?" });
-            await new Promise(res => setTimeout(res, 2500));
-            await asumaWebhook.send({ content: "OROCHIMARU! YOU TRAITOR!" });
-            await new Promise(res => setTimeout(res, 2500));
-            await orochimaruWebhook.send({ content: "Another monkey. Hmph! *flicks wrist*" });
-            await new Promise(res => setTimeout(res, 2500));
-            await asumaWebhook.send({ content: `Gah! Not again... <@${userId}>, watch out!` });
-            await new Promise(res => setTimeout(res, 2500));
+            await sendWebhookWithContinue(asumaWebhook, { content: "It's been a month since that witch poisoned me. I think I'll be tagging along with you on S-ranks." }, userId);
+            await sendWebhookWithContinue(asumaWebhook, { content: "The witch we met the other day will keep an eye on you. We need to gather intel about the Akatsuki." }, userId);
+            await sendWebhookWithContinue(orochimaruWebhook, { content: "Well, well... what do we have here? More Konoha insects?" }, userId);
+            await sendWebhookWithContinue(asumaWebhook, { content: "OROCHIMARU! YOU TRAITOR!" }, userId);
+            await sendWebhookWithContinue(orochimaruWebhook, { content: "Another monkey. Hmph! *flicks wrist*" }, userId);
+            await sendWebhookWithContinue(asumaWebhook, { content: `Gah! Not again... <@${userId}>, watch out!` }, userId);
             const attackRow = new ActionRowBuilder().addComponents(
                 new ButtonBuilder().setCustomId('orochimaru_attack').setLabel('Attack Orochimaru').setStyle(ButtonStyle.Danger)
             );
@@ -1677,22 +1696,14 @@ async function runOrochimaruStory(interaction, users, userId, players, jutsuList
                 c.on('collect', btn => { btn.deferUpdate(); resolve(); c.stop(); });
                 c.on('end', (_, reason) => { if (reason === 'time') resolve(); });
             });
-            await orochimaruWebhook.send({ content: "Foolish child. *effortlessly counters your attack*" });
-            await new Promise(res => setTimeout(res, 2500));
-            await interaction.followUp("**Orochimaru's power is overwhelming! You've been defeated!**");
-            await new Promise(res => setTimeout(res, 2500));
-            await interaction.followUp("**You wake up in a remote village, saved by kind villagers.**");
-            await new Promise(res => setTimeout(res, 4500));
-            await asumaWebhook.send({ content: `<@${userId}>, listen carefully. I have a plan.` });
-            await new Promise(res => setTimeout(res, 2500));
-            await asumaWebhook.send({ content: "I'll launch an all-out attack to distract him. You need to land a finishing blow to his vitals." });
-            await new Promise(res => setTimeout(res, 2500));
-            await asumaWebhook.send({ content: "But you must wait for the right moment." });
-            await new Promise(res => setTimeout(res, 2500));
-            await interaction.followUp("**You track down Orochimaru to the same location.**");
-            await new Promise(res => setTimeout(res, 2500));
-            await orochimaruWebhook.send({ content: "Back for more? How... persistent." });
-            await new Promise(res => setTimeout(res, 2500));
+            await sendMsgWithContinue(interaction, { content: "Foolish child. *effortlessly counters your attack*" }, userId);
+            await sendMsgWithContinue(interaction, { content: "**Orochimaru's power is overwhelming! You've been defeated!**" }, userId);
+            await sendMsgWithContinue(interaction, { content: "**You wake up in a remote village, saved by kind villagers.**" }, userId);
+            await sendWebhookWithContinue(asumaWebhook, { content: `<@${userId}>, listen carefully. I have a plan.` }, userId);
+            await sendWebhookWithContinue(asumaWebhook, { content: "I'll launch an all-out attack to distract him. You need to land a finishing blow to his vitals." }, userId);
+            await sendWebhookWithContinue(asumaWebhook, { content: "But you must wait for the right moment." }, userId);
+            await sendMsgWithContinue(interaction, { content: "**You track down Orochimaru to the same location.**" }, userId);
+            await sendWebhookWithContinue(orochimaruWebhook, { content: "Back for more? How... persistent." }, userId);
         }
         const fightRow = new ActionRowBuilder().addComponents(
             new ButtonBuilder().setCustomId('orochimaru_fight').setLabel('Fight').setStyle(ButtonStyle.Danger)
@@ -1711,21 +1722,14 @@ async function runOrochimaruStory(interaction, users, userId, players, jutsuList
             srankBosses.orochimaru, OROCHIMARU_BG, OROCHIMARU_AVATAR, "Orochimaru"
         );
         if (battleResult === "win") {
-            await orochimaruWebhook.send({ content: "Impossible... how could I be defeated by... *coughs up black blood*" });
-            await new Promise(res => setTimeout(res, 2500));
-            await interaction.followUp("**Orochimaru's body begins to show signs of corruption - the same as Haku and Zabuza!**");
-            await new Promise(res => setTimeout(res, 2500));
-            await asumaWebhook.send({ content: `No... she got to him too! <@${userId}>, we need to leave, now!` });
-            await new Promise(res => setTimeout(res, 2500));
-            await kagamiWebhook.send({ content: "Leaving so soon? And here I was going to offer my congratulations." });
-            await new Promise(res => setTimeout(res, 2500));
-            await kagamiWebhook.send({ content: "You're becoming quite the nuisance. Maybe I should pay a visit to that little redhead of yours... Kurenai, was it?" });
-            await new Promise(res => setTimeout(res, 2500));
-            await asumaWebhook.send({ content: "You stay away from her!" });
-            await new Promise(res => setTimeout(res, 2500));
-            await kagamiWebhook.send({ content: "Or what? You'll try to poison me again? *laughs* Don't worry, we'll meet again soon." });
-            await new Promise(res => setTimeout(res, 2500));
-            await asumaWebhook.send({ content: "We need to get back to the village and warn everyone. This is bigger than we thought." });
+            await sendWebhookWithContinue(orochimaruWebhook, { content: "Impossible... how could I be defeated by... *coughs up black blood*" }, userId);
+            await sendMsgWithContinue(interaction, { content: "**Orochimaru's body begins to show signs of corruption - the same as Haku and Zabuza!**" }, userId);
+            await sendWebhookWithContinue(asumaWebhook, { content: `No... she got to him too! <@${userId}>, we need to leave, now!` }, userId);
+            await sendWebhookWithContinue(kagamiWebhook, { content: "Leaving so soon? And here I was going to offer my congratulations." }, userId);
+            await sendWebhookWithContinue(kagamiWebhook, { content: "You're becoming quite the nuisance. Maybe I should pay a visit to that little redhead of yours... Kurenai, was it?" }, userId);
+            await sendWebhookWithContinue(asumaWebhook, { content: "You stay away from her!" }, userId);
+            await sendWebhookWithContinue(kagamiWebhook, { content: "Or what? You'll try to poison me again? *laughs* Don't worry, we'll meet again soon." }, userId);
+            await sendWebhookWithContinue(asumaWebhook, { content: "We need to get back to the village and warn everyone. This is bigger than we thought." }, userId);
         }
         return battleResult;
     } catch (error) {
@@ -2082,7 +2086,7 @@ async function runCorruptedOrochimaruBattle(interaction, users, userId, players,
                         fs.writeFileSync(usersPath, JSON.stringify(u, null, 2));
                     }
                 });
-                await interaction.followUp(`**You have been defeated by Corrupted Orochimaru! Game Over.**`);
+                await sendMsgWithContinue(interaction, { content: `**You have been defeated by Corrupted Orochimaru! Game Over.**` }, userId);
                 return "loss";
             }
             if (npc.currentHealth <= 0) {
@@ -2093,7 +2097,7 @@ async function runCorruptedOrochimaruBattle(interaction, users, userId, players,
                         fs.writeFileSync(usersPath, JSON.stringify(u, null, 2));
                     }
                 });
-                await interaction.followUp(`**Corrupted Orochimaru has been defeated! You win!**`);
+                await sendMsgWithContinue(interaction, { content: `**Corrupted Orochimaru has been defeated! You win!**` }, userId);
                 return "win";
             }
             player.chakra += CHAKRA_REGEN[player.rank] || 1;
@@ -2235,13 +2239,7 @@ module.exports = {
                 availableBosses.haku = srankBosses.haku;
             }
 
-            // Always allow Kagami's Hideout to be visible for testing/progression
-            availableBosses.kagamis_hideout = {
-                name: "Kagami's Hideout",
-                health: 0,
-                power: 0,
-                description: "Investigate the mysterious hideout of Kagami."
-            };
+
 
             // --- Add Kurenai S-Rank if Orochimaru is defeated ---
             if ((userDefeats.orochimaru > 0 || userUnlocked.includes("orochimaru")) && !availableBosses.kurenai) {
@@ -2253,12 +2251,15 @@ module.exports = {
                     jutsu: ["Attack", "Fireball Jutsu", "Summon Ninken", "Infused Chakra"],
                     description: "Back at the village..",
                 };
+            }
 
+            // --- Add Kagami's Hideout only if Kagami is defeated (Back at the village completed) ---
+            if (userDefeats.kagami > 0 || userUnlocked.includes("kagamis_hideout")) {
                 availableBosses.kagamis_hideout = {
                     name: "Kagami's Hideout",
                     health: 0,
                     power: 0,
-                    description: "Investigate the source of corruption.",
+                    description: "Investigate the mysterious hideout of Kagami."
                 };
             }
 
@@ -2315,39 +2316,6 @@ module.exports = {
                             result = await runKagamisHideoutStory(interaction, users, userId, players, jutsuList);
                             break;
                         case "kurenai":
-
-                            async function sendWebhookWithContinue(webhook, options, userId) {
-                                const row = new ActionRowBuilder().addComponents(
-                                    new ButtonBuilder().setCustomId('continue_' + Date.now()).setLabel('Continue').setStyle(ButtonStyle.Secondary)
-                                );
-                                const msg = await webhook.send({ ...options, components: [row] });
-                                return new Promise(resolve => {
-                                    const c = msg.createMessageComponentCollector({
-                                        filter: btn => btn.user.id === userId && btn.customId.startsWith('continue_'),
-                                        time: 60000,
-                                        max: 1
-                                    });
-                                    c.on('collect', async btn => { await btn.update({ components: [] }); resolve(); });
-                                    c.on('end', async (_, reason) => { if (reason === 'time') await msg.edit({ components: [] }).catch(() => { }); resolve(); });
-                                });
-                            }
-
-                            async function sendMsgWithContinue(interaction, options, userId) {
-                                const row = new ActionRowBuilder().addComponents(
-                                    new ButtonBuilder().setCustomId('continue_' + Date.now()).setLabel('Continue').setStyle(ButtonStyle.Secondary)
-                                );
-                                const msg = await interaction.followUp({ ...options, components: [row] });
-                                return new Promise(resolve => {
-                                    const c = msg.createMessageComponentCollector({
-                                        filter: btn => btn.user.id === userId && btn.customId.startsWith('continue_'),
-                                        time: 60000,
-                                        max: 1
-                                    });
-                                    c.on('collect', async btn => { await btn.update({ components: [] }); resolve(); });
-                                    c.on('end', async (_, reason) => { if (reason === 'time') await msg.edit({ components: [] }).catch(() => { }); resolve(); });
-                                });
-                            }
-
                             await sendMsgWithContinue(interaction, {
                                 embeds: [new EmbedBuilder()
                                     .setTitle("Back at the village:")
@@ -2685,24 +2653,3 @@ module.exports = {
     }
 
 };
-
-async function waitForContinue(interaction, userId, content = "\u200b") {
-    const buttonId = 'story_continue_' + Date.now();
-    const continueButton = new ButtonBuilder()
-        .setCustomId(buttonId)
-        .setLabel('Continue')
-        .setStyle(ButtonStyle.Secondary);
-    const row = new ActionRowBuilder().addComponents(continueButton);
-
-    const message = await interaction.followUp({ content, components: [row], ephemeral: false });
-
-    return new Promise(resolve => {
-        const c = message.createMessageComponentCollector({
-            filter: (btn) => btn.user.id === userId && btn.customId === buttonId,
-            time: 600000,
-            max: 1
-        });
-        c.on('collect', async (btn) => { await btn.update({ components: [] }); resolve(); });
-        c.on('end', async (_, reason) => { if (reason === 'time') await message.edit({ components: [] }).catch(() => { }); resolve(); });
-    });
-}
