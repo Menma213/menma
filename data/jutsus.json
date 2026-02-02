@@ -2797,7 +2797,7 @@
     "name": "Izanami",
     "description": "**Teachings that do not speak of pain have no meaning, for humankind cannot gain anything in return**\n user uses Izanami, The Space and Time around them slowed down. user now controls the time around them for the fate to be decided.",
     "info": "On use: Sets HP/Chakra to Infinity for 3 rounds (Recording Phase). After Recording, Flow Phase starts where target MUST repeat moves or deal 0 damage, while user auto-repeats moves. Only usable once. Last Resort: If dying without using, revives at 1 HP, cleanses, and activates Life Drainer mode.",
-    "image_url": "https://media.tenor.com/_7iTq0Z3SjMAAAAM/itachi-izanami.gif",
+    "image_url": "https://i.postimg.cc/gjwfSv6D/image.png",
     "chakraCost": 0,
     "category": "Akatsuki Event Exclusive",
     "obtainment": "unobtainable",
@@ -2820,6 +2820,14 @@
       {
         "type": "lifesteal_max_hp",
         "percentage": 50
+      },
+      {
+        "type": "buff",
+        "stats": {
+          "accuracy": 500
+        },
+        "duration": 1,
+        "applyToUser": true
       }
     ]
   },

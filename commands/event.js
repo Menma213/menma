@@ -5,11 +5,12 @@ const { runBattle } = require('./combinedcommands.js');
 const { userMutex, jutsuMutex } = require('../utils/locks');
 
 // --- File Paths ---
-const eventPath = path.resolve(__dirname, '../../menma/data/event.json');
-const playersPath = path.resolve(__dirname, '../../menma/data/players.json');
-const usersPath = path.resolve(__dirname, '../../menma/data/users.json');
-const jutsusPath = path.resolve(__dirname, '../../menma/data/jutsus.json');
-const akatsukiEventPreviewPath = path.resolve(__dirname, '../../menma/data/akatsukievent.json');
+const eventPath = path.join(__dirname, '../data/event.json');
+const playersPath = path.join(__dirname, '../data/players.json');
+const usersPath = path.join(__dirname, '../data/users.json');
+const jutsusPath = path.join(__dirname, '../data/jutsus.json');
+const userJutsuPath = path.join(__dirname, '../data/jutsu.json');
+const akatsukiEventPreviewPath = path.join(__dirname, '../data/akatsukievent.json');
 
 // --- Config ---
 const ZORO_BASE = {
@@ -201,7 +202,8 @@ module.exports = {
         .addSubcommand(sub => sub.setName('fight').setDescription('Fight through 100 floors as Zoro'))
         .addSubcommand(sub => sub.setName('shop').setDescription('Exchange Akatsuki Tokens for Jutsus and Themes'))
         .addSubcommand(sub => sub.setName('cardlevelup').setDescription('Level up your Zoro card (Cost: Ryo)'))
-        .addSubcommand(sub => sub.setName('cardawaken').setDescription('Awaken your Zoro card (Cost: Card Essence)')),
+        .addSubcommand(sub => sub.setName('cardawaken').setDescription('Awaken your Zoro card (Cost: Card Essence)'))
+        .addSubcommand(sub => sub.setName('equip').setDescription('Equip your Akatsuki Profile Theme')),
 
     async execute(interaction) {
         const userId = interaction.user.id;
@@ -216,23 +218,28 @@ module.exports = {
             return interaction.reply({ content: "To begin interacting with the event, please finish the Preview. https://shinobirpg.online/story", ephemeral: true });
         }
 
-        const eventData = loadEventData();
-        if (!eventData.users[userId]) {
-            eventData.users[userId] = {
-                storyStage: 0,
-                tokens: 0,
-                zoro: {
-                    level: 1,
-                    exp: 0,
-                    awakenStage: 0,
-                    floorsCleared: 0,
-                    cardEssence: 0,
-                    currentFloor: 1
-                },
-                inventory: { jutsus: [], themes: [] }
-            };
-            saveEventData(eventData);
-        }
+        // Initialize/Load event data with lock
+        let eventData;
+        await userMutex.runExclusive(async () => {
+            eventData = loadEventData();
+            if (!eventData.users[userId]) {
+                eventData.users[userId] = {
+                    storyStage: 0,
+                    tokens: 0,
+                    zoro: {
+                        level: 1,
+                        exp: 0,
+                        awakenStage: 0,
+                        floorsCleared: 0,
+                        cardEssence: 0,
+                        currentFloor: 1
+                    },
+                    inventory: { jutsus: [], themes: [] }
+                };
+                saveEventData(eventData);
+            }
+        });
+
         const userEvent = eventData.users[userId];
 
         // --- Subcommands ---
@@ -248,6 +255,8 @@ module.exports = {
             await handleLevelUp(interaction, userId, userEvent, eventData);
         } else if (subcommand === 'cardawaken') {
             await handleAwaken(interaction, userId, userEvent, eventData);
+        } else if (subcommand === 'equip') {
+            await handleEquip(interaction, userId, userEvent, eventData);
         }
     }
 };
@@ -425,13 +434,19 @@ async function handleSummon(interaction, userId, userEvent, eventData) {
         const count = i.customId === 'summon_1' ? 1 : 10;
         const cost = count * 10;
 
-        const freshPlayers = JSON.parse(fs.readFileSync(playersPath, 'utf8'));
-        if ((freshPlayers[userId]?.ss || 0) < cost) {
+        const costMet = await userMutex.runExclusive(async () => {
+            const freshPlayers = JSON.parse(fs.readFileSync(playersPath, 'utf8'));
+            if ((freshPlayers[userId]?.ss || 0) < cost) {
+                return false;
+            }
+            freshPlayers[userId].ss -= cost;
+            fs.writeFileSync(playersPath, JSON.stringify(freshPlayers, null, 2));
+            return true;
+        });
+
+        if (!costMet) {
             return i.reply({ content: `You don't have enough SS! You need ${cost}.`, ephemeral: true });
         }
-
-        freshPlayers[userId].ss -= cost;
-        fs.writeFileSync(playersPath, JSON.stringify(freshPlayers, null, 2));
 
         await i.deferUpdate();
 
@@ -453,36 +468,73 @@ async function handleSummon(interaction, userId, userEvent, eventData) {
             results.push(weightedRandom(SUMMON_POOL));
         }
 
-        userEvent.tokens += count === 1 ? 1 : 10; // 10 tokens for 10x roll
+        try {
+            await Promise.all([
+                userMutex.runExclusive(async () => {
+                    const finalPlayers = JSON.parse(fs.readFileSync(playersPath, 'utf8'));
+                    const finalUsers = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
+                    const eventData_rewards = loadEventData();
+                    const userEvent_rewards = eventData_rewards.users[userId];
 
-        // Apply Rewards
+                    if (!finalPlayers[userId]) finalPlayers[userId] = { level: 1, exp: 0, money: 0, ramen: 0, ss: 0 };
+                    if (!finalUsers[userId]) finalUsers[userId] = { level: 1, exp: 0, money: 0, ramen: 0 };
+
+                    results.forEach(reward => {
+                        if (reward.type === 'ryo') {
+                            const value = Number(reward.value) || 0;
+                            finalPlayers[userId].money = (Number(finalPlayers[userId].money) || 0) + value;
+                            finalUsers[userId].money = (Number(finalUsers[userId].money) || 0) + value;
+                            if (finalUsers[userId].ryo !== undefined) finalUsers[userId].ryo = (Number(finalUsers[userId].ryo) || 0) + value;
+                        } else if (reward.type === 'exp') {
+                            const value = Number(reward.value) || 0;
+                            finalPlayers[userId].exp = (Number(finalPlayers[userId].exp) || 0) + value;
+                            finalUsers[userId].exp = (Number(finalUsers[userId].exp) || 0) + value;
+                            if (finalUsers[userId].xp !== undefined) finalUsers[userId].xp = (Number(finalUsers[userId].xp) || 0) + value;
+                        } else if (reward.type === 'ramen') {
+                            const value = Number(reward.value) || 0;
+                            finalUsers[userId].ramen = (Number(finalUsers[userId].ramen) || 0) + value;
+                            finalPlayers[userId].ramen = (Number(finalPlayers[userId].ramen) || 0) + value;
+                        } else if (reward.type === 'theme') {
+                            if (userEvent_rewards && !userEvent_rewards.inventory.themes.includes(reward.value)) {
+                                userEvent_rewards.inventory.themes.push(reward.value);
+                            }
+                            if (!finalUsers[userId].themes) finalUsers[userId].themes = [];
+                            if (!finalUsers[userId].themes.includes(reward.value)) {
+                                finalUsers[userId].themes.push(reward.value);
+                            }
+                        }
+                    });
+
+                    userEvent_rewards.tokens += count === 1 ? 1 : 10;
+                    fs.writeFileSync(playersPath, JSON.stringify(finalPlayers, null, 2));
+                    fs.writeFileSync(usersPath, JSON.stringify(finalUsers, null, 2));
+                    saveEventData(eventData_rewards);
+                }),
+                jutsuMutex.runExclusive(async () => {
+                    const userJutsuData = JSON.parse(fs.readFileSync(userJutsuPath, 'utf8'));
+                    if (!userJutsuData[userId]) userJutsuData[userId] = { usersjutsu: [], scrolls: [], combos: [], items: {} };
+                    if (!Array.isArray(userJutsuData[userId].usersjutsu)) userJutsuData[userId].usersjutsu = [];
+                    if (!Array.isArray(userJutsuData[userId].scrolls)) userJutsuData[userId].scrolls = [];
+
+                    results.forEach(reward => {
+                        if (reward.type === 'jutsu') {
+                            if (!userJutsuData[userId].scrolls.includes(reward.value)) {
+                                userJutsuData[userId].scrolls.push(reward.value);
+                            }
+                            if (!userJutsuData[userId].usersjutsu.includes(reward.value)) {
+                                userJutsuData[userId].usersjutsu.push(reward.value);
+                            }
+                        }
+                    });
+                    fs.writeFileSync(userJutsuPath, JSON.stringify(userJutsuData, null, 2));
+                })
+            ]);
+        } catch (error) {
+            console.error(`[Event Error - handleSummon Reward Application]:`, error);
+            await interaction.followUp({ content: "There was an error applying your rewards. Please contact an admin.", ephemeral: true });
+        }
+
         const rewardSummary = results.map(r => r.name).join('\n');
-        const finalPlayers = JSON.parse(fs.readFileSync(playersPath, 'utf8'));
-        const finalUsers = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
-        const userJutsuPath = path.resolve(__dirname, '../../menma/data/jutsu.json');
-        const userJutsuData = JSON.parse(fs.readFileSync(userJutsuPath, 'utf8'));
-        if (!userJutsuData[userId]) userJutsuData[userId] = { scrolls: [] };
-
-        results.forEach(reward => {
-            if (reward.type === 'ryo') {
-                finalPlayers[userId].money = (finalPlayers[userId].money || 0) + reward.value;
-            } else if (reward.type === 'exp') {
-                finalPlayers[userId].exp = (finalPlayers[userId].exp || 0) + reward.value;
-            } else if (reward.type === 'ramen') {
-                finalUsers[userId].ramen = (finalUsers[userId].ramen || 0) + reward.value;
-            } else if (reward.type === 'jutsu') {
-                if (!userJutsuData[userId].scrolls.includes(reward.value)) {
-                    userJutsuData[userId].scrolls.push(reward.value);
-                }
-            } else if (reward.type === 'theme') {
-                userEvent.inventory.themes.push(reward.value);
-            }
-        });
-
-        fs.writeFileSync(playersPath, JSON.stringify(finalPlayers, null, 2));
-        fs.writeFileSync(usersPath, JSON.stringify(finalUsers, null, 2));
-        fs.writeFileSync(userJutsuPath, JSON.stringify(userJutsuData, null, 2));
-        saveEventData(eventData);
 
         const resultEmbed = new EmbedBuilder()
             .setTitle(count === 1 ? "Summon Result" : "10x Summon Results")
@@ -554,10 +606,20 @@ async function handleFight(interaction, userId, userEvent, eventData) {
 
 
     if (result && result.winner && result.winner.userId === userId) {
-        // WIN
-        userEvent.zoro.floorsCleared = Math.max(userEvent.zoro.floorsCleared, floor);
-        userEvent.zoro.currentFloor = floor + 1;
-        userEvent.zoro.cardEssence += 1;
+        // WIN - Update state with lock
+        await userMutex.runExclusive(async () => {
+            const eventData_win = loadEventData();
+            const userEvent_win = eventData_win.users[userId];
+            if (userEvent_win) {
+                userEvent_win.zoro.floorsCleared = Math.max(userEvent_win.zoro.floorsCleared, floor);
+                userEvent_win.zoro.currentFloor = floor + 1;
+                userEvent_win.zoro.cardEssence += 1;
+                if (floor === 100) {
+                    userEvent_win.zoro.currentFloor = 100; // stick at 100
+                }
+                saveEventData(eventData_win);
+            }
+        });
 
         const winEmbed = new EmbedBuilder()
             .setTitle(`Floor ${floor} Cleared!`)
@@ -567,15 +629,19 @@ async function handleFight(interaction, userId, userEvent, eventData) {
 
         if (floor === 100) {
             winEmbed.setDescription("CONGRATULATIONS! You have defeated Itachi Uchiha. The story continues in the next update... To be continued!");
-            userEvent.zoro.currentFloor = 100; // stick at 100
         }
 
-        saveEventData(eventData);
         await interaction.followUp({ embeds: [winEmbed] });
     } else {
-        // LOSS
-        userEvent.zoro.currentFloor = 1;
-        saveEventData(eventData);
+        // LOSS - Update state with lock
+        await userMutex.runExclusive(async () => {
+            const eventData_loss = loadEventData();
+            const userEvent_loss = eventData_loss.users[userId];
+            if (userEvent_loss) {
+                userEvent_loss.zoro.currentFloor = 1;
+                saveEventData(eventData_loss);
+            }
+        });
         const lossEmbed = new EmbedBuilder()
             .setTitle("BATTLE DEFEAT")
             .setColor("#FF0000")
@@ -592,23 +658,35 @@ async function handleLevelUp(interaction, userId, userEvent, eventData) {
         return interaction.reply({ content: `Zoro has reached his current level cap (${maxLevel})! Awaken him to increase the cap.`, ephemeral: true });
     }
 
-    const players = JSON.parse(fs.readFileSync(playersPath, 'utf8'));
-    if (players[userId].money < cost) {
+    const levelUpData = await userMutex.runExclusive(async () => {
+        const players_lv = JSON.parse(fs.readFileSync(playersPath, 'utf8'));
+        const eventData_lv = loadEventData();
+        const userEvent_lv = eventData_lv.users[userId];
+
+        if (!userEvent_lv || players_lv[userId].money < cost) return null;
+
+        players_lv[userId].money -= cost;
+        userEvent_lv.zoro.level += 1;
+        userEvent_lv.zoro.exp = 0;
+
+        fs.writeFileSync(playersPath, JSON.stringify(players_lv, null, 2));
+        saveEventData(eventData_lv);
+        return {
+            level: userEvent_lv.zoro.level,
+            money: players_lv[userId].money
+        };
+    });
+
+    if (!levelUpData) {
         return interaction.reply({ content: `You need ${cost.toLocaleString()} Ryo to level up!`, ephemeral: true });
     }
 
-    players[userId].money -= cost;
-    userEvent.zoro.level += 1;
-
-    fs.writeFileSync(playersPath, JSON.stringify(players, null, 2));
-    saveEventData(eventData);
-
-    const stats = getZoroStats(userEvent.zoro.level);
+    const stats = getZoroStats(levelUpData.level);
     const embed = new EmbedBuilder()
         .setTitle("Zoro Level Up!")
         .setColor("#00FF00")
-        .setDescription(`Zoro is now Level **${userEvent.zoro.level}**!\n\n**HP:** ${stats.health}\n**Power:** ${stats.power}\n**Defense:** ${stats.defense}`)
-        .setFooter({ text: `Next Level Cost: ${(200000 + (userEvent.zoro.level - 1) * 50000).toLocaleString()} Ryo` });
+        .setDescription(`Zoro is now Level **${levelUpData.level}**!\n\n**HP:** ${stats.health}\n**Power:** ${stats.power}\n**Defense:** ${stats.defense}`)
+        .setFooter({ text: `Next Level Cost: ${(200000 + (levelUpData.level - 1) * 50000).toLocaleString()} Ryo` });
 
     await interaction.reply({ embeds: [embed] });
 }
@@ -618,20 +696,30 @@ async function handleAwaken(interaction, userId, userEvent, eventData) {
         return interaction.reply({ content: "Zoro is already fully awakened!", ephemeral: true });
     }
 
-    if (userEvent.zoro.cardEssence < 20) {
-        return interaction.reply({ content: `You need 20 Card Essence to awaken! (You have ${userEvent.zoro.cardEssence})`, ephemeral: true });
+    const awakenData = await userMutex.runExclusive(async () => {
+        const eventData_awk = loadEventData();
+        const userEvent_awk = eventData_awk.users[userId];
+
+        if (!userEvent_awk || userEvent_awk.zoro.cardEssence < 20) return null;
+
+        userEvent_awk.zoro.cardEssence -= 20;
+        userEvent_awk.zoro.awakenStage += 1;
+        saveEventData(eventData_awk);
+        return {
+            awakenStage: userEvent_awk.zoro.awakenStage
+        };
+    });
+
+    if (!awakenData) {
+        return interaction.reply({ content: `You need 20 Card Essence to awaken!`, ephemeral: true });
     }
 
-    userEvent.zoro.cardEssence -= 20;
-    userEvent.zoro.awakenStage += 1;
-
-    const newJutsu = ZORO_JUTSUS[userEvent.zoro.awakenStage];
-    saveEventData(eventData);
+    const newJutsu = ZORO_JUTSUS[awakenData.awakenStage];
 
     const embed = new EmbedBuilder()
         .setTitle("ZORO AWAKENED!")
         .setColor("#FFD700")
-        .setDescription(`Zoro has reached Awakening Stage **${userEvent.zoro.awakenStage}**!\n\n**Unlocked Jutsu:** ${newJutsu}\n**New Level Cap:** ${(userEvent.zoro.awakenStage + 1) * 20}`)
+        .setDescription(`Zoro has reached Awakening Stage **${awakenData.awakenStage}**!\n\n**Unlocked Jutsu:** ${newJutsu}\n**New Level Cap:** ${(awakenData.awakenStage + 1) * 20}`)
         .setImage("https://i.pinimg.com/736x/28/95/36/289536f9297400c9b08101dec6b9ec08.jpg");
 
     await interaction.reply({ embeds: [embed] });
@@ -644,28 +732,28 @@ async function handleShop(interaction, userId, userEvent, eventData) {
         .setDescription(`Spend your Akatsuki Tokens here to obtain legendary techniques and exclusive themes!\n\n**Your Balance:** \`${userEvent.tokens} Tokens\``)
         .setImage("https://i.postimg.cc/3J4VD64M/image.png")
         .addFields(
-            { name: "Susanoo", value: "50 Tokens", inline: true },
-            { name: "Amaterasu: Infinite Flames", value: "75 Tokens", inline: true },
-            { name: "Tsukuyomi", value: "75 Tokens", inline: true },
-            { name: "Almighty Push", value: "60 Tokens", inline: true },
-            { name: "Kamui", value: "60 Tokens", inline: true },
-            { name: "Praise Jashin", value: "50 Tokens", inline: true },
-            { name: "Izanami", value: "200 Tokens", inline: true },
-            { name: "Akatsuki Profile Theme", value: "100 Tokens", inline: true }
+            { name: "Susanoo", value: "90 Tokens", inline: true },
+            { name: "Amaterasu: Infinite Flames", value: "155 Tokens", inline: true },
+            { name: "Tsukuyomi", value: "100 Tokens", inline: true },
+            { name: "Almighty Push", value: "120 Tokens", inline: true },
+            { name: "Kamui", value: "160 Tokens", inline: true },
+            { name: "Praise Jashin", value: "250 Tokens", inline: true },
+            { name: "Izanami", value: "500 Tokens", inline: true },
+            { name: "Akatsuki Profile Theme", value: "350 Tokens", inline: true }
         );
 
     const select = new StringSelectMenuBuilder()
         .setCustomId('shop_select')
         .setPlaceholder('Select an item to buy')
         .addOptions([
-            { label: 'Susanoo', value: 'Susanoo_50' },
-            { label: 'Amaterasu: Infinite Flames', value: 'Amaterasu: Infinite Flames_75' },
-            { label: 'Tsukuyomi', value: 'Tsukuyomi_75' },
-            { label: 'Almighty Push', value: 'Almighty Push_60' },
-            { label: 'Kamui', value: 'Kamui_60' },
-            { label: 'Praise Jashin', value: 'Praise Jashin_50' },
-            { label: 'Izanami', value: 'Izanami_200' },
-            { label: 'Akatsuki Profile Theme', value: 'Theme_100' }
+            { label: 'Susanoo', value: 'Susanoo_90' },
+            { label: 'Amaterasu: Infinite Flames', value: 'Amaterasu: Infinite Flames_155' },
+            { label: 'Tsukuyomi', value: 'Tsukuyomi_100' },
+            { label: 'Almighty Push', value: 'Almighty Push_120' },
+            { label: 'Kamui', value: 'Kamui_160' },
+            { label: 'Praise Jashin', value: 'Praise Jashin_250' },
+            { label: 'Izanami', value: 'Izanami_500' },
+            { label: 'Akatsuki Profile Theme', value: 'Theme_350' }
         ]);
 
     const row = new ActionRowBuilder().addComponents(select);
@@ -677,25 +765,77 @@ async function handleShop(interaction, userId, userEvent, eventData) {
         const [name, costStr] = i.values[0].split('_');
         const cost = parseInt(costStr);
 
-        if (userEvent.tokens < cost) {
-            return i.reply({ content: `You don't have enough tokens! You need ${cost}.`, ephemeral: true });
-        }
+        const purchaseResult = await Promise.all([
+            userMutex.runExclusive(async () => {
+                const eventData_shop = loadEventData();
+                const userEvent_shop = eventData_shop.users[userId];
+                const finalUsers = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
 
-        userEvent.tokens -= cost;
-        if (name === 'Theme') {
-            userEvent.inventory.themes.push('Akatsuki');
-        } else {
-            const userJutsuPath = path.resolve(__dirname, '../../menma/data/jutsu.json');
-            const userJutsuData = JSON.parse(fs.readFileSync(userJutsuPath, 'utf8'));
-            if (!userJutsuData[userId]) userJutsuData[userId] = { scrolls: [] };
-            if (!userJutsuData[userId].scrolls.includes(name)) {
-                userJutsuData[userId].scrolls.push(name);
+                if (!userEvent_shop || userEvent_shop.tokens < cost) return { success: false, reason: 'tokens' };
+
+                userEvent_shop.tokens -= cost;
+
+                if (name === 'Theme') {
+                    if (!userEvent_shop.inventory.themes.includes('Akatsuki')) {
+                        userEvent_shop.inventory.themes.push('Akatsuki');
+                    }
+                    if (finalUsers[userId]) {
+                        if (!finalUsers[userId].themes) finalUsers[userId].themes = [];
+                        if (!finalUsers[userId].themes.includes('Akatsuki')) {
+                            finalUsers[userId].themes.push('Akatsuki');
+                        }
+                    }
+                }
+                fs.writeFileSync(usersPath, JSON.stringify(finalUsers, null, 2));
+                saveEventData(eventData_shop);
+                return { success: true };
+            }),
+            jutsuMutex.runExclusive(async () => {
+                if (name === 'Theme') return;
+                const userJutsuData = JSON.parse(fs.readFileSync(userJutsuPath, 'utf8'));
+                if (!userJutsuData[userId]) userJutsuData[userId] = { usersjutsu: [], scrolls: [], combos: [], items: {} };
+                if (!Array.isArray(userJutsuData[userId].usersjutsu)) userJutsuData[userId].usersjutsu = [];
+                if (!Array.isArray(userJutsuData[userId].scrolls)) userJutsuData[userId].scrolls = [];
+
+                if (!userJutsuData[userId].scrolls.includes(name)) {
+                    userJutsuData[userId].scrolls.push(name);
+                }
+                if (!userJutsuData[userId].usersjutsu.includes(name)) {
+                    userJutsuData[userId].usersjutsu.push(name);
+                }
                 fs.writeFileSync(userJutsuPath, JSON.stringify(userJutsuData, null, 2));
-            }
-        }
+            })
+        ]);
 
-        saveEventData(eventData);
-        await i.reply({ content: `Successfully purchased **${name}**!`, ephemeral: true });
+        if (purchaseResult[0].success) {
+            await i.reply({ content: `Successfully purchased **${name}**!`, ephemeral: true });
+        } else {
+            return i.reply({ content: `You don't have enough tokens!`, ephemeral: true });
+        }
         collector.stop();
     });
+}
+async function handleEquip(interaction, userId, userEvent, eventData) {
+    const hasTheme = await userMutex.runExclusive(async () => {
+        const usersData = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
+        const user = usersData[userId];
+        if (!user) return { success: false, reason: 'not_enrolled' };
+
+        // Check if Akatsuki theme is in their owned themes
+        if (!user.themes || !user.themes.includes('Akatsuki')) {
+            return { success: false, reason: 'no_theme' };
+        }
+
+        user.profileColor = 'akatsuki';
+        fs.writeFileSync(usersPath, JSON.stringify(usersData, null, 2));
+        return { success: true };
+    });
+
+    if (hasTheme.success) {
+        return interaction.reply({ content: "Successfully equipped the **Akatsuki** profile theme! View it with `/profile`.", ephemeral: true });
+    } else if (hasTheme.reason === 'no_theme') {
+        return interaction.reply({ content: "You don't own the Akatsuki profile theme! You can get it from the `/event shop` or `/event summon`.", ephemeral: true });
+    } else {
+        return interaction.reply({ content: "You need to `/enroll` first!", ephemeral: true });
+    }
 }

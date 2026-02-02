@@ -733,12 +733,20 @@ const applyEffect = (effect, user, target, effectiveUser, effectiveTarget, resul
                 }
 
                 if (damageResult.hit && damageResult.damage > 0) {
-                    const dmg = damageResult.damage;
+                    let dmg = damageResult.damage;
+
+                    // IZANAMI IMMORTALITY CHECK
+                    if (target.izanamiImmortal) {
+                        if (result.specialEffects) result.specialEffects.push(`${target.name} is IMMORTAL! No damage taken.`);
+                        dmg = 0;
+                    }
+
                     result.damage += dmg;
 
-                    if (applyDamageImmediately) {
+                    if (applyDamageImmediately && dmg > 0) {
                         // Ensure currentHealth is treated correctly if starting from undefined (falling back to stats)
                         const current = (target.currentHealth !== undefined && target.currentHealth !== null) ? target.currentHealth : (target.health || 0);
+
                         target.currentHealth = Math.max(0, current - dmg);
                     }
 
@@ -1868,6 +1876,7 @@ function executeJutsu(baseUser, baseTarget, effectiveUser, effectiveTarget, juts
 
     result.specialEffects.push(...userEffects.specialEffects);
     result.specialEffects.push(...targetEffects.specialEffects);
+
 
     // Check resource costs
     const cost = jutsu.chakraCost || 0;
@@ -3430,20 +3439,31 @@ async function runBattle(interaction, player1Id, player2Id, battleType, npcTempl
                     p.izanamiRound++;
                     if (p.izanamiRound <= 3) {
                         p.izanamiPhase = "recording";
-                        p.currentHealth = 999999999;
-                        p.chakra = 999999999;
+                        p.izanamiImmortal = true;
+                        // Set health to very high but don't force it every turn if we can just nullify damage
+                        p.currentHealth = Math.max(p.currentHealth || 0, 999999);
+                        p.chakra = Math.max(p.chakra || 0, 999999);
+
                         const opp = (p === player1) ? player2 : player1;
-                        opp.currentHealth = 999999999;
-                        opp.chakra = 999999999;
+                        opp.izanamiImmortal = true;
+                        opp.currentHealth = Math.max(opp.currentHealth || 0, 999999);
+                        opp.chakra = Math.max(opp.chakra || 0, 999999);
+
                         const pSummaries = (p === player1) ? player1RoundBasedSummaries : player2RoundBasedSummaries;
-                        pSummaries.push({ desc: "The Fate is Being Decided" });
+                        pSummaries.push({ desc: "Izanami: Fate is being decided (Immortal Phase)" });
                     } else if (p.izanamiRound <= 6) {
                         p.izanamiPhase = "flow";
+                        p.izanamiImmortal = false;
+                        const opp = (p === player1) ? player2 : player1;
+                        opp.izanamiImmortal = false;
                         const pSummaries = (p === player1) ? player1RoundBasedSummaries : player2RoundBasedSummaries;
-                        pSummaries.push({ desc: "The fate was already decided" });
+                        pSummaries.push({ desc: "Izanami: The fate was already decided" });
                     } else {
                         p.izanamiActive = false;
                         p.izanamiPhase = "ended";
+                        p.izanamiImmortal = false;
+                        const opp = (p === player1) ? player2 : player1;
+                        opp.izanamiImmortal = false;
                     }
                 }
             });

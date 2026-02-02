@@ -23,8 +23,12 @@ function execute({ baseUser, baseTarget, effectiveUser, effectiveTarget, jutsuDa
         target: []
     };
 
+    // Set temporary immortality flag
+    baseUser.izanamiImmortal = true;
+    baseTarget.izanamiImmortal = true;
+
     result.specialEffects.push(`${baseUser.name} activates Izanami! The fate is being decided...`);
-    result.specialEffects.push("Both combatants HP and Chakra are set to INFINITY!");
+    result.specialEffects.push("The flow of time is distorted! Both combatants are IMMORTAL for 3 rounds!");
 
     return result;
 }
