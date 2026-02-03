@@ -16,6 +16,11 @@ module.exports = {
             return;
         }
 
+        // Check if the command is used in the main server
+        if (interaction.guildId !== '1381268582595297321') {
+            return interaction.reply({ content: 'This command can only be used in the main server.', ephemeral: true });
+        }
+
         // Defer early to avoid "Unknown interaction" if processing takes >3s
         try {
             await interaction.deferReply({ ephemeral: true });

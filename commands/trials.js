@@ -32,7 +32,7 @@ const HOKAGE_TRIALS = [
     },
     {
         name: "Tsunade",
-        image: "https://i.pinimg.com/236x/e5/2b/dc/e52bdc19eWJh8J6Mx9DrGXKEv3ojKmqw8Cv9pscK.jpg",
+        image: "https://i.pinimg.com/736x/e0/d1/1f/e0d11f11f3cfa0c39dbd242a1e2f2958.jpg",
         health: 30000,
         power: 3000,
         defense: 2110,

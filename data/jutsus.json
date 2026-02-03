@@ -3151,5 +3151,15 @@
         "chance": 100
       }
     ]
+  },
+  "Shadow Possession": {
+    "name": "Shadow Possession",
+    "description": "user possesses the shadow of the target, allowing them to control their actions",
+    "category": "Mentor Jutsu",
+    "chakraCost": 10,
+    "obtainment": "unobtainable",
+    "obtainable": false,
+    "effects": [],
+    "scriptFile": "shadow_possession.js"
   }
 }

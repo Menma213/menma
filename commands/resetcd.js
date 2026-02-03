@@ -14,6 +14,11 @@ module.exports = {
                 .setRequired(true)
         ),
     async execute(interaction) {
+        // Check if the command is used in the main server
+        if (interaction.guildId !== '1381268582595297321') {
+            return interaction.reply({ content: 'This command can only be used in the main server.', ephemeral: true });
+        }
+
         // Only allow admins to use this command (optional: remove if not needed)
         if (!interaction.member.permissions.has('Administrator')) {
             return interaction.reply({ content: "You do not have permission to use this command.", ephemeral: true });

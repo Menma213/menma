@@ -229,7 +229,7 @@ module.exports = {
             // Run Battle
             const result = await runBattle(interaction, userId, npcId, 'arank', randomNpc);
 
-            if (result.winner && result.winner.userId === userId) {
+            if (result && result.winner && result.winner.userId === userId) {
                 // Update persistent battle stats
                 combatant.currentHealth = result.winner.currentHealth;
                 combatant.chakra = result.winner.chakra;

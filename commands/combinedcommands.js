@@ -20,7 +20,7 @@ async function getBufferFromResponse(response) {
 }
 
 const { BLOODLINES } = require('./bloodline.js');
-const { runMemorySequence } = require('../utils/memory.js');
+// const { runMemorySequence } = require('../utils/memory.js'); // DISABLED - Causing battle failures
 const activeBattles = new Map(); // Exported for multiplayer commands
 
 // =======================================================================================
@@ -2739,16 +2739,8 @@ async function runBattle(interaction, player1Id, player2Id, battleType, npcTempl
 
     const users = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
 
-
-    const eligibleRanks = ['Academy Student', 'Genin', 'Chuunin'];
-    if (!player1Override && users[player1Id] && eligibleRanks.includes(users[player1Id].rank) && Math.random() < 0.2) {
-        try {
-            return await runMemorySequence(interaction, player1Id);
-        } catch (err) {
-            console.error('Error in Memory Sequence:', err);
-            // Fall through to normal battle if memory fails
-        }
-    }
+    // MEMORY SEQUENCE REMOVED - Was causing battles to fail for new players
+    // TODO: Re-implement memory sequence with proper battle result handling
 
     // Load players.json (levels and persistent player stats)
     const PLAYERS_FILE_PATH = path.resolve(__dirname, '../../menma/data/players.json');
