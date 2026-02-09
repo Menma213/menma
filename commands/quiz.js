@@ -143,12 +143,14 @@ async function startAkatsukiEvent(channel) {
         const deidaraTemplate = {
             name: "Deidara",
             image: DEIDARA_AVATAR,
-            health: 5000000000,
-            power: 20000000,
-            defense: 20000000,
-            accuracy: 100000,
+            health: 10000000000,
+            currentHealth: 10000000000,
+            maxHealth: 10000000000,
+            power: 50000000,
+            defense: 50000000,
+            accuracy: 200000,
             dodge: 50,
-            jutsu: ["Explosive Bird", "C3"],
+            jutsu: ["Explosive Bird", "C3", "Rasengan"],
             statsType: 'fixed',
             immunities: ["stun", "flinch", "drown", "possessed", "bleed", "poison", "burn", "curse", "frost", "shadow_possession", "mist", "blind", "confuse", "stumble", "zap", "siphon", "darkness", "debuff", "all"]
         };
@@ -195,6 +197,13 @@ module.exports = {
     name: 'quiz',
     description: 'Start the Akatsuki Event raid!',
     async execute(interaction, args) {
+        // Main Server Restriction
+        if (interaction.guildId !== '1381268582595297321') {
+            const msg = 'This command can only be used in the main server.';
+            if (interaction.reply) return interaction.reply({ content: msg, ephemeral: true });
+            return interaction.channel.send(msg);
+        }
+
         const userId = interaction.user ? interaction.user.id : interaction.author.id;
         const now = Date.now();
         const COOLDOWN_TIME = 12 * 60 * 60 * 1000;

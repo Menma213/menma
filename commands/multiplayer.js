@@ -22,6 +22,9 @@ module.exports = {
             const [id, state] = entries[i];
             // Match host AND channel to ensure we get the correct current battle
             if (state.player1 && state.player1.userId === interaction.user.id && state.channel.id === interaction.channel.id) {
+                if (state.battleType === 'event_fight') {
+                    return interaction.reply({ content: "Players in Zoro fights are not allowed to invite others!", ephemeral: true });
+                }
                 battleId = id;
                 battleState = state;
                 break;

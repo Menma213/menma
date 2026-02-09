@@ -51,8 +51,8 @@ function execute({
     // --- 3. DAMAGE CALCULATION ---
     // Formula: (2500 * user.power / target.defense) * (user.chakra - 5)
     try {
-        const chakraMultiplier = Math.max(1, currentChakra - 5); // Ensure at least 1
-        const baseDamageValue = 2500 * (Number(effectiveUser.power) || 1) / Math.max(1, Number(effectiveTarget.defense) || 1);
+        const chakraMultiplier = 1 + (currentChakra / 10);
+        const baseDamageValue = 500 * (Number(effectiveUser.power) || 1) / Math.max(1, Number(effectiveTarget.defense) || 1);
         const finalDamage = Math.floor(baseDamageValue * chakraMultiplier);
 
         // DO NOT manually deduct health here; return result.damage so the engine can handle it (avoids double damage)
@@ -61,8 +61,8 @@ function execute({
     } catch (e) {
         console.error("Error calculating damage in Perfect Sage:", e);
         // Robust fallback calculation
-        const chakraMultiplier = Math.max(1, currentChakra - 5);
-        const fallbackDamage = Math.floor((2500 * (effectiveUser.power || 1) / Math.max(1, effectiveTarget.defense || 1)) * chakraMultiplier);
+        const chakraMultiplier = 1 + (currentChakra / 10);
+        const fallbackDamage = Math.floor((500 * (effectiveUser.power || 1) / Math.max(1, effectiveTarget.defense || 1)) * chakraMultiplier);
         result.damage = fallbackDamage;
     }
 

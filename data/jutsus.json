@@ -2354,27 +2354,15 @@
   "Planetary Devastation": {
     "name": "Planetary Devastation",
     "description": "user traps target in a black sphere. It detonates in 10 rounds!",
-    "roundBased": true,
     "image_url": "https://static.wikia.nocookie.net/naruto/images/f/fb/Chibaku_Tensei.png/revision/latest?cb=20150309054440",
     "chakraCost": 15,
     "category": "No Category",
     "obtainment": "event Jutsu",
     "obtainable": true,
-    "roundEffects": {
-      "1": {
-        "description": "The black Sphere starts to form."
-      },
-      "2-9": {
-        "description": "The black Sphere continues to form."
-      },
-      "10": {
-        "description": "The black Sphere traps target and kills them!",
-        "effects": {
-          "type": "damage",
-          "formula": "target.health * 10"
-        }
-      }
-    }
+    "effects": [],
+    "scriptFile": "planetary_devestation.js",
+    "roundBased": true,
+    "duration": 10
   },
   "Wheel of Fate Adaptation": {
     "name": "Wheel of Fate Adaptation",
@@ -2718,7 +2706,7 @@
     "name": "Perfect Sage",
     "description": "user absorbs chakra nature, enhancing their stats and improving their combat skills ",
     "image_url": "https://media.tenor.com/4Yi8L0rA9qoAAAAM/hashirama.gif",
-    "chakraCost": 10,
+    "chakraCost": 20,
     "category": "Custom",
     "obtainment": "unobtainable",
     "obtainable": false,
@@ -3045,7 +3033,7 @@
     "effects": [
       {
         "type": "damage",
-        "formula": "50 * user.power / target.defense"
+        "formula": "150 * user.power / target.defense"
       }
     ]
   },
@@ -3058,7 +3046,7 @@
     "effects": [
       {
         "type": "damage",
-        "formula": "100 * user.power / target.defense"
+        "formula": "200 * user.power / target.defense"
       }
     ]
   },
@@ -3071,7 +3059,13 @@
     "effects": [
       {
         "type": "damage",
-        "formula": "250 * user.power / target.defense"
+        "formula": "320 * user.power / target.defense"
+      },
+      {
+        "type": "status",
+        "status": "stun",
+        "duration": 1,
+        "chance": 100
       }
     ]
   },
@@ -3098,6 +3092,12 @@
       {
         "type": "damage",
         "formula": "1000 * user.power / target.defense"
+      },
+      {
+        "type": "status",
+        "status": "stun",
+        "duration": 3,
+        "chance": 100
       }
     ]
   },
@@ -3110,7 +3110,13 @@
     "effects": [
       {
         "type": "damage",
-        "formula": "2500 * user.power / target.defense"
+        "formula": "3000 * user.power / target.defense"
+      },
+      {
+        "type": "status",
+        "status": "stun",
+        "duration": 3,
+        "chance": 100
       }
     ]
   },
@@ -3161,5 +3167,34 @@
     "obtainable": false,
     "effects": [],
     "scriptFile": "shadow_possession.js"
+  },
+  "Infinite Void": {
+    "name": "Infinite Void",
+    "description": "**Witness eternity — and be erased within it.**\n expands a boundless cosmic domain where space fractures into glowing streams of endless knowledge and cursed energy. Stars freeze mid-motion as gravity bends toward the user’s presence. The opponent’s senses are overwhelmed by infinite pressure while the user stands at the center like a divine ruler of reality itself. Every breath inside the domain feels heavier… every thought slower… until resistance becomes impossible",
+    "info": "Custom Jutsu",
+    "image_url": "https://i.pinimg.com/originals/86/86/39/86863971049510cac9362ca0212c2ab6.gif",
+    "chakraCost": 15,
+    "category": "Custom",
+    "effects": [
+      {
+        "type": "debuff",
+        "stats": {
+          "defense": "target.power * 0.15",
+          "power": "target.power * 0.15"
+        },
+        "duration": 5
+      },
+      {
+        "type": "damage",
+        "formula": "2500 * user.power / target.defense"
+      },
+      {
+        "type": "buff",
+        "stats": {
+          "power": "user.power * 20"
+        },
+        "duration": 3
+      }
+    ]
   }
 }

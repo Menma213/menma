@@ -51,7 +51,7 @@ const FLOOR_NPCS = [
     {
         name: "Kabuto Yakushi",
         image: "https://i.pinimg.com/736x/5d/cb/ee/5dcbeee3a37b58d155fb92ae78e35a61.jpg",
-        jutsu: ["Mystic Palm", "Attack", "Singularity Pulse: Requiem of the Stars"]
+        jutsu: ["Mystic Palm", "Attack", "Rasengan"]
     },
     {
         name: "Konan",
@@ -85,7 +85,7 @@ const FLOOR_NPCS = [
     },
     {
         name: "Obito Uchiha",
-        image: "",
+        image: "https://i.pinimg.com/736x/c5/99/4f/c5994f648d2745b9cc252270a729d75f.jpg",
         jutsu: ["Kamui", "Lightning Blade: All Out", "Attack"]
     }
 ];
@@ -616,6 +616,23 @@ async function handleFight(interaction, userId, userEvent, eventData) {
                 userEvent_win.zoro.cardEssence += 1;
                 if (floor === 100) {
                     userEvent_win.zoro.currentFloor = 100; // stick at 100
+
+                    // Awards for Itachi
+                    const users = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
+                    if (users[userId]) {
+                        if (!users[userId].unlocked_titles) users[userId].unlocked_titles = [];
+                        if (!users[userId].unlocked_titles.includes("The Ghost of the Uchiha")) {
+                            users[userId].unlocked_titles.push("The Ghost of the Uchiha");
+                        }
+                        fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
+                    }
+
+                    const jutsus = JSON.parse(fs.readFileSync(userJutsuPath, 'utf8'));
+                    if (jutsus[userId]) {
+                        if (!jutsus[userId].items) jutsus[userId].items = {};
+                        jutsus[userId].items["Pocket Watch"] = (jutsus[userId].items["Pocket Watch"] || 0) + 1;
+                        fs.writeFileSync(userJutsuPath, JSON.stringify(jutsus, null, 2));
+                    }
                 }
                 saveEventData(eventData_win);
             }
@@ -628,30 +645,22 @@ async function handleFight(interaction, userId, userEvent, eventData) {
             .setImage(zoroPlayer.image);
 
         if (floor === 100) {
-            winEmbed.setDescription("CONGRATULATIONS! You have defeated Itachi Uchiha. The story continues in the next update... To be continued!");
+            winEmbed.setDescription("CONGRATULATIONS! You have defeated Itachi Uchiha. The story continues in the next update... To be continued!\n\n**NEW REWARDS OBTAINED:**\n- Title: `The Ghost of the Uchiha`\n- Accessory: `Pocket Watch` (Mythical)");
         }
+
 
         await interaction.followUp({ embeds: [winEmbed] });
     } else {
-        // LOSS - Update state with lock
-        await userMutex.runExclusive(async () => {
-            const eventData_loss = loadEventData();
-            const userEvent_loss = eventData_loss.users[userId];
-            if (userEvent_loss) {
-                userEvent_loss.zoro.currentFloor = 1;
-                saveEventData(eventData_loss);
-            }
-        });
         const lossEmbed = new EmbedBuilder()
             .setTitle("BATTLE DEFEAT")
             .setColor("#FF0000")
-            .setDescription("You were defeated. You must restart from Floor 1! Keep your levels and awakenings, and try again.");
+            .setDescription(`You were defeated on Floor ${floor}. You can try again from this floor. Keep training your card level and awakenings!`);
         await interaction.followUp({ embeds: [lossEmbed] });
     }
 }
 
 async function handleLevelUp(interaction, userId, userEvent, eventData) {
-    const cost = 200000 + (userEvent.zoro.level - 1) * 50000;
+    const cost = 120000 + (userEvent.zoro.level - 1) * 25000;
     const maxLevel = (userEvent.zoro.awakenStage + 1) * 20;
 
     if (userEvent.zoro.level >= maxLevel) {
@@ -686,7 +695,7 @@ async function handleLevelUp(interaction, userId, userEvent, eventData) {
         .setTitle("Zoro Level Up!")
         .setColor("#00FF00")
         .setDescription(`Zoro is now Level **${levelUpData.level}**!\n\n**HP:** ${stats.health}\n**Power:** ${stats.power}\n**Defense:** ${stats.defense}`)
-        .setFooter({ text: `Next Level Cost: ${(200000 + (levelUpData.level - 1) * 50000).toLocaleString()} Ryo` });
+        .setFooter({ text: `Next Level Cost: ${(120000 + (levelUpData.level - 1) * 25000).toLocaleString()} Ryo` });
 
     await interaction.reply({ embeds: [embed] });
 }

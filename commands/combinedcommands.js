@@ -66,6 +66,7 @@ let effectsConfig = fs.existsSync(effectsConfigPath) ? JSON.parse(fs.readFileSyn
 // --- Enhanced Effect Handlers ---
 const effectHandlers = {
     lifestealMaxHP(user, target, percentage) {
+        if (target.izanamiImmortal) return 0;
         const amount = Math.floor((target.maxHealth || target.health || 100) * (percentage / 100));
         target.currentHealth = (target.currentHealth || 0) - amount;
         user.currentHealth = (user.currentHealth || 0) + amount;
@@ -580,8 +581,13 @@ const effectHandlers = {
                     result.specialEffects.push(`${combatant.name} is ${effect.status}, taking ${dotDamage} damage.`);
                 }
 
-                combatant.currentHealth = combatant.currentHealth - dotDamage;
-                result.damage += dotDamage;
+                if (!combatant.izanamiImmortal) {
+                    combatant.currentHealth = combatant.currentHealth - dotDamage;
+                    result.damage += dotDamage;
+                } else {
+                    dotDamage = 0;
+                    result.specialEffects.push(`${combatant.name} is IMMORTAL! No damage taken from ${effect.status}.`);
+                }
             }
 
             // Handle healing over time
@@ -627,8 +633,12 @@ const effectHandlers = {
                             max: Math.max,
                             min: Math.min
                         }));
-                    combatant.currentHealth = combatant.currentHealth - Math.abs(amount);
-                    result.damage += Math.abs(amount);
+                    if (!combatant.izanamiImmortal) {
+                        combatant.currentHealth = combatant.currentHealth - Math.abs(amount);
+                        result.damage += Math.abs(amount);
+                    } else {
+                        result.specialEffects.push(`${combatant.name} is IMMORTAL! No damage taken.`);
+                    }
                     result.specialEffects.push(`${combatant.name} lost ${Math.abs(amount)} HP (per-round cost).`);
                 } catch (err) {
                     console.error('Error evaluating health_per_round:', err);
@@ -1790,13 +1800,19 @@ function executeJutsu(baseUser, baseTarget, effectiveUser, effectiveTarget, juts
                 const finalResult = customResult;
 
                 // If the custom jutsu is round-based, add it to the activeCustomRoundJutsus
-                if (jutsu.isRoundBased) {
+                // Only add on first activation to avoid duplicates
+                if (jutsu.roundBased && isFirstActivation) {
                     baseUser.activeCustomRoundJutsus = baseUser.activeCustomRoundJutsus || [];
-                    baseUser.activeCustomRoundJutsus.push({
-                        name: jutsuName,
-                        scriptFile: jutsu.scriptFile,
-                        roundsLeft: jutsu.duration || 3 // Assuming duration is defined in jutsus.json or script
-                    });
+                    // Check if not already active
+                    const alreadyActive = baseUser.activeCustomRoundJutsus.find(j => j.name === jutsuName);
+                    if (!alreadyActive) {
+                        baseUser.activeCustomRoundJutsus.push({
+                            name: jutsuName,
+                            scriptFile: jutsu.scriptFile,
+                            roundsLeft: (jutsu.duration || 3) - 1, // Subtract 1 since round 1 just happened
+                            currentRound: 1
+                        });
+                    }
                 }
                 return finalResult;
             } else {
@@ -2597,10 +2613,20 @@ function applyDamageWithReflection(attacker, defender, damageAmount, actionResul
         if (damageAmount > initialDefenderHealth) {
             tookOverwhelmingDamage = true;
             // Shield breaks: Defender takes full damage, Attacker takes NONE
-            defender.currentHealth = defender.currentHealth - damageAmount;
+            if (!defender.izanamiImmortal) {
+                defender.currentHealth = defender.currentHealth - damageAmount;
+            } else {
+                actionResult.specialEffects = actionResult.specialEffects || [];
+                actionResult.specialEffects.push(`${defender.name} is IMMORTAL! Shield shatter damage nullified.`);
+            }
         } else {
             // Shield holds: Attacker takes the damage
-            attacker.currentHealth = attacker.currentHealth - damageAmount;
+            if (!attacker.izanamiImmortal) {
+                attacker.currentHealth = attacker.currentHealth - damageAmount;
+            } else {
+                actionResult.specialEffects = actionResult.specialEffects || [];
+                actionResult.specialEffects.push(`${attacker.name} is IMMORTAL! Reflected damage nullified.`);
+            }
             // Defender heals (absorbs the hit) - capped at max HP handled by health assignment usually, ensuring no overheal loop logic here
             const maxHP = defender.maxHealth || defender.health || 0;
             defender.currentHealth = Math.min(maxHP, defender.currentHealth + damageAmount);
@@ -2629,10 +2655,12 @@ function applyDamageWithReflection(attacker, defender, damageAmount, actionResul
         // If already fully adapted (4+ hits), reflect 50% and take no damage
         if (hits >= 4) {
             const reflectedDmg = Math.floor(damageAmount * 0.5);
-            attacker.currentHealth -= reflectedDmg;
+            if (!attacker.izanamiImmortal) {
+                attacker.currentHealth -= reflectedDmg;
+            }
             actionResult.specialEffects = actionResult.specialEffects || [];
-            actionResult.specialEffects.push(`**ADAPTED!** ${defender.name} has fully adapted to ${attackName}. ${attacker.name} took ${reflectedDmg} reflected damage!`);
-            actionResult.reflectedDamageMessage = `**ADAPTED!** ${defender.name} fully adapted: ${attacker.name} took ${reflectedDmg} reflected damage!`;
+            actionResult.specialEffects.push(`**ADAPTED!** ${defender.name} has fully adapted to ${attackName}. ${attacker.name} took ${attacker.izanamiImmortal ? 0 : reflectedDmg} reflected damage!`);
+            actionResult.reflectedDamageMessage = `**ADAPTED!** ${defender.name} fully adapted: ${attacker.name} took ${attacker.izanamiImmortal ? 0 : reflectedDmg} reflected damage!`;
             return; // No damage to defender
         }
 
@@ -2665,7 +2693,12 @@ function applyDamageWithReflection(attacker, defender, damageAmount, actionResul
     }
 
     // Default: No reflection or partial adaptation: defender takes damage
-    defender.currentHealth = defender.currentHealth - damageAmount;
+    if (!defender.izanamiImmortal) {
+        defender.currentHealth = defender.currentHealth - damageAmount;
+    } else {
+        actionResult.specialEffects = actionResult.specialEffects || [];
+        actionResult.specialEffects.push(`${defender.name} is IMMORTAL! Damage nullified.`);
+    }
 }
 
 
@@ -2980,6 +3013,7 @@ async function runBattle(interaction, player1Id, player2Id, battleType, npcTempl
         activeBattles.set(interaction.id, {
             player1,
             player2,
+            battleType,
             channel: interaction.channel,
             collector: null,
             newPlayersQueue: []
@@ -3055,7 +3089,11 @@ async function runBattle(interaction, player1Id, player2Id, battleType, npcTempl
             [player1, player2].forEach(entity => {
                 const res = effectHandlers.processActiveEffects(entity);
                 if (res.damage) {
-                    entity.currentHealth = (entity.currentHealth || 0) - res.damage;
+                    if (!entity.izanamiImmortal) {
+                        entity.currentHealth = (entity.currentHealth || 0) - res.damage;
+                    } else {
+                        // Damage already nullified in processActiveEffects but we can add a check here for safety
+                    }
                 }
                 if (res.chakraDrain) {
                     entity.chakra = Math.max(0, (entity.chakra || 0) - res.chakraDrain);
@@ -3425,6 +3463,79 @@ async function runBattle(interaction, player1Id, player2Id, battleType, npcTempl
             applyRoundBasedEffects(player1ActiveJutsus, player1, player2, player1RoundBasedSummaries);
             applyRoundBasedEffects(player2ActiveJutsus, player2, player1, player2RoundBasedSummaries);
 
+            // --- CUSTOM ROUND-BASED JUTSU PROCESSING (for script-based jutsus) ---
+            const processCustomRoundJutsus = (user, target, summariesArray) => {
+                if (!user.activeCustomRoundJutsus || user.activeCustomRoundJutsus.length === 0) return;
+
+                const customJutsusPath = path.join(__dirname, '../data/custom_jutsus');
+                const toRemove = [];
+
+                for (let i = 0; i < user.activeCustomRoundJutsus.length; i++) {
+                    const customJutsu = user.activeCustomRoundJutsus[i];
+                    customJutsu.currentRound = (customJutsu.currentRound || 1) + 1;
+
+                    try {
+                        const customScriptFile = path.join(customJutsusPath, customJutsu.scriptFile);
+                        const customJutsuModule = require(customScriptFile);
+
+                        if (typeof customJutsuModule.execute === 'function') {
+                            const jutsu = jutsuList[customJutsu.name];
+                            const result = customJutsuModule.execute({
+                                baseUser: user,
+                                baseTarget: target,
+                                effectiveUser: getEffectiveStats(user),
+                                effectiveTarget: getEffectiveStats(target),
+                                jutsuData: jutsu,
+                                round: customJutsu.currentRound,
+                                isFirstActivation: false,
+                                jutsuList,
+                                effectHandlers,
+                                getEffectiveStats
+                            });
+
+                            // Apply damage/heal from the result
+                            if (result.damage > 0) {
+                                if (target.izanamiImmortal) {
+                                    result.specialEffects = result.specialEffects || [];
+                                    result.specialEffects.push(`${target.name} is IMMORTAL! No damage taken.`);
+                                } else {
+                                    target.currentHealth -= result.damage;
+                                }
+                            }
+                            if (result.heal > 0) {
+                                user.currentHealth = Math.min(user.currentHealth + result.heal, user.maxHealth || user.health);
+                            }
+
+                            // Add to summaries
+                            summariesArray.push({
+                                desc: result.description || `${customJutsu.name} (Round ${customJutsu.currentRound})`,
+                                effects: [
+                                    ...(result.damage > 0 ? [{ type: 'damage', value: result.damage }] : []),
+                                    ...(result.heal > 0 ? [{ type: 'heal', value: result.heal }] : []),
+                                    ...(result.specialEffects || []).map(msg => ({ type: 'text', value: msg }))
+                                ]
+                            });
+                        }
+                    } catch (err) {
+                        console.error(`Error processing custom round jutsu ${customJutsu.name}:`, err);
+                    }
+
+                    // Check if jutsu should be removed
+                    customJutsu.roundsLeft--;
+                    if (customJutsu.roundsLeft <= 0) {
+                        toRemove.push(i);
+                    }
+                }
+
+                // Remove completed jutsus (in reverse to avoid index issues)
+                for (let i = toRemove.length - 1; i >= 0; i--) {
+                    user.activeCustomRoundJutsus.splice(toRemove[i], 1);
+                }
+            };
+
+            processCustomRoundJutsus(player1, player2, player1RoundBasedSummaries);
+            processCustomRoundJutsus(player2, player1, player2RoundBasedSummaries);
+
             // --- IZANAMI PHASE MANAGEMENT & INFINITY ---
             [player1, player2].forEach(p => {
                 if (p.izanamiActive) {
@@ -3432,14 +3543,14 @@ async function runBattle(interaction, player1Id, player2Id, battleType, npcTempl
                     if (p.izanamiRound <= 3) {
                         p.izanamiPhase = "recording";
                         p.izanamiImmortal = true;
-                        // Set health to very high but don't force it every turn if we can just nullify damage
-                        p.currentHealth = Math.max(p.currentHealth || 0, 999999);
-                        p.chakra = Math.max(p.chakra || 0, 999999);
+                        // Set health to a truly massive number to visually represent immortality
+                        p.currentHealth = Math.max(p.currentHealth || 0, 999999999999999);
+                        p.chakra = Math.max(p.chakra || 0, 999999999999999);
 
                         const opp = (p === player1) ? player2 : player1;
                         opp.izanamiImmortal = true;
-                        opp.currentHealth = Math.max(opp.currentHealth || 0, 999999);
-                        opp.chakra = Math.max(opp.chakra || 0, 999999);
+                        opp.currentHealth = Math.max(opp.currentHealth || 0, 999999999999999);
+                        opp.chakra = Math.max(opp.chakra || 0, 999999999999999);
 
                         const pSummaries = (p === player1) ? player1RoundBasedSummaries : player2RoundBasedSummaries;
                         pSummaries.push({ desc: "Izanami: Fate is being decided (Immortal Phase)" });
