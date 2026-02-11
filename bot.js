@@ -364,6 +364,108 @@ if (!REDIRECT_URI || !WEB_CLIENT_SECRET) {
 }
 
 // Serve static files from 'website' directory
+// API: Meditate Session
+webApp.post('/api/meditate', async (req, res) => {
+    const { userId } = req.body;
+    if (!userId) return res.status(400).json({ success: false, error: "Missing userId" });
+    try {
+        const IDLE_GRIND_FILE = path.join(__dirname, 'data', 'idle_grind.json');
+        let idleData = fs.existsSync(IDLE_GRIND_FILE) ? JSON.parse(fs.readFileSync(IDLE_GRIND_FILE, 'utf8')) : {};
+        if (!idleData[userId]) idleData[userId] = { multiplier: 1.0 };
+        idleData[userId].isMeditating = true;
+        idleData[userId].lastStart = Date.now();
+        fs.writeFileSync(IDLE_GRIND_FILE, JSON.stringify(idleData, null, 2));
+        res.json({ success: true });
+    } catch (e) {
+        console.error('[API Error] /api/meditate:', e);
+        res.status(500).json({ success: false, error: 'Server error' });
+    }
+});
+
+// API: Meditate Complete
+webApp.post('/api/meditate-complete', async (req, res) => {
+    const { userId } = req.body;
+    if (!userId) return res.status(400).json({ error: 'Missing userId' });
+    try {
+        const PLAYERS_FILE = path.join(__dirname, 'data', 'players.json');
+        const USERS_FILE = path.join(__dirname, 'data', 'users.json');
+        const IDLE_GRIND_FILE = path.join(__dirname, 'data', 'idle_grind.json');
+        const players = fs.existsSync(PLAYERS_FILE) ? JSON.parse(fs.readFileSync(PLAYERS_FILE, 'utf8')) : {};
+        const users = fs.existsSync(USERS_FILE) ? JSON.parse(fs.readFileSync(USERS_FILE, 'utf8')) : {};
+        const idleData = fs.existsSync(IDLE_GRIND_FILE) ? JSON.parse(fs.readFileSync(IDLE_GRIND_FILE, 'utf8')) : {};
+        const userIdle = idleData[userId];
+        if (!userIdle || !userIdle.isMeditating) return res.json({ success: false, error: 'Not meditating' });
+        const now = Date.now();
+        const elapsedMs = now - userIdle.lastStart;
+        const progress = Math.min(elapsedMs / 60000, 1.0);
+        const userData = users[userId] || { wins: 0, level: 1 };
+        const levelReduction = Math.floor((userData.wins || 0) / 10);
+        const earnedLevels = Math.floor(progress * Math.max(15 - levelReduction, 0));
+        const earnedMoney = Math.floor(progress * 2500000 * (userIdle.multiplier || 1.0));
+        if (users[userId]) users[userId].level = (users[userId].level || 1) + earnedLevels;
+        if (!players[userId]) players[userId] = { id: userId, money: 0 };
+        players[userId].money = (players[userId].money || 0) + earnedMoney;
+        userIdle.isMeditating = false;
+        userIdle.multiplier = 1.0;
+        fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
+        fs.writeFileSync(PLAYERS_FILE, JSON.stringify(players, null, 2));
+        fs.writeFileSync(IDLE_GRIND_FILE, JSON.stringify(idleData, null, 2));
+        try {
+            const user = await client.users.fetch(userId);
+            if (user) user.send(`🧘 **Meditation Complete!**\nYou gained **${earnedLevels} Levels** and **$${earnedMoney.toLocaleString()}**!`);
+        } catch (e) { }
+        res.json({ success: true, message: `Gained ${earnedLevels} Levels & ${earnedMoney.toLocaleString()} Ryo` });
+    } catch (e) {
+        console.error('[API Error] /api/meditate-complete:', e);
+        res.status(500).json({ error: 'Internal Error' });
+    }
+});
+
+// API: Idle Data
+webApp.get('/api/idle-data', async (req, res) => {
+    const userId = req.query.userId;
+    if (!userId) return res.status(400).json({ error: 'Missing userId' });
+    try {
+        const PLAYERS_FILE = path.join(__dirname, 'data', 'players.json');
+        const USERS_FILE = path.join(__dirname, 'data', 'users.json');
+        const IDLE_GRIND_FILE = path.join(__dirname, 'data', 'idle_grind.json');
+        const players = fs.existsSync(PLAYERS_FILE) ? JSON.parse(fs.readFileSync(PLAYERS_FILE, 'utf8')) : {};
+        const users = fs.existsSync(USERS_FILE) ? JSON.parse(fs.readFileSync(USERS_FILE, 'utf8')) : {};
+        const idleData = fs.existsSync(IDLE_GRIND_FILE) ? JSON.parse(fs.readFileSync(IDLE_GRIND_FILE, 'utf8')) : {};
+        const playerData = players[userId] || {};
+        const userData = users[userId] || { wins: 0, level: 1 };
+        const userIdle = idleData[userId] || { isMeditating: false, lastStart: 0, multiplier: 1.0 };
+        let pendingLevels = 0;
+        let pendingMoney = 0;
+        if (userIdle.isMeditating) {
+            const now = Date.now();
+            const elapsedMs = now - userIdle.lastStart;
+            const progress = Math.min(elapsedMs / 60000, 1.0);
+            const levelReduction = Math.floor((userData.wins || 0) / 10);
+            pendingLevels = Math.floor(progress * Math.max(15 - levelReduction, 0));
+            pendingMoney = Math.floor(progress * 2500000 * (userIdle.multiplier || 1.0));
+        }
+        res.json({
+            success: true,
+            adtokens: playerData.adtokens || 0,
+            wins: userData.wins || 0,
+            level: userData.level || 1,
+            pendingLevels,
+            pendingMoney,
+            isMeditating: userIdle.isMeditating,
+            multiplier: userIdle.multiplier || 1.0
+        });
+    } catch (e) {
+        console.error('[API Error] /api/idle-data:', e);
+        res.status(500).json({ error: 'Internal Error' });
+    }
+});
+
+// Safety Catch-all for /api routes to prevent HTML fall-through (fixes "Unexpected token <" error)
+webApp.all('/api/*', (req, res) => {
+    res.status(404).json({ success: false, error: "API Route Not Found" });
+});
+
 webApp.use(express.static(path.join(__dirname, 'website')));
 
 webApp.get('/', (req, res) => {

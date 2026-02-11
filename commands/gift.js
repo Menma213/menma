@@ -146,6 +146,15 @@ module.exports = {
         const sub = interaction.options.getSubcommand();
         const userId = interaction.user.id;
 
+        if (sub !== 'inventory') {
+            if (!interaction.member || !interaction.member.roles.cache.has(ADMIN_ROLE_ID)) {
+                return interaction.reply({ content: "You do not have the required role to use this command.", ephemeral: true });
+            }
+            if (interaction.guildId !== '1381268582595297321') {
+                return interaction.reply({ content: "This command can only be used in the main server.", ephemeral: true });
+            }
+        }
+
 
 
         // Helper function to log SS gifts to the specific channel
@@ -252,23 +261,11 @@ module.exports = {
         }
 
         if (sub === 'money') {
-            if (interaction.guildId !== '1381268582595297321') return interaction.reply({ content: "This command can only be used in the main server.", ephemeral: true });
             const target = interaction.options.getUser('user');
             const amount = interaction.options.getInteger('amount');
             if (amount <= 0) return interaction.reply({ content: "Amount must be positive.", ephemeral: true });
-            if (target.id === userId && !interaction.member.roles.cache.has(ADMIN_ROLE_ID)) return interaction.reply({ content: "You can't gift yourself.", ephemeral: true });
 
             let users = loadUserData();
-            if (!interaction.member.roles.cache.has(ADMIN_ROLE_ID)) {
-                if (!users[userId] || typeof users[userId].money !== 'number') {
-                    return interaction.reply({ content: "You don't have a valid account or money balance.", ephemeral: true });
-                }
-                if (users[userId].money < amount) {
-                    return interaction.reply({ content: "You don't have enough money to gift that amount.", ephemeral: true });
-                }
-                users[userId].money -= amount;
-                saveUserData(users);
-            }
             let giftData = loadGiftData();
             if (!giftData[target.id]) giftData[target.id] = [];
             const id = generateGiftId(giftData[target.id]);
@@ -293,15 +290,10 @@ module.exports = {
         }
 
         if (sub === 'ss') {
-            if (interaction.guildId !== '1381268582595297321') return interaction.reply({ content: "This command can only be used in the main server.", ephemeral: true });
-            if (!interaction.member.permissions.has('Administrator') && !interaction.member.roles.cache.has(ADMIN_ROLE_ID)) {
-                return interaction.reply({ content: "Only admins can gift Shinobi Shards.", ephemeral: true });
-            }
             const target = interaction.options.getUser('user');
             const amount = interaction.options.getInteger('amount');
             const giftId = interaction.options.getInteger('id');
             if (amount <= 0) return interaction.reply({ content: "Amount must be positive.", ephemeral: true });
-            if (target.id === userId && !interaction.member.roles.cache.has(ADMIN_ROLE_ID)) return interaction.reply({ content: "You can't gift yourself.", ephemeral: true });
 
             let giftData = loadGiftData();
             if (!giftData[target.id]) giftData[target.id] = [];
@@ -331,10 +323,6 @@ module.exports = {
         }
 
         if (sub === 'ss_global') {
-            if (interaction.guildId !== '1381268582595297321') return interaction.reply({ content: "This command can only be used in the main server.", ephemeral: true });
-            if (!interaction.member.permissions.has('Administrator') && !interaction.member.roles.cache.has(ADMIN_ROLE_ID)) {
-                return interaction.reply({ content: "Only admins can gift Shinobi Shards globally.", ephemeral: true });
-            }
             const amount = interaction.options.getInteger('amount');
             const giftId = interaction.options.getInteger('id');
             if (amount <= 0) return interaction.reply({ content: "Amount must be positive.", ephemeral: true });
@@ -374,10 +362,6 @@ module.exports = {
         }
 
         if (sub === 'combo') {
-            if (interaction.guildId !== '1381268582595297321') return interaction.reply({ content: "This command can only be used in the main server.", ephemeral: true });
-            if (!interaction.member.permissions.has('Administrator') && !interaction.member.roles.cache.has(ADMIN_ROLE_ID)) {
-                return interaction.reply({ content: "Only admins can gift Combos.", ephemeral: true });
-            }
             const target = interaction.options.getUser('user');
             const comboName = interaction.options.getString('name');
             const giftId = interaction.options.getInteger('id');
@@ -408,10 +392,6 @@ module.exports = {
         }
 
         if (sub === 'combo_global') {
-            if (interaction.guildId !== '1381268582595297321') return interaction.reply({ content: "This command can only be used in the main server.", ephemeral: true });
-            if (!interaction.member.permissions.has('Administrator') && !interaction.member.roles.cache.has(ADMIN_ROLE_ID)) {
-                return interaction.reply({ content: "Only admins can gift Combos globally.", ephemeral: true });
-            }
             const comboName = interaction.options.getString('name');
             const giftId = interaction.options.getInteger('id');
 
@@ -448,10 +428,6 @@ module.exports = {
         }
 
         if (sub === 'ramen') {
-            if (interaction.guildId !== '1381268582595297321') return interaction.reply({ content: "This command can only be used in the main server.", ephemeral: true });
-            if (!interaction.member.permissions.has('Administrator') && !interaction.member.roles.cache.has(ADMIN_ROLE_ID)) {
-                return interaction.reply({ content: "Only admins can gift Ramen Tickets.", ephemeral: true });
-            }
             const target = interaction.options.getUser('user');
             const amount = interaction.options.getInteger('amount');
             const giftId = interaction.options.getInteger('id');
@@ -483,10 +459,6 @@ module.exports = {
         }
 
         if (sub === 'ramen_global') {
-            if (interaction.guildId !== '1381268582595297321') return interaction.reply({ content: "This command can only be used in the main server.", ephemeral: true });
-            if (!interaction.member.permissions.has('Administrator') && !interaction.member.roles.cache.has(ADMIN_ROLE_ID)) {
-                return interaction.reply({ content: "Only admins can gift Ramen Tickets globally.", ephemeral: true });
-            }
             const amount = interaction.options.getInteger('amount');
             const giftId = interaction.options.getInteger('id');
             if (amount <= 0) return interaction.reply({ content: "Amount must be positive.", ephemeral: true });

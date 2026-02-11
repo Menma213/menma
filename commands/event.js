@@ -18,8 +18,8 @@ const ZORO_BASE = {
     power: 50,
     defense: 50,
     chakra: 100,
-    accuracy: 95,
-    dodge: 10
+    accuracy: 120, // Increased from 95 to help with scaling NPC dodge
+    dodge: 15      // Small buff to dodge too
 };
 
 const ZORO_LEVEL_GAIN = {
@@ -46,7 +46,7 @@ const FLOOR_NPCS = [
     {
         name: "Hidan",
         image: "https://i.pinimg.com/736x/52/3f/b4/523fb4d06642379ef9176ac531ea7008.jpg",
-        jutsu: ["Praise Jashin", "Attack", "Rasengan"]
+        jutsu: ["Mystic Palm", "Attack", "Rasengan"]
     },
     {
         name: "Kabuto Yakushi",
@@ -587,10 +587,10 @@ async function handleFight(interaction, userId, userEvent, eventData) {
         defense: 50 * multiplier * (1 + (floor - 1) * 0.1),
         chakra: 1000,
         accuracy: 90 + floor,
-        dodge: 10 + floor,
+        dodge: 10 + floor * 0.5, // Scaled down dodge to be less punishing
         jutsu: npcData.jutsu || ["Attack", "Fireball Jutsu", "Rasengan"],
         statsType: "fixed",
-        immunities: ["stun", "bleed", "burn", "status"]
+        immunities: [] // Removed all immunities as requested
     };
 
     if (floor === 100) {
@@ -661,7 +661,7 @@ async function handleFight(interaction, userId, userEvent, eventData) {
 
 async function handleLevelUp(interaction, userId, userEvent, eventData) {
     const cost = 120000 + (userEvent.zoro.level - 1) * 25000;
-    const maxLevel = (userEvent.zoro.awakenStage + 1) * 20;
+    const maxLevel = 50 + (userEvent.zoro.awakenStage * 30); // Reach 200 at stage 5 (50 + 150)
 
     if (userEvent.zoro.level >= maxLevel) {
         return interaction.reply({ content: `Zoro has reached his current level cap (${maxLevel})! Awaken him to increase the cap.`, ephemeral: true });
@@ -728,7 +728,7 @@ async function handleAwaken(interaction, userId, userEvent, eventData) {
     const embed = new EmbedBuilder()
         .setTitle("ZORO AWAKENED!")
         .setColor("#FFD700")
-        .setDescription(`Zoro has reached Awakening Stage **${awakenData.awakenStage}**!\n\n**Unlocked Jutsu:** ${newJutsu}\n**New Level Cap:** ${(awakenData.awakenStage + 1) * 20}`)
+        .setDescription(`Zoro has reached Awakening Stage **${awakenData.awakenStage}**!\n\n**Unlocked Jutsu:** ${newJutsu}\n**New Level Cap:** ${50 + (awakenData.awakenStage * 30)}`)
         .setImage("https://i.pinimg.com/736x/28/95/36/289536f9297400c9b08101dec6b9ec08.jpg");
 
     await interaction.reply({ embeds: [embed] });

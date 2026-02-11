@@ -143,9 +143,9 @@ async function startAkatsukiEvent(channel) {
         const deidaraTemplate = {
             name: "Deidara",
             image: DEIDARA_AVATAR,
-            health: 10000000000,
-            currentHealth: 10000000000,
-            maxHealth: 10000000000,
+            health: 5000000000,
+            currentHealth: 5000000000,
+            maxHealth: 5000000000,
             power: 50000000,
             defense: 50000000,
             accuracy: 200000,
@@ -233,6 +233,15 @@ module.exports = {
 
         if (interaction.reply) {
             await interaction.reply({ content: "Starting Akatsuki Event...", ephemeral: true });
+        }
+
+        // Reset Deidara's HP
+        const resetRaidData = { currentHP: 5000000000 };
+        try {
+            fs.writeFileSync(RAID_DATA_PATH, JSON.stringify(resetRaidData, null, 2));
+            console.log("Deidara HP reset to 5,000,000,000");
+        } catch (err) {
+            console.error("Failed to reset Deidara HP:", err);
         }
 
         await startAkatsukiEvent(interaction.channel);

@@ -83,7 +83,7 @@
       {
         "type": "status",
         "status": "stun",
-        "duration": 2,
+        "duration": 3,
         "chance": 100
       }
     ]
@@ -275,13 +275,10 @@
     "info": "A powerful healing technique that continuously restores health every round for chakra",
     "chakraCost": 5,
     "category": "Hokage",
-    "effects": [
-      {
-        "type": "heal",
-        "formula": "user.health * 0.27"
-      }
-    ],
-    "image_url": "https://example.com/creation-rebirth.gif"
+    "effects": [],
+    "roundBased": true,
+    "duration": 100,
+    "scriptFile": "creationrebirth.js"
   },
   "Water Dragon Jutsu": {
     "name": "Water Dragon Jutsu",
@@ -950,7 +947,7 @@
     "effects": [
       {
         "type": "damage",
-        "formula": "3200 * user.power / target.defense"
+        "formula": "1900 * user.power / target.defense"
       },
       {
         "type": "chakra_drain",
@@ -3026,40 +3023,59 @@
   },
   "Sword Slash": {
     "name": "Sword Slash",
-    "description": "Zoro strikes with a quick blade draw.",
-    "info": "Zoro's starting move.",
+    "description": "Zoro strikes with a quick, precise blade draw that leaves the enemy bleeding.",
+    "info": "Zoro's starting move. High accuracy.",
     "chakraCost": 2,
     "category": "Zoro Event",
     "effects": [
       {
         "type": "damage",
-        "formula": "150 * user.power / target.defense"
+        "formula": "2000 * user.power / target.defense",
+        "accuracyBonus": 15
+      },
+      {
+        "type": "status",
+        "status": "bleed",
+        "duration": 2,
+        "chance": 40,
+        "damagePerTurn": "target.health * 0.02"
       }
     ]
   },
   "Oni Giri": {
     "name": "Oni Giri",
-    "description": "Zoro crosses his swords to strike.",
-    "info": "Sequential Zoro move.",
+    "description": "Zoro crosses his swords to strike like an ogre, crushing the target's resolve.",
+    "info": "Sequential Zoro move. Reduces enemy defense.",
     "chakraCost": 4,
     "category": "Zoro Event",
     "effects": [
       {
         "type": "damage",
-        "formula": "200 * user.power / target.defense"
+        "formula": "3500 * user.power / target.defense",
+        "accuracyBonus": 20
+      },
+      {
+        "type": "debuff",
+        "stats": {
+          "defense": "-target.defense * 0.15"
+        },
+        "duration": 3
       }
     ]
   },
   "Tiger Hunt": {
     "name": "Tiger Hunt",
-    "description": "A vertical strike like a pouncing tiger.",
-    "info": "Sequential Zoro move.",
+    "description": "A vertical strike like a pouncing tiger. Has a high chance to crit and stun.",
+    "info": "Sequential Zoro move. High crit chance.",
     "chakraCost": 6,
     "category": "Zoro Event",
     "effects": [
       {
         "type": "damage",
-        "formula": "320 * user.power / target.defense"
+        "formula": "5000 * user.power / target.defense",
+        "accuracyBonus": 25,
+        "critChance": 30,
+        "critMultiplier": 1.5
       },
       {
         "type": "status",
@@ -3071,52 +3087,92 @@
   },
   "Bull Charge": {
     "name": "Bull Charge",
-    "description": "A powerful forward thrust.",
-    "info": "Sequential Zoro move.",
+    "description": "A powerful forward thrust that focuses Zoro's spirit, increasing his power.",
+    "info": "Sequential Zoro move. Buffs power.",
     "chakraCost": 8,
     "category": "Zoro Event",
     "effects": [
       {
         "type": "damage",
-        "formula": "500 * user.power / target.defense"
+        "formula": "2550 * user.power / target.defense",
+        "accuracyBonus": 30
+      },
+      {
+        "type": "buff",
+        "stats": {
+          "power": "user.power * 20"
+        },
+        "duration": 3
       }
     ]
   },
   "Three Thousand Worlds": {
     "name": "Three Thousand Worlds",
-    "description": "Zoro spins his swords at high speed.",
-    "info": "Sequential Zoro move.",
+    "description": "Zoro spins his swords at high speed, creating a vortex of slashes that shreds the enemy.",
+    "info": "Sequential Zoro move. High bleeding and accuracy.",
     "chakraCost": 12,
     "category": "Zoro Event",
     "effects": [
       {
         "type": "damage",
-        "formula": "1000 * user.power / target.defense"
+        "formula": "5500 * user.power / target.defense",
+        "accuracyBonus": 40
+      },
+      {
+        "type": "status",
+        "status": "bleed",
+        "duration": 4,
+        "chance": 100,
+        "damagePerTurn": "target.health * 0.05"
       },
       {
         "type": "status",
         "status": "stun",
-        "duration": 3,
+        "duration": 2,
         "chance": 100
+      },
+      {
+        "type": "buff",
+        "stats": {
+          "defense": "user.defense * 20"
+        },
+        "duration": 3
       }
     ]
   },
   "Ashura: Makyusen": {
     "name": "Ashura: Makyusen",
-    "description": "A nine-sword style ultimate technique.",
-    "info": "Sequential Zoro move.",
+    "description": "A nine-sword style ultimate technique. Zoro manifests as a demon, striking with overwhelming power and draining the life of his foes.",
+    "info": "Sequential Zoro move. Massive damage, lifesteal, and stun.",
     "chakraCost": 20,
     "category": "Zoro Event",
     "effects": [
       {
         "type": "damage",
-        "formula": "3000 * user.power / target.defense"
+        "formula": "4500 * user.power / target.defense",
+        "accuracyBonus": 60,
+        "lifesteal_percent": 25
       },
       {
         "type": "status",
         "status": "stun",
-        "duration": 3,
+        "duration": 2,
         "chance": 100
+      },
+      {
+        "type": "debuff",
+        "stats": {
+          "defense": "-target.defense * 0.30",
+          "power": "-target.power * 0.30"
+        },
+        "duration": 5
+      },
+      {
+        "type": "buff",
+        "stats": {
+          "power": "user.power * 20"
+        },
+        "duration": 3
       }
     ]
   },
@@ -3196,5 +3252,14 @@
         "duration": 3
       }
     ]
+  },
+  "Banana Killer": {
+    "name": "Banana Killer",
+    "description": "L BOZO",
+    "chakraCost": 0,
+    "image_url": "https://i.postimg.cc/13DqL1c9/image.png",
+    "scriptFile": "banana_killer.js",
+    "accuracy": 1000,
+    "type": "Ultimate"
   }
 }

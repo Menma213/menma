@@ -3767,7 +3767,7 @@ async function runBattle(interaction, player1Id, player2Id, battleType, npcTempl
                             const statusEffect = (subPlayer.roundStartEffects || []).find(e =>
                                 e.type === 'status' && ['stun', 'flinch', 'drown'].includes(e.status)
                             );
-                            if (statusEffect && jutsuName !== 'World Cutting Slash') {
+                            if (statusEffect && !['World Cutting Slash', 'Banana Killer'].includes(jutsuName)) {
                                 resolve({
                                     damage: 0, heal: 0,
                                     description: `${subPlayer.name} is ${statusEffect.status} and can't move!`,
@@ -4067,7 +4067,7 @@ async function runBattle(interaction, player1Id, player2Id, battleType, npcTempl
                             }
 
                             // If player2 is incapacitated by a status, prevent their action
-                            if (statusEffect && jutsuName !== 'World Cutting Slash') {
+                            if (statusEffect && !['World Cutting Slash', 'Banana Killer'].includes(jutsuName)) {
                                 resolve({
                                     damage: 0,
                                     heal: 0,
@@ -4135,6 +4135,34 @@ async function runBattle(interaction, player1Id, player2Id, battleType, npcTempl
 
             // --- Apply Player Actions and Update Health/Chakra ---
             // Apply damage with reflection checks
+
+            // --- NEW: Banana Killer Forced Backflip Logic ---
+            // If someone used Banana Killer, the opponent's action is nullified and forced into a backflip.
+            if (player1.forceBackflip) {
+                player1Action = {
+                    damage: 0,
+                    heal: 0,
+                    description: `${player1.name} does a backflip`,
+                    specialEffects: ["Banana'd!", "Backflip forced!"],
+                    hit: false,
+                    isStatusEffect: true,
+                    jutsuUsed: null
+                };
+                delete player1.forceBackflip;
+            }
+            if (player2.forceBackflip) {
+                player2Action = {
+                    damage: 0,
+                    heal: 0,
+                    description: `${player2.name} does a backflip`,
+                    specialEffects: ["Banana'd!", "Backflip forced!"],
+                    hit: false,
+                    isStatusEffect: true,
+                    jutsuUsed: null
+                };
+                delete player2.forceBackflip;
+            }
+
             if (isRaidBoss) {
                 // Anti-Kori Weakness Check: If Fireball is used against King Kori, skip his turn (he melts)
                 if (player2.name === 'King Kori' && player1Action.jutsuUsed === 'Fireball Jutsu') {
