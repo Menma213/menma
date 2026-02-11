@@ -13,25 +13,20 @@ module.exports = {
         .setDescription('View the available combos in the shop'),
 
     async execute(interaction) {
-        // Main shop embed
+        // Main shop embed (Dynamic Combos)
         const embed = new EmbedBuilder()
             .setColor(0x000000)
-            .setTitle('SHOP')
-            .setDescription('Here you can learn new combos for your arsenal.')
+            .setTitle('COMBO SHOP')
+            .setDescription('Here you can learn new combos for your arsenal. Use `/buy combo: name` to purchase.')
             .setThumbnail('https://static1.cbrimages.com/wordpress/wp-content/uploads/2020/03/Konohagakure.jpg')
             .addFields(
-                {
-                    name: '1) Basic Combo',
-                    value: 'Attack + Transformation Jutsu\nCreates an "Empowered Attack" that deals 100 True Damage.\nCost: Free (0)',
+                ...Object.values(shopItems).map(item => ({
+                    name: item.name,
+                    value: `**Requirements:** ${item.requirements.join(' + ')}\n**Effect:** ${item.effect}\n**Cost:** ${item.currency === 'ss' ? '' : '$'}${item.price.toLocaleString()}${item.currency === 'ss' ? ' SS' : ''}`,
                     inline: false
-                },
-                {
-                    name: '2) Intermediate Combo',
-                    value: 'Analysis + Transformation Jutsu + Rasengan\nDeals 100,000 damage, stuns the opponent for 1 round, and applies bleed.\nCost: 10,000',
-                    inline: false
-                }
+                }))
             )
-            .setFooter({ text: 'Page 1/3' });
+            .setFooter({ text: 'Page 1/5' });
 
         // Add Jutsu Shop embed
         const jutsuEmbed = new EmbedBuilder()

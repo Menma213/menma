@@ -1145,7 +1145,7 @@
     "description": "puts target to sleep",
     "chakraCost": 12,
     "category": "Jounin",
-    "image_url": "https://i.pinimg.com/originals/7a/1e/ed/7a1eed3f3f4e4c6f4e4c6f4e4c6f4c6f.gif",
+    "image_url": "https://i.pinimg.com/originals/7a/1e/ed/7a19eWJh8J6Mx9DrGXKEv3ojKmqw8Cv9pscK.gif",
     "effects": [
       {
         "type": "status",
@@ -1239,7 +1239,7 @@
     "description": "User summons a lightning storm that deals massive damage to target",
     "chakraCost": 12,
     "category": "Shinobi Master",
-    "image_url": "https://i.pinimg.com/originals/1c/3b/8e/1c3b8e2f3f4e4c6f4e4c6f4e4c6f4c6f.gif",
+    "image_url": "https://i.pinimg.com/originals/1c/3b/8e/19eWJh8J6Mx9DrGXKEv3ojKmqw8Cv9pscK.gif",
     "effects": [
       {
         "type": "damage",
@@ -1253,7 +1253,7 @@
     "description": "**Fire Breathing 9th Form: Rengoku**\n cuts through target",
     "chakraCost": 15,
     "category": "Shinobi Master",
-    "image_url": "https://i.pinimg.com/originals/7c/8e/1e/7c8e1e2f3f4e4c6f4e4c6f4e4c6f4c6f.gif",
+    "image_url": "https://i.pinimg.com/originals/7c/8e/1e/7c8e19eWJh8J6Mx9DrGXKEv3ojKmqw8Cv9pscK.gif",
     "effects": [
       {
         "type": "damage",
@@ -1295,7 +1295,7 @@
     "description": "user creates 1000 clones of themself to confuse and attack target\n clones attack",
     "chakraCost": 11,
     "category": "No Category",
-    "image_url": "https://i.pinimg.com/originals/1c/3b/8e/1c3b8e2f3f4e4c6f4e4c6f4e4c6f4c6f.gif",
+    "image_url": "https://i.pinimg.com/originals/1c/3b/8e/19eWJh8J6Mx9DrGXKEv3ojKmqw8Cv9pscK.gif",
     "effects": [
       {
         "type": "damage",
@@ -1315,7 +1315,7 @@
     "description": "Summons a giant hound made of lightning to attack target",
     "chakraCost": 6,
     "category": "Custom",
-    "image_url": "https://i.pinimg.com/originals/1c/3b/8e/1c3b8e2f3f4e4c6f4e4c6f4e4c6f4c6f.gif",
+    "image_url": "https://i.pinimg.com/originals/1c/3b/8e/19eWJh8J6Mx9DrGXKEv3ojKmqw8Cv9pscK.gif",
     "effects": [
       {
         "type": "damage",
@@ -1362,7 +1362,7 @@
     "description": "***user transforms into a massive boulder and rolls over target",
     "chakraCost": 5,
     "category": "Shop",
-    "image_url": "https://i.pinimg.com/originals/1c/3b/8e/1c3b8e2f3f4e4c6f4e4c6f4e4c6f4c6f.gif",
+    "image_url": "https://i.pinimg.com/originals/1c/3b/8e/19eWJh8J6Mx9DrGXKEv3ojKmqw8Cv9pscK.gif",
     "effects": [
       {
         "type": "damage",
@@ -1502,7 +1502,7 @@
     "obtainment": "unobtainable",
     "description": "**No Matter How Devastated You May Be!**\n user hands ignite in flames, greatly increasing power and attacking target consecutively 3 times",
     "chakraCost": 8,
-    "image_url": "https://i.pinimg.com/originals/ee/8c/21/ee8c21cbc213428ae44f6c968f8264e4.gif",
+    "image_url": "https://i.pinimg.com/originals/ee/8c/21/ee8c219eWJh8J6Mx9DrGXKEv3ojKmqw8Cv9pscK.gif",
     "category": "Custom",
     "effects": [
       {
@@ -3006,6 +3006,8 @@
     "chakraCost": 15,
     "category": "Event Jutsu Akatsuki",
     "effects": [],
+    "roundBased": true,
+    "roundsActive": 99,
     "scriptFile": "water_prison.js"
   },
   "Energy Blast": {
@@ -3261,5 +3263,133 @@
     "scriptFile": "banana_killer.js",
     "accuracy": 1000,
     "type": "Ultimate"
+  },
+  "Detroit Smash": {
+    "name": "Detroit Smash",
+    "description": "User jumps into the air and smashes the opponent with a powerful punch.",
+    "chakraCost": 10,
+    "effects": [
+      {
+        "type": "damage",
+        "formula": "2500 * user.power / target.defense"
+      },
+      {
+        "type": "status",
+        "status": "stun",
+        "duration": 3,
+        "chance": 100
+      }
+    ]
+  },
+  "Getsuga Tensho": {
+    "name": "Getsuga Tensho",
+    "description": "User fires a powerful energy slash at the opponent.",
+    "chakraCost": 13,
+    "effects": [
+      {
+        "type": "damage",
+        "formula": "2500 * user.power / target.defense"
+      },
+      {
+        "type": "debuff",
+        "stats": {
+          "defense": "target.power * 0.15",
+          "power": "target.power * 0.15"
+        },
+        "duration": 3
+      },
+      {
+        "type": "buff",
+        "stats": {
+          "power": "user.power * 5"
+        },
+        "duration": 3
+      }
+    ]
+  },
+  "Gum Gum Gatling": {
+    "name": "Gum Gum Gatling",
+    "description": "User fires a barrage of punches at the opponent.",
+    "chakraCostType": "percent_health",
+    "effects": [
+      {
+        "type": "damage",
+        "formula": "2500 * user.power / target.defense"
+      },
+      {
+        "type": "chakra_drain",
+        "amount": "target.chakra * 0.15"
+      }
+    ]
+  },
+  "Galick Gun": {
+    "name": "Galick Gun",
+    "description": "User fires a powerful energy beam at the opponent.",
+    "chakraCost": 16,
+    "effects": [
+      {
+        "type": "damage",
+        "formula": "2500 * user.power / target.defense"
+      },
+      {
+        "type": "debuff",
+        "stats": {
+          "defense": "target.power * 0.25",
+          "power": "target.power * 0.25"
+        },
+        "duration": 3
+      },
+      {
+        "type": "buff",
+        "stats": {
+          "power": "user.power * 10"
+        },
+        "duration": 3
+      }
+    ]
+  },
+  "Dimensional Slash": {
+    "name": "Dimensional Slash",
+    "description": "User fires a powerful energy slash at the opponent.",
+    "chakraCost": 10,
+    "effects": [
+      {
+        "type": "damage",
+        "formula": "2500 * user.power / target.defense"
+      },
+      {
+        "type": "bleed",
+        "duration": 5,
+        "DamagePerTurn": "target.health * 0.05"
+      }
+    ]
+  },
+  "Raiders Tower": {
+    "name": "Raiders Tower",
+    "description": "Sets a hidden trap.",
+    "chakraCost": 0,
+    "image_url": "https://i.makeagif.com/media/9-16-2021/fpNR0s.gif",
+    "effects": [],
+    "scriptFile": "raiders_tower.js"
+  },
+  "Ikari": {
+    "name": "Ikari",
+    "description": "**user surges with power and transforms into the Ikari state!**\n It looks as though he's managed to... take on the incredible strength the Saiyans have whenever they become Great Apes.",
+    "chakraCost": 0,
+    "roundBased": true,
+    "roundsActive": 99,
+    "image_url": "https://i.pinimg.com/originals/59/68/bb/5968bbf5bc8c4e985bb2d73037d421dd.gif",
+    "effects": [],
+    "scriptFile": "ikari.js"
+  },
+  "Full Power Strike": {
+    "name": "Full Power Strike",
+    "description": "Attacks with full force",
+    "effects": [
+      {
+        "type": "damage",
+        "formula": "2500 * user.power / target.defense"
+      }
+    ]
   }
 }

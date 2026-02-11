@@ -1,19 +1,61 @@
 module.exports = {
-    // Combos Shop (Money)
+    // Combos Shop
     shopItems: {
         "basic combo": {
             name: "Basic Combo",
             description: "Attack + Transformation Jutsu",
-            effect: "Creates an \"Empowered Attack\" that deals 100 True Damage.",
+            effect: "Creates an \"Empowered Attack\" that deals 25 True Damage.",
             price: 0,
+            currency: "money",
             requirements: ["attack", "transformation"]
         },
         "intermediate combo": {
             name: "Intermediate Combo",
             description: "Analysis + Transformation Jutsu + Rasengan",
-            effect: "Deals 100,000 damage, stuns the opponent for 1 round, and applies bleed.",
-            price: 10000,
+            effect: "Deals 500 true damage, stuns for 1 round, and applies bleed.",
+            price: 15000,
+            currency: "money",
             requirements: ["analysis", "transformation", "rasengan"]
+        },
+        "dance of the shadows": {
+            name: "Dance of the Shadows",
+            description: "Shadow Clone Jutsu + Rasenshuriken + Sexy Jutsu",
+            effect: "Deals 4000 true damage and applies bleed for 3 turns.",
+            price: 250,
+            currency: "ss",
+            requirements: ["Shadow Clone Jutsu", "Rasenshuriken", "Sexy Jutsu"]
+        },
+        "serpent's corruption": {
+            name: "Serpent's Corruption",
+            description: "Serpents Wrath + Transformation Jutsu + Mystic Palm",
+            effect: "Deals 10000 true damage and applies poison for 4 turns.",
+            price: 500,
+            currency: "ss",
+            requirements: ["Serpents Wrath", "Transformation Jutsu", "Mystic Palm"]
+        },
+        "wind and fire": {
+            name: "Wind and Fire",
+            description: "Rasenshuriken + Burning Ash + Fireball Jutsu",
+            effect: "Deals 15000 true damage, applies burn for 3 turns and bleed for 2 turns.",
+            price: 50000000,
+            currency: "money",
+            requirements: ["Rasenshuriken", "Burning Ash", "Fireball Jutsu"]
+        },
+        "flash of the leaf": {
+            name: "Flash of the Leaf",
+            description: "Flying Raijin Jutsu + Lightning Blade: All Out + Rasengan",
+            effect: "Deals 20000 true damage and stuns for 1 turn.",
+            price: 100000000,
+            currency: "money",
+            requirements: ["Flying Raijin Jutsu", "Lightning Blade: All Out", "Rasengan"]
+        },
+        "legendary sannin": {
+            name: "Legendary Sannin",
+            description: "Creation Rebirth + Serpents Wrath + Shadow Clone Jutsu",
+            effect: "Deals 2500 true damage, applies poison for 3 turns, and heals user for 20% HP.",
+            price: 300,
+            currency: "ss",
+            requirements: ["Creation Rebirth", "Serpents Wrath", "Shadow Clone Jutsu"]
         }
     },
 
@@ -102,7 +144,7 @@ module.exports = {
         }
     },
 
-    // Event Shop (Christmas Tokens) - Synced prices
+    // Event Shop (Ay Tokens)
     eventShopItems: {
         "ramen bowl": {
             name: "Ramen Bowl",

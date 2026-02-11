@@ -322,6 +322,7 @@ module.exports = {
             const combo = shopItems[comboKey];
             const jutsusPath = path.join(__dirname, '../data', 'jutsu.json');
             const jutsuData = JSON.parse(fs.readFileSync(jutsusPath, 'utf8'));
+            const players = JSON.parse(fs.readFileSync(playersPath, 'utf8'));
             const userId = interaction.user.id;
 
             if (!jutsuData[userId]) {
@@ -332,12 +333,24 @@ module.exports = {
                 return interaction.reply('You already know this combo!');
             }
 
-            if (combo.price > 0) {
-                const players = JSON.parse(fs.readFileSync(playersPath, 'utf8'));
-                if (!players[userId] || players[userId].money < combo.price) {
-                    return interaction.reply(`You need $${combo.price} to buy this combo!`);
+            // Handle Dual Currency
+            const currency = combo.currency || 'money';
+            const price = combo.price || 0;
+
+            if (price > 0) {
+                if (!players[userId]) return interaction.reply('Profile not found.');
+
+                if (currency === 'ss') {
+                    if ((players[userId].ss || 0) < price) {
+                        return interaction.reply(`You need ${price} Shinobi Shards (SS) to buy this combo!`);
+                    }
+                    players[userId].ss -= price;
+                } else {
+                    if ((players[userId].money || 0) < price) {
+                        return interaction.reply(`You need $${price.toLocaleString()} to buy this combo!`);
+                    }
+                    players[userId].money -= price;
                 }
-                players[userId].money -= combo.price;
                 fs.writeFileSync(playersPath, JSON.stringify(players, null, 4));
             }
 
@@ -348,8 +361,8 @@ module.exports = {
 
             fs.writeFileSync(jutsusPath, JSON.stringify(jutsuData, null, 4));
 
-            // Fixed logging emoji (replaced mojibake)
-            await logPurchase(interaction, ` <@${userId}> purchased combo **${combo.name}** for $${combo.price || 0}.`);
+            const currencyLabel = currency === 'ss' ? 'SS' : '$';
+            await logPurchase(interaction, ` <@${userId}> purchased combo **${combo.name}** for ${currencyLabel}${price.toLocaleString()}.`);
 
             return interaction.reply(`Successfully learned ${combo.name}!`);
         }

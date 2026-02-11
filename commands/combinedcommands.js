@@ -1592,12 +1592,23 @@ function createMovesEmbed(player, roundNum) {
             if (player.activeEffects?.some(e => e.status === 'Life Drainer Active')) {
                 return jutsu === 'Attack';
             }
+            // Ikari Restriction: only allow Attack when chakra depleted
+            if (player.activeEffects?.some(e => e.status === 'Ikari Restriction')) {
+                return jutsu === 'Attack';
+            }
             if (jutsu === 'Attack' && player.activeEffects?.some(e => e.type === 'status' && e.status === 'Perfect Susanoo Active')) {
                 return false;
             }
             return true;
         })
-        .map(([key, jutsuName]) => ({ key, name: jutsuName, data: jutsuList[jutsuName] }));
+        .map(([key, jutsuName]) => {
+            let finalName = jutsuName;
+            if (jutsuName === 'Attack') {
+                const replacer = player.activeEffects?.find(e => e.replacesAttack && e.replaceWith);
+                if (replacer) finalName = replacer.replaceWith;
+            }
+            return { key, name: finalName, data: jutsuList[finalName] };
+        });
 
     // Add Susano Slash as an extra option if Perfect Susanoo is active
     if (player.activeEffects?.some(e => e.type === 'status' && e.status === 'Perfect Susanoo Active')) {
@@ -1710,8 +1721,29 @@ function getJutsuByButton(buttonId, player) {
 
 
     let availableJutsusForDisplay = Object.entries(player.jutsu || {})
-        .filter(([_, jutsu]) => jutsu !== 'None' && !(jutsu === 'Attack' && player.activeEffects?.some(e => e.type === 'status' && e.status === 'Perfect Susanoo Active')))
-        .map(([key, jutsuName]) => ({ key, name: jutsuName, data: jutsuList[jutsuName] }));
+        .filter(([_, jutsu]) => {
+            if (jutsu === 'None') return false;
+            // Ikari Restriction: only allow Attack when chakra depleted
+            if (player.activeEffects?.some(e => e.status === 'Ikari Restriction') && jutsu !== 'Attack') {
+                return false;
+            }
+            // Life Drainer: only allow Attack
+            if (player.activeEffects?.some(e => e.status === 'Life Drainer Active') && jutsu !== 'Attack') {
+                return false;
+            }
+            if (jutsu === 'Attack' && player.activeEffects?.some(e => e.type === 'status' && e.status === 'Perfect Susanoo Active')) {
+                return false;
+            }
+            return true;
+        })
+        .map(([key, jutsuName]) => {
+            let finalName = jutsuName;
+            if (jutsuName === 'Attack') {
+                const replacer = player.activeEffects?.find(e => e.replacesAttack && e.replaceWith);
+                if (replacer) finalName = replacer.replaceWith;
+            }
+            return { key, name: finalName, data: jutsuList[finalName] };
+        });
 
     // Add Susano Slash as an extra option if Perfect Susanoo is active
     if (player.activeEffects?.some(e => e.type === 'status' && e.status === 'Perfect Susanoo Active')) {
@@ -4162,6 +4194,30 @@ async function runBattle(interaction, player1Id, player2Id, battleType, npcTempl
                 };
                 delete player2.forceBackflip;
             }
+
+            // --- RAIDERS TOWER LOGIC (Delegated to script) ---
+            const raidersTowerProcess = async (attacker, defender, action) => {
+                const scriptPath = path.join(customJutsusPath, 'raiders_tower.js');
+                if (fs.existsSync(scriptPath)) {
+                    try {
+                        const raidersTower = require(scriptPath);
+                        raidersTower.execute({
+                            baseUser: attacker,
+                            baseTarget: defender,
+                            action: action,
+                            roundNum: roundNum,
+                            type: 'process'
+                        });
+                        // The script modifies action and attacker directly
+                        // No need for embeds - it shows in round summary via action.description
+                    } catch (err) {
+                        console.error("Error in Raiders Tower processing:", err);
+                    }
+                }
+            };
+
+            await raidersTowerProcess(player1, player2, player1Action);
+            await raidersTowerProcess(player2, player1, player2Action);
 
             if (isRaidBoss) {
                 // Anti-Kori Weakness Check: If Fireball is used against King Kori, skip his turn (he melts)

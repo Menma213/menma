@@ -85,9 +85,9 @@
     "jutsu": {
       "slot_0": "Attack",
       "slot_1": "Izanami",
-      "slot_2": "FLOWING RED SCALE",
+      "slot_2": "Raiders Tower",
       "slot_3": "Analysis",
-      "slot_4": "Banana Killer",
+      "slot_4": "Ikari",
       "slot_5": "Carnage"
     },
     "money": 1068510,
@@ -103,7 +103,7 @@
     "perks": "Jinchuriki",
     "lastguard": 1750175065990,
     "lastdrank": null,
-    "lastbrank": null,
+    "lastbrank": 1770840777095,
     "lastsrank": 1769937045441,
     "role": "Bruiser",
     "lastrob": 1757615299049,

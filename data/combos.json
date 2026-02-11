@@ -1,15 +1,22 @@
 {
     "Basic Combo": {
         "name": "Basic Combo",
-        "requiredJutsus": ["Attack", "Transformation Jutsu"],
+        "requiredJutsus": [
+            "Attack",
+            "Transformation Jutsu"
+        ],
         "damage": 250,
         "damageType": "true",
         "effects": []
     },
     "Intermediate Combo": {
         "name": "Intermediate Combo",
-        "requiredJutsus": ["Analysis", "Transformation Jutsu", "Rasengan"],
-        "damage": 100000,
+        "requiredJutsus": [
+            "Analysis",
+            "Transformation Jutsu",
+            "Rasengan"
+        ],
+        "damage": 5000,
         "damageType": "true",
         "effects": [
             {
@@ -26,14 +33,180 @@
     },
     "Dance of the Shadows": {
         "name": "Dance of the Shadows",
-        "requiredJutsus": ["Shadow Clone Jutsu", "Rasenshuriken", "Sexy Jutsu"],
-        "damage": 50000,
+        "requiredJutsus": [
+            "Shadow Clone Jutsu",
+            "Rasenshuriken",
+            "Sexy Jutsu"
+        ],
+        "damage": 4000,
         "damageType": "true",
         "effects": [
             {
                 "type": "status",
                 "status": "bleed",
                 "duration": 3
+            }
+        ]
+    },
+    "Team 7 Classic": {
+        "name": "Team 7 Classic",
+        "requiredJutsus": [
+            "Shadow Clone Jutsu",
+            "Fireball Jutsu",
+            "Cherry Blossom Impact"
+        ],
+        "damage": 6000,
+        "damageType": "true",
+        "effects": [
+            {
+                "type": "status",
+                "status": "burn",
+                "duration": 2
+            }
+        ]
+    },
+    "Kakashi's Legacy": {
+        "name": "Kakashi's Legacy",
+        "requiredJutsus": [
+            "Summon Ninken",
+            "Lightning Blade",
+            "Shadow Clone Jutsu"
+        ],
+        "damage": 7500,
+        "damageType": "true",
+        "effects": [
+            {
+                "type": "status",
+                "status": "stun",
+                "duration": 2
+            }
+        ]
+    },
+    "Hidden Mist Duo": {
+        "name": "Hidden Mist Duo",
+        "requiredJutsus": [
+            "Silent Assassination",
+            "Needle Assault",
+            "Water Dragon Jutsu"
+        ],
+        "damage": 9000,
+        "damageType": "true",
+        "effects": [
+            {
+                "type": "status",
+                "status": "bleed",
+                "duration": 3
+            }
+        ]
+    },
+    "Hokage's Will": {
+        "name": "Hokage's Will",
+        "requiredJutsus": [
+            "Flying Raijin Jutsu",
+            "Rasengan",
+            "Great Forest Crumbling"
+        ],
+        "damage": 12000,
+        "damageType": "true",
+        "effects": [
+            {
+                "type": "status",
+                "status": "stun",
+                "duration": 2
+            }
+        ]
+    },
+    "Shadow Tactician": {
+        "name": "Shadow Tactician",
+        "requiredJutsus": [
+            "Analysis",
+            "Shadow Strangle",
+            "Smoke Bomb"
+        ],
+        "damage": 3500,
+        "damageType": "true",
+        "effects": [
+            {
+                "type": "status",
+                "status": "stun",
+                "duration": 2
+            }
+        ]
+    },
+    "Wind and Fire": {
+        "name": "Wind and Fire",
+        "requiredJutsus": [
+            "Rasenshuriken",
+            "Burning Ash",
+            "Fireball Jutsu"
+        ],
+        "damage": 15000,
+        "damageType": "true",
+        "effects": [
+            {
+                "type": "status",
+                "status": "burn",
+                "duration": 3
+            },
+            {
+                "type": "status",
+                "status": "bleed",
+                "duration": 2
+            }
+        ]
+    },
+    "Serpent's Corruption": {
+        "name": "Serpent's Corruption",
+        "requiredJutsus": [
+            "Serpents Wrath",
+            "Transformation Jutsu",
+            "Mystic Palm"
+        ],
+        "damage": 10000,
+        "damageType": "true",
+        "effects": [
+            {
+                "type": "status",
+                "status": "poison",
+                "duration": 4
+            }
+        ]
+    },
+    "Flash of the Leaf": {
+        "name": "Flash of the Leaf",
+        "requiredJutsus": [
+            "Flying Raijin Jutsu",
+            "Lightning Blade: All Out",
+            "Rasengan"
+        ],
+        "damage": 20000,
+        "damageType": "true",
+        "effects": [
+            {
+                "type": "status",
+                "status": "stun",
+                "duration": 1
+            }
+        ]
+    },
+    "Legendary Sannin": {
+        "name": "Legendary Sannin",
+        "requiredJutsus": [
+            "Creation Rebirth",
+            "Serpents Wrath",
+            "Shadow Clone Jutsu"
+        ],
+        "damage": 2500,
+        "damageType": "true",
+        "effects": [
+            {
+                "type": "status",
+                "status": "poison",
+                "duration": 3
+            },
+            {
+                "type": "heal",
+                "formula": "user.health * 0.2"
             }
         ]
     }
