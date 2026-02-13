@@ -10,22 +10,24 @@ const playersPath = path.join(__dirname, '../data/players.json');
 const usersPath = path.join(__dirname, '../data/users.json');
 const jutsusPath = path.join(__dirname, '../data/jutsus.json');
 const userJutsuPath = path.join(__dirname, '../data/jutsu.json');
+const userAccessoryPath = path.join(__dirname, '../data/userAccessory.json');
 const akatsukiEventPreviewPath = path.join(__dirname, '../data/akatsukievent.json');
 
 // --- Config ---
 const ZORO_BASE = {
-    hp: 100,
-    power: 50,
-    defense: 50,
+    hp: 10000,
+    power: 5000,
+    defense: 5000,
     chakra: 100,
     accuracy: 120, // Increased from 95 to help with scaling NPC dodge
     dodge: 15      // Small buff to dodge too
 };
 
 const ZORO_LEVEL_GAIN = {
-    hp: 20,
-    power: 10,
-    defense: 10
+    hp: 2000,
+    power: 1000,
+    defense: 1000,
+    chakra: 5
 };
 
 const ZORO_JUTSUS = [
@@ -133,11 +135,15 @@ function getZoroStats(level) {
         health: ZORO_BASE.hp + (level - 1) * ZORO_LEVEL_GAIN.hp,
         power: ZORO_BASE.power + (level - 1) * ZORO_LEVEL_GAIN.power,
         defense: ZORO_BASE.defense + (level - 1) * ZORO_LEVEL_GAIN.defense,
-        chakra: ZORO_BASE.chakra,
+        chakra: ZORO_BASE.chakra + (level - 1) * ZORO_LEVEL_GAIN.chakra,
         accuracy: ZORO_BASE.accuracy,
         dodge: ZORO_BASE.dodge
     };
 }
+
+// --- Webhook System (similar to scroll.js) ---
+const webhookCache = new Map();
+const CACHE_TTL = 60000;
 
 async function cleanupWebhooks(channel) {
     try {
@@ -155,20 +161,72 @@ async function cleanupWebhooks(channel) {
 }
 
 async function getWebhook(channel, name, avatar) {
-    await cleanupWebhooks(channel);
-    const webhooks = await channel.fetchWebhooks();
-    let wh = webhooks.find(w => w.name === name);
-    if (!wh) {
-        wh = await channel.createWebhook({ name, avatar });
+    const channelId = channel.id;
+    const now = Date.now();
+
+    try {
+        let cache = webhookCache.get(channelId);
+
+        if (!cache || (now - cache.lastFetched > CACHE_TTL)) {
+            const fetched = await channel.fetchWebhooks().catch(() => new Map());
+            cache = { webhooks: fetched, lastFetched: now };
+            webhookCache.set(channelId, cache);
+        }
+
+        // Try to find an existing webhook with this name
+        let targetWebhook = cache.webhooks.find(w => w.name === name && w.owner.id === channel.client.user.id);
+        if (targetWebhook) return targetWebhook;
+
+        // Use a generic worker if specific one not found and limit reached
+        if (cache.webhooks.size >= 15) {
+            let worker = cache.webhooks.find(w => w.name === 'Menma Worker' && w.owner.id === channel.client.user.id);
+            if (worker) return worker;
+
+            // If we really have to, delete one to make room
+            const botWebhooks = cache.webhooks.filter(w => w.owner && w.owner.id === channel.client.user.id);
+            if (botWebhooks.size > 0) {
+                const toDelete = botWebhooks.first();
+                await toDelete.delete();
+                cache.webhooks.delete(toDelete.id);
+            }
+        }
+
+        const newWebhook = await channel.createWebhook({
+            name: name,
+            avatar: avatar
+        });
+        cache.webhooks.set(newWebhook.id, newWebhook);
+        return newWebhook;
+
+    } catch (error) {
+        console.error("Webhook creation error:", error);
+        // Fallback object if everything fails
+        return {
+            send: async (payload) => {
+                const content = typeof payload === 'string' ? payload : payload.content;
+                const emb = typeof payload === 'object' ? payload.embeds : [];
+                return channel.send({ content: `**${name}**: ${content || ''}`, embeds: emb, components: payload.components });
+            }
+        };
     }
-    return wh;
 }
 
-async function sendWebhookAndWait(webhook, content, userId, channel) {
+async function sendWebhookAndWait(webhook, content, userId, channel, persona = {}) {
     const row = new ActionRowBuilder().addComponents(
         new ButtonBuilder().setCustomId(`event_continue_${userId}`).setLabel('Continue').setStyle(ButtonStyle.Primary)
     );
-    const msg = await webhook.send({ content, components: [row] });
+
+    // Use persona to override if it's a generic worker webhook, 
+    // otherwise the webhook's own name/avatar (set in getWebhook) is used by default
+    const sendOptions = {
+        content,
+        components: [row]
+    };
+
+    if (persona.name) sendOptions.username = persona.name;
+    if (persona.avatar) sendOptions.avatarURL = persona.avatar;
+
+    const msg = await webhook.send(sendOptions);
 
     try {
         const i = await channel.awaitMessageComponent({
@@ -176,9 +234,16 @@ async function sendWebhookAndWait(webhook, content, userId, channel) {
             time: 300000
         });
         await i.deferUpdate();
+        // Edit the message to remove the button. 
+        // Note: webhooks can edit their own messages via the webhook client/object
         await webhook.editMessage(msg.id, { components: [] });
     } catch (e) {
-        await webhook.editMessage(msg.id, { components: [] });
+        // If it times out or fails, try to remove buttons
+        try {
+            await webhook.editMessage(msg.id, { components: [] });
+        } catch (err) {
+            console.log("Could not edit message to remove buttons");
+        }
     }
 }
 
@@ -278,29 +343,29 @@ async function handleStory(interaction, userId, userEvent, eventData) {
 
     const zoroWH = await getWebhook(channel, 'Zoro', ZORO_PFP);
     const userWH = await getWebhook(channel, user.username, user.displayAvatarURL());
-    const guardWH = await getWebhook(channel, 'Guard#1', GUARD_PFP);
+    const guardWH = await getWebhook(channel, 'Guard', GUARD_PFP);
     const itachiWH = await getWebhook(channel, 'Itachi', ITACHI_PFP);
 
     if (userEvent.storyStage === 0) {
-        await sendWebhookAndWait(userWH, "Oh god. What have i done to deserve this? Where am i?", userId, channel);
-        await sendWebhookAndWait(zoroWH, "Oi! When you were retrieving the scroll you were followed by 2 men in black! You have no senses!", userId, channel);
-        await sendWebhookAndWait(userWH, "Zoro? You're here too?", userId, channel);
-        await sendWebhookAndWait(zoroWH, "I had to co-operate. He used a strange mind technique.", userId, channel);
-        await sendWebhookAndWait(userWH, "it's called a genjutsu. We need to get out of here.", userId, channel);
-        await sendWebhookAndWait(zoroWH, "I can break these chains with ease, but it'll only end up worse for us. There's bunch of guards outside.", userId, channel);
-        await sendWebhookAndWait(userWH, "where are your swords?", userId, channel);
-        await sendWebhookAndWait(zoroWH, "They took em, bastards. Or i wouldnt sit here like a coward.", userId, channel);
-        await sendWebhookAndWait(userWH, "I have enough energy to um maybe kill a guard or two.", userId, channel);
-        await sendWebhookAndWait(zoroWH, "I don't know how it's gonna help but here, take this an old dying man gave it to me.", userId, channel);
+        await sendWebhookAndWait(userWH, "Oh god. What have i done to deserve this? Where am i?", userId, channel, { name: user.username, avatar: user.displayAvatarURL() });
+        await sendWebhookAndWait(zoroWH, "Oi! When you were retrieving the scroll you were followed by 2 men in black! You have no senses!", userId, channel, { name: 'Zoro', avatar: ZORO_PFP });
+        await sendWebhookAndWait(userWH, "Zoro? You're here too?", userId, channel, { name: user.username, avatar: user.displayAvatarURL() });
+        await sendWebhookAndWait(zoroWH, "I had to co-operate. He used a strange mind technique.", userId, channel, { name: 'Zoro', avatar: ZORO_PFP });
+        await sendWebhookAndWait(userWH, "it's called a genjutsu. We need to get out of here.", userId, channel, { name: user.username, avatar: user.displayAvatarURL() });
+        await sendWebhookAndWait(zoroWH, "I can break these chains with ease, but it'll only end up worse for us. There's bunch of guards outside.", userId, channel, { name: 'Zoro', avatar: ZORO_PFP });
+        await sendWebhookAndWait(userWH, "where are your swords?", userId, channel, { name: user.username, avatar: user.displayAvatarURL() });
+        await sendWebhookAndWait(zoroWH, "They took em, bastards. Or i wouldnt sit here like a coward.", userId, channel, { name: 'Zoro', avatar: ZORO_PFP });
+        await sendWebhookAndWait(userWH, "I have enough energy to um maybe kill a guard or two.", userId, channel, { name: user.username, avatar: user.displayAvatarURL() });
+        await sendWebhookAndWait(zoroWH, "I don't know how it's gonna help but here, take this an old dying man gave it to me.", userId, channel, { name: 'Zoro', avatar: ZORO_PFP });
 
         await interaction.followUp({ content: "**<Obtained 1x Pocket Watch>**" });
 
-        await sendWebhookAndWait(userWH, "a watch? I aint Sure how this is gonna work. Nothings gonna happen if we sit here all day!", userId, channel);
-        await sendWebhookAndWait(zoroWH, "Alright. \n**<Zoro breaks all the chains using Conquerors haki>** \nLet's go!", userId, channel);
-        await sendWebhookAndWait(userWH, "Careful, do not yell!", userId, channel);
-        await sendWebhookAndWait(guardWH, "THEY BROKE THROUGH. EVERYONE ASSEMBLE!", userId, channel);
-        await sendWebhookAndWait(zoroWH, "Well..Shit.", userId, channel);
-        await sendWebhookAndWait(userWH, "Alright...Watch this.", userId, channel);
+        await sendWebhookAndWait(userWH, "a watch? I aint Sure how this is gonna work. Nothings gonna happen if we sit here all day!", userId, channel, { name: user.username, avatar: user.displayAvatarURL() });
+        await sendWebhookAndWait(zoroWH, "Alright. \n**<Zoro breaks all the chains using Conquerors haki>** \nLet's go!", userId, channel, { name: 'Zoro', avatar: ZORO_PFP });
+        await sendWebhookAndWait(userWH, "Careful, do not yell!", userId, channel, { name: user.username, avatar: user.displayAvatarURL() });
+        await sendWebhookAndWait(guardWH, "THEY BROKE THROUGH. EVERYONE ASSEMBLE!", userId, channel, { name: 'Guard', avatar: GUARD_PFP });
+        await sendWebhookAndWait(zoroWH, "Well..Shit.", userId, channel, { name: 'Zoro', avatar: ZORO_PFP });
+        await sendWebhookAndWait(userWH, "Alright...Watch this.", userId, channel, { name: user.username, avatar: user.displayAvatarURL() });
 
         // Guard Fight
         const guardsNPC = {
@@ -329,49 +394,49 @@ async function handleStory(interaction, userId, userEvent, eventData) {
         await runBattle(interaction, userId, "NPC_100Guards", "event_story", guardsNPC, 'friendly', false, userOverride);
 
 
-        await sendWebhookAndWait(userWH, "Hah! Take that. Although..that took all my energy.", userId, channel);
-        await sendWebhookAndWait(zoroWH, "Let's find my swords!", userId, channel);
+        await sendWebhookAndWait(userWH, "Hah! Take that. Although..that took all my energy.", userId, channel, { name: user.username, avatar: user.displayAvatarURL() });
+        await sendWebhookAndWait(zoroWH, "Let's find my swords!", userId, channel, { name: 'Zoro', avatar: ZORO_PFP });
         await interaction.followUp({ content: "*They look around*\nThey find a room that is covered in ice." });
 
-        await sendWebhookAndWait(userWH, "That is hella Fishy.", userId, channel);
-        await sendWebhookAndWait(zoroWH, "This is where my swords are", userId, channel);
-        await sendWebhookAndWait(userWH, "how do you know?", userId, channel);
-        await sendWebhookAndWait(zoroWH, "**Barges in** There they are! \n**<Picks up his swords>**", userId, channel);
-        await sendWebhookAndWait(userWH, "Oof! Thank god. Now let's get out of here.", userId, channel);
+        await sendWebhookAndWait(userWH, "That is hella Fishy.", userId, channel, { name: user.username, avatar: user.displayAvatarURL() });
+        await sendWebhookAndWait(zoroWH, "This is where my swords are", userId, channel, { name: 'Zoro', avatar: ZORO_PFP });
+        await sendWebhookAndWait(userWH, "how do you know?", userId, channel, { name: user.username, avatar: user.displayAvatarURL() });
+        await sendWebhookAndWait(zoroWH, "**Barges in** There they are! \n**<Picks up his swords>**", userId, channel, { name: 'Zoro', avatar: ZORO_PFP });
+        await sendWebhookAndWait(userWH, "Oof! Thank god. Now let's get out of here.", userId, channel, { name: user.username, avatar: user.displayAvatarURL() });
         await interaction.followUp({ content: "**As they are about to walk out...**" });
-        await sendWebhookAndWait(userWH, "Great..nothing new here. Your regular boring plot twist.", userId, channel);
-        await sendWebhookAndWait(zoroWH, "I feel the presence again, its the Genjutsu guy.", userId, channel);
-        await sendWebhookAndWait(userWH, "There he is...", userId, channel);
-        await sendWebhookAndWait(itachiWH, "You broke out? How annoying.", userId, channel);
-        await sendWebhookAndWait(zoroWH, "I will crush your skull!", userId, channel);
-        await sendWebhookAndWait(userWH, "What do you want from me? why have you been following me?", userId, channel);
-        await sendWebhookAndWait(itachiWH, "I needed your blood. Now, i have it. You can die.", userId, channel);
+        await sendWebhookAndWait(userWH, "Great..nothing new here. Your regular boring plot twist.", userId, channel, { name: user.username, avatar: user.displayAvatarURL() });
+        await sendWebhookAndWait(zoroWH, "I feel the presence again, its the Genjutsu guy.", userId, channel, { name: 'Zoro', avatar: ZORO_PFP });
+        await sendWebhookAndWait(userWH, "There he is...", userId, channel, { name: user.username, avatar: user.displayAvatarURL() });
+        await sendWebhookAndWait(itachiWH, "You broke out? How annoying.", userId, channel, { name: 'Itachi', avatar: ITACHI_PFP });
+        await sendWebhookAndWait(zoroWH, "I will crush your skull!", userId, channel, { name: 'Zoro', avatar: ZORO_PFP });
+        await sendWebhookAndWait(userWH, "What do you want from me? why have you been following me?", userId, channel, { name: user.username, avatar: user.displayAvatarURL() });
+        await sendWebhookAndWait(itachiWH, "I needed your blood. Now, i have it. You can die.", userId, channel, { name: 'Itachi', avatar: ITACHI_PFP });
 
         await interaction.followUp({ content: "**Itachi disappears** But the rest of the akatsuki members appear." });
-        await sendWebhookAndWait(zoroWH, "Tch. I'm done. ***ENMA***", userId, channel);
+        await sendWebhookAndWait(zoroWH, "Tch. I'm done. ***ENMA***", userId, channel, { name: 'Zoro', avatar: ZORO_PFP });
         await interaction.followUp({ content: "**Zoro readies a powerful attack to strike a cloaked akatsuki figure but..**" });
-        await sendWebhookAndWait(userWH, "Zoro, watch out!", userId, channel);
+        await sendWebhookAndWait(userWH, "Zoro, watch out!", userId, channel, { name: user.username, avatar: user.displayAvatarURL() });
         await interaction.followUp({ content: "**Zoro is hit by a really big ice shard! He is bleeding**" });
         await interaction.followUp({ content: "User looks up to see who did it and There's another fall falling right at User." });
-        await sendWebhookAndWait(userWH, "So this is how it ends...", userId, channel);
+        await sendWebhookAndWait(userWH, "So this is how it ends...", userId, channel, { name: user.username, avatar: user.displayAvatarURL() });
 
         await interaction.followUp({ content: "**<1x Pocket Watch used>**\n**A Strange Noise Echoes**: ***REPLAY***", embeds: [new EmbedBuilder().setTitle("TIME RESET").setColor("#000000").setImage("https://media.tenor.com/2Yy-f2Wf_rAAAAAM/time-rewind.gif")] });
 
-        await sendWebhookAndWait(zoroWH, "I feel the presence again, its the Genjutsu guy.", userId, channel);
-        await sendWebhookAndWait(userWH, "H-Huh...", userId, channel);
-        await sendWebhookAndWait(itachiWH, "You broke out? How annoying.", userId, channel);
-        await sendWebhookAndWait(zoroWH, "I will crush your skull!", userId, channel);
-        await sendWebhookAndWait(userWH, "Zoro! whatever you do, Do not attack!", userId, channel);
-        await sendWebhookAndWait(zoroWH, "Huh?", userId, channel);
-        await sendWebhookAndWait(userWH, "Listen to me, please! the pocket watch is a mythical weapon, its reacting to the situation!", userId, channel);
-        await sendWebhookAndWait(zoroWH, "Then what do you want me to do?", userId, channel);
-        await sendWebhookAndWait(userWH, "I-Idon't know.", userId, channel);
+        await sendWebhookAndWait(zoroWH, "I feel the presence again, its the Genjutsu guy.", userId, channel, { name: 'Zoro', avatar: ZORO_PFP });
+        await sendWebhookAndWait(userWH, "H-Huh...", userId, channel, { name: user.username, avatar: user.displayAvatarURL() });
+        await sendWebhookAndWait(itachiWH, "You broke out? How annoying.", userId, channel, { name: 'Itachi', avatar: ITACHI_PFP });
+        await sendWebhookAndWait(zoroWH, "I will crush your skull!", userId, channel, { name: 'Zoro', avatar: ZORO_PFP });
+        await sendWebhookAndWait(userWH, "Zoro! whatever you do, Do not attack!", userId, channel, { name: user.username, avatar: user.displayAvatarURL() });
+        await sendWebhookAndWait(zoroWH, "Huh?", userId, channel, { name: 'Zoro', avatar: ZORO_PFP });
+        await sendWebhookAndWait(userWH, "Listen to me, please! the pocket watch is a mythical weapon, its reacting to the situation!", userId, channel, { name: user.username, avatar: user.displayAvatarURL() });
+        await sendWebhookAndWait(zoroWH, "Then what do you want me to do?", userId, channel, { name: 'Zoro', avatar: ZORO_PFP });
+        await sendWebhookAndWait(userWH, "I-Idon't know.", userId, channel, { name: user.username, avatar: user.displayAvatarURL() });
 
         const scrollWH = await getWebhook(channel, "Mysterious Scroll", ITACHI_PFP);
-        await sendWebhookAndWait(scrollWH, "Poor Soul. I Shall guide you.", userId, channel);
+        await sendWebhookAndWait(scrollWH, "Poor Soul. I Shall guide you.", userId, channel, { name: "Mysterious Scroll", avatar: ITACHI_PFP });
 
         await interaction.followUp({ content: "**<Obtained 1x Card Roronoa Zoro>**" });
-        await sendWebhookAndWait(scrollWH, "Young'un. I request thou to equip this card. Please use `/event fight` and i shall guide you.", userId, channel);
+        await sendWebhookAndWait(scrollWH, "Young'un. I request thou to equip this card. Please use `/event fight` and i shall guide you.", userId, channel, { name: "Mysterious Scroll", avatar: ITACHI_PFP });
 
         const introEmbed = new EmbedBuilder()
             .setTitle("Event Introduction Complete!")
@@ -574,13 +639,15 @@ async function handleFight(interaction, userId, userEvent, eventData) {
         maxHealth: zoroStats.health,
         jutsu: Object.fromEntries(zoroJutsus.map((j, i) => [i, j])),
         statsType: "fixed",
-        userId: userId // needed for session
+        userId: userId, // needed for session
+        items: { "Pocket Watch": 1 },
+        equippedAccessory: "Pocket Watch"
     };
 
     // Create NPC
     const npc = {
-        name: npcName + ` (Floor ${floor})`,
-        image: npcData.image,
+        name: (floor === 101 ? "Ultimate Boss: Itachi Uchiha" : npcName) + ` (Floor ${floor === 101 ? "???" : floor})`,
+        image: floor === 101 ? "https://i.pinimg.com/236x/be/c2/df/bec2df60e873dd560f05434a8dc1a4ed.jpg" : npcData.image,
         health: 100 * multiplier * (1 + (floor - 1) * 0.1),
         currentHealth: 100 * multiplier * (1 + (floor - 1) * 0.1),
         power: 50 * multiplier * (1 + (floor - 1) * 0.1),
@@ -590,16 +657,33 @@ async function handleFight(interaction, userId, userEvent, eventData) {
         dodge: 10 + floor * 0.5, // Scaled down dodge to be less punishing
         jutsu: npcData.jutsu || ["Attack", "Fireball Jutsu", "Rasengan"],
         statsType: "fixed",
-        immunities: [] // Removed all immunities as requested
+        immunities: []
     };
 
-    if (floor === 100) {
-        npc.name = "Ultimate Boss: Itachi Uchiha";
-        npc.health = 5000000000;
-        npc.currentHealth = 5000000000;
-        npc.power = 20000000;
-        npc.defense = 20000000;
-        npc.jutsu = ["Izanami", "Tsukuyomi", "Amaterasu: Infinite Flames", "Susanoo"];
+    if (floor === 101) {
+        const ZORO_PFP = 'https://i.pinimg.com/736x/28/95/36/289536f9297400c9b08101dec6b9ec08.jpg';
+        const ITACHI_PFP = 'https://i.postimg.cc/zvyNhjtw/image.png';
+
+        const zoroWH = await getWebhook(interaction.channel, 'Zoro', ZORO_PFP);
+        const itachiWH = await getWebhook(interaction.channel, 'Itachi', ITACHI_PFP);
+        const userWH = await getWebhook(interaction.channel, interaction.user.username, interaction.user.displayAvatarURL());
+
+        const zoro = { name: 'Zoro', avatar: ZORO_PFP };
+        const itachi = { name: 'Itachi', avatar: ITACHI_PFP };
+        const user = { name: interaction.user.username, avatar: interaction.user.displayAvatarURL() };
+
+        await sendWebhookAndWait(zoroWH, "You can run, but you CANT HIDE!", userId, interaction.channel, zoro);
+        await sendWebhookAndWait(itachiWH, "Pest.", userId, interaction.channel, itachi);
+        await sendWebhookAndWait(userWH, "It's over now!", userId, interaction.channel, user);
+        await interaction.channel.send("**Fight begins!**");
+
+        npc.health = 10000000000;
+        npc.currentHealth = 10000000000;
+        npc.power = 50000000;
+        npc.defense = 50000000;
+        npc.accuracy = 500000;
+        npc.jutsu = ["Izanami", "Requiem of Stars", "Tsukuyomi", "Rasengan", "Susanoo", "Creation Rebirth "];
+        npc.immunities = ["stun", "flinch", "drown", "possessed", "bleed", "poison", "burn", "curse", "frost", "shadow_possession", "mist", "blind", "confuse", "stumble", "zap", "siphon", "darkness", "debuff", "all"];
     }
 
     const result = await runBattle(interaction, userId, `NPC_${npcName}`, "event_fight", npc, 'friendly', false, zoroPlayer);
@@ -607,31 +691,56 @@ async function handleFight(interaction, userId, userEvent, eventData) {
 
     if (result && result.winner && result.winner.userId === userId) {
         // WIN - Update state with lock
+        let isFirstTime = false;
         await userMutex.runExclusive(async () => {
             const eventData_win = loadEventData();
             const userEvent_win = eventData_win.users[userId];
             if (userEvent_win) {
+                isFirstTime = floor > userEvent_win.zoro.floorsCleared;
                 userEvent_win.zoro.floorsCleared = Math.max(userEvent_win.zoro.floorsCleared, floor);
-                userEvent_win.zoro.currentFloor = floor + 1;
-                userEvent_win.zoro.cardEssence += 1;
-                if (floor === 100) {
-                    userEvent_win.zoro.currentFloor = 100; // stick at 100
 
-                    // Awards for Itachi
-                    const users = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
-                    if (users[userId]) {
-                        if (!users[userId].unlocked_titles) users[userId].unlocked_titles = [];
-                        if (!users[userId].unlocked_titles.includes("The Ghost of the Uchiha")) {
-                            users[userId].unlocked_titles.push("The Ghost of the Uchiha");
+                if (floor === 101) {
+                    userEvent_win.zoro.currentFloor = 101; // stick at 101
+                } else {
+                    userEvent_win.zoro.currentFloor = floor + 1;
+                }
+
+                if (isFirstTime) {
+                    userEvent_win.zoro.cardEssence += 1;
+
+                    if (floor === 101) {
+                        // Awards for Itachi
+                        const users = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
+                        const players = JSON.parse(fs.readFileSync(playersPath, 'utf8'));
+                        const userAccessories = fs.existsSync(userAccessoryPath) ? JSON.parse(fs.readFileSync(userAccessoryPath, 'utf8')) : {};
+
+                        if (users[userId]) {
+                            if (!users[userId].unlocked_titles) users[userId].unlocked_titles = [];
+                            if (!users[userId].unlocked_titles.includes("The Ghost of the Uchiha")) {
+                                users[userId].unlocked_titles.push("The Ghost of the Uchiha");
+                            }
+                            fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
                         }
-                        fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
-                    }
 
-                    const jutsus = JSON.parse(fs.readFileSync(userJutsuPath, 'utf8'));
-                    if (jutsus[userId]) {
-                        if (!jutsus[userId].items) jutsus[userId].items = {};
-                        jutsus[userId].items["Pocket Watch"] = (jutsus[userId].items["Pocket Watch"] || 0) + 1;
-                        fs.writeFileSync(userJutsuPath, JSON.stringify(jutsus, null, 2));
+                        if (players[userId]) {
+                            // Add Ryo and Ramen to players.json
+                            players[userId].money = (players[userId].money || 0) + 10000000;
+                            players[userId].ramen = (players[userId].ramen || 0) + 100;
+                            fs.writeFileSync(playersPath, JSON.stringify(players, null, 2));
+                        }
+
+                        // Add Pocket Watch to userAccessory.json
+                        if (!userAccessories[userId]) {
+                            userAccessories[userId] = {
+                                inventory: [],
+                                equipped: null,
+                                bonusStats: {}
+                            };
+                        }
+                        if (!userAccessories[userId].inventory.includes("Pocket Watch")) {
+                            userAccessories[userId].inventory.push("Pocket Watch");
+                        }
+                        fs.writeFileSync(userAccessoryPath, JSON.stringify(userAccessories, null, 4));
                     }
                 }
                 saveEventData(eventData_win);
@@ -639,29 +748,80 @@ async function handleFight(interaction, userId, userEvent, eventData) {
         });
 
         const winEmbed = new EmbedBuilder()
-            .setTitle(`Floor ${floor} Cleared!`)
+            .setTitle(`Floor ${floor === 101 ? "???" : floor} Cleared!`)
             .setColor("#00FF00")
-            .setDescription(`You defeated ${npcName}!\n\n**+1 Card Essence**\nNext Floor: ${floor + 1}`)
+            .setDescription(`You defeated ${floor === 101 ? "Itachi Uchiha" : npcName}!${isFirstTime ? "\n\n**+1 Card Essence**" : ""}${floor === 101 ? "" : `\nNext Floor: ${floor + 1}`}`)
             .setImage(zoroPlayer.image);
 
-        if (floor === 100) {
-            winEmbed.setDescription("CONGRATULATIONS! You have defeated Itachi Uchiha. The story continues in the next update... To be continued!\n\n**NEW REWARDS OBTAINED:**\n- Title: `The Ghost of the Uchiha`\n- Accessory: `Pocket Watch` (Mythical)");
+        if (floor === 101) {
+            const ZORO_PFP = 'https://i.pinimg.com/736x/28/95/36/289536f9297400c9b08101dec6b9ec08.jpg';
+            const ITACHI_PFP = 'https://i.postimg.cc/zvyNhjtw/image.png';
+
+            const zoroWH = await getWebhook(interaction.channel, 'Zoro', ZORO_PFP);
+            const itachiWH = await getWebhook(interaction.channel, 'Itachi', ITACHI_PFP);
+            const userWH = await getWebhook(interaction.channel, interaction.user.username, interaction.user.displayAvatarURL());
+
+            const zoro = { name: 'Zoro', avatar: ZORO_PFP };
+            const itachi = { name: 'Itachi', avatar: ITACHI_PFP };
+            const user = { name: interaction.user.username, avatar: interaction.user.displayAvatarURL() };
+
+            await sendWebhookAndWait(zoroWH, "HAHAHAHHA", userId, interaction.channel, zoro);
+            await sendWebhookAndWait(userWH, "Why did you do all this?", userId, interaction.channel, user);
+            await sendWebhookAndWait(itachiWH, "Dosent matter now, does it?", userId, interaction.channel, itachi);
+            await sendWebhookAndWait(userWH, "WHY DID YOU KIDNAP ME?", userId, interaction.channel, user);
+            await sendWebhookAndWait(itachiWH, "Ancient Myths. And trust me, there's more people coming for you and your blood.", userId, interaction.channel, itachi);
+            await sendWebhookAndWait(userWH, "Why my blood?", userId, interaction.channel, user);
+            await sendWebhookAndWait(itachiWH, "The rogues have found many inscriptions recently that point to you as the predecessor of the legendary Hagoromo Otsutsuki. You have the ability to travel between realms, with ease.", userId, interaction.channel, itachi);
+            await sendWebhookAndWait(userWH, "What were you gonna do with my blood?", userId, interaction.channel, user);
+            await sendWebhookAndWait(itachiWH, "That...\nhttps://i.postimg.cc/1tRFKcBh/image.png", userId, interaction.channel, itachi);
+            await sendWebhookAndWait(userWH, "What in the world is that?", userId, interaction.channel, user);
+            await sendWebhookAndWait(zoroWH, "Poneglyph?", userId, interaction.channel, zoro);
+            await sendWebhookAndWait(itachiWH, "Your ancestory sealed the tailed beasts away. Your blood is the only way to unseal them.", userId, interaction.channel, itachi);
+            await sendWebhookAndWait(userWH, "For what purpose?", userId, interaction.channel, user);
+            await sendWebhookAndWait(itachiWH, "The tailed beasts which combine into the ten tails is the only thing that can protect our realm. My ancestors, and yours do not understand that. They fought for centuries to keep the beasts sealed.", userId, interaction.channel, itachi);
+            await sendWebhookAndWait(zoroWH, "That sounds smart to me. These tailed beasts are more of a threat than a protection!", userId, interaction.channel, zoro);
+            await sendWebhookAndWait(userWH, "Protection from what?", userId, interaction.channel, user);
+            await sendWebhookAndWait(itachiWH, "The Otsutsuki. The otsutsuki bloodline is way more diversified than one can imagine.\nThere is a certain entity that they call The Otsutsuki God, which is the ultimate threat to all the realms, including yours, Zoro.", userId, interaction.channel, itachi);
+            await sendWebhookAndWait(zoroWH, "Sure, I believe you.", userId, interaction.channel, zoro);
+            await sendWebhookAndWait(userWH, "I think he's right, Zoro. I've seen visions...", userId, interaction.channel, user);
+            await sendWebhookAndWait(itachiWH, "that's the power of your blood. Help me, we MUST protect this world!", userId, interaction.channel, itachi);
+            await sendWebhookAndWait(userWH, "UGH i need time to think this through! I'll come back when i have an answer.", userId, interaction.channel, user);
+            await sendWebhookAndWait(zoroWH, "Someone send me back home :(", userId, interaction.channel, zoro);
+            await interaction.channel.send("**TO BE CONTINUED**");
+
+            if (isFirstTime) {
+                winEmbed.setDescription("CONGRATULATIONS! You have defeated the Ghost of the Uchiha, Itachi. The story continues in the next update... To be continued!\n\n**NEW REWARDS OBTAINED:**\n- Title: `The Ghost of the Uchiha`\n- Accessory: `Pocket Watch` (Mythical)\n- **10,000,000 Ryo**\n- **100 Ramen**");
+            } else {
+                winEmbed.setDescription("CONGRATULATIONS! You have defeated the Ghost of the Uchiha, Itachi again. The story continues in the next update... To be continued!\n\n*Note: rewards already claimed for this floor.*");
+            }
         }
 
-
-        await interaction.followUp({ embeds: [winEmbed] });
+        if (floor === 101) {
+            await interaction.channel.send({ embeds: [winEmbed] });
+        } else {
+            await interaction.followUp({ embeds: [winEmbed] });
+        }
     } else {
+        if (floor === 101) {
+            const ITACHI_PFP = 'https://i.postimg.cc/zvyNhjtw/image.png';
+            const itachiWH = await getWebhook(interaction.channel, 'Itachi', ITACHI_PFP);
+            await itachiWH.send({
+                content: "Deserved.",
+                username: "Itachi",
+                avatarURL: ITACHI_PFP
+            });
+        }
         const lossEmbed = new EmbedBuilder()
             .setTitle("BATTLE DEFEAT")
             .setColor("#FF0000")
-            .setDescription(`You were defeated on Floor ${floor}. You can try again from this floor. Keep training your card level and awakenings!`);
+            .setDescription(`You were defeated on Floor ${floor === 101 ? "???" : floor}. You can try again from this floor. Keep training your card level and awakenings!`);
         await interaction.followUp({ embeds: [lossEmbed] });
     }
 }
 
 async function handleLevelUp(interaction, userId, userEvent, eventData) {
     const cost = 120000 + (userEvent.zoro.level - 1) * 25000;
-    const maxLevel = 50 + (userEvent.zoro.awakenStage * 30); // Reach 200 at stage 5 (50 + 150)
+    const maxLevel = 100 + (userEvent.zoro.awakenStage * 180); // Reach 1000 at stage 5 (100 + 900)
 
     if (userEvent.zoro.level >= maxLevel) {
         return interaction.reply({ content: `Zoro has reached his current level cap (${maxLevel})! Awaken him to increase the cap.`, ephemeral: true });
@@ -728,7 +888,7 @@ async function handleAwaken(interaction, userId, userEvent, eventData) {
     const embed = new EmbedBuilder()
         .setTitle("ZORO AWAKENED!")
         .setColor("#FFD700")
-        .setDescription(`Zoro has reached Awakening Stage **${awakenData.awakenStage}**!\n\n**Unlocked Jutsu:** ${newJutsu}\n**New Level Cap:** ${50 + (awakenData.awakenStage * 30)}`)
+        .setDescription(`Zoro has reached Awakening Stage **${awakenData.awakenStage}**!\n\n**Unlocked Jutsu:** ${newJutsu}\n**New Level Cap:** ${100 + (awakenData.awakenStage * 180)}`)
         .setImage("https://i.pinimg.com/736x/28/95/36/289536f9297400c9b08101dec6b9ec08.jpg");
 
     await interaction.reply({ embeds: [embed] });

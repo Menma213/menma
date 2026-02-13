@@ -49,15 +49,17 @@ module.exports = {
         const equipName = interaction.options.getString('equip');
         const unequipName = interaction.options.getString('unequip');
 
-        // 1. ANBU Check
+        // 1. ANBU Check & Ownership Bypass
         const anbuData = readJsonFile(anbuPath);
-        if (!anbuData.members || !anbuData.members[userId]) {
-            return interaction.editReply({ content: 'This command is for ANBU members only.' });
+        let userAccessoryData = readJsonFile(userAccessoryPath);
+        const hasAccessories = userAccessoryData[userId] && userAccessoryData[userId].inventory && userAccessoryData[userId].inventory.length > 0;
+
+        if ((!anbuData.members || !anbuData.members[userId]) && !hasAccessories) {
+            return interaction.editReply({ content: 'This command is for ANBU members or accessory owners only.' });
         }
 
         // 2. Data Loading & Migration
         let usersData = readJsonFile(usersPath);
-        let userAccessoryData = readJsonFile(userAccessoryPath);
 
         // --- Migration Logic ---
         let migrationOccurred = false;
@@ -100,6 +102,8 @@ module.exports = {
             // a) Unequip current item first
             if (userAcc.equipped && userAcc.bonusStats) {
                 for (const [stat, value] of Object.entries(userAcc.bonusStats)) {
+                    // Skip accuracy - it should only be calculated dynamically in battle
+                    if (stat === 'accuracy') continue;
                     userData[stat] = (userData[stat] || 0) - value;
                 }
             }
@@ -107,6 +111,8 @@ module.exports = {
             // b) Equip new item
             const newBonusStats = accessoryToEquip.stats || {};
             for (const [stat, value] of Object.entries(newBonusStats)) {
+                // Skip accuracy - it should only be calculated dynamically in battle
+                if (stat === 'accuracy') continue;
                 userData[stat] = (userData[stat] || 0) + value;
             }
 
@@ -131,6 +137,8 @@ module.exports = {
             // --- Stat Change Logic ---
             if (userAcc.bonusStats) {
                 for (const [stat, value] of Object.entries(userAcc.bonusStats)) {
+                    // Skip accuracy - it should only be calculated dynamically in battle
+                    if (stat === 'accuracy') continue;
                     userData[stat] = (userData[stat] || 0) - value;
                 }
             }

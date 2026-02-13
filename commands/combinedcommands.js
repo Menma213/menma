@@ -37,6 +37,7 @@ const effectsConfigPath = path.resolve(__dirname, '../../menma/data/effects.json
 const customJutsusPath = path.resolve(__dirname, '../../menma/data/custom_jutsus');
 const raidProgressPath = path.resolve(__dirname, '../../menma/data/raid_progress.json');
 const korilorePath = path.resolve(__dirname, '../../menma/data/korilore.json');
+const userAccessoryPath = path.resolve(__dirname, '../../menma/data/userAccessory.json');
 
 
 const LOG_CHANNEL_ID = "1381278641144467637";
@@ -1035,7 +1036,7 @@ function getEffectiveStats(entity) {
         health: Number(entity.health) || 100,
         currentHealth: (entity.currentHealth !== undefined && entity.currentHealth !== null) ? Number(entity.currentHealth) : Number(entity.health || 100),
         chakra: Number(entity.chakra) || 10,
-        accuracy: Number(entity.accuracy) || 80,
+        accuracy: 80, // Base accuracy - always 60, never read from entity
         dodge: Number(entity.dodge) || 0,
         adaptedTechniques: entity.adaptedTechniques || {},
         activeEffects: entity.activeEffects || []
@@ -1647,8 +1648,8 @@ function createMovesEmbed(player, roundNum) {
                 isDisabled = true;
             }
 
-            // Disable Izanami if used
-            if (name === 'Izanami' && player.izanamiUsed) {
+            // Disable Izanami if used or disabled by pocket watch
+            if (name === 'Izanami' && (player.izanamiUsed || player.izanamiDisabled)) {
                 isDisabled = true;
             }
 
@@ -2810,6 +2811,7 @@ async function runBattle(interaction, player1Id, player2Id, battleType, npcTempl
     // Load players.json (levels and persistent player stats)
     const PLAYERS_FILE_PATH = path.resolve(__dirname, '../../menma/data/players.json');
     const playersData = fs.existsSync(PLAYERS_FILE_PATH) ? JSON.parse(fs.readFileSync(PLAYERS_FILE_PATH, 'utf8')) : {};
+    const userAccessoryData = fs.existsSync(userAccessoryPath) ? JSON.parse(fs.readFileSync(userAccessoryPath, 'utf8')) : {};
 
     const client = interaction.client; // Get client from interaction
     // Initialize player1 (always a user)
@@ -2852,7 +2854,9 @@ async function runBattle(interaction, player1Id, player2Id, battleType, npcTempl
             // Use level from players.json (fallback to users.json or default 1)
             level: (playersData[player1Id] && typeof playersData[player1Id].level === 'number') ? playersData[player1Id].level : (users[player1Id] && users[player1Id].level ? users[player1Id].level : 1),
             activeCustomRoundJutsus: [],
-            roles: player1Member ? player1Member.roles.cache.map(r => r.id) : []
+            roles: player1Member ? player1Member.roles.cache.map(r => r.id) : [],
+            equippedAccessory: userAccessoryData[player1Id]?.equipped || null,
+            accessoryInventory: userAccessoryData[player1Id]?.inventory || []
         };
         player1.subPlayers = [player1];
     }
@@ -2987,7 +2991,9 @@ async function runBattle(interaction, player1Id, player2Id, battleType, npcTempl
             image: stored.image,
             id: player2Id, // Add id field for compatibility
             activeCustomRoundJutsus: [],
-            roles: player2Member ? player2Member.roles.cache.map(r => r.id) : []
+            roles: player2Member ? player2Member.roles.cache.map(r => r.id) : [],
+            equippedAccessory: userAccessoryData[player2Id]?.equipped || null,
+            accessoryInventory: userAccessoryData[player2Id]?.inventory || []
         };
 
         if (!player2.activeEffects) player2.activeEffects = [];
@@ -3928,6 +3934,7 @@ async function runBattle(interaction, player1Id, player2Id, battleType, npcTempl
                 if (player2Action.isRoundActivation && player2Action.jutsuUsed) {
                     player2ActiveJutsus[player2Action.jutsuUsed] = { round: 1 };
                 }
+
                 // --- Shadow possession copy logic for NPC path ---
                 try {
                     // If player1 is shadow-possessed, copy player2's (NPC) action into player1Action
@@ -4157,6 +4164,80 @@ async function runBattle(interaction, player1Id, player2Id, battleType, npcTempl
                     }, battleType, false, client); // isPlayer2NPC is always false here
                     return { winner: player1, loser: player2 };
                 }
+            }
+
+            // --- POCKET WATCH MECHANIC GLOBAL ---
+            let replayActive = false;
+            const watchInteractions = [
+                { attacker: player2, defender: player1, action: player2Action, attackerId: player2Id, defenderId: player1Id },
+                { attacker: player1, defender: player2, action: player1Action, attackerId: player1Id, defenderId: player2Id }
+            ];
+
+            for (const entry of watchInteractions) {
+                const hasWatch = entry.defender.equippedAccessory === "Pocket Watch" || (entry.defender.accessoryInventory && entry.defender.accessoryInventory.includes("Pocket Watch"));
+                // Trigger only if attacker uses Izanami and hasn't been blocked before
+                if (entry.action && entry.action.jutsuUsed === "Izanami" && hasWatch && !entry.attacker.izanamiDisabled) {
+                    const glowEmbed = new EmbedBuilder()
+                        .setTitle("The Watch starts to glow..")
+                        .setImage("https://i.postimg.cc/nzVBnbX7/image.png")
+                        .setColor("#FFFF00");
+                    const interactButton = new ButtonBuilder()
+                        .setCustomId(`pocketwatch_interact-${entry.defenderId}-${roundNum}`)
+                        .setLabel("Interact")
+                        .setStyle(ButtonStyle.Primary);
+                    const row = new ActionRowBuilder().addComponents(interactButton);
+
+                    const glowMsg = await battleChannel.send({ embeds: [glowEmbed], components: [row] });
+
+                    try {
+                        const interactionFilter = i => i.user.id === entry.defenderId && i.customId.startsWith('pocketwatch_interact');
+                        const interactResponse = await glowMsg.awaitMessageComponent({ filter: interactionFilter, time: 30000 });
+
+                        await interactResponse.deferUpdate();
+
+                        const replayEmbed = new EmbedBuilder()
+                            .setTitle("REPLAY!")
+                            .setImage("https://news.mit.edu/sites/default/files/images/202207/MIT-TimeReversal-01-press_0.gif")
+                            .setColor("#0000FF");
+                        await battleChannel.send({ embeds: [replayEmbed] });
+
+                        // Handle Boss Case vs General cases
+                        if (entry.attacker.name.includes("Itachi") && npcTemplate) {
+                            // Special death for Itachi Boss
+                            entry.attacker.currentHealth = 0;
+                            entry.action.description = "Time has been reverted! Itachi is defeated!";
+                        } else {
+                            // Standard Replay and Lockout
+                            entry.attacker.izanamiDisabled = true;
+                            entry.attacker.izanamiUsed = true; // Mark as used so it can't be used again
+                            replayActive = true;
+                            entry.action.description = "Time has been reverted! Izanami was cancelled!";
+                        }
+
+                        // Neutralize Izanami state completely
+                        entry.attacker.izanamiActive = false;
+                        entry.attacker.izanamiPhase = "ended";
+                        entry.attacker.izanamiRound = 0;
+                        player1.izanamiImmortal = false;
+                        player2.izanamiImmortal = false;
+
+                        // Nullify action
+                        entry.action.damage = 0;
+                        entry.action.heal = 0;
+                        entry.action.hit = false;
+                        entry.action.specialEffects = (entry.action.specialEffects || []).concat(["POCKET WATCH ACTIVATED", "REPLAY!"]);
+
+                        await glowMsg.edit({ components: [] }).catch(() => { });
+                    } catch (e) {
+                        await glowMsg.edit({ components: [] }).catch(() => { });
+                    }
+                }
+            }
+
+            if (replayActive) {
+                // Round restarted: skip damage applications and repeat loop with same roundNum
+                // We don't increment roundNum at the bottom if we continue here
+                continue;
             }
 
             // --- NEW: Decrement P2 duration AFTER acting ---
@@ -4597,9 +4678,10 @@ function npcChooseMove(baseNpc, basePlayer, effectiveNpc, effectivePlayer) {
         npcJutsuArr = Object.values(baseNpc.jutsu);
     }
 
-    // Filter available jutsu based on chakra
+    // Filter available jutsu based on chakra and Izanami restriction
     const availableJutsuNames = npcJutsuArr.filter(jName => {
         const jutsu = jutsuList[jName];
+        if (jName === "Izanami" && (baseNpc.izanamiUsed || baseNpc.izanamiDisabled)) return false;
         return jutsu && (jutsu.chakraCost || 0) <= (baseNpc.chakra || 0);
     });
 

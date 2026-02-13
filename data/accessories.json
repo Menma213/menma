@@ -100,5 +100,14 @@
                 "chance": 5
             }
         ]
+    },
+    {
+        "name": "Pocket Watch",
+        "description": "A mysterious watch that seems to hum with the energy of time itself. It is said to have the power to revert fate.",
+        "rarity": "Mythical",
+        "price": 1000000000000000000000000000,
+        "stats": {
+            "accuracy": 10
+        }
     }
 ]

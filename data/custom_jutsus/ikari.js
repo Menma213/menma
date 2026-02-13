@@ -37,6 +37,28 @@ module.exports = {
         } else {
             // Subsequent rounds: Upkeep logic
 
+            // Check if already restricted (Chakra depleted phase)
+            const isRestricted = baseUser.activeEffects?.some(e => e.status === 'Ikari Restriction');
+
+            if (isRestricted) {
+                // Keep the jutsu alive for passive regen
+                if (baseUser.activeCustomRoundJutsus) {
+                    const selfEntry = baseUser.activeCustomRoundJutsus.find(j => j.name === jutsuData.name);
+                    if (selfEntry) selfEntry.roundsLeft = 100;
+                }
+
+                return {
+                    damage: 0,
+                    heal: healAmount,
+                    description: `${baseUser.name}'s Ikari maintains passive health regeneration!`,
+                    specialEffects: [
+                        `Healed ${healAmount} HP (Passive Regen)`
+                    ],
+                    hit: true,
+                    jutsuUsed: 'Ikari'
+                };
+            }
+
             // 1. Check if chakra WILL BE at or below threshold AFTER deduction
             const chakraAfterDeduction = Math.max(0, (baseUser.chakra || 0) - CHAKRA_COST_PER_ROUND);
 
@@ -54,22 +76,23 @@ module.exports = {
                     });
                 }
 
-                // Deduct chakra
+                // Deduct final chakra
                 baseUser.chakra = chakraAfterDeduction;
 
-                // End the jutsu - chakra too low
+                // Keep the jutsu alive for passive regen!
                 if (baseUser.activeCustomRoundJutsus) {
                     const selfEntry = baseUser.activeCustomRoundJutsus.find(j => j.name === jutsuData.name);
-                    if (selfEntry) selfEntry.roundsLeft = 0;
+                    if (selfEntry) selfEntry.roundsLeft = 100;
                 }
 
                 return {
                     damage: 0,
-                    heal: 0,
-                    description: `${baseUser.name}'s Ikari fades... Chakra depleted!`,
+                    heal: healAmount,
+                    description: `${baseUser.name}'s Ikari pushes to its limit! Chakra depleted.`,
                     specialEffects: [
-                        "Ikari Deactivated (Low Chakra)",
-                        "⚠️ Only basic attack available!"
+                        "Ikari Limit Reached (Chakra Depleted)",
+                        `Healed ${healAmount} HP`,
+                        "⚠️ Only Full Power Strike available!"
                     ],
                     hit: true,
                     jutsuUsed: 'Ikari'

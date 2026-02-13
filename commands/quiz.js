@@ -56,12 +56,12 @@ async function startAkatsukiEvent(channel) {
             avatarURL: TEUCHI_AVATAR
         });
     } else {
-        await channel.send({ content: "HELP ME!!!", embeds: [helpEmbed], components: [row] });
+        await channel.send({ content: "<@&1389238943823827067> HELP ME!!!", embeds: [helpEmbed], components: [row] });
     }
 
     const participants = new Set();
     const filter = i => i.customId === 'what_happened';
-    const collector = channel.createMessageComponentCollector({ filter, time: 60000 });
+    const collector = channel.createMessageComponentCollector({ filter, time: 90000 });
 
     collector.on('collect', async i => {
         if (!participants.has(i.user.id)) {
@@ -72,7 +72,7 @@ async function startAkatsukiEvent(channel) {
         }
     });
 
-    await delay(60000); // Wait 1 minute
+    await delay(90000); // Wait 1.5 minutes
     collector.stop();
 
     if (participants.size === 0) {
@@ -206,7 +206,7 @@ module.exports = {
 
         const userId = interaction.user ? interaction.user.id : interaction.author.id;
         const now = Date.now();
-        const COOLDOWN_TIME = 12 * 60 * 60 * 1000;
+        const COOLDOWN_TIME = 2 * 60 * 60 * 1000;
 
         // Load Cooldowns
         let cooldowns = {};

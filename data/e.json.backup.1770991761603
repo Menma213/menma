@@ -1002,7 +1002,8 @@
     "themes": [
       "Akatsuki"
     ],
-    "title": "Flames of the Heaven"
+    "title": "Flames of the Heaven",
+    "accuracy": 0
   },
   "966850707674267728": {
     "level": 1,
@@ -6113,7 +6114,8 @@
     "unlocked_titles": [
       "The Ghost of the Uchiha"
     ],
-    "title": "The Ghost of the Uchiha"
+    "title": "The Ghost of the Uchiha",
+    "accuracy": 10
   },
   "495235192190009345": {
     "wins": 1,
@@ -8891,6 +8893,7 @@
       "Akatsuki"
     ],
     "profileColor": "akatsuki",
+    "accuracy": 0,
     "unlocked_titles": [
       "The Ghost of the Uchiha"
     ],
@@ -10310,6 +10313,7 @@
       "Akatsuki"
     ],
     "profileColor": "akatsuki",
+    "accuracy": 0,
     "location": "land_of_wind",
     "maxTierUnlocked": 4,
     "firstimemission": true,
@@ -10934,6 +10938,7 @@
     "maxTierUnlocked": 3,
     "firstimemission": true,
     "current_mission": "naruto_wins",
+    "accuracy": 0,
     "zoromission": true,
     "premiumRoles": [
       {

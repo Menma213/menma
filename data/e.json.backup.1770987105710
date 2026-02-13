@@ -472,7 +472,7 @@
   "799979545046155284": {
     "level": 91,
     "exp": 210570.41209674085,
-    "wins": 4066,
+    "wins": 4059,
     "losses": 30,
     "rankedPoints": 0,
     "clan": "Kamizuru",
@@ -485,19 +485,19 @@
     "chakra": 15,
     "jutsu": {
       "slot_0": "Attack",
-      "slot_1": "Mystic Palm",
+      "slot_1": "Wheel of Fate Adaptation",
       "slot_2": "Kamui",
       "slot_3": "Analysis",
-      "slot_4": "Explosive Paper Clone",
-      "slot_5": "Infused Chakra Blade: Enhanced"
+      "slot_4": "World Cutting Slash",
+      "slot_5": "Asura's Blade of Execution"
     },
     "money": 17404530,
     "ramen": -21430,
     "Combo": "Kakashi's Legacy",
-    "lastdrank": 1770984999907,
-    "mentorExp": 2766,
+    "lastdrank": 1770960770004,
+    "mentorExp": 2759,
     "drankCompleted": true,
-    "lastbrank": 1770988148687,
+    "lastbrank": 1770960772493,
     "elo": 20,
     "brankWon": true,
     "lastArank": 1770432074710,
@@ -517,7 +517,7 @@
     "tutorialStory": true,
     "tutorialScrollStage": false,
     "tutorialScrollsComplete": true,
-    "LastTrials": 1770985036349,
+    "LastTrials": 1770960790091,
     "trialsResult": "win",
     "tutorialTrialsComplete": true,
     "tutorialTrainingComplete": true,
@@ -818,30 +818,30 @@
   "874591871412879361": {
     "level": 64,
     "exp": 47883,
-    "wins": 3794,
+    "wins": 3787,
     "losses": 32,
     "rankedPoints": 0,
     "clan": "Kamizuru",
     "bloodline": "Nara",
     "mentor": "Asuma",
     "rank": "Chuunin",
-    "health": 9215,
+    "health": 7715,
     "power": 20961,
     "defense": 25836,
     "chakra": 10,
     "jutsu": {
       "slot_0": "Attack",
       "slot_1": "Analysis",
-      "slot_2": "Susanoo",
-      "slot_3": "Amaterasu",
+      "slot_2": "Tenseigan Chakra Mode",
+      "slot_3": "Praise Jashin",
       "slot_4": "Mystic Palm Enhanced",
       "slot_5": "Asura's Blade of Execution"
     },
     "money": 4575481,
-    "ramen": -1816,
+    "ramen": -1666,
     "Combo": "Shadow Tactician",
     "lastdrank": 1770948531077,
-    "mentorExp": 3516,
+    "mentorExp": 3509,
     "drankCompleted": true,
     "lastbrank": 1770948236379,
     "brankWon": true,
@@ -849,7 +849,7 @@
     "lastArank": 1770948391971,
     "lastClaim": "2025-09-03T18:14:23.880Z",
     "nextClaim": "2025-09-04T18:14:23.880Z",
-    "LastTrials": 1770988990587,
+    "LastTrials": 1770983655781,
     "profileColor": "legendary",
     "trialsResult": "win",
     "hakuDefeats": 0,
@@ -879,7 +879,7 @@
       "orochimaru"
     ],
     "firstusescroll": true,
-    "lastDungeon": 1770991506874,
+    "lastDungeon": 1770953582176,
     "current_dungeon": null,
     "dungeonscompleted": 15,
     "srankResult": "win",
@@ -922,7 +922,7 @@
       "slot_2": "FLOWING RED SCALE",
       "slot_3": "PIERCING BLOOD: CONVERGENCE MAXIMUM",
       "slot_4": "Asura's Blade of Execution",
-      "slot_5": "Raiders Tower"
+      "slot_5": "Izanami"
     },
     "money": 56701730,
     "ramen": -18025,
@@ -946,7 +946,7 @@
     },
     "lastdrank": 1770971530370,
     "drankCompleted": true,
-    "lastbrank": 1770990594513,
+    "lastbrank": 1770971533587,
     "brankWon": true,
     "lastsrank": null,
     "LastTrials": 1770971462114,
@@ -1002,7 +1002,8 @@
     "themes": [
       "Akatsuki"
     ],
-    "title": "Flames of the Heaven"
+    "title": "Flames of the Heaven",
+    "accuracy": 0
   },
   "966850707674267728": {
     "level": 1,
@@ -6113,7 +6114,8 @@
     "unlocked_titles": [
       "The Ghost of the Uchiha"
     ],
-    "title": "The Ghost of the Uchiha"
+    "title": "The Ghost of the Uchiha",
+    "accuracy": 60
   },
   "495235192190009345": {
     "wins": 1,
@@ -6977,18 +6979,18 @@
     "chakra": 15,
     "jutsu": {
       "slot_0": "Attack",
-      "slot_1": "Creation Rebirth",
-      "slot_2": "Analysis",
+      "slot_1": "Unified Will",
+      "slot_2": "Dimensional Slash",
       "slot_3": "Praise Jashin",
       "slot_4": "Infused Chakra Blade",
-      "slot_5": "Tenseigan Chakra Mode"
+      "slot_5": "Izanami"
     },
     "Combo": "Kakashi's Legacy",
-    "lastdrank": 1770988929454,
+    "lastdrank": 1770960879128,
     "drankCompleted": true,
-    "lastbrank": 1770988932670,
+    "lastbrank": 1770960880316,
     "brankWon": true,
-    "lastsrank": 1770988331373,
+    "lastsrank": 1770804207291,
     "srankResult": "win",
     "tutorialStory": true,
     "bloodlineTuto": true,
@@ -6998,7 +7000,7 @@
       "haku": 6,
       "corrupted_haku": 6,
       "kagami": 123,
-      "kagamis_hideout": 24
+      "kagamis_hideout": 23
     },
     "lastArank": 1770725184925,
     "mentorExp": 10747,
@@ -7012,16 +7014,16 @@
     "maxTierUnlocked": 6,
     "usedMysteryBox": true,
     "firstusescroll": true,
-    "lastDungeon": 1770988418926,
+    "lastDungeon": 1770962714403,
     "current_dungeon": null,
-    "dungeonscompleted": 193,
+    "dungeonscompleted": 192,
     "crystalpalaceevent": true,
     "bloodline_pending": null,
     "bloodline_shrine_visits_needed": null,
     "bloodline_shrine_visits": null,
     "lastShrineVisit": 1770301114084,
     "current_scroll": null,
-    "title": "The Ghost of the Uchiha",
+    "title": "Genin",
     "firstimemission": true,
     "zoromission": true,
     "current_mission": null,
@@ -7035,9 +7037,6 @@
     "exp": 562000,
     "themes": [
       "Akatsuki"
-    ],
-    "unlocked_titles": [
-      "The Ghost of the Uchiha"
     ]
   },
   "1215055297492819978": {
@@ -8822,7 +8821,7 @@
     "mentor": "Asuma",
     "rank": "Jounin",
     "occupation": "Village",
-    "health": 39832,
+    "health": 38282,
     "power": 60435,
     "defense": 60128,
     "chakra": 10,
@@ -8830,7 +8829,7 @@
       "slot_0": "Attack",
       "slot_1": "Indra's Arrow",
       "slot_2": "Asura's Blade of Execution",
-      "slot_3": "Infused Chakra Blade: Enhanced",
+      "slot_3": "Shadow Possession",
       "slot_4": "Izanami",
       "slot_5": "Analysis"
     },
@@ -8847,7 +8846,7 @@
     "tutorialScrollStage": false,
     "current_scroll": null,
     "firstusescroll": false,
-    "lastDungeon": 1770991005274,
+    "lastDungeon": 1770980584226,
     "current_dungeon": null,
     "lastArank": 1770463416237,
     "mentorExp": 1484,
@@ -8859,7 +8858,7 @@
       "kagamis_hideout": 43
     },
     "inventory": [],
-    "ramen": -7388,
+    "ramen": -7233,
     "bloodlineTuto": true,
     "unlockedSrank": [
       "zabuza"
@@ -8891,6 +8890,7 @@
       "Akatsuki"
     ],
     "profileColor": "akatsuki",
+    "accuracy": 0,
     "unlocked_titles": [
       "The Ghost of the Uchiha"
     ],
@@ -10251,9 +10251,9 @@
     "mentor": "None",
     "rank": "Chuunin",
     "occupation": "Rogue",
-    "health": 13217,
-    "power": 27295,
-    "defense": 23599,
+    "health": 13170,
+    "power": 27229,
+    "defense": 23572,
     "chakra": 15,
     "jutsu": {
       "slot_0": "Attack",
@@ -10267,9 +10267,9 @@
     "referralEligible": true,
     "lastArank": 1770897762999,
     "mentorExp": 227,
-    "lastdrank": 1770988864649,
+    "lastdrank": 1770965638274,
     "drankCompleted": true,
-    "lastbrank": 1770988868370,
+    "lastbrank": 1770965641428,
     "brankWon": true,
     "unlockedSrank": [
       "zabuza"
@@ -10288,14 +10288,14 @@
     "ramen": -162,
     "bloodline_pending": "Uzumaki",
     "bloodline_shrine_visits_needed": 9,
-    "bloodline_shrine_visits": 4,
-    "lastShrineVisit": 1770988856455,
+    "bloodline_shrine_visits": 3,
+    "lastShrineVisit": 1770959896084,
     "firstusescroll": true,
-    "lastDungeon": 1770988806258,
+    "lastDungeon": 1770965606471,
     "current_dungeon": null,
     "tutorialStory": true,
     "bestParryTime": 0.016,
-    "dungeonscompleted": 14,
+    "dungeonscompleted": 13,
     "current_scroll": null,
     "usedMysteryBox": true,
     "premiumRoles": [
@@ -10310,6 +10310,7 @@
       "Akatsuki"
     ],
     "profileColor": "akatsuki",
+    "accuracy": 0,
     "location": "land_of_wind",
     "maxTierUnlocked": 4,
     "firstimemission": true,
@@ -10934,6 +10935,7 @@
     "maxTierUnlocked": 3,
     "firstimemission": true,
     "current_mission": "naruto_wins",
+    "accuracy": 0,
     "zoromission": true,
     "premiumRoles": [
       {
@@ -11550,17 +11552,17 @@
     "mentorExp": 1
   },
   "819435695478800414": {
-    "wins": 180,
-    "losses": 7,
+    "wins": 174,
+    "losses": 6,
     "rankedPoints": 0,
     "clan": "None",
     "bloodline": null,
     "mentor": "Sakura",
     "rank": "Genin",
     "occupation": "Village",
-    "health": 7013,
-    "power": 4197,
-    "defense": 3949,
+    "health": 7001,
+    "power": 4181,
+    "defense": 3942,
     "chakra": 10,
     "jutsu": {
       "slot_0": "Attack",
@@ -11572,18 +11574,18 @@
     },
     "Combo": "Shadow Tactician",
     "referralEligible": true,
-    "lastdrank": 1770989047484,
+    "lastdrank": 1770978515849,
     "drankCompleted": true,
-    "lastbrank": 1770988992261,
+    "lastbrank": 1770978576506,
     "brankWon": true,
-    "lastsrank": 1770989271319,
+    "lastsrank": 1770977579565,
     "srankResult": "win",
     "srankDefeats": {
       "haku": 1,
       "zabuza": 1,
       "orochimaru": 1,
       "kagami": 1,
-      "kagamis_hideout": 2
+      "kagamis_hideout": 1
     },
     "titles": [
       "Newbie"
@@ -11594,7 +11596,7 @@
     "tutorialStory": true,
     "tutorialScrollStage": false,
     "tutorialScrollsComplete": true,
-    "LastTrials": 1770989054723,
+    "LastTrials": 1770977345909,
     "trialsResult": "lose",
     "tutorialTrialsComplete": true,
     "tutorialTrainingComplete": true,
@@ -11606,12 +11608,12 @@
     "ramen": -437,
     "firstusescroll": false,
     "current_dungeon": null,
-    "mentorExp": 179,
+    "mentorExp": 173,
     "bloodlineTuto": true,
     "bloodline_pending": "Senju",
     "bloodline_shrine_visits_needed": 4,
-    "bloodline_shrine_visits": 3,
-    "lastShrineVisit": 1770988979232
+    "bloodline_shrine_visits": 2,
+    "lastShrineVisit": 1770975652263
   },
   "1471592850197053581": {
     "wins": 1,

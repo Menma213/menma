@@ -56,15 +56,15 @@ function createAmountSelectionRow() {
     return new ActionRowBuilder().addComponents(
         new ButtonBuilder()
             .setCustomId('amount_1')
-            .setLabel('1 Shard (100k)')
+            .setLabel('1 Shard (300k)')
             .setStyle(ButtonStyle.Primary),
         new ButtonBuilder()
             .setCustomId('amount_5')
-            .setLabel('5 Shards (500k)')
+            .setLabel('5 Shards (1.5M)')
             .setStyle(ButtonStyle.Primary),
         new ButtonBuilder()
             .setCustomId('amount_10')
-            .setLabel('10 Shards (1M)')
+            .setLabel('10 Shards (3M)')
             .setStyle(ButtonStyle.Primary),
         new ButtonBuilder()
             .setCustomId('custom')
@@ -132,7 +132,7 @@ module.exports = {
     // Thunderbird spawn system
     async spawnThunderbird(client, guildId = null, channelId = null) {
         const now = Date.now();
-        
+
         // Check cooldown (global cooldown)
         if (now - lastThunderbirdSpawn < THUNDERBIRD_COOLDOWN) {
             return false;
@@ -145,7 +145,7 @@ module.exports = {
 
             const guild = await client.guilds.fetch(targetGuildId);
             const channel = await guild.channels.fetch(targetChannelId);
-            
+
             if (!channel) {
                 console.error('Thunderbird channel not found for guild', targetGuildId);
                 return false;
@@ -164,7 +164,7 @@ module.exports = {
             // Create webhook and send message
             let webhooks = await channel.fetchWebhooks();
             let thunderbirdWebhook = webhooks.find(w => w.owner && w.owner.id === client.user.id && w.name === THUNDERBIRD_NAME);
-            
+
             if (!thunderbirdWebhook) {
                 thunderbirdWebhook = await channel.createWebhook({
                     name: THUNDERBIRD_NAME,
@@ -202,9 +202,9 @@ module.exports = {
         if (!event) {
             return { active: false, timeUntilNext: Math.max(0, THUNDERBIRD_COOLDOWN - (Date.now() - lastThunderbirdSpawn)) };
         }
-        
-        return { 
-            active: true, 
+
+        return {
+            active: true,
             timeRemaining: Math.max(0, event.expiresAt - Date.now()),
             timeUntilNext: Math.max(0, THUNDERBIRD_COOLDOWN - (Date.now() - lastThunderbirdSpawn))
         };
@@ -249,7 +249,7 @@ module.exports = {
             try {
                 let webhooks = await interaction.channel.fetchWebhooks();
                 let webhook = webhooks.find(w => w.owner && w.owner.id === interaction.client.user.id && w.name === name);
-                
+
                 if (!webhook) {
                     webhook = await interaction.channel.createWebhook({
                         name: name,
@@ -272,10 +272,10 @@ module.exports = {
         async function sendWebhookMessage(webhook, content, opts = {}) {
             if (!webhook) return;
             const avatarURL = opts.avatarURL || (typeof webhook.avatarURL === 'function' ? webhook.avatarURL() : webhook.avatarURL);
-            return await webhook.send({ 
-                content, 
-                username: webhook.name, 
-                avatarURL, 
+            return await webhook.send({
+                content,
+                username: webhook.name,
+                avatarURL,
                 components: opts.components || []
             });
         }
@@ -287,9 +287,9 @@ module.exports = {
             let rows = [];
             if (Array.isArray(components)) rows = components;
             else if (components) rows = [components];
-            return await webhook.send({ 
-                embeds: [embed], 
-                username: webhook.name, 
+            return await webhook.send({
+                embeds: [embed],
+                username: webhook.name,
                 avatarURL,
                 components: rows.length ? rows : []
             });
@@ -297,7 +297,7 @@ module.exports = {
 
         // Check if Thunderbird is active for this guild
         const isThunderbirdActive = thunderbirdEvents.has(interaction.guild.id);
-        
+
         // --- THUNDERBIRD INTERACTION LOGIC ---
         if (isThunderbirdActive) {
             try {
@@ -327,14 +327,14 @@ module.exports = {
             const shopEmbed = new EmbedBuilder()
                 .setTitle("Shinobi Shard Shop")
                 .setColor("#e6b800")
-                .setDescription("Choose how many Shinobi Shards you want to buy:\n\n• **1 Shard**: 100,000 money\n• **5 Shards**: 500,000 money  \n• **10 Shards**: 1,000,000 money\n\nOr select Custom Amount for a different quantity.");
-            
+                .setDescription("Choose how many Shinobi Shards you want to buy:\n\n• **1 Shard**: 300,000 money\n• **5 Shards**: 1,500,000 money  \n• **10 Shards**: 3,000,000 money\n\nOr select Custom Amount for a different quantity.");
+
             await sendWebhookEmbed(thunderbirdWebhook, shopEmbed, createAmountSelectionRow());
 
             // Wait for amount selection
             let amount = 1;
             let customAmount = false;
-            
+
             const amountInteraction = await waitForAnyButton(interaction, [userId], ['amount_1', 'amount_5', 'amount_10', 'custom']);
             if (!amountInteraction) {
                 await sendWebhookMessage(thunderbirdWebhook, "Thunderbird: Why do u even approach me if you wanted to waste my time!");
@@ -362,29 +362,29 @@ module.exports = {
 
                 // Show the modal via the button interaction - FIXED
                 await amountInteraction.showModal(modal);
-                
+
                 try {
                     const modalSubmit = await amountInteraction.awaitModalSubmit({
                         filter: i => i.customId === modalId && i.user.id === userId,
                         time: 60000
                     });
-                    
+
                     const customAmountValue = modalSubmit.fields.getTextInputValue('amount_input');
                     amount = parseInt(customAmountValue);
-                    
+
                     if (isNaN(amount) || amount <= 0 || amount > 999) {
-                        await modalSubmit.reply({ 
-                            content: "Invalid amount entered. Please enter a positive number between 1-999.", 
-                            ephemeral: true 
+                        await modalSubmit.reply({
+                            content: "Invalid amount entered. Please enter a positive number between 1-999.",
+                            ephemeral: true
                         });
                         return;
                     }
-                    
-                    await modalSubmit.reply({ 
-                        content: `Custom amount of ${amount} shards recorded.`, 
-                        ephemeral: true 
+
+                    await modalSubmit.reply({
+                        content: `Custom amount of ${amount} shards recorded.`,
+                        ephemeral: true
                     });
-                    
+
                 } catch (error) {
                     console.error("Modal submission error:", error);
                     await sendWebhookMessage(thunderbirdWebhook, "No valid amount entered. Transaction cancelled.");
@@ -395,8 +395,8 @@ module.exports = {
                 amount = parseInt(amountInteraction.customId.split('_')[1]);
             }
 
-            const totalPrice = amount * 100000;
-            
+            const totalPrice = amount * 300000;
+
             // Check if user has enough money
             if ((users[userId].money || 0) < totalPrice) {
                 await sendWebhookMessage(thunderbirdWebhook, `You don't have enough money! You need ${totalPrice.toLocaleString()} money but only have ${(users[userId].money || 0).toLocaleString()}.`);
@@ -408,7 +408,7 @@ module.exports = {
                 .setTitle("Confirm Purchase")
                 .setColor("#ff9900")
                 .setDescription(`You are about to buy **${amount} Shinobi Shard${amount !== 1 ? 's' : ''}** for **${totalPrice.toLocaleString()} money**.\n\nPress Confirm to complete the transaction.`);
-            
+
             await sendWebhookEmbed(thunderbirdWebhook, confirmEmbed, createConfirmRow());
 
             const confirmInteraction = await waitForAnyButton(interaction, [userId], ['confirm']);
@@ -436,7 +436,7 @@ module.exports = {
         } catch (err) {
             if (err.code !== 10062) console.error('Interaction reply error:', err);
         }
-        
+
         await sendWebhookMessage(gatoWebhook, `Greetings! I am **Gatō**, the wealthiest businessman in the Land of Waves. I'll be your host for this trade!`, {
             components: [createContinueRow()]
         });
@@ -461,7 +461,7 @@ module.exports = {
             await sendWebhookMessage(gatoWebhook, "No valid user mentioned. Trade cancelled.");
             return;
         }
-        
+
         if (!users[partnerId]) {
             await sendWebhookMessage(gatoWebhook, "That user is not enrolled in the game. Trade cancelled.");
             return;
@@ -495,7 +495,7 @@ module.exports = {
                 "Click your Offer button to open a modal and submit your offer."
             )
             .setFooter({ text: "Use the Offer button to submit your input." });
-        
+
         await sendWebhookMessage(gatoWebhook, "Both traders: click your Offer button to submit your offer via modal:");
         await sendWebhookEmbed(gatoWebhook, guideEmbed);
         await sendWebhookMessage(gatoWebhook, "Open your offer modal using your button below.", {
@@ -503,7 +503,7 @@ module.exports = {
         });
 
         let offers = {};
-        
+
         // For each trader, wait for them to click their button, show modal and await submission
         for (const uid of [userId, partnerId]) {
             const btn = await waitForButton(interaction, uid, `offer_${uid}`, 120000);
@@ -535,27 +535,27 @@ module.exports = {
                     filter: i => i.customId === modalId && i.user.id === uid,
                     time: 60000
                 });
-                
+
                 const offerText = modalSubmit.fields.getTextInputValue('offer_input').trim();
                 const match = offerText.match(/^(\d+)\s*(ss|money)$/i);
                 if (!match) {
-                    await modalSubmit.reply({ 
-                        content: "Invalid offer format. Use e.g. `50000 money` or `20 ss`.", 
-                        ephemeral: true 
+                    await modalSubmit.reply({
+                        content: "Invalid offer format. Use e.g. `50000 money` or `20 ss`.",
+                        ephemeral: true
                     });
                     await sendWebhookMessage(gatoWebhook, "Invalid offer format received. Trade cancelled.");
                     return;
                 }
-                
+
                 const amount = parseInt(match[1]);
                 const type = match[2].toLowerCase();
                 offers[uid] = { amount, type };
-                
-                await modalSubmit.reply({ 
-                    content: `Offer recorded: ${amount} ${type}`, 
-                    ephemeral: true 
+
+                await modalSubmit.reply({
+                    content: `Offer recorded: ${amount} ${type}`,
+                    ephemeral: true
                 });
-                
+
             } catch (err) {
                 console.error("Modal submission error:", err);
                 await sendWebhookMessage(gatoWebhook, "No offer submission received. Trade cancelled.");
@@ -574,7 +574,7 @@ module.exports = {
                 { name: user2.username, value: `${offers[partnerId].amount} ${offers[partnerId].type === 'ss' ? 'Shinobi Shards' : 'Money'}` }
             )
             .setFooter({ text: "Both users must press Confirm to finalize the trade." });
-        
+
         await sendWebhookMessage(gatoWebhook, "Oh? That's a nice trade! Both must press Confirm to confirm.", {
             components: [createConfirmRow()]
         });
@@ -583,16 +583,16 @@ module.exports = {
         // Step 8: Wait for both users to confirm with buttons
         let confirmed = new Set();
         const confirmFilter = i => [userId, partnerId].includes(i.user.id) && i.customId === 'confirm';
-        
+
         try {
             while (confirmed.size < 2) {
-                const buttonInteraction = await interaction.channel.awaitMessageComponent({ 
-                    filter: confirmFilter, 
-                    time: 60000 
+                const buttonInteraction = await interaction.channel.awaitMessageComponent({
+                    filter: confirmFilter,
+                    time: 60000
                 });
                 confirmed.add(buttonInteraction.user.id);
                 await buttonInteraction.deferUpdate();
-                
+
                 // Update message to show who has confirmed
                 if (confirmed.size === 1) {
                     const confirmedUser = Array.from(confirmed)[0];
@@ -612,7 +612,7 @@ module.exports = {
         let players = fs.existsSync(playersPath) ? JSON.parse(fs.readFileSync(playersPath, 'utf8')) : {};
         let p1 = players[userId] || {};
         let p2 = players[partnerId] || {};
-        
+
         function getSS(user) {
             return user.ss || user.SS || 0;
         }
@@ -621,7 +621,7 @@ module.exports = {
             else if ('SS' in user) user.SS = val;
             else user.ss = val;
         }
-        
+
         // Validate offers
         let errors = [];
         for (const [uid, offer] of Object.entries(offers)) {
@@ -632,7 +632,7 @@ module.exports = {
                 if ((user.money || 0) < offer.amount) errors.push(`<@${uid}> does not have enough money.`);
             }
         }
-        
+
         if (errors.length) {
             await sendWebhookMessage(gatoWebhook, "Trade failed:\n" + errors.join('\n'));
             return;
@@ -646,7 +646,7 @@ module.exports = {
             p1.money = (p1.money || 0) - offers[userId].amount;
             p2.money = (p2.money || 0) + offers[userId].amount;
         }
-        
+
         if (offers[partnerId].type === 'ss') {
             setSS(p2, getSS(p2) - offers[partnerId].amount);
             setSS(p1, getSS(p1) + offers[partnerId].amount);
@@ -654,7 +654,7 @@ module.exports = {
             p2.money = (p2.money || 0) - offers[partnerId].amount;
             p1.money = (p1.money || 0) + offers[partnerId].amount;
         }
-        
+
         players[userId] = p1;
         players[partnerId] = p2;
         fs.writeFileSync(playersPath, JSON.stringify(players, null, 2));

@@ -5,7 +5,15 @@ const path = require('path');
 const sqlite = require('sqlite');
 const sqlite3 = require('sqlite3');
 const { random } = require('mathjs');
+const mongoose = require('mongoose');
+
 require('dotenv').config();
+
+// Access UserToken model (defined in the main process/actualbot.js)
+// We use a try-catch getter or verify it exists, assuming actualbot initialized it.
+const UserToken = mongoose.models.UserToken || mongoose.model('UserToken', new mongoose.Schema({
+    discordId: String, googleId: String, accessToken: String, refreshToken: String, expiryDate: Number
+}));
 
 // Your Discord User ID, used for security checks
 const OWNER_ID = '835408109899219004';
@@ -166,6 +174,86 @@ async function registerNewCommand(client, filePath) {
     }
 }
 
+// --- OAuth Helper Functions ---
+
+/**
+ * Refresh Google Access Token using Refresh Token
+ */
+async function refreshAccessToken(userTokenDoc) {
+    if (!userTokenDoc.refreshToken) return null;
+
+    try {
+        const response = await fetch('https://oauth2.googleapis.com/token', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({
+                client_id: process.env.GOOGLE_CLIENT_ID,
+                client_secret: process.env.GOOGLE_CLIENT_SECRET,
+                refresh_token: userTokenDoc.refreshToken,
+                grant_type: 'refresh_token'
+            })
+        });
+
+        const data = await response.json();
+
+        if (data.access_token) {
+            userTokenDoc.accessToken = data.access_token;
+            userTokenDoc.expiryDate = Date.now() + (data.expires_in * 1000);
+            await userTokenDoc.save();
+            return data.access_token;
+        } else {
+            console.error('Failed to refresh token:', data);
+            return null;
+        }
+    } catch (error) {
+        console.error('Error refreshing token:', error);
+        return null;
+    }
+}
+
+/**
+ * Generate Content using User's OAuth Token (REST API)
+ * This ensures the usage counts against the USER'S quota.
+ */
+async function generateContentWithUserToken(accessToken, prompt, systemInstruction = "") {
+    const modelName = "models/gemini-2.5-flash-lite"; // Consistent with line 14
+    const url = `https://generativelanguage.googleapis.com/v1beta/${modelName}:generateContent`;
+
+    const requestBody = {
+        contents: [{ parts: [{ text: prompt }] }]
+    };
+
+    if (systemInstruction) {
+        requestBody.system_instruction = { parts: [{ text: systemInstruction }] };
+    }
+
+    try {
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(requestBody)
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`API Error: ${response.status} - ${errorText}`);
+        }
+
+        const data = await response.json();
+        if (data.candidates && data.candidates.length > 0 && data.candidates[0].content) {
+            return data.candidates[0].content.parts.map(p => p.text).join('');
+        }
+        return "No response generated.";
+
+    } catch (error) {
+        console.error("User Token Generation Error:", error);
+        throw error;
+    }
+}
+
 // Minigame Management Tools
 const minigameTools = {
     async deleteMinigame(commandName, client) {
@@ -226,7 +314,7 @@ const minigameTools = {
  * Tool function: Creates a new minigame command
  * This function now uses the async registerNewCommand
  */
-async function createMinigame(targetUserId, gameName, gameDescription, message, client) {
+async function createMinigame(targetUserId, gameName, gameDescription, message, client, accessToken) {
     // Allow anyone to create minigames now
     if (!gameName || gameName.trim().length < 3 || gameName.length > 50) {
         return "Game name must be between 3 and 50 characters.";
@@ -250,58 +338,38 @@ async function createMinigame(targetUserId, gameName, gameDescription, message, 
     }
 
     const amoebaSystemPrompt = `
-    
-    
-    
     You are Amoeba, a world-class professional developer who specializes in coding minigames for Discord.
     
-    
-    
     CRITICAL REQUIREMENTS:
-    
     # Here's a dataset that will help you with making discord minigames: '${MINIGAME_DATASET}'
-    
     1. Use 'discord.js' v14 (SlashCommandBuilder, EmbedBuilder, interaction.reply with components)
-    
     2. Command name MUST be exactly: '${commandName}'
-    
     3. Description MUST be short (under 100 characters): '${gameDescription}'
-    
     4. NO external file system operations (fs, path, require('../'))
-    
     5. NO forbidden modules - only use discord.js and built-in Node.js modules
-    
     6. All game logic must be contained within the 'execute' function
-    
     7. Use EmbedBuilder for main game display
-    
     8. Keep code simple and self-contained
     
-    
-    
     Respond with ONLY the JavaScript code in a markdown block.
-    
-    
-    
     `;
 
     const amoebaUserPrompt = `
-Generate a Discord.js v14 Slash Command for a minigame named "${gameName}".
-Game concept: "${gameDescription}"
-Command name: "${commandName}"
-Description: "${gameDescription}"
-Make it single-player and fun!
-`;
+    Generate a Discord.js v14 Slash Command for a minigame named "${gameName}".
+    Game concept: "${gameDescription}"
+    Command name: "${commandName}"
+    Description: "${gameDescription}"
+    Make it single-player and fun!
+    `;
 
     let generatedCode = '';
 
     try {
-        const result = await model.generateContent({
-            contents: [{ parts: [{ text: amoebaUserPrompt }] }],
-            systemInstruction: { parts: [{ text: amoebaSystemPrompt }] },
-        });
+        // Use User Token for Generation
+        const responseTextRaw = await generateContentWithUserToken(accessToken, amoebaUserPrompt, amoebaSystemPrompt);
+        // Normalize response
+        const responseText = responseTextRaw || "";
 
-        const responseText = result.response.text();
         const codeMatch = responseText.match(/```javascript\n([\s\S]*?)\n```/);
         if (codeMatch && codeMatch[1]) {
             generatedCode = codeMatch[1].trim();
@@ -1099,12 +1167,40 @@ module.exports.setup = (client, userPromptCounts) => {
             processingUsers.add(userId);
 
             try {
+                // --- AUTH CHECK START ---
+                // Check if user has linked their Google Account
+                let userToken = await UserToken.findOne({ discordId: userId });
+
+                if (!userToken) {
+                    const authEmbed = new EmbedBuilder()
+                        .setColor('#4285F4') // Google Blue
+                        .setTitle('Enable AI Features')
+                        .setDescription(`To chat with me using advanced AI, you need to link your Google account (it's free!).\n\n**[Click Here to Activate AI](https://shinobirpg.online/ai?user_id=${userId})**`)
+                        .setFooter({ text: 'Powered by Google Gemini' });
+
+                    await message.reply({ embeds: [authEmbed] });
+                    return;
+                }
+
+                // Check Token Expiry & Refresh if needed
+                if (Date.now() >= (userToken.expiryDate || 0)) {
+                    console.log(`[Auth] Refreshing token for ${userId}`);
+                    const newAccessToken = await refreshAccessToken(userToken);
+                    if (!newAccessToken) {
+                        await message.reply("Your AI session has expired. Please log in again at: https://shinobirpg.online/ai?user_id=" + userId);
+                        return;
+                    }
+                    userToken.accessToken = newAccessToken; // Update local reference
+                }
+                // --- AUTH CHECK END ---
+
                 userPromptCounts[userId] = (userPromptCounts[userId] || 0) + 1;
 
                 // Clean up old chained conversations
                 cleanupChainedConversations();
 
                 // 1. MODERATION SCRIPT (Improved Filter)
+                // Keeping bot quota for moderation (fast, cheap) to avoid charging user just for checking safety.
                 const isMessageSafe = await moderateMessage(userMessage);
                 if (!isMessageSafe) {
                     await message.reply("This message contains content that violates our guidelines.");
@@ -1129,8 +1225,9 @@ module.exports.setup = (client, userPromptCounts) => {
 
                 try {
                     const toolPrompt = toolDetectionPrompt.replace("{USER_MESSAGE}", userMessage);
-                    const toolResult = await model.generateContent(toolPrompt);
-                    const toolResponseText = cleanResponse(toolResult.response.text());
+                    // Use User's Quota for Tool Detection
+                    const toolResponseTextRaw = await generateContentWithUserToken(userToken.accessToken, toolPrompt);
+                    const toolResponseText = cleanResponse(toolResponseTextRaw);
 
                     if (toolResponseText !== 'NOTOOL') {
                         const parsedToolResponse = JSON.parse(toolResponseText);
@@ -1164,7 +1261,8 @@ module.exports.setup = (client, userPromptCounts) => {
                                     replyMessage = await editStat(payload.userId, payload.stat, payload.value, payload.fileType, message, client);
                                     break;
                                 case 'createMinigame':
-                                    replyMessage = await createMinigame(payload.userId, payload.gameName, payload.gameDescription, message, client);
+                                    // PASS ACCESS TOKEN
+                                    replyMessage = await createMinigame(payload.userId, payload.gameName, payload.gameDescription, message, client, userToken.accessToken);
                                     break;
                                 case 'deleteMinigame':
                                     replyMessage = await minigameTools.deleteMinigame(payload.commandName, client);
@@ -1200,7 +1298,6 @@ module.exports.setup = (client, userPromptCounts) => {
 
                 // 5. MAIN CONVERSATION (Enhanced with memory and chaining)
                 const conversationPrompt = `
-
 You do not have a name. Your personality is that of a human being. You talk like any human would and THINK like any human would. You also have feelings just like humans and if the users arent treating you nicely, you react just like a human, in a defensive or angry way.
 
 The user may use other languages when they talk to you, when that's the case, send the reply in the same language that the user prompted in. If I say a prompt in Portuguese answer in Portuguese as well.
@@ -1236,9 +1333,9 @@ IMPORTANT: ALL YOUR ANSWERS MUST BE SHORT AND CONCISE. Answer like a human being
 `;
 
                 try {
-                    const result = await model.generateContent(conversationPrompt);
-                    const responseText = result.response.text();
-                    const finalResponse = cleanAndLimitMessage(responseText);
+                    // USE USER TOKEN FOR GENERATION
+                    const responseTextRaw = await generateContentWithUserToken(userToken.accessToken, conversationPrompt);
+                    const finalResponse = cleanAndLimitMessage(responseTextRaw);
 
                     // Save to permanent memory with keywords
                     await savePermanentMemory(`User: ${userMessage.substring(0, 100)}... | Assistant: ${finalResponse.substring(0, 100)}...`);
@@ -1254,7 +1351,12 @@ IMPORTANT: ALL YOUR ANSWERS MUST BE SHORT AND CONCISE. Answer like a human being
                     await message.reply(finalResponse);
                 } catch (error) {
                     console.error('Conversation generation failed:', error);
-                    await message.reply("My systems are experiencing temporary fluctuations. Please try again.");
+                    // Check if error is quota related or auth related
+                    if (error.message.includes('401') || error.message.includes('403')) {
+                        await message.reply("There was an issue with your AI authorization. Please try logging in again: https://shinobirpg.online/ai?user_id=" + userId);
+                    } else {
+                        await message.reply("My systems are experiencing temporary fluctuations (or your quota might be exceeded).");
+                    }
                 }
             } finally {
                 // Always remove user from processing set

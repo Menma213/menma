@@ -4,12 +4,12 @@
       "storyStage": 1,
       "tokens": 11,
       "zoro": {
-        "level": 1,
+        "level": 10000000,
         "exp": 0,
-        "awakenStage": 0,
-        "floorsCleared": 0,
-        "cardEssence": 0,
-        "currentFloor": 1
+        "awakenStage": 5,
+        "floorsCleared": 101,
+        "cardEssence": 2,
+        "currentFloor": 101
       },
       "inventory": {
         "jutsus": [],
