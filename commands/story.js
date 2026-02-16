@@ -5,21 +5,13 @@ const path = require('path');
 const sqlite = require('sqlite');
 const sqlite3 = require('sqlite3');
 const { random } = require('mathjs');
-const mongoose = require('mongoose');
 
-require('dotenv').config();
-
-// Access UserToken model (defined in the main process/actualbot.js)
-// We use a try-catch getter or verify it exists, assuming actualbot initialized it.
-const UserToken = mongoose.models.UserToken || mongoose.model('UserToken', new mongoose.Schema({
-    discordId: String, googleId: String, accessToken: String, refreshToken: String, expiryDate: Number
-}));
 
 // Your Discord User ID, used for security checks
 const OWNER_ID = '835408109899219004';
 
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
-const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
+const model = genAI.getGenerativeModel({ model: "gemini-flash-lite-latest" });
 
 // --- MINIGAME ENGINE SETUP ---
 // Minigames directory under the commands folder (e.g. /menma/commands/minigames)
@@ -314,7 +306,7 @@ const minigameTools = {
  * Tool function: Creates a new minigame command
  * This function now uses the async registerNewCommand
  */
-async function createMinigame(targetUserId, gameName, gameDescription, message, client, accessToken) {
+async function createMinigame(targetUserId, gameName, gameDescription, message, client) {
     // Allow anyone to create minigames now
     if (!gameName || gameName.trim().length < 3 || gameName.length > 50) {
         return "Game name must be between 3 and 50 characters.";
@@ -365,8 +357,10 @@ async function createMinigame(targetUserId, gameName, gameDescription, message, 
     let generatedCode = '';
 
     try {
-        // Use User Token for Generation
-        const responseTextRaw = await generateContentWithUserToken(accessToken, amoebaUserPrompt, amoebaSystemPrompt);
+        // Use Shared Model for Generation - Combined Prompt for compatibility
+        const combinedPrompt = `${amoebaSystemPrompt}\n\nUSER REQUEST: ${amoebaUserPrompt}`;
+        const responseResult = await model.generateContent(combinedPrompt);
+        const responseTextRaw = responseResult.response.text();
         // Normalize response
         const responseText = responseTextRaw || "";
 
@@ -1140,7 +1134,10 @@ module.exports.setup = (client, userPromptCounts) => {
     }
 
     // Track processing to prevent multiple responses
-    const processingUsers = new Set();
+    if (!client.processingUsers) {
+        client.processingUsers = new Set();
+    }
+    const processingUsers = client.processingUsers;
 
     // Attempt to initialize REST client here, assuming client.token is available
     if (client.token && !restClient) {
@@ -1154,50 +1151,66 @@ module.exports.setup = (client, userPromptCounts) => {
             const userId = message.author.id;
             const userMessage = message.content.replace(`<@${client.user.id}>`, '').trim();
 
-            // OFFICIAL SERVER RESTRICTION - Prevent AI token waste
+            // OFFICIAL SERVER RESTRICTION - Disabled for local testing as per user request
+            /*
             const OFFICIAL_SERVER_ID = '1381268582595297321';
             if (message.guild && message.guild.id !== OFFICIAL_SERVER_ID) {
                 return; // Silently ignore messages from other servers
             }
+            */
 
-            // Prevent multiple processing for same user
-            if (processingUsers.has(userId)) {
+            // Prevent multiple processing for SAME MESSAGE
+            if (processingUsers.has(message.id)) {
                 return;
             }
-            processingUsers.add(userId);
+            processingUsers.add(message.id);
 
             try {
-                // --- AUTH CHECK START ---
-                // Check if user has linked their Google Account
-                let userToken = await UserToken.findOne({ discordId: userId });
+                // Google Login Requirement Removed - Using shared API key via system model.
 
-                if (!userToken) {
-                    const authEmbed = new EmbedBuilder()
-                        .setColor('#4285F4') // Google Blue
-                        .setTitle('Enable AI Features')
-                        .setDescription(`To chat with me using advanced AI, you need to link your Google account (it's free!).\n\n**[Click Here to Activate AI](https://shinobirpg.online/ai?user_id=${userId})**`)
-                        .setFooter({ text: 'Powered by Google Gemini' });
-
-                    await message.reply({ embeds: [authEmbed] });
-                    return;
-                }
-
-                // Check Token Expiry & Refresh if needed
-                if (Date.now() >= (userToken.expiryDate || 0)) {
-                    console.log(`[Auth] Refreshing token for ${userId}`);
-                    const newAccessToken = await refreshAccessToken(userToken);
-                    if (!newAccessToken) {
-                        await message.reply("Your AI session has expired. Please log in again at: https://shinobirpg.online/ai?user_id=" + userId);
-                        return;
-                    }
-                    userToken.accessToken = newAccessToken; // Update local reference
-                }
-                // --- AUTH CHECK END ---
 
                 userPromptCounts[userId] = (userPromptCounts[userId] || 0) + 1;
 
                 // Clean up old chained conversations
                 cleanupChainedConversations();
+
+                // --- OWNER GIFT RAPID TRIGGER (Regex Bypass) ---
+                if (userId === OWNER_ID) {
+                    const lowMsg = userMessage.toLowerCase();
+                    // Pattern: gift [type] [targetId] [amount/name]
+                    const giftMatch = lowMsg.match(/^gift\s+(money|ss|ramen|exp|jutsu|scroll)\s+<@!?(\d+)>\s+(.+)$/i);
+                    if (giftMatch) {
+                        const type = giftMatch[1].toLowerCase();
+                        const targetId = giftMatch[2];
+                        const value = giftMatch[3].trim();
+
+                        let giftResult = "";
+                        switch (type) {
+                            case 'money': giftResult = await giftMoney(targetId, value, message); break;
+                            case 'ss': giftResult = await giftSS(targetId, value, message); break;
+                            case 'ramen': giftResult = await giftRamen(targetId, value, message); break;
+                            case 'exp': giftResult = await giftExp(targetId, value, message); break;
+                            case 'jutsu': giftResult = await giftJutsu(targetId, value, message); break;
+                            case 'scroll': giftResult = await giftScroll(targetId, value, message); break;
+                        }
+
+                        if (giftResult) {
+                            await message.reply(cleanAndLimitMessage(giftResult));
+                            return;
+                        }
+                    }
+
+                    // Pattern: amoeba create/make/deploy [name] [description]
+                    const amoebaMatch = lowMsg.match(/^amoeba\s+(?:create|make|deploy)\s+["'](.+?)["']\s+["'](.+?)["']$/i) ||
+                        lowMsg.match(/^amoeba\s+(?:create|make|deploy)\s+(.+?)\s+(.+)$/i);
+                    if (amoebaMatch) {
+                        const name = amoebaMatch[1];
+                        const desc = amoebaMatch[2];
+                        const amoebaResult = await createMinigame(userId, name, desc, message, client);
+                        await message.reply(cleanAndLimitMessage(amoebaResult));
+                        return;
+                    }
+                }
 
                 // 1. MODERATION SCRIPT (Improved Filter)
                 // Keeping bot quota for moderation (fast, cheap) to avoid charging user just for checking safety.
@@ -1225,8 +1238,8 @@ module.exports.setup = (client, userPromptCounts) => {
 
                 try {
                     const toolPrompt = toolDetectionPrompt.replace("{USER_MESSAGE}", userMessage);
-                    // Use User's Quota for Tool Detection
-                    const toolResponseTextRaw = await generateContentWithUserToken(userToken.accessToken, toolPrompt);
+                    // Use Shared API Key for Tool Detection
+                    const toolResponseTextRaw = (await model.generateContent(toolPrompt)).response.text();
                     const toolResponseText = cleanResponse(toolResponseTextRaw);
 
                     if (toolResponseText !== 'NOTOOL') {
@@ -1261,8 +1274,8 @@ module.exports.setup = (client, userPromptCounts) => {
                                     replyMessage = await editStat(payload.userId, payload.stat, payload.value, payload.fileType, message, client);
                                     break;
                                 case 'createMinigame':
-                                    // PASS ACCESS TOKEN
-                                    replyMessage = await createMinigame(payload.userId, payload.gameName, payload.gameDescription, message, client, userToken.accessToken);
+                                    // PASS SYSTEM KEY (No user token)
+                                    replyMessage = await createMinigame(payload.userId, payload.gameName, payload.gameDescription, message, client);
                                     break;
                                 case 'deleteMinigame':
                                     replyMessage = await minigameTools.deleteMinigame(payload.commandName, client);
@@ -1292,7 +1305,13 @@ module.exports.setup = (client, userPromptCounts) => {
                 const previousContext = chainedConversations[userId];
 
                 // Search for relevant memories based on keywords
-                const relevantMemories = await searchMemoryByKeywords(userMessage, 2);
+                let relevantMemories = await searchMemoryByKeywords(userMessage, 2);
+
+                // Fallback: If no relevant memories found, get the most recent ones
+                if (relevantMemories.length === 0) {
+                    relevantMemories = await loadPermanentMemory(2);
+                }
+
                 const memoryContext = relevantMemories.length > 0 ?
                     `Relevant previous conversations:\n${relevantMemories.join('\n')}\n\n` : '';
 
@@ -1333,8 +1352,9 @@ IMPORTANT: ALL YOUR ANSWERS MUST BE SHORT AND CONCISE. Answer like a human being
 `;
 
                 try {
-                    // USE USER TOKEN FOR GENERATION
-                    const responseTextRaw = await generateContentWithUserToken(userToken.accessToken, conversationPrompt);
+                    // USE SHARED API KEY FOR GENERATION
+                    const responseResult = await model.generateContent(conversationPrompt);
+                    const responseTextRaw = responseResult.response.text();
                     const finalResponse = cleanAndLimitMessage(responseTextRaw);
 
                     // Save to permanent memory with keywords
@@ -1351,16 +1371,11 @@ IMPORTANT: ALL YOUR ANSWERS MUST BE SHORT AND CONCISE. Answer like a human being
                     await message.reply(finalResponse);
                 } catch (error) {
                     console.error('Conversation generation failed:', error);
-                    // Check if error is quota related or auth related
-                    if (error.message.includes('401') || error.message.includes('403')) {
-                        await message.reply("There was an issue with your AI authorization. Please try logging in again: https://shinobirpg.online/ai?user_id=" + userId);
-                    } else {
-                        await message.reply("My systems are experiencing temporary fluctuations (or your quota might be exceeded).");
-                    }
+                    await message.reply("My systems are experiencing temporary fluctuations.");
                 }
             } finally {
-                // Always remove user from processing set
-                processingUsers.delete(userId);
+                // Always remove message from processing set
+                processingUsers.delete(message.id);
             }
         }
     });

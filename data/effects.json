@@ -75,7 +75,6 @@
       }
     }
   },
-  
   "statusEffects": {
     "stun": {
       "description": "Target cannot act",
@@ -120,7 +119,7 @@
       "emoji": "<:status:1368243589498540092>",
       "canAttack": false,
       "isDoT": true,
-      "defaultDamage": "target.health * 0.20",
+      "defaultDamage": "target.health * 0.10",
       "can_stack": false
     },
     "curse": {
@@ -160,7 +159,6 @@
       "can_stack": false
     }
   },
-  
   "costTypes": {
     "chakra": "Fixed chakra cost",
     "percent_chakra": "Percentage of current chakra",
@@ -170,7 +168,6 @@
     "chakra_per_round": "Recurring chakra cost per round while an effect/jutsu is active",
     "health_per_round": "Recurring health cost per round while an effect/jutsu is active"
   },
-  
   "formulaContext": {
     "user": {
       "power": "User's power stat",
@@ -193,7 +190,6 @@
     "hasHiddenMist": "Boolean if target has hidden mist",
     "isTargetIncapacitated": "Boolean if target is stunned/flinched"
   },
-  
   "npcFields": {
     "statsType": "'fixed' or 'scalable' - if 'fixed' use NPC's provided health/power/defense directly, if 'scalable' use baseHealth/basePower/baseDefense multipliers relative to the player",
     "immunities": "array of status strings (e.g. [\"stun\",\"bleed\"]) - statuses the NPC is immune to"

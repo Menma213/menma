@@ -6,7 +6,7 @@
  */
 module.exports = {
     execute: function ({ baseUser, baseTarget, jutsuData, isFirstActivation }) {
-        const UPKEEP_COST = 7;
+        const UPKEEP_COST = 15;
 
         if (isFirstActivation) {
             // Initial setup - chakra cost (15) is handled by the engine
@@ -70,7 +70,7 @@ module.exports = {
             if (baseUser.activeCustomRoundJutsus) {
                 const selfEntry = baseUser.activeCustomRoundJutsus.find(j => j.name === jutsuData.name);
                 if (selfEntry) {
-                    selfEntry.roundsLeft = 10;
+                    selfEntry.roundsLeft = 100;
                 }
             }
 

@@ -951,8 +951,7 @@
       },
       {
         "type": "chakra_drain",
-        "amount": "-target.chakra * 0.5",
-        "duration": 1
+        "amount": 10
       }
     ]
   },
@@ -2793,7 +2792,7 @@
   "Life Drainer": {
     "name": "Life Drainer",
     "description": "User drains the very life essence of the target.",
-    "info": "Attack: user.power * 2500 / target.defense. Steals 50% Max HP from target.",
+    "info": "Attack: user.power * 2500 / target.defense. Steals 20% Max HP from target.",
     "chakraCost": 0,
     "category": "Exclusive",
     "obtainment": "Triggered by Izanami Last Resort",
@@ -2804,12 +2803,12 @@
       },
       {
         "type": "lifesteal_max_hp",
-        "percentage": 50
+        "percentage": 20
       },
       {
         "type": "buff",
         "stats": {
-          "accuracy": 500
+          "accuracy": 20
         },
         "duration": 1,
         "applyToUser": true
@@ -2948,7 +2947,7 @@
         "status": "burn",
         "duration": 3,
         "chance": 100,
-        "damagePerTurn": "target.health * 0.25"
+        "damagePerTurn": "target.health * 0.08"
       }
     ]
   },
@@ -3224,6 +3223,8 @@
     "obtainment": "unobtainable",
     "obtainable": false,
     "effects": [],
+    "roundBased": true,
+    "roundsActive": 99,
     "scriptFile": "shadow_possession.js"
   },
   "Infinite Void": {
@@ -3391,5 +3392,21 @@
         "formula": "2500 * user.power / target.defense"
       }
     ]
+  },
+  "TAILED BEAST ART: VERMILLION PULSE": {
+    "name": "TAILED BEAST ART: VERMILLION PULSE",
+    "description": "**Vessel or not, this power is mine to command! Feast on the flicker of my life.**\n user incinerates their own vitality, vaporizing 40% of their life force into a blinding surge of raw chakra. Trading blood for absolute dominance, they strike with the power of a dying sun",
+    "chakraCost": 0,
+    "image_url": "https://i.giphy.com/qtZs5LzRxaMhGypjcc.webp",
+    "effects": [],
+    "scriptFile": "tailed_beast_art_vermillion_pulse.js"
+  },
+  "Iai Chop Form 7:Nichirin": {
+    "name": "Iai Chop Form 7:Nichirin",
+    "description": "user lowers their stance as faint blue sparks flicker around their feet and with a thunderclap of combustion, the body erupts in Adolla flames— In one seamless Iai motion, the hand is drawn faster than sight, leaving behind a radiant arc shaped like a rising sun ",
+    "chakraCost": 16,
+    "image_url": "https://i.pinimg.com/originals/b8/ba/5e/b8ba5e0688ababbcd66572c4ab273f8d.gif",
+    "effects": [],
+    "scriptFile": "form7_nichirin.js"
   }
 }

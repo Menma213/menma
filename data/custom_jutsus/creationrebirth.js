@@ -1,6 +1,6 @@
 module.exports = {
     execute: function ({ baseUser, jutsuData, isFirstActivation }) {
-        const COST_PER_ROUND = 10;
+        const COST_PER_ROUND = 15;
         const maxHP = Number(baseUser.maxHealth || baseUser.health || 100);
         // Heal 30% of Max HP (capped by engine at Max HP)
         const healAmount = Math.floor(maxHP * 0.30);
@@ -44,7 +44,7 @@ module.exports = {
                 const selfEntry = baseUser.activeCustomRoundJutsus.find(j => j.name === jutsuData.name);
                 if (selfEntry) {
                     // Set to 10 so it stays active
-                    selfEntry.roundsLeft = 10;
+                    selfEntry.roundsLeft = 100;
                 }
             }
 

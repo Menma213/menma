@@ -367,10 +367,19 @@ const effectHandlers = {
     heal: (user, formula) => {
         try {
             const context = {
-                user: { ...user },
+                user: {
+                    power: Number(user.power) || 0,
+                    defense: Number(user.defense) || 0,
+                    health: Number(user.maxHealth || user.health) || 100,
+                    maxHealth: Number(user.maxHealth || user.health) || 100,
+                    currentHealth: (user.currentHealth !== undefined && user.currentHealth !== null) ? Number(user.currentHealth) : Number(user.health || 100),
+                    chakra: Number(user.chakra) || 0,
+                    accuracy: Number(user.accuracy) || 80
+                },
                 max: Math.max,
                 min: Math.min
             };
+
             const healAmount = Math.floor(math.evaluate(formula, context));
 
             // Cap healing so it doesn't exceed max HP
@@ -484,7 +493,7 @@ const effectHandlers = {
                 bleed: 0.03,
                 poison: 0.02,
                 burn: 0.025,
-                drown: 0.04,
+                drown: 0.1,
                 curse: 0.035,
                 zap: 0.03
             };
@@ -839,7 +848,7 @@ const applyEffect = (effect, user, target, effectiveUser, effectiveTarget, resul
                 return { type: 'debuff', value: debuffChanges };
             }
             case 'heal': {
-                const healAmount = effectHandlers.heal(effectiveUser, effect.formula || effect.amount || "0");
+                const healAmount = effectHandlers.heal(user, effect.formula || effect.amount || "0");
                 const potentialHealth = (user.currentHealth || 0) + healAmount;
                 if (potentialHealth > 0) {
                     user.currentHealth = potentialHealth;
@@ -957,7 +966,7 @@ const applyEffect = (effect, user, target, effectiveUser, effectiveTarget, resul
             case 'lifesteal_max_hp': {
                 const percentage = Number(effect.percentage) || 0;
                 const stolen = effectHandlers.lifestealMaxHP(user, target, percentage);
-                if (result.specialEffects) result.specialEffects.push(`Life Drainer: Stole ${stolen} HP from target (50% Max HP)!`);
+                if (result.specialEffects) result.specialEffects.push(`Life Drainer: Stole ${stolen} HP from target (20% Max HP)!`);
                 return { type: 'lifesteal_max_hp', value: stolen };
             }
             default:
@@ -3803,7 +3812,7 @@ async function runBattle(interaction, player1Id, player2Id, battleType, npcTempl
 
                             // Stun check (using round start snapshot)
                             const statusEffect = (subPlayer.roundStartEffects || []).find(e =>
-                                e.type === 'status' && ['stun', 'flinch', 'drown'].includes(e.status)
+                                e.type === 'status' && ['stun', 'flinch', 'drown', 'possessed', 'shadow_possession'].includes(e.status)
                             );
                             if (statusEffect && !['World Cutting Slash', 'Banana Killer'].includes(jutsuName)) {
                                 resolve({
@@ -3935,53 +3944,8 @@ async function runBattle(interaction, player1Id, player2Id, battleType, npcTempl
                     player2ActiveJutsus[player2Action.jutsuUsed] = { round: 1 };
                 }
 
-                // --- Shadow possession copy logic for NPC path ---
-                try {
-                    // If player1 is shadow-possessed, copy player2's (NPC) action into player1Action
-                    // Check snapshot to ensure simultaneous resolution
-                    const p1Poss = (player1.roundStartEffects || []).find(e => e.type === 'status' && (e.status === 'possessed' || e.status === 'shadow_possession'));
-                    if (p1Poss && typeof p1Poss.source === 'string') {
-                        const possessorId = p1Poss.source.split('-')[0];
-                        if (possessorId === player2.userId) {
-                            player1Action = JSON.parse(JSON.stringify(player2Action));
-                            player1Action.specialEffects = [`(Shadow-possessed — action copied from ${player2.name})`].concat(player1Action.specialEffects || []);
-                        }
-                    }
-
-                    // If NPC is shadow-possessed (rare), copy player1Action into player2Action
-                    const p2Poss = (player2.roundStartEffects || []).find(e => e.type === 'status' && (e.status === 'possessed' || e.status === 'shadow_possession'));
-                    if (p2Poss && typeof p2Poss.source === 'string') {
-                        const possessorId = p2Poss.source.split('-')[0];
-                        if (possessorId === player1.userId) {
-                            // If NPC is possessed by player1, they are incapacitated.
-                            // We modify the description to reflect the "copying" aspect,
-                            // but the action itself remains an incapacitated one (damage/heal 0).
-                            player2Action.description = `(Shadow-possessed — ${player2.name} would have copied ${player1.name}'s action, but is incapacitated!)`;
-                            player2Action.specialEffects = [`(Shadow-possessed — action copied from ${player1.name})`].concat(player2Action.specialEffects || []);
-                            player2Action.damage = 0; // Ensure no damage is dealt
-                            player2Action.heal = 0;   // Ensure no healing occurs
-                            player2Action.hit = false; // Ensure no hit is registered
-                            player2Action.isStatusEffect = true; // Mark as status effect
-                            player2Action.jutsuUsed = null; // No jutsu was actually used
-                        }
-                    }
-                } catch (err) {
-                    console.error('Error applying shadow possession copy (NPC path):', err);
-                }
             } else {
-                // If player2 is shadow-possessed, show the possessor
                 let displayPlayer2 = { ...player2 };
-                try {
-                    const p2Poss = (player2.activeEffects || []).find(e => e.type === 'status' && e.status === 'shadow_possession');
-                    if (p2Poss && typeof p2Poss.source === 'string') {
-                        const possessorId = p2Poss.source.split('-')[0];
-                        if (possessorId === player1.userId) {
-                            displayPlayer2 = { ...player2, name: `${player2.name} (Possessed — using ${player1.name}'s jutsus)`, jutsu: player1.jutsu };
-                        }
-                    }
-                } catch (err) {
-                    console.error('Error preparing displayPlayer2 for shadow possession:', err);
-                }
                 const { embed: embed2, components: components2 } = createMovesEmbed(displayPlayer2, roundNum);
                 const moveMessage2 = await battleChannel.send({
                     content: `<@${player2.userId}>`,
@@ -4072,38 +4036,9 @@ async function runBattle(interaction, player1Id, player2Id, battleType, npcTempl
                             }
                             // Check for status effects on player2 (stun/flinch/drown) - USE SNAPSHOT
                             const statusEffect = (player2.roundStartEffects || []).find(e =>
-                                e.type === 'status' && ['stun', 'flinch', 'drown'].includes(e.status)
+                                e.type === 'status' && ['stun', 'flinch', 'drown', 'possessed', 'shadow_possession'].includes(e.status)
                             );
 
-                            // --- Shadow possession copy logic ---
-                            // Use roundStartEffects to decide IF action should be copied
-                            try {
-                                // If player1 is shadow-possessed, copy player2's (this result) action to player1Action
-                                const p1Poss = (player1.roundStartEffects || []).find(e => e.type === 'status' && (e.status === 'possessed' || e.status === 'shadow_possession'));
-                                if (p1Poss && typeof p1Poss.source === 'string') {
-                                    const possessorId = p1Poss.source.split('-')[0];
-                                    if (possessorId === player2.userId) {
-                                        player1Action = JSON.parse(JSON.stringify(result));
-                                        player1Action.specialEffects = [`(Shadow-possessed — action copied from ${player2.name})`].concat(player1Action.specialEffects || []);
-                                    }
-                                }
-
-                                // If player2 is shadow-possessed, copy player1Action into player2's action (result)
-                                const p2Poss = (player2.roundStartEffects || []).find(e => e.type === 'status' && (e.status === 'possessed' || e.status === 'shadow_possession'));
-                                if (p2Poss && typeof p2Poss.source === 'string') {
-                                    const possessorId = p2Poss.source.split('-')[0];
-                                    if (possessorId === player1.userId) {
-                                        // copy player1's already-selected action into result (player2Action)
-                                        const copied = JSON.parse(JSON.stringify(player1Action || { damage: 0, heal: 0, description: `${player2.name} did nothing.` }));
-                                        copied.specialEffects = [`(Shadow-possessed — action copied from ${player1.name})`].concat(copied.specialEffects || []);
-                                        // overwrite result so the resolved player2Action is the copied one
-                                        Object.keys(result).forEach(k => delete result[k]);
-                                        Object.assign(result, copied);
-                                    }
-                                }
-                            } catch (err) {
-                                console.error('Error applying shadow possession copy:', err);
-                            }
 
                             // If player2 is incapacitated by a status, prevent their action
                             if (statusEffect && !['World Cutting Slash', 'Banana Killer'].includes(jutsuName)) {
@@ -4111,7 +4046,7 @@ async function runBattle(interaction, player1Id, player2Id, battleType, npcTempl
                                     damage: 0,
                                     heal: 0,
                                     description: `${player2.name} is ${statusEffect.status} and can't move!`,
-                                    specialEffects: [statusEffect.status.charAt(0).toUpperCase() + statusEffect.status.slice(1) + " active"],
+                                    specialEffects: [statusEffect.status.toUpperCase() + " active"],
                                     hit: false,
                                     isStatusEffect: true,
                                     jutsuUsed: null

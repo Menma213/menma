@@ -39,12 +39,7 @@ client.commands = new Collection(); // Ensure commands is a Collection
 // Add global prompt counter
 const userPromptCounts = {};
 
-// --- Load story.js and run setup for minigame engine ---
-const storyModule = require('./commands/story');
-if (typeof storyModule.setup === 'function') {
-    storyModule.setup(client, userPromptCounts);
-}
-// --- End minigame engine setup ---
+
 
 // Money Logging System
 const lastUserInteraction = {};
