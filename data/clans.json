@@ -23,11 +23,12 @@
         },
         "weapons": {},
         "contributions": {},
-        "power": 0
+        "power": 0,
+        "power_penalty": 0
     },
     "Team Blank": {
         "name": "Team Blank",
-        "image": "https://cdn.discordapp.com/attachments/1381268583107264605/1444022577377968288/c6019eWJh8J6Mx9DrGXKEv3ojKmqw8Cv9pscK.jpg?ex=692b3253&is=6929e0d3&hm=72b5fb60d64e4414aa219ea1de9eeef8a8420dd435f657d7550d0e7e48841cef&",
+        "image": "https://cdn.discordapp.com/attachments/1381268583107264605/1444022577377968288/c6019eWpBa3WYGMHky9fLK2ZZfCxvCGedxoa.jpg?ex=692b3253&is=6929e0d3&hm=72b5fb60d64e4414aa219ea1de9eeef8a8420dd435f657d7550d0e7e48841cef&",
         "leader": "961918563382362122",
         "coLeader": null,
         "elders": [],
@@ -41,7 +42,8 @@
         "rules": "only cool people allowed",
         "materials": {},
         "weapons": {},
-        "contributions": {}
+        "contributions": {},
+        "power_penalty": 0
     },
     "Kamizuru": {
         "name": "Kamizuru",
@@ -61,9 +63,14 @@
             "766465809639669840",
             "818893461881094175",
             "1453436128483868713",
-            "1453436128483868713"
+            "1453436128483868713",
+            "1303374282130198538",
+            "983939927156871208",
+            "1302557566672310294",
+            "874591871412879361",
+            "518732237303447592"
         ],
-        "treasury": 402681843,
+        "treasury": 402681979,
         "level": 4,
         "xp": 100,
         "controlledTerritories": [
@@ -72,18 +79,18 @@
         ],
         "rules": "Join us and we'll be great than all clan",
         "materials": {
-            "rope": 76,
-            "gun_powder": 6097,
-            "copper": 3393,
-            "iron": 8111,
-            "metal": 4935,
-            "wood": 6845,
-            "rare_resin": 44,
+            "rope": 23573,
+            "gun_powder": 39245,
+            "copper": 32314,
+            "iron": 44954,
+            "metal": 36849,
+            "wood": 42137,
+            "rare_resin": 154,
             "lightning_resin": 1,
             "mythical_sand": 0
         },
         "weapons": {
-            "Chakra Blade": 2448,
+            "Chakra Blade": 3068,
             "Chakra Canon": 113,
             "Ninjutsu Drones": 128,
             "Jutsu Absorption Arm": 3,
@@ -118,12 +125,12 @@
         ],
         "rules": "if you leave the clan you have to be yeeted",
         "materials": {
-            "iron": 9,
+            "iron": 12,
             "wood": 6,
-            "metal": 14,
-            "gun_powder": 16,
-            "rope": 11,
-            "copper": 4
+            "metal": 17,
+            "gun_powder": 19,
+            "rope": 20,
+            "copper": 13
         },
         "weapons": {
             "Chakra Canon": 3484042742
@@ -135,7 +142,8 @@
             "active": true,
             "multiplier": 2000000
         },
-        "lastDistribution": 1769187312780
+        "lastDistribution": 1769187312780,
+        "power_penalty": 0
     },
     "Rebellion : 真": {
         "name": "Rebellion : 真",
@@ -160,9 +168,11 @@
             "772230265565216798",
             "1243438862139916308",
             "930983759975706655",
-            "1442562014328127549"
+            "1442562014328127549",
+            "1467587909602509078",
+            "1320073283982327884"
         ],
-        "treasury": 1008995,
+        "treasury": 1108995,
         "level": 5,
         "xp": 1000,
         "controlledTerritories": [
@@ -178,23 +188,23 @@
         ],
         "rules": "Dear Member,\n\nIf you desire to join The 'Rebellion' Please follow the TOS. \n\nThe following Terms & Conditions are:\n•No sharing information with outsiders.\n•No leaving the clan in under 3 months of joining.\n•No inside sabatoging\n•No breaking these rules.\n\n__Consequences__\n\n• All stats lowered by 1/4.",
         "materials": {
-            "wood": 15083,
-            "iron": 16860,
-            "rope": 1082,
-            "gun_powder": 13151,
-            "copper": 8714,
-            "metal": 11206,
-            "rare_resin": 136,
+            "wood": 16781,
+            "iron": 18924,
+            "rope": 1271,
+            "gun_powder": 14664,
+            "copper": 9525,
+            "metal": 12491,
+            "rare_resin": 160,
             "holy_waters": 2,
             "a_piece_of_earth": 1,
             "lightning_resin": 1
         },
         "weapons": {
-            "Chakra Blade": 3925,
+            "Chakra Blade": 4357,
             "Ninjutsu Drones": 18
         },
         "contributions": {},
-        "power": 0,
+        "power": 109675,
         "buffs": {
             "tier": 1,
             "active": true,
@@ -208,12 +218,9 @@
         "image": "https://share.google/2Ck1wZM6ZHMewqqbY",
         "leader": "711146181794988064",
         "coLeader": null,
-        "elders": [
-            "1215055297492819978"
-        ],
+        "elders": [],
         "members": [
             "711146181794988064",
-            "1215055297492819978",
             "811203159401693196",
             "890669412917592114",
             "890668763085672458"
@@ -224,12 +231,12 @@
         "controlledTerritories": [],
         "rules": "No rules set.",
         "materials": {
-            "rope": 320,
-            "copper": 1937,
+            "rope": 321,
+            "copper": 1938,
             "metal": 2098,
             "gun_powder": 2584,
-            "iron": 3308,
-            "wood": 2992,
+            "iron": 3310,
+            "wood": 2994,
             "rare_resin": 4,
             "lightning_resin": 2
         },
@@ -246,6 +253,43 @@
             "active": true,
             "multiplier": 20
         },
-        "lastDistribution": 1769613075649
+        "lastDistribution": 1769613075649,
+        "power_penalty": 0
+    },
+    "Jedi Order": {
+        "name": "Jedi Order",
+        "image": "https://www.worldanvil.com/w/star-wars3A-fate-of-the-galaxy-mandalorian-bbq/a/jedi-order-organization",
+        "leader": "741142009670271010",
+        "coLeader": null,
+        "elders": [],
+        "members": [
+            "741142009670271010"
+        ],
+        "treasury": 10000000,
+        "level": 1,
+        "xp": 0,
+        "controlledTerritories": [],
+        "rules": "Follow the Jedi Code",
+        "materials": {
+            "metal": 60,
+            "wood": 34,
+            "iron": 78,
+            "copper": 65,
+            "gun_powder": 116,
+            "rope": 28
+        },
+        "weapons": {
+            "Chakra Blade": 1,
+            "Ninjutsu Drones": 1
+        },
+        "contributions": {},
+        "lastDistribution": 1770689229121,
+        "power": 0,
+        "buffs": {
+            "tier": 1,
+            "active": true,
+            "multiplier": 20
+        },
+        "power_penalty": 0
     }
 }

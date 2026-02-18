@@ -224,9 +224,10 @@ module.exports = {
                 tierProgress = '**Max Tier Reached!**';
             }
 
+            const clanTokenBalance = clanTokens[userClan.name] || 0;
             const embed = new EmbedBuilder()
                 .setTitle(`${userClan.name} [Tier ${userClan.level}]`)
-                .setDescription(`**Leader:** <@${userClan.leader}>\n**Members:** ${userClan.members.length}\n**Treasury:** ${userClan.treasury.toLocaleString()} Ryo\n**Clan Power:** ${finalPower.toLocaleString()} (Raw: ${rawPower.toLocaleString()}, Penalty: ${penalty.toLocaleString()})`)
+                .setDescription(`**Leader:** <@${userClan.leader}>\n**Members:** ${userClan.members.length}\n**Treasury:** ${userClan.treasury.toLocaleString()} Ryo\n**Clan Tokens:** ${clanTokenBalance.toLocaleString()}\n**Clan Power:** ${finalPower.toLocaleString()} (Raw: ${rawPower.toLocaleString()}, Penalty: ${penalty.toLocaleString()})`)
                 .addFields(
                     { name: 'Territories', value: userClan.controlledTerritories.length > 0 ? userClan.controlledTerritories.map(formatName).join(', ') : 'None', inline: true },
                     { name: 'Co-Leader', value: userClan.coLeader ? `<@${userClan.coLeader}>` : 'None', inline: true },
@@ -734,9 +735,10 @@ module.exports = {
                 { id: 'channel_private', name: 'Private Clan Channel', cost: 100, type: 'channel', desc: "A private channel for your clan." }
             ];
 
+            const clanTokenBalance = clanTokens[userClan.name] || 0;
             const embed = new EmbedBuilder()
                 .setTitle('Clan Shop')
-                .setDescription(`Buy items using **Clan Tokens**.\nYour Balance: **${clanTokens[userId] || 0} Tokens**\nUse \`/clan buy item:<id>\` to purchase.`)
+                .setDescription(`Buy items using **Clan Tokens**.\nClan Balance: **${clanTokenBalance} Tokens**\nOnly the Clan Leader can purchase items for the clan.\nUse \`/clan buy item:<id>\` to purchase.`)
                 .setColor('#0099ff');
 
             shopItems.forEach(item => {
@@ -749,10 +751,7 @@ module.exports = {
         // --- BUY ---
         if (subcommand === 'buy') {
             if (!userClan) return interaction.reply({ content: 'Not in a clan.', ephemeral: true });
-            if (!userClan) return interaction.reply({ content: 'Not in a clan.', ephemeral: true });
-            // Removed leader check, anyone with tokens can buy? Or still leader only?
-            // "So we need to change the clan shop currency from ryo to clan tokens" implies individual currency.
-            // Let's allow anyone to buy for themselves/clan.
+            if (userClan.leader !== userId) return interaction.reply({ content: 'Only the Clan Leader can make purchases for the clan.', ephemeral: true });
 
             const itemId = interaction.options.getString('item');
             const shopItems = [
@@ -765,29 +764,30 @@ module.exports = {
             const item = shopItems.find(i => i.id === itemId);
             if (!item) return interaction.reply({ content: 'Item not found.', ephemeral: true });
 
-            const userTokens = clanTokens[userId] || 0;
-            if (userTokens < item.cost) return interaction.reply({ content: `Insufficient Clan Tokens. You have ${userTokens}, need ${item.cost}.`, ephemeral: true });
+            const clanTokenBalance = clanTokens[userClan.name] || 0;
+            if (clanTokenBalance < item.cost) return interaction.reply({ content: `Insufficient Clan Tokens. The clan has ${clanTokenBalance}, need ${item.cost}.`, ephemeral: true });
 
-            clanTokens[userId] = userTokens - item.cost;
+            clanTokens[userClan.name] = clanTokenBalance - item.cost;
             await saveJson(CLAN_TOKENS_FILE, clanTokens);
 
-            // Effect logic
+            // Apply effect to ALL members
             if (item.type === 'item') {
-                // Add to clan inventory? Or distribute? For now, just say bought.
-                // Assuming clan has inventory for ramen?
-                // userClan.inventory...
-                // Add to user inventory
-                if (!users[userId].inventory) users[userId].inventory = [];
-                for (let k = 0; k < item.amount; k++) users[userId].inventory.push(item.item);
+                for (const memberId of userClan.members) {
+                    if (!users[memberId]) users[memberId] = {};
+                    if (!users[memberId].inventory) users[memberId].inventory = [];
+                    for (let k = 0; k < item.amount; k++) users[memberId].inventory.push(item.item);
+                }
                 await saveJson(USERS_FILE, users);
-                return interaction.reply({ content: `Bought ${item.name}. Added to your inventory.` });
+                return interaction.reply({ content: `Bought ${item.name} for all members! Items added to everyone's inventory.` });
             } else if (item.type === 'currency') {
-                // Add SS to leader? Or distribute?
-                players[userId].ss = (players[userId].ss || 0) + item.amount;
+                for (const memberId of userClan.members) {
+                    if (!players[memberId]) players[memberId] = {};
+                    players[memberId].ss = (players[memberId].ss || 0) + item.amount;
+                }
                 await saveJson(PLAYERS_FILE, players);
-                return interaction.reply({ content: `Bought ${item.name}. Added to your balance.` });
+                return interaction.reply({ content: `Bought ${item.name} for all members! SS added to everyone's balance.` });
             } else {
-                return interaction.reply({ content: `Bought ${item.name}. Please contact admin to set up.` });
+                return interaction.reply({ content: `Bought ${item.name}. Please contact admin to set up for the clan.` });
             }
         }
 
@@ -849,10 +849,12 @@ module.exports = {
                 if (players[memberId]) {
                     players[memberId].ss = (players[memberId].ss || 0) + rewardSS;
                 }
-
-                clanTokens[memberId] = (clanTokens[memberId] || 0) + rewardTokens;
                 memberCount++;
             }
+
+            // Distribute Tokens to Clan Pool
+            const totalTokens = rewardTokens * memberCount;
+            clanTokens[userClan.name] = (clanTokens[userClan.name] || 0) + totalTokens;
 
             // Update Clan Data
             userClan.lastDistribution = now;
@@ -1044,25 +1046,17 @@ module.exports = {
                     if (!userClan.controlledTerritories.includes(territory.name)) {
                         userClan.controlledTerritories.push(territory.name);
                     }
+
                     if (enemyClan) {
                         enemyClan.controlledTerritories = enemyClan.controlledTerritories.filter(t => t !== territory.name);
-
-                        // Higher - Lower penalty: Loser gets penalized by the difference
-                        const penaltyIncrease = Math.max(0, myPower - enemyPower);
-                        enemyClan.power_penalty = (enemyClan.power_penalty || 0) + penaltyIncrease;
                     }
 
                     await saveJson(TERRITORIES_FILE, territories);
                     await saveJson(CLANS_FILE, clans);
 
-                    await interaction.followUp({ content: `**Victory!** ${userClan.name} has captured ${territory.displayName}!\nThe **${enemyClanName || 'Neutral'}** forces have suffered a crushing defeat!` });
+                    await interaction.followUp({ content: `**Victory!** ${userClan.name} has captured ${territory.displayName}!\nThe **${enemyClanName || 'Neutral'}** forces have been defeated.` });
                 } else {
                     // Lose
-                    // Higher - Lower penalty: Loser gets penalized by the difference
-                    const penaltyIncrease = Math.max(0, enemyPower - myPower);
-                    userClan.power_penalty = (userClan.power_penalty || 0) + penaltyIncrease;
-
-                    await saveJson(CLANS_FILE, clans);
                     await interaction.followUp({ content: `**Defeat!** ${userClan.name} failed to capture ${territory.displayName}.` });
                 }
             }, 5000);

@@ -58,6 +58,21 @@ const EMOJIS = {
 };
 const COMBO_EMOJI_FILLED = "[X]";
 const COMBO_EMOJI_EMPTY = "[ ]";
+const EFFECT_PRIORITY = {
+    'remove_buffs': 0,
+    'cleanse': 1,
+    'buff': 2,
+    'debuff': 2,
+    'status': 3,
+    'chakra_drain': 4,
+    'chakra_gain': 4,
+    'damage': 10,
+    'heal': 10,
+    'instantKill': 11,
+    'OHKO': 11,
+    'ohko': 11,
+    'lifesteal_max_hp': 12
+};
 
 // --- Data Loading ---
 let jutsuList = fs.existsSync(jutsusPath) ? JSON.parse(fs.readFileSync(jutsusPath, 'utf8')) : {};
@@ -1045,7 +1060,7 @@ function getEffectiveStats(entity) {
         health: Number(entity.health) || 100,
         currentHealth: (entity.currentHealth !== undefined && entity.currentHealth !== null) ? Number(entity.currentHealth) : Number(entity.health || 100),
         chakra: Number(entity.chakra) || 10,
-        accuracy: 80, // Base accuracy - always 60, never read from entity
+        accuracy: Number(entity.accuracy) || 80, // Read base accuracy from entity or default to 80
         dodge: Number(entity.dodge) || 0,
         adaptedTechniques: entity.adaptedTechniques || {},
         activeEffects: entity.activeEffects || []
@@ -2086,27 +2101,11 @@ function executeJutsu(baseUser, baseTarget, effectiveUser, effectiveTarget, juts
         }
     }
 
-    // Global Patch: Sort effects to ensure buffs/debuffs are applied BEFORE damage/heal
-    // This ensures that the current action's damage correctly reflects new stats.
-    const effectPriority = {
-        'remove_buffs': 0,
-        'cleanse': 1,
-        'buff': 2,
-        'debuff': 2,
-        'status': 3,
-        'chakra_drain': 4,
-        'chakra_gain': 4,
-        'damage': 10,
-        'heal': 10,
-        'instantKill': 11,
-        'OHKO': 11,
-        'ohko': 11,
-        'lifesteal_max_hp': 12
-    };
+
 
     const sortedEffects = [...effectsToProcess].sort((a, b) => {
-        const pA = effectPriority[a.type] ?? 5;
-        const pB = effectPriority[b.type] ?? 5;
+        const pA = EFFECT_PRIORITY[a.type] ?? 5;
+        const pB = EFFECT_PRIORITY[b.type] ?? 5;
         return pA - pB;
     });
 
@@ -3466,22 +3465,31 @@ async function runBattle(interaction, player1Id, player2Id, battleType, npcTempl
                             const dummyResult = { damage: 0, heal: 0, specialEffects: [] };
 
                             // Apply effects for this round of the active jutsu
+                            let effectsToProcess = [];
                             if (Array.isArray(roundEffect.effects)) {
-                                roundEffect.effects.forEach(effect => {
-                                    applyEffect(effect, user, target, effectiveUser, effectiveTarget, dummyResult, jutsuName, effectHandlers, true);
-                                });
+                                effectsToProcess = roundEffect.effects;
                             } else if (roundEffect.effects && typeof roundEffect.effects === 'object') {
-                                // Support for single object effect
-                                applyEffect(roundEffect.effects, user, target, effectiveUser, effectiveTarget, dummyResult, jutsuName, effectHandlers, true);
+                                effectsToProcess = [roundEffect.effects];
                             }
 
-                            // Legacy support for old roundEffect keys
-                            if (roundEffect.damage) applyEffect({ type: 'damage', ...roundEffect.damage }, user, target, effectiveUser, effectiveTarget, dummyResult, jutsuName, effectHandlers, true);
-                            if (roundEffect.heal) applyEffect({ type: 'heal', ...roundEffect.heal }, user, target, effectiveUser, effectiveTarget, dummyResult, jutsuName, effectHandlers, true);
-                            if (roundEffect.status) applyEffect({ type: 'status', status: roundEffect.status, duration: roundEffect.duration || 1 }, user, target, effectiveUser, effectiveTarget, dummyResult, jutsuName, effectHandlers, true);
-                            if (roundEffect.debuff) applyEffect({ type: 'debuff', stats: roundEffect.debuff.stats, duration: roundEffect.duration || 1 }, user, target, effectiveUser, effectiveTarget, dummyResult, jutsuName, effectHandlers, true);
-                            if (roundEffect.buff) applyEffect({ type: 'buff', stats: roundEffect.buff.stats, duration: roundEffect.duration || 1 }, user, target, effectiveUser, effectiveTarget, dummyResult, jutsuName, effectHandlers, true);
-                            if (roundEffect.chakra_gain) applyEffect({ type: 'chakra_gain', ...roundEffect.chakra_gain }, user, target, effectiveUser, effectiveTarget, dummyResult, jutsuName, effectHandlers, true);
+                            // Support for legacy keys
+                            if (roundEffect.damage) effectsToProcess.push({ type: 'damage', ...roundEffect.damage });
+                            if (roundEffect.heal) effectsToProcess.push({ type: 'heal', ...roundEffect.heal });
+                            if (roundEffect.status) effectsToProcess.push({ type: 'status', status: roundEffect.status, duration: roundEffect.duration || 1 });
+                            if (roundEffect.debuff) effectsToProcess.push({ type: 'debuff', stats: roundEffect.debuff.stats, duration: roundEffect.duration || 1 });
+                            if (roundEffect.buff) effectsToProcess.push({ type: 'buff', stats: roundEffect.buff.stats, duration: roundEffect.duration || 1 });
+                            if (roundEffect.chakra_gain) effectsToProcess.push({ type: 'chakra_gain', ...roundEffect.chakra_gain });
+
+                            // Sort effects to ensure buffs/debuffs are applied BEFORE damage/heal
+                            const sortedEffects = [...effectsToProcess].sort((a, b) => {
+                                const pA = EFFECT_PRIORITY[a.type] ?? 5;
+                                const pB = EFFECT_PRIORITY[b.type] ?? 5;
+                                return pA - pB;
+                            });
+
+                            sortedEffects.forEach(effect => {
+                                applyEffect(effect, user, target, effectiveUser, effectiveTarget, dummyResult, jutsuName, effectHandlers, true);
+                            });
 
                             if (dummyResult.damage > 0) effectSummary.push({ type: 'damage', value: dummyResult.damage });
                             if (dummyResult.heal > 0) effectSummary.push({ type: 'heal', value: dummyResult.heal });
@@ -3528,11 +3536,14 @@ async function runBattle(interaction, player1Id, player2Id, battleType, npcTempl
 
                         if (typeof customJutsuModule.execute === 'function') {
                             const jutsu = jutsuList[customJutsu.name];
+                            const effectiveUser = getEffectiveStats(user);
+                            const effectiveTarget = getEffectiveStats(target);
+
                             const result = customJutsuModule.execute({
                                 baseUser: user,
                                 baseTarget: target,
-                                effectiveUser: getEffectiveStats(user),
-                                effectiveTarget: getEffectiveStats(target),
+                                effectiveUser,
+                                effectiveTarget,
                                 jutsuData: jutsu,
                                 round: customJutsu.currentRound,
                                 isFirstActivation: false,
@@ -3541,26 +3552,37 @@ async function runBattle(interaction, player1Id, player2Id, battleType, npcTempl
                                 getEffectiveStats
                             });
 
-                            // Apply damage/heal from the result
-                            if (result.damage > 0) {
-                                if (target.izanamiImmortal) {
-                                    result.specialEffects = result.specialEffects || [];
-                                    result.specialEffects.push(`${target.name} is IMMORTAL! No damage taken.`);
-                                } else {
-                                    target.currentHealth -= result.damage;
-                                }
+                            // Enhanced Effect Processing for Custom Scripts
+                            let effectsToProcess = [];
+                            if (Array.isArray(result.effects)) {
+                                effectsToProcess = result.effects;
+                            } else {
+                                // Fallback for script results without explicit effects array
+                                if (result.damage) effectsToProcess.push({ type: 'damage', value: result.damage });
+                                if (result.heal) effectsToProcess.push({ type: 'heal', value: result.heal });
+                                if (result.stats) effectsToProcess.push({ type: result.isDebuff ? 'debuff' : 'buff', stats: result.stats, duration: result.duration || 1 });
                             }
-                            if (result.heal > 0) {
-                                user.currentHealth = Math.min(user.currentHealth + result.heal, user.maxHealth || user.health);
-                            }
+
+                            // Sort effects
+                            const sortedEffects = [...effectsToProcess].sort((a, b) => {
+                                const pA = EFFECT_PRIORITY[a.type] ?? 5;
+                                const pB = EFFECT_PRIORITY[b.type] ?? 5;
+                                return pA - pB;
+                            });
+
+                            const dummyResult = { damage: 0, heal: 0, specialEffects: [] };
+                            sortedEffects.forEach(effect => {
+                                applyEffect(effect, user, target, effectiveUser, effectiveTarget, dummyResult, customJutsu.name, effectHandlers, true);
+                            });
 
                             // Add to summaries
                             summariesArray.push({
                                 desc: result.description || `${customJutsu.name} (Round ${customJutsu.currentRound})`,
                                 effects: [
-                                    ...(result.damage > 0 ? [{ type: 'damage', value: result.damage }] : []),
-                                    ...(result.heal > 0 ? [{ type: 'heal', value: result.heal }] : []),
-                                    ...(result.specialEffects || []).map(msg => ({ type: 'text', value: msg }))
+                                    ...(dummyResult.damage > 0 ? [{ type: 'damage', value: dummyResult.damage }] : []),
+                                    ...(dummyResult.heal > 0 ? [{ type: 'heal', value: dummyResult.heal }] : []),
+                                    ...(dummyResult.specialEffects || []).map(msg => ({ type: 'text', value: msg })),
+                                    ...(result.specialEffects || []).filter(msg => !dummyResult.specialEffects.includes(msg)).map(msg => ({ type: 'text', value: msg }))
                                 ]
                             });
                         }

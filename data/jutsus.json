@@ -64,11 +64,11 @@
     "info": "User heals based on their missing health",
     "obtainment": "obtained from sakura mentor",
     "category": "Genin",
-    "chakraCost": 4,
+    "chakraCost": 9,
     "effects": [
       {
         "type": "heal",
-        "formula": "user.health * 0.4 + 100"
+        "formula": "user.health * 0.2"
       }
     ]
   },
@@ -560,12 +560,12 @@
     "obtainment": "obtained from sakura at jounin mentor rank",
     "description": "Enhanced version of the jutsu Mystic Palm",
     "info": "User heals based on their missing health, but this time it's more healing than before.",
-    "chakraCost": 7,
+    "chakraCost": 14,
     "category": "Jounin",
     "effects": [
       {
         "type": "heal",
-        "formula": "user.health * 0.7"
+        "formula": "user.health * 0.5"
       }
     ]
   },
