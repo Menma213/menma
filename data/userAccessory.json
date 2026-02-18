@@ -1,13 +1,295 @@
 {
-    "1132693590066331828": {
+    "799979545046155284": {
+        "inventory": [
+            "The Sword of Kusanagi",
+            "Goku's Pole",
+            "Gara's Gourd",
+            "The Sage Cloak",
+            "Uchiha Necklace",
+            "Infinity",
+            "Ryomen Sukuna's Finger",
+            "The Founding Titan",
+            "Pocket Watch"
+        ],
+        "equipped": "The Founding Titan",
+        "bonusStats": {
+            "power": 10000,
+            "defense": 10000
+        }
+    },
+    "818893461881094175": {
+        "inventory": [
+            "The Sword of Kusanagi",
+            "The Sage Cloak",
+            "Uchiha Necklace",
+            "Infinity",
+            "The Founding Titan",
+            "Goku's Pole",
+            "Gara's Gourd",
+            "Ryomen Sukuna's Finger",
+            "Pocket Watch"
+        ],
+        "equipped": "The Founding Titan",
+        "bonusStats": {
+            "power": 10000,
+            "defense": 10000
+        }
+    },
+    "835408109899219004": {
+        "inventory": [
+            "Goku's Pole",
+            "Death Note"
+        ],
+        "equipped": "Death Note",
+        "bonusStats": {}
+    },
+    "820580034376105995": {
+        "inventory": [
+            "The Founding Titan",
+            "Ryomen Sukuna's Finger",
+            "Goku's Pole",
+            "Infinity",
+            "Gara's Gourd",
+            "The Sword of Kusanagi",
+            "The Sage Cloak",
+            "Pocket Watch"
+        ],
+        "equipped": "The Founding Titan",
+        "bonusStats": {
+            "power": 10000,
+            "defense": 10000
+        }
+    },
+    "1123162433507311677": {
+        "inventory": [
+            "The Founding Titan",
+            "Infinity"
+        ],
+        "equipped": "The Founding Titan",
+        "bonusStats": {
+            "power": 10000,
+            "defense": 10000
+        }
+    },
+    "1409902593949433958": {
+        "inventory": [
+            "Goku's Pole",
+            "Ryomen Sukuna's Finger",
+            "The Founding Titan",
+            "Infinity",
+            "Gara's Gourd",
+            "The Sword of Kusanagi",
+            "The Sage Cloak",
+            "Uchiha Necklace",
+            "Pocket Watch"
+        ],
+        "equipped": "Pocket Watch",
+        "bonusStats": {
+            "chakra": 100,
+            "accuracy": 10
+        }
+    },
+    "1297962644531183666": {
+        "inventory": [
+            "The Founding Titan",
+            "Infinity"
+        ],
+        "equipped": "The Founding Titan",
+        "bonusStats": {
+            "power": 10000,
+            "defense": 10000
+        }
+    },
+    "766465809639669840": {
+        "inventory": [
+            "The Founding Titan",
+            "The Sword of Kusanagi",
+            "Pocket Watch"
+        ],
+        "equipped": "The Founding Titan",
+        "bonusStats": {
+            "power": 10000,
+            "defense": 10000
+        }
+    },
+    "791252443039924255": {
+        "inventory": [
+            "Infinity"
+        ],
+        "equipped": null,
+        "bonusStats": {}
+    },
+    "711146181794988064": {
         "inventory": [
             "Uchiha Necklace"
         ],
-        "equipped": "Uchiha Necklace",
+        "equipped": null,
+        "bonusStats": {}
+    },
+    "437016873104834561": {
+        "inventory": [
+            "Infinity",
+            "Ryomen Sukuna's Finger",
+            "The Sage Cloak"
+        ],
+        "equipped": null,
+        "bonusStats": {}
+    },
+    "1336261859224981594": {
+        "inventory": [
+            "The Founding Titan"
+        ],
+        "equipped": "The Founding Titan",
         "bonusStats": {
-            "power": 2500,
-            "defense": 1000,
-            "accuracy": 10
+            "power": 10000,
+            "defense": 10000
+        }
+    },
+    "811203159401693196": {
+        "inventory": [
+            "Infinity"
+        ],
+        "equipped": null,
+        "bonusStats": {}
+    },
+    "1453436128483868713": {
+        "inventory": [
+            "The Founding Titan",
+            "Infinity",
+            "Ryomen Sukuna's Finger",
+            "Gara's Gourd",
+            "The Sword of Kusanagi",
+            "The Sage Cloak",
+            "Goku's Pole",
+            "Uchiha Necklace",
+            "Pocket Watch"
+        ],
+        "equipped": "The Founding Titan",
+        "bonusStats": {
+            "power": 10000,
+            "defense": 10000
+        }
+    },
+    "1341946327126507522": {
+        "inventory": [
+            "The Founding Titan",
+            "The Sage Cloak"
+        ],
+        "equipped": "The Founding Titan",
+        "bonusStats": {
+            "power": 10000,
+            "defense": 10000
+        }
+    },
+    "930983759975706655": {
+        "inventory": [
+            "Infinity",
+            "The Founding Titan",
+            "The Sage Cloak"
+        ],
+        "equipped": "The Founding Titan",
+        "bonusStats": {
+            "power": 10000,
+            "defense": 10000
+        }
+    },
+    "1140404569923395668": {
+        "inventory": [
+            "Infinity"
+        ],
+        "equipped": null,
+        "bonusStats": {}
+    },
+    "1442562014328127549": {
+        "inventory": [
+            "Infinity"
+        ],
+        "equipped": null,
+        "bonusStats": {}
+    },
+    "1303128250079383583": {
+        "inventory": [
+            "Uchiha Necklace"
+        ],
+        "equipped": null,
+        "bonusStats": {}
+    },
+    "1243438862139916308": {
+        "inventory": [
+            "Infinity"
+        ],
+        "equipped": null,
+        "bonusStats": {}
+    },
+    "741142009670271010": {
+        "inventory": [
+            "Uchiha Necklace",
+            "Goku's Pole",
+            "The Founding Titan",
+            "Ryomen Sukuna's Finger"
+        ],
+        "equipped": "The Founding Titan",
+        "bonusStats": {
+            "power": 10000,
+            "defense": 10000
+        }
+    },
+    "938325776883929108": {
+        "inventory": [
+            "The Founding Titan"
+        ],
+        "equipped": "The Founding Titan",
+        "bonusStats": {
+            "power": 10000,
+            "defense": 10000
+        }
+    },
+    "1146966849335074826": {
+        "inventory": [
+            "Infinity"
+        ],
+        "equipped": "Infinity",
+        "bonusStats": {
+            "defense": 8000
+        }
+    },
+    "553999404001001482": {
+        "inventory": [
+            "Uchiha Necklace",
+            "The Founding Titan"
+        ],
+        "equipped": "The Founding Titan",
+        "bonusStats": {
+            "power": 10000,
+            "defense": 10000
+        }
+    },
+    "1302557566672310294": {
+        "inventory": [
+            "Infinity"
+        ],
+        "equipped": null,
+        "bonusStats": {}
+    },
+    "874591871412879361": {
+        "inventory": [
+            "The Founding Titan",
+            "Pocket Watch"
+        ],
+        "equipped": "The Founding Titan",
+        "bonusStats": {
+            "power": 10000,
+            "defense": 10000
+        }
+    },
+    "1320073283982327884": {
+        "inventory": [
+            "The Founding Titan"
+        ],
+        "equipped": "The Founding Titan",
+        "bonusStats": {
+            "power": 10000,
+            "defense": 10000
         }
     }
 }

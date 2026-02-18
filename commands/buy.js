@@ -264,6 +264,34 @@ module.exports = {
                 return interaction.reply(`<@${userId}> Successfully purchased a **Custom Jutsu**!`);
             }
 
+            // --- Accessory handling (SS Shop) ---
+            if (premium.type === 'accessory') {
+                if (!players[userId].ss || players[userId].ss < premium.price) {
+                    return interaction.reply(`You need ${premium.price} Shinobi Shards to buy this item!`);
+                }
+
+                // Check if already owned
+                const userAccessoryPath = path.join(__dirname, '../data/userAccessory.json');
+                let userAccessoryData = fs.existsSync(userAccessoryPath) ? JSON.parse(fs.readFileSync(userAccessoryPath, 'utf8')) : {};
+                if (!userAccessoryData[userId]) {
+                    userAccessoryData[userId] = { inventory: [], equipped: null, bonusStats: {} };
+                }
+                if (userAccessoryData[userId].inventory.includes(premium.name)) {
+                    return interaction.reply('You already own this accessory!');
+                }
+
+                // Deduct SS
+                players[userId].ss -= premium.price;
+                fs.writeFileSync(playersPath, JSON.stringify(players, null, 4));
+
+                // Add to inventory
+                userAccessoryData[userId].inventory.push(premium.name);
+                fs.writeFileSync(userAccessoryPath, JSON.stringify(userAccessoryData, null, 4));
+
+                await logPurchase(interaction, `<@${userId}> purchased premium accessory **${premium.display}** for ${premium.price} Shinobi Shards.`);
+                return interaction.reply(`Successfully purchased **${premium.display}**! Use \`/accessory\` to equip it.`);
+            }
+
             if (players[userId].premiumRoles && players[userId].premiumRoles.some(r => r && r.roleId === premium.roleId)) {
                 return interaction.reply('You already own this premium item!');
             }
@@ -540,6 +568,10 @@ You now have 1 Stat Refund available. Use the /refund command to access it.`);
 
             if (!item) {
                 return interaction.reply('That accessory does not exist in the shop!');
+            }
+
+            if (item.purchasable === false) {
+                return interaction.reply('This accessory cannot be purchased with money. Check the Shinobi Shard shop!');
             }
 
             const players = JSON.parse(fs.readFileSync(playersPath, 'utf8'));

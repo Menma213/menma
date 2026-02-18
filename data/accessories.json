@@ -93,13 +93,15 @@
         "name": "Death Note",
         "description": "A notebook that kills anyone whose name is written inside.",
         "rarity": "Thunderbird",
-        "price": 1500000,
         "effects": [
             {
                 "type": "instant_kill",
                 "chance": 5
             }
-        ]
+        ],
+        "purchasable": false,
+        "price": 2500,
+        "currency": "ss"
     },
     {
         "name": "Pocket Watch",

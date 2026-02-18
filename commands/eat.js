@@ -1,10 +1,13 @@
 const { EmbedBuilder, SlashCommandBuilder } = require('discord.js');
-const fs = require('fs');
+const fs = require('fs').promises;
 const path = require('path');
+const { userMutex } = require('../utils/locks');
 
 // Define the Channel ID where the command is allowed
-// IMPORTANT: Replace 'YOUR_ICHIRAKU_RAMEN_CHANNEL_ID_HERE' with the actual ID of your Ichiraku Ramen channel!
-const ICHIRAKU_RAMEN_CHANNEL_ID = '1381269932427317339'; 
+const ICHIRAKU_RAMEN_CHANNEL_ID = '1381269932427317339';
+
+const playersPath = path.resolve(__dirname, '../data/players.json');
+const usersPath = path.resolve(__dirname, '../data/users.json');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -25,14 +28,11 @@ module.exports = {
                 .setDescription('Quantity to buy')
                 .setRequired(false)
         ),
-    name: 'eat', // Command name (for legacy handler)
-    description: 'Buy bowls using your Ramen Coupons.', // Command description (for legacy handler)
+    name: 'eat',
+    description: 'Buy bowls using your Ramen Coupons.',
     async execute(interactionOrMessage, args) {
-        // Determine if it's a Slash Command Interaction or a Message
-        const isSlashCommand = interactionOrMessage.isCommand?.(); 
+        const isSlashCommand = interactionOrMessage.isCommand?.();
 
-        // --- Channel ID Check ---
-        // Ensure it's a guild channel before checking ID
         if (!interactionOrMessage.guild) {
             const dmMessage = "This command can only be used in a server channel.";
             if (isSlashCommand) {
@@ -51,53 +51,18 @@ module.exports = {
                 return interactionOrMessage.reply(forbiddenChannelMessage);
             }
         }
-        // --- End Channel ID Check ---
 
-        // Get the user's ID
-        let userId = interactionOrMessage.user.id;
-
-        // Load players.json for ramen deduction
-        const playersPath = path.resolve(__dirname, '../../menma/data/players.json');
-        let players = fs.existsSync(playersPath) ? JSON.parse(fs.readFileSync(playersPath, 'utf8')) : {};
-        if (!players[userId]) players[userId] = {};
-        // Use ramen from players.json
-        let ramenCoupons = Number(players[userId].ramen) || 0;
-
-        // Load users.json
-        const usersPath = path.resolve(__dirname, '../../menma/data/users.json');
-        
-        // Ensure users.json exists, if not, create it
-        if (!fs.existsSync(usersPath)) {
-            fs.writeFileSync(usersPath, JSON.stringify({}, null, 2));
-        }
-
-        let users;
-        try {
-            users = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
-        } catch (error) {
-            console.error("Error reading or parsing users.json:", error);
-            const errorMessage = "An error occurred while reading user data. Please try again later.";
-            if (isSlashCommand) {
-                return interactionOrMessage.reply({ content: errorMessage, ephemeral: true });
-            } else {
-                return interactionOrMessage.reply(errorMessage);
-            }
-        }
-
-        // Get the user's data
-        let user = users[userId] || { ramen: 0, power: 0, defense: 0, health: 0 }; // Default values if user doesn't exist
+        let userId = isSlashCommand ? interactionOrMessage.user.id : interactionOrMessage.author.id;
 
         let bowlType, quantity;
-        if (isSlashCommand) { // Use isSlashCommand for clarity
+        if (isSlashCommand) {
             bowlType = interactionOrMessage.options.getString('bowl');
             quantity = interactionOrMessage.options.getInteger('quantity') || 1;
         } else {
-            // Prefix command
             bowlType = args[0] ? args[0].toLowerCase() : null;
             quantity = args[1] ? parseInt(args[1]) : 1;
         }
 
-        // Validate quantity: must be an integer >= 1
         if (!Number.isInteger(quantity) || quantity <= 0) {
             const invalidQuantityMessage = 'Quantity must be a positive integer (1 or greater).';
             if (isSlashCommand) {
@@ -107,7 +72,6 @@ module.exports = {
             }
         }
 
-        // Check if the bowl type is valid
         const bowls = {
             beef: { power: 15, cost: 1 },
             fish: { defense: 15, cost: 1 },
@@ -115,7 +79,7 @@ module.exports = {
         };
 
         if (!bowls[bowlType]) {
-            const invalidBowlMessage = isSlashCommand 
+            const invalidBowlMessage = isSlashCommand
                 ? 'Invalid bowl type. Use `/eat bowl:<beef|fish|veggie>`.'
                 : 'Invalid bowl type. Use `%eat beef`, `%eat fish`, or `%eat veggie`.';
             if (isSlashCommand) {
@@ -125,57 +89,74 @@ module.exports = {
             }
         }
 
-        // Calculate total cost
         const totalCost = bowls[bowlType].cost * quantity;
 
-        // Extra safety: prevent non-positive totalCost (shouldn't happen with current config)
-        if (totalCost <= 0) {
-            const invalidCostMessage = 'Invalid purchase amount.';
-            if (isSlashCommand) {
-                return interactionOrMessage.reply({ content: invalidCostMessage, ephemeral: true });
-            } else {
-                return interactionOrMessage.channel.send(invalidCostMessage);
+        try {
+            if (isSlashCommand) await interactionOrMessage.deferReply();
+
+            let result = await userMutex.runExclusive(async () => {
+                const playersData = JSON.parse(await fs.readFile(playersPath, 'utf8').catch(() => "{}"));
+                const usersData = JSON.parse(await fs.readFile(usersPath, 'utf8').catch(() => "{}"));
+
+                if (!playersData[userId]) playersData[userId] = {};
+                if (!usersData[userId]) usersData[userId] = { ramen: 0, power: 0, defense: 0, health: 0 };
+
+                let ramenCoupons = Number(playersData[userId].ramen) || 0;
+
+                if (ramenCoupons < totalCost) {
+                    return { success: false, message: `You don't have enough Ramen Coupons to buy ${quantity} ${bowlType} bowl(s).` };
+                }
+
+                // Deduct from players.json
+                playersData[userId].ramen = ramenCoupons - totalCost;
+
+                // Update users.json
+                let user = usersData[userId];
+                user.ramen = (Number(user.ramen) || 0) - totalCost;
+                if (bowls[bowlType].power) user.power = (Number(user.power) || 0) + bowls[bowlType].power * quantity;
+                if (bowls[bowlType].defense) user.defense = (Number(user.defense) || 0) + bowls[bowlType].defense * quantity;
+                if (bowls[bowlType].health) user.health = (Number(user.health) || 0) + bowls[bowlType].health * quantity;
+
+                await fs.writeFile(playersPath, JSON.stringify(playersData, null, 2));
+                await fs.writeFile(usersPath, JSON.stringify(usersData, null, 2));
+
+                return { success: true };
+            });
+
+            if (!result.success) {
+                if (isSlashCommand) {
+                    return interactionOrMessage.editReply({ content: result.message });
+                } else {
+                    return interactionOrMessage.channel.send(result.message);
+                }
             }
-        }
 
-        // Check if the user has enough Ramen Coupons
-        if (ramenCoupons < totalCost) {
-            const insufficientRamenMessage = `You don't have enough Ramen Coupons to buy ${quantity} ${bowlType} bowl(s).`;
+            const embed = new EmbedBuilder()
+                .setTitle('Ramen Shop')
+                .setDescription(`You bought ${quantity} ${bowlType.charAt(0).toUpperCase() + bowlType.slice(1)} Bowl(s) for ${totalCost} Ramen Coupon(s) 🍜`)
+                .addFields(
+                    { name: 'Stats Increased:', value: `+${bowls[bowlType].power * quantity || bowls[bowlType].defense * quantity || bowls[bowlType].health * quantity} ${bowls[bowlType].power ? 'Power' : bowls[bowlType].defense ? 'Defense' : 'Health'}!`, inline: false }
+                )
+                .setColor('#006400');
+
             if (isSlashCommand) {
-                return interactionOrMessage.reply({ content: insufficientRamenMessage, ephemeral: true });
+                await interactionOrMessage.editReply({ embeds: [embed] });
             } else {
-                return interactionOrMessage.channel.send(insufficientRamenMessage);
+                await interactionOrMessage.channel.send({ embeds: [embed] });
             }
-        }
 
-        // Deduct the cost from players.json
-        players[userId].ramen = ramenCoupons - totalCost;
-        fs.writeFileSync(playersPath, JSON.stringify(players, null, 2));
-
-        // Update user stats in users.json
-        user.ramen -= totalCost;
-        if (bowls[bowlType].power) user.power += bowls[bowlType].power * quantity;
-        if (bowls[bowlType].defense) user.defense += bowls[bowlType].defense * quantity;
-        if (bowls[bowlType].health) user.health += bowls[bowlType].health * quantity;
-
-        // Save the updated user data
-        users[userId] = user;
-        fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
-
-        // Create the embed
-        const embed = new EmbedBuilder()
-            .setTitle('Ramen Shop')
-            .setDescription(`You bought ${quantity} ${bowlType.charAt(0).toUpperCase() + bowlType.slice(1)} Bowl(s) for ${totalCost} Ramen Coupon(s) 🍜`)
-            .addFields(
-                { name: 'Stats Increased:', value: `+${bowls[bowlType].power * quantity || bowls[bowlType].defense * quantity || bowls[bowlType].health * quantity} ${bowls[bowlType].power ? 'Power' : bowls[bowlType].defense ? 'Defense' : 'Health'}!`, inline: false }
-            )
-            .setColor('#006400'); // Green color for the embed
-
-        // Send the embed
-        if (isSlashCommand) {
-            await interactionOrMessage.reply({ embeds: [embed], ephemeral: false });
-        } else {
-            await interactionOrMessage.channel.send({ embeds: [embed] });
+        } catch (error) {
+            console.error("Error in eat command:", error);
+            const errorMessage = "An error occurred while processing your request.";
+            if (isSlashCommand) {
+                if (interactionOrMessage.deferred) {
+                    await interactionOrMessage.editReply({ content: errorMessage });
+                } else {
+                    await interactionOrMessage.reply({ content: errorMessage, ephemeral: true });
+                }
+            } else {
+                await interactionOrMessage.channel.send(errorMessage);
+            }
         }
     },
 };

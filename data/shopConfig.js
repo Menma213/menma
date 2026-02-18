@@ -125,6 +125,14 @@ module.exports = {
             price: 2000,
             type: 'autofrank',
             durationKey: '12h'
+        },
+        {
+            id: "death note",
+            name: "Death Note",
+            display: "Death Note",
+            description: "A notebook that kills anyone whose name is written inside.",
+            price: 2500,
+            type: 'accessory'
         }
     ],
 

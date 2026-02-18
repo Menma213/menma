@@ -94,11 +94,13 @@ module.exports = {
             .setTitle('ACCESSORY SHOP')
             .setDescription('Buy powerful accessories for money!')
             .addFields(
-                ...allAccessories.map(item => ({
-                    name: item.name,
-                    value: `${item.description}\nCost: $${item.price}`,
-                    inline: false
-                }))
+                ...allAccessories
+                    .filter(item => item.purchasable !== false)
+                    .map(item => ({
+                        name: item.name,
+                        value: `${item.description}\nCost: $${item.price.toLocaleString()}`,
+                        inline: false
+                    }))
             )
             .setFooter({ text: 'Page 5/5' });
 

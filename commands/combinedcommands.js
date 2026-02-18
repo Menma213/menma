@@ -877,7 +877,7 @@ const applyEffect = (effect, user, target, effectiveUser, effectiveTarget, resul
                     );
                     const canStack = effect.can_stack === true;
 
-                    if (existingStatusIndex !== -1) {
+                    if (existingStatusIndex !== -1 && effect.status !== 'stun') {
                         if (result.specialEffects) result.specialEffects.push(`${targetEntity.name} already had this effect active!`);
                         return;
                     } else {
@@ -1609,6 +1609,7 @@ function createMovesEmbed(player, roundNum) {
             if (jutsu === 'Attack' && player.activeEffects?.some(e => e.type === 'status' && e.status === 'Perfect Susanoo Active')) {
                 return false;
             }
+            if (player.bannedJutsus && player.bannedJutsus.includes(jutsu)) return false;
             return true;
         })
         .map(([key, jutsuName]) => {
@@ -2497,8 +2498,8 @@ function createBattleSummary(
  * Enhanced NPC AI with smarter move selection
  */
 function npcChooseMove(baseNpc, basePlayer, effectiveNpc, effectivePlayer) {
-    // Check for status effects that prevent action - USE SNAPSHOT
-    const statusEffect = (baseNpc.roundStartEffects || baseNpc.activeEffects || []).find(e =>
+    // Check for status effects that prevent action - USE ACTIVE EFFECTS (INSTANT)
+    const statusEffect = (baseNpc.activeEffects || []).find(e =>
         e.type === 'status' && ['stun', 'flinch', 'drown', 'possessed'].includes(e.status)
     );
 
@@ -3637,6 +3638,66 @@ async function runBattle(interaction, player1Id, player2Id, battleType, npcTempl
             }
 
             // Create and Send Moves Embed for P1
+            // --- DEATH NOTE LOGIC (Player 1) ---
+            if (!isPlayer2NPC && player1.subPlayers[0].equippedAccessory === "Death Note" && !player1.subPlayers[0].deathNoteUsed) {
+                const user = player1.subPlayers[0];
+                const opponent = player2;
+
+                // Get opponent jutsus
+                const oppJutsus = Object.values(opponent.jutsu || {})
+                    .filter(j => j !== 'None' && j !== 'Attack'); // Cannot ban Attack or None
+
+                if (oppJutsus.length > 0) {
+                    const uniqueJutsus = [...new Set(oppJutsus)].slice(0, 25); // Limit to 25 for SelectMenu
+
+                    if (uniqueJutsus.length > 0) {
+                        const row = new ActionRowBuilder().addComponents(
+                            new StringSelectMenuBuilder()
+                                .setCustomId(`deathnote-${user.userId}-${roundNum}`)
+                                .setPlaceholder('Write a name in the Death Note...')
+                                .addOptions(uniqueJutsus.map(j => ({ label: j, value: j, description: `Bin ${j}` })))
+                        );
+                        const skipRow = new ActionRowBuilder().addComponents(
+                            new ButtonBuilder()
+                                .setCustomId(`deathnote_skip-${user.userId}-${roundNum}`)
+                                .setLabel('Close Book')
+                                .setStyle(ButtonStyle.Secondary)
+                        );
+
+                        const dnEmbed = new EmbedBuilder()
+                            .setTitle('Death Note Activated')
+                            .setDescription(`**${user.name}**, you have the Death Note equipped.\nSelect a jutsu from the list below to ban ${opponent.name} from using it for the rest of the battle.`)
+                            .setColor('#000000')
+                            .setThumbnail('https://i.postimg.cc/x83Wfbdy/image.png');
+
+                        const dnMsg = await battleChannel.send({
+                            content: `<@${user.userId}>`,
+                            embeds: [dnEmbed],
+                            components: [row, skipRow]
+                        });
+
+                        try {
+                            const filter = i => i.user.id === user.userId && (i.customId.startsWith('deathnote') || i.customId.startsWith('deathnote_skip'));
+                            const selection = await dnMsg.awaitMessageComponent({ filter, time: 30000 });
+
+                            if (selection.isStringSelectMenu()) {
+                                const bannedJutsu = selection.values[0];
+                                opponent.bannedJutsus = opponent.bannedJutsus || [];
+                                opponent.bannedJutsus.push(bannedJutsu);
+                                user.deathNoteUsed = true;
+
+                                await selection.reply({ content: `**${bannedJutsu}** has been written in the Death Note. ${opponent.name} can no longer use it!`, ephemeral: true });
+                            } else {
+                                await selection.deferUpdate();
+                            }
+                            await dnMsg.delete().catch(() => { });
+                        } catch (e) {
+                            await dnMsg.delete().catch(() => { });
+                        }
+                    }
+                }
+            }
+
             const mainPlayer = player1.subPlayers[0];
             const { embed: embed1, components: components1 } = createMovesEmbed(mainPlayer, roundNum);
             // Force color
@@ -3810,8 +3871,8 @@ async function runBattle(interaction, player1Id, player2Id, battleType, npcTempl
                                 subPlayer.comboState.usedJutsus.add(jutsuName);
                             }
 
-                            // Stun check (using round start snapshot)
-                            const statusEffect = (subPlayer.roundStartEffects || []).find(e =>
+                            // Stun check (using current active effects for instant application)
+                            const statusEffect = (subPlayer.activeEffects || []).find(e =>
                                 e.type === 'status' && ['stun', 'flinch', 'drown', 'possessed', 'shadow_possession'].includes(e.status)
                             );
                             if (statusEffect && !['World Cutting Slash', 'Banana Killer'].includes(jutsuName)) {
@@ -3946,6 +4007,66 @@ async function runBattle(interaction, player1Id, player2Id, battleType, npcTempl
 
             } else {
                 let displayPlayer2 = { ...player2 };
+
+                // --- DEATH NOTE LOGIC (Player 2) ---
+                if (player2.equippedAccessory === "Death Note" && !player2.deathNoteUsed) {
+                    const user = player2;
+                    const opponent = player1;
+
+                    // Get opponent jutsus (from main player 1)
+                    const oppJutsus = Object.values(opponent.jutsu || {})
+                        .filter(j => j !== 'None' && j !== 'Attack');
+
+                    if (oppJutsus.length > 0) {
+                        const uniqueJutsus = [...new Set(oppJutsus)].slice(0, 25);
+
+                        if (uniqueJutsus.length > 0) {
+                            const row = new ActionRowBuilder().addComponents(
+                                new StringSelectMenuBuilder()
+                                    .setCustomId(`deathnote-${user.userId}-${roundNum}`)
+                                    .setPlaceholder('Write a name in the Death Note...')
+                                    .addOptions(uniqueJutsus.map(j => ({ label: j, value: j, description: `Ban ${j}` })))
+                            );
+                            const skipRow = new ActionRowBuilder().addComponents(
+                                new ButtonBuilder()
+                                    .setCustomId(`deathnote_skip-${user.userId}-${roundNum}`)
+                                    .setLabel('Close Book')
+                                    .setStyle(ButtonStyle.Secondary)
+                            );
+
+                            const dnEmbed = new EmbedBuilder()
+                                .setTitle('Death Note Activated')
+                                .setDescription(`**${user.name}**, you have the Death Note equipped.\nSelect a jutsu from the list below to ban ${opponent.name} from using it for the rest of the battle.`)
+                                .setColor('#000000')
+                                .setThumbnail('https://i.postimg.cc/x83Wfbdy/image.png');
+
+                            const dnMsg = await battleChannel.send({
+                                content: `<@${user.userId}>`,
+                                embeds: [dnEmbed],
+                                components: [row, skipRow]
+                            });
+
+                            try {
+                                const filter = i => i.user.id === user.userId && (i.customId.startsWith('deathnote') || i.customId.startsWith('deathnote_skip'));
+                                const selection = await dnMsg.awaitMessageComponent({ filter, time: 30000 });
+
+                                if (selection.isStringSelectMenu()) {
+                                    const bannedJutsu = selection.values[0];
+                                    opponent.bannedJutsus = opponent.bannedJutsus || [];
+                                    opponent.bannedJutsus.push(bannedJutsu);
+                                    user.deathNoteUsed = true;
+
+                                    await selection.reply({ content: `**${bannedJutsu}** has been written in the Death Note. ${opponent.name} can no longer use it!`, ephemeral: true });
+                                } else {
+                                    await selection.deferUpdate();
+                                }
+                                await dnMsg.delete().catch(() => { });
+                            } catch (e) {
+                                await dnMsg.delete().catch(() => { });
+                            }
+                        }
+                    }
+                }
                 const { embed: embed2, components: components2 } = createMovesEmbed(displayPlayer2, roundNum);
                 const moveMessage2 = await battleChannel.send({
                     content: `<@${player2.userId}>`,
@@ -4034,8 +4155,8 @@ async function runBattle(interaction, player1Id, player2Id, battleType, npcTempl
                             if (player2.comboState && player2.comboState.combo.requiredJutsus.includes(jutsuName)) {
                                 player2.comboState.usedJutsus.add(jutsuName);
                             }
-                            // Check for status effects on player2 (stun/flinch/drown) - USE SNAPSHOT
-                            const statusEffect = (player2.roundStartEffects || []).find(e =>
+                            // Check for status effects on player2 (stun/flinch/drown) - USE CURRENT ACTIVE EFFECTS
+                            const statusEffect = (player2.activeEffects || []).find(e =>
                                 e.type === 'status' && ['stun', 'flinch', 'drown', 'possessed', 'shadow_possession'].includes(e.status)
                             );
 
