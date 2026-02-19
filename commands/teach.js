@@ -6,11 +6,15 @@ const path = require('path');
 const jutsuDataPath = path.join(__dirname, '../../menma/data/jutsu.json');
 const jutsusPath = path.join(__dirname, '../../menma/data/jutsus.json');
 
-// Authorized Teachers
-const authorizedTeachers = {
-    "835408109899219004": "Thunder",
-    "961918563382362122": "Asukky",
-    "818893461881094175": "Husker"
+// Permission Structure
+const permissions = {
+    fullAccess: {
+        "835408109899219004": "Thunder",
+        "961918563382362122": "Asukky"
+    },
+    removeOnly: {
+        "818893461881094175": "Husker"
+    }
 };
 
 module.exports = {
@@ -67,16 +71,29 @@ module.exports = {
     async execute(interaction) {
         try {
             const executorId = interaction.user.id;
-            const executorName = authorizedTeachers[executorId];
+            const subcommand = interaction.options.getSubcommand();
 
-            if (!executorName) {
+            const isFullAccess = permissions.fullAccess[executorId];
+            const isRemoveOnly = permissions.removeOnly[executorId];
+
+            // Not authorized
+            if (!isFullAccess && !isRemoveOnly) {
                 return interaction.reply({
                     content: "You do not have permission to use this command.",
                     ephemeral: true
                 });
             }
 
-            const subcommand = interaction.options.getSubcommand();
+            // Husker restriction
+            if (isRemoveOnly && subcommand !== "remove") {
+                return interaction.reply({
+                    content: "You only have permission to use the remove subcommand.",
+                    ephemeral: true
+                });
+            }
+
+            const executorName = isFullAccess || isRemoveOnly;
+
             const student = interaction.options.getUser('student');
             const jutsuKey = interaction.options.getString('jutsu');
 
@@ -101,7 +118,7 @@ module.exports = {
             let actionText;
             let color;
 
-            // GIVE LOGIC
+            // GIVE
             if (subcommand === "give") {
 
                 if (userJutsuList.includes(jutsuKey)) {
@@ -116,7 +133,7 @@ module.exports = {
                 color = 0x2ecc71;
             }
 
-            // REMOVE LOGIC
+            // REMOVE
             if (subcommand === "remove") {
 
                 if (!userJutsuList.includes(jutsuKey)) {
