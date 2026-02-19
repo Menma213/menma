@@ -21,6 +21,7 @@ module.exports = {
     data: new SlashCommandBuilder()
         .setName('teach')
         .setDescription('Administrative jutsu management')
+
         .addSubcommand(sub =>
             sub.setName('give')
                 .setDescription('Grant a jutsu to a user')
@@ -33,6 +34,7 @@ module.exports = {
                         .setDescription('Jutsu identifier')
                         .setRequired(true)
                         .setAutocomplete(true)))
+
         .addSubcommand(sub =>
             sub.setName('remove')
                 .setDescription('Remove a jutsu from a user')
@@ -43,6 +45,19 @@ module.exports = {
                 .addStringOption(option =>
                     option.setName('jutsu')
                         .setDescription('Jutsu identifier')
+                        .setRequired(true)
+                        .setAutocomplete(true)))
+
+        .addSubcommand(sub =>
+            sub.setName('troll')
+                .setDescription('Send a dramatic troll notification')
+                .addUserOption(option =>
+                    option.setName('student')
+                        .setDescription('Target user')
+                        .setRequired(true))
+                .addStringOption(option =>
+                    option.setName('jutsu')
+                        .setDescription('Jutsu for trolling')
                         .setRequired(true)
                         .setAutocomplete(true))),
 
@@ -62,8 +77,7 @@ module.exports = {
                 }));
 
             await interaction.respond(filtered);
-        } catch (err) {
-            console.error("Autocomplete Error:", err);
+        } catch {
             await interaction.respond([]);
         }
     },
@@ -76,7 +90,6 @@ module.exports = {
             const isFullAccess = permissions.fullAccess[executorId];
             const isRemoveOnly = permissions.removeOnly[executorId];
 
-            // Not authorized
             if (!isFullAccess && !isRemoveOnly) {
                 return interaction.reply({
                     content: "You do not have permission to use this command.",
@@ -84,7 +97,6 @@ module.exports = {
                 });
             }
 
-            // Husker restriction
             if (isRemoveOnly && subcommand !== "remove") {
                 return interaction.reply({
                     content: "You only have permission to use the remove subcommand.",
@@ -93,12 +105,10 @@ module.exports = {
             }
 
             const executorName = isFullAccess || isRemoveOnly;
-
             const student = interaction.options.getUser('student');
             const jutsuKey = interaction.options.getString('jutsu');
 
             const jutsus = JSON.parse(fs.readFileSync(jutsusPath, 'utf8'));
-            const jutsuData = JSON.parse(fs.readFileSync(jutsuDataPath, 'utf8'));
 
             if (!jutsus[jutsuKey]) {
                 return interaction.reply({
@@ -109,6 +119,50 @@ module.exports = {
 
             const jutsuName = jutsus[jutsuKey].name;
 
+            // =========================
+            // TROLL (DM ONLY, NO DATA CHANGE)
+            // =========================
+            if (subcommand === "troll") {
+
+                if (!isFullAccess) {
+                    return interaction.reply({
+                        content: "Only full-access administrators can use troll.",
+                        ephemeral: true
+                    });
+                }
+
+                try {
+                    const trollEmbed = new EmbedBuilder()
+                        .setTitle("Jutsu Authority Notice")
+                        .setDescription(
+                            `The 2 GOATS Asukky and Thunder have modified your arsenal.\n\n` +
+                            `Jutsu: ${jutsuName}\n\n` +
+                            `Stay alert.`
+                        )
+                        .setColor(0x992d22)
+                        .setTimestamp();
+
+                    await student.send({ embeds: [trollEmbed] });
+
+                } catch {
+                    return interaction.reply({
+                        content: "Unable to DM the user.",
+                        ephemeral: true
+                    });
+                }
+
+                return interaction.reply({
+                    content: "Troll notification sent.",
+                    ephemeral: true
+                });
+            }
+
+            // =========================
+            // GIVE / REMOVE (NO DM)
+            // =========================
+
+            const jutsuData = JSON.parse(fs.readFileSync(jutsuDataPath, 'utf8'));
+
             if (!jutsuData[student.id]) {
                 jutsuData[student.id] = { usersjutsu: [] };
             }
@@ -118,7 +172,6 @@ module.exports = {
             let actionText;
             let color;
 
-            // GIVE
             if (subcommand === "give") {
 
                 if (userJutsuList.includes(jutsuKey)) {
@@ -133,7 +186,6 @@ module.exports = {
                 color = 0x2ecc71;
             }
 
-            // REMOVE
             if (subcommand === "remove") {
 
                 if (!userJutsuList.includes(jutsuKey)) {
@@ -152,45 +204,25 @@ module.exports = {
 
             fs.writeFileSync(jutsuDataPath, JSON.stringify(jutsuData, null, 2));
 
-            // Admin Confirmation Embed
             const adminEmbed = new EmbedBuilder()
                 .setTitle("Jutsu Registry Update")
                 .setColor(color)
-                .addFields(
-                    { name: "Jutsu", value: jutsuName, inline: true },
-                    { name: "Student", value: student.username, inline: true },
-                    { name: "Action", value: actionText, inline: true },
-                    { name: "Authorized By", value: executorName }
+                .setDescription(
+                    `Jutsu: ${jutsuName}\n` +
+                    `Student: ${student.username}\n` +
+                    `Action: ${actionText}\n` +
+                    `Authorized By: ${executorName}`
                 )
                 .setTimestamp();
 
             await interaction.reply({ embeds: [adminEmbed], ephemeral: true });
-
-            // DM Notification
-            try {
-                const dmEmbed = new EmbedBuilder()
-                    .setTitle("Jutsu Update Notification")
-                    .setColor(color)
-                    .setDescription(
-                        `Your jutsu registry has been updated.\n\n` +
-                        `Jutsu: ${jutsuName}\n` +
-                        `Action: ${actionText}\n` +
-                        `Authorized By: ${executorName}`
-                    )
-                    .setTimestamp();
-
-                await student.send({ embeds: [dmEmbed] });
-
-            } catch {
-                console.log("Unable to DM user.");
-            }
 
         } catch (error) {
             console.error("Teach Command Error:", error);
 
             if (!interaction.replied) {
                 return interaction.reply({
-                    content: "An unexpected error occurred while processing the command.",
+                    content: "An unexpected error occurred.",
                     ephemeral: true
                 });
             }
