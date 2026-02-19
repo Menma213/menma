@@ -1,12 +1,17 @@
-const { SlashCommandBuilder } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const fs = require('fs');
 const path = require('path');
 
-// Path configurations
-const usersPath = path.join(__dirname, '../../menma/data/users.json');
+// Paths
 const jutsuDataPath = path.join(__dirname, '../../menma/data/jutsu.json');
 const jutsusPath = path.join(__dirname, '../../menma/data/jutsus.json');
+
+// GOATS
 const allowedTeacherIds = ["835408109899219004", "961918563382362122"];
+const goatNames = {
+    "835408109899219004": "Thunder",
+    "961918563382362122": "Asukky"
+};
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -41,94 +46,131 @@ module.exports = {
         try {
             const focusedValue = interaction.options.getFocused().toLowerCase();
             const jutsus = JSON.parse(fs.readFileSync(jutsusPath));
-            
+
             const filtered = Object.entries(jutsus)
-                .filter(([key, jutsu]) => 
-                    jutsu.name.toLowerCase().includes(focusedValue) || 
+                .filter(([key, jutsu]) =>
+                    jutsu.name.toLowerCase().includes(focusedValue) ||
                     key.toLowerCase().includes(focusedValue))
                 .slice(0, 25)
                 .map(([key, jutsu]) => ({
                     name: `${jutsu.name} (${key})`,
                     value: key
                 }));
-            
+
             await interaction.respond(filtered);
-        } catch (error) {
-            console.error('Autocomplete error:', error);
+        } catch (err) {
+            console.error(err);
             await interaction.respond([]);
         }
     },
 
     async execute(interaction) {
         try {
-            // Permission check
             if (!allowedTeacherIds.includes(interaction.user.id)) {
-                return interaction.reply({ content: "❌ You are not authorized to use this command.", ephemeral: true });
+                return interaction.reply({
+                    content: "❌ You are not authorized.",
+                    ephemeral: true
+                });
             }
 
             const subcommand = interaction.options.getSubcommand();
             const student = interaction.options.getUser('student');
             const jutsuKey = interaction.options.getString('jutsu');
 
-            // Load files
-            let jutsus, jutsuData;
-            try {
-                jutsus = JSON.parse(fs.readFileSync(jutsusPath));
-                jutsuData = JSON.parse(fs.readFileSync(jutsuDataPath));
-            } catch (err) {
-                console.error('File read error:', err);
-                return interaction.reply("❌ Failed to load data files.");
-            }
+            const jutsus = JSON.parse(fs.readFileSync(jutsusPath));
+            const jutsuData = JSON.parse(fs.readFileSync(jutsuDataPath));
 
-            // Validate jutsu exists
             if (!jutsus[jutsuKey]) {
-                return interaction.reply("❌ That jutsu doesn't exist in the global registry.");
+                return interaction.reply({ content: "❌ Jutsu not found.", ephemeral: true });
             }
 
             const jutsuName = jutsus[jutsuKey].name;
 
-            // Ensure student has registry
             if (!jutsuData[student.id]) {
                 jutsuData[student.id] = { usersjutsu: [] };
             }
 
-            // =========================
-            // GIVE JUTSU
-            // =========================
-            if (subcommand === 'give') {
+            const isGoat = goatNames[interaction.user.id];
+            let actionText;
+            let color;
+
+            // ======================
+            // GIVE
+            // ======================
+            if (subcommand === "give") {
 
                 if (jutsuData[student.id].usersjutsu.includes(jutsuKey)) {
-                    return interaction.reply(`ℹ️ ${student.username} already knows ${jutsuName}.`);
+                    return interaction.reply({
+                        content: `ℹ️ ${student.username} already knows **${jutsuName}**.`,
+                        ephemeral: true
+                    });
                 }
 
                 jutsuData[student.id].usersjutsu.push(jutsuKey);
-
-                fs.writeFileSync(jutsuDataPath, JSON.stringify(jutsuData, null, 2));
-
-                return interaction.reply(`✅ Successfully taught ${jutsuName} to ${student.username}!`);
+                actionText = "taught";
+                color = 0x00ff88;
             }
 
-            // =========================
-            // REMOVE JUTSU (UNTEACH)
-            // =========================
-            if (subcommand === 'remove') {
+            // ======================
+            // REMOVE
+            // ======================
+            if (subcommand === "remove") {
 
                 if (!jutsuData[student.id].usersjutsu.includes(jutsuKey)) {
-                    return interaction.reply(`ℹ️ ${student.username} does not know ${jutsuName}.`);
+                    return interaction.reply({
+                        content: `ℹ️ ${student.username} does not know **${jutsuName}**.`,
+                        ephemeral: true
+                    });
                 }
 
-                // Remove the jutsu
-                jutsuData[student.id].usersjutsu = 
+                jutsuData[student.id].usersjutsu =
                     jutsuData[student.id].usersjutsu.filter(j => j !== jutsuKey);
 
-                fs.writeFileSync(jutsuDataPath, JSON.stringify(jutsuData, null, 2));
+                actionText = "removed";
+                color = 0xff3c3c;
+            }
 
-                return interaction.reply(`🗑️ Successfully removed ${jutsuName} from ${student.username}!`);
+            fs.writeFileSync(jutsuDataPath, JSON.stringify(jutsuData, null, 2));
+
+            // ======================
+            // Admin Confirmation Embed
+            // ======================
+            const adminEmbed = new EmbedBuilder()
+                .setTitle("🌀 Jutsu Registry Updated")
+                .setDescription(`**${jutsuName}** has been ${actionText} ${actionText === "taught" ? "to" : "from"} ${student.username}.`)
+                .setColor(color)
+                .setFooter({ text: `Executed by ${interaction.user.username}` })
+                .setTimestamp();
+
+            await interaction.reply({ embeds: [adminEmbed], ephemeral: true });
+
+            // ======================
+            // DM SYSTEM
+            // ======================
+            try {
+                const dmEmbed = new EmbedBuilder()
+                    .setTitle("📜 Your Jutsu Has Been Modified")
+                    .setDescription(
+                        isGoat
+                            ? `👑 The 2 GOATS **Asukky** and **Thunder** have ${actionText} **${jutsuName}** ${actionText === "taught" ? "to" : "from"} your arsenal.\n\nStay sharp.`
+                            : `Your jutsu **${jutsuName}** has been ${actionText}.`
+                    )
+                    .setColor(color)
+                    .setTimestamp();
+
+                await student.send({ embeds: [dmEmbed] });
+            } catch (dmError) {
+                console.log("Could not DM user.");
             }
 
         } catch (error) {
-            console.error('Error in teach command:', error);
-            return interaction.reply("❌ An unexpected error occurred while processing this command.");
+            console.error(error);
+            if (!interaction.replied) {
+                return interaction.reply({
+                    content: "❌ Unexpected error occurred.",
+                    ephemeral: true
+                });
+            }
         }
     }
 };
