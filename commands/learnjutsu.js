@@ -50,7 +50,7 @@ const SCROLL_JUTSU_INFO = {
     "9th form: Rengoku": {
         jutsu: "9th form: Rengoku",
         shards: 15
-        },
+    },
     "Summon Manda": {
         jutsu: "Summon Manda",
         shards: 10
@@ -66,6 +66,10 @@ const SCROLL_JUTSU_INFO = {
     "Tenseigan Scroll": {
         jutsu: "Tenseigan Chakra Mode",
         shards: 20
+    },
+    "Chakra Tool Creation Scroll": {
+        jutsu: "Chakra tool creation",
+        shards: 50
     }
 };
 

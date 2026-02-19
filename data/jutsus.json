@@ -501,6 +501,7 @@
     "info": "User uses their shadow to strangle the opponent, dealing damage and stunning them.",
     "obtainment": "from shikamaru at jounin mentor rank",
     "chakraCost": 8,
+    "clan": "Nara",
     "category": "Jounin",
     "effects": [
       {
@@ -925,6 +926,7 @@
     "obtainment": "Hinata Hyuga Mentor",
     "description": "user Strikes target 32 times in rapid succession",
     "chakraCost": 10,
+    "clan": "Hyuga",
     "category": "No Category",
     "effects": [
       {
@@ -943,6 +945,7 @@
     "obtainment": "Hinata Hyuga Mentor",
     "description": "user Strikes target 64 times in rapid succession",
     "chakraCost": 15,
+    "clan": "Hyuga",
     "category": "No Category",
     "effects": [
       {
@@ -1012,6 +1015,7 @@
     "obtainment": "from scroll dungeons",
     "description": "Summons black flames that burn anything in their path.",
     "chakraCost": 10,
+    "clan": "Uchiha",
     "can_stack": false,
     "category": "No Category",
     "effects": [
@@ -2873,7 +2877,7 @@
   "Ninpo: Ascetic Blaze": {
     "name": "Ninpo: Ascetic Blaze",
     "description": "Nothing will ever be allowed to have any say in how we live…not even death itself\n user  reinforced their punches with a godly blaze, a fire hot enough to make immortals flinch. ",
-    "chakraCost": 25,
+    "chakraCost": 20,
     "image_url": "https://i.pinimg.com/originals/68/33/5c/68335cdb98a16999ae55eef1575e80b5.gif",
     "category": "Mentor jutsu",
     "obtainment": "Mentor",
@@ -2923,6 +2927,7 @@
     "name": "Susanoo",
     "description": "user uses their sharingan and summons a giant humanoid avatar made of chakra to protect them",
     "info": "A defensive jutsu used in memories.",
+    "clan": "Uchiha",
     "chakraCost": 7,
     "category": "Event Jutsu Akatsuki",
     "effects": [
@@ -2939,6 +2944,7 @@
     "name": "Amaterasu: Infinite Flames",
     "description": "user activates their mangekyo sharingan and creates a even more dangerous of amaterasu",
     "info": "Event akatsuki jutsu",
+    "clan": "Uchiha",
     "chakraCost": 30,
     "category": "Event Jutsu Akatsuki",
     "effects": [
@@ -2955,6 +2961,7 @@
     "name": "Kamui",
     "description": "user teleports to another dimension, evading the attack",
     "info": "Event akatsuki jutsu",
+    "clan": "Uchiha",
     "chakraCost": 10,
     "category": "Event Jutsu Akatsuki",
     "effects": [
@@ -3182,6 +3189,7 @@
     "description": "Traps the target in a nightmare for eternity (3 rounds).",
     "info": "Akatsuki Event Jutsu",
     "chakraCost": 15,
+    "clan": "Uchiha",
     "category": "Event Jutsu Akatsuki",
     "effects": [
       {
@@ -3220,6 +3228,7 @@
     "description": "user possesses the shadow of the target, allowing them to control their actions",
     "category": "Mentor Jutsu",
     "chakraCost": 10,
+    "clan": "Nara",
     "obtainment": "unobtainable",
     "obtainable": false,
     "effects": [],
@@ -3408,5 +3417,64 @@
     "image_url": "https://i.pinimg.com/originals/b8/ba/5e/b8ba5e0688ababbcd66572c4ab273f8d.gif",
     "effects": [],
     "scriptFile": "form7_nichirin.js"
+  },
+  "The Force: Awakens": {
+    "name": "The Force: Awakens",
+    "description": "**An intense connection to all living things, often manifesting as a warm, guiding presence, a \"gut feeling\" or a \"heartbeat of the galaxy\"**\n user releases powerful energy and strangles the enemy. The user feels a strange power rising within their body. The user gains knowledge of the entire galaxy. The enemy feels pain from the intimidating power of the Force",
+    "chakraCost": 20,
+    "Category": "Custom",
+    "image_url": "https://i.pinimg.com/originals/80/64/d1/8064d1a38d4004e26b0143d594fd823d.gif",
+    "effects": [
+      {
+        "type": "buff",
+        "stats": {
+          "power": "user.power * 50"
+        },
+        "duration": 3
+      },
+      {
+        "type": "status",
+        "status": "stun",
+        "duration": 3,
+        "chance": 100
+      },
+      {
+        "type": "status",
+        "status": "bleed",
+        "duration": 3,
+        "chance": 100
+      },
+      {
+        "type": "chakra_gain",
+        "formula": "7"
+      }
+    ]
+  },
+  "Palace of the dragon king": {
+    "name": "Palace of the dragon king",
+    "description": "user stuns target for an eternity.",
+    "info": "An inescapable temporal seal that freezes the target in place.",
+    "chakraCost": 20,
+    "category": "Custom",
+    "obtainment": "unobtainable",
+    "scriptFile": "palace_of_the_dragon_king.js"
+  },
+  "Chakra tool creation": {
+    "name": "Chakra tool creation",
+    "description": "user creates a chakra tool and attacks target with overwhelming force",
+    "info": "A high-precision barrage of celestial chakra weapons.",
+    "chakraCost": 15,
+    "category": "Custom",
+    "obtainment": "Otsutsuki",
+    "scriptFile": "chakra_tool_creation.js"
+  },
+  "Urashiki jutsu steal": {
+    "name": "Urashiki jutsu steal",
+    "description": "user uses their celestial fishing rod, user hooks the target's spiritual essence, extracting and replicating their own techniques.",
+    "info": "Hooks the target's soul to manifest and mirror their own techniques.",
+    "chakraCost": 18,
+    "category": "Custom",
+    "obtainment": "unobtainable",
+    "scriptFile": "urashiki_jutsu_steal.js"
   }
 }

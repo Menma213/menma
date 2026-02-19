@@ -16,37 +16,55 @@ function execute({ baseUser, baseTarget, effectiveUser, effectiveTarget, jutsuDa
     baseUser.chakra -= cost;
     result.chakraUsed = cost;
 
-    
-    const powerBuff = 40000; 
-    const defenseBuff = 40000;
+    // --- 1. APPLY 20X POWER AND DEFENSE BOOST ---
+    // Delta needed: (20 * stat) - current_stat = 19 * current_stat
+    const powerDelta = Math.floor(effectiveUser.power * 19);
+    const defenseDelta = Math.floor(effectiveUser.defense * 19);
 
     baseUser.activeEffects = baseUser.activeEffects || [];
-    baseUser.activeEffects.push({
+    baseUser.activeEffects.unshift({
         type: 'buff',
-        stats: { power: powerBuff },
+        stats: {
+            power: powerDelta,
+            defense: defenseDelta
+        },
         duration: 3,
-        source: jutsuData.name
-    });
-    baseUser.activeEffects.push({
-        type: 'buff',
-        stats: { defense: defenseBuff },
-        duration: 3,
-        source: jutsuData.name
+        source: jutsuData.name,
+        isNew: true
     });
 
-    result.specialEffects.push(`${baseUser.name} gains a boost in power and defense!`);
+    result.specialEffects.push(`${baseUser.name} transcends reality! Power and Defense increased by 20x!`);
 
-    
+    // --- 2. STEAL ALL GOOD BUFFS ---
     baseTarget.activeEffects = baseTarget.activeEffects || [];
-    const buffsToSteal = baseTarget.activeEffects.filter(e => e.type === 'buff');
-    baseTarget.activeEffects = baseTarget.activeEffects.filter(e => e.type !== 'buff');
+
+    // Identify beneficial effects: buffs, heals, and helpful statuses
+    const buffsToSteal = baseTarget.activeEffects.filter(e =>
+        e.type === 'buff' ||
+        e.type === 'heal' ||
+        (e.type === 'status' && (e.healPerTurn || ['revive', 'haste', 'regeneration', 'shield'].includes(e.status)))
+    );
 
     if (buffsToSteal.length > 0) {
-        baseUser.activeEffects.push(...buffsToSteal);
         buffsToSteal.forEach(buff => {
-            const buffName = Object.keys(buff.stats).join(', ');
-            result.specialEffects.push(`${baseUser.name} steals ${buffName} from ${baseTarget.name}!`);
+            // Apply stolen buff to user (copy and mark as new)
+            baseUser.activeEffects.push({ ...buff, isNew: true });
+
+            // Determine a name for the log message
+            let effectLabel = "";
+            if (buff.stats) {
+                effectLabel = Object.keys(buff.stats).join(', ') + " buff";
+            } else {
+                effectLabel = buff.status || buff.type;
+            }
+
+            result.specialEffects.push(`${baseUser.name} steals ${effectLabel} from ${baseTarget.name}!`);
         });
+
+        // Remove stolen buffs from target
+        baseTarget.activeEffects = baseTarget.activeEffects.filter(e => !buffsToSteal.includes(e));
+    } else {
+        result.specialEffects.push(`${baseTarget.name} had no buffs to steal.`);
     }
 
     return result;

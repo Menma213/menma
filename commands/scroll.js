@@ -8,6 +8,22 @@ const MYSTERIOUS_VOICE_AVATAR = 'https://wallpapers.com/images/hd/yellow-anime-9
 const ZORO_AVATAR = 'https://i.postimg.cc/PxqbJmXH/image.png';
 const IMAGE_OF_FOUR_HEROES = 'https://i.postimg.cc/132mtsMC/image.png';
 
+const SCROLL_JUTSU_INFO = {
+    "Needle Assault Scroll": { jutsu: "Needle Assault", shards: 2 },
+    "Silent Assassination Scroll": { jutsu: "Silent Assassination", shards: 2 },
+    "Serpents Wrath Scroll": { jutsu: "Serpents Wrath", shards: 2 },
+    "Infused Chakra Blade Scroll": { jutsu: "Infused Chakra Blade", shards: 1 },
+    "Amaterasu": { jutsu: "Amaterasu", shards: 6 },
+    "Lightning Blade: All Out": { jutsu: "Lightning Blade: All Out", shards: 10 },
+    "9th form: Rengoku": { jutsu: "9th form: Rengoku", shards: 15 },
+    "Summon Manda": { jutsu: "Summon Manda", shards: 10 },
+    "Kamehameha Scroll": { jutsu: "Kamehameha", shards: 50 },
+    "Asura's Blade of Execution": { jutsu: "Asura's Blade of Execution", shards: 50 },
+    "Tenseigan Scroll": { jutsu: "Tenseigan Chakra Mode", shards: 20 },
+    "Urashiki Scroll": { jutsu: "Palace of the dragon king", shards: 50 },
+    "Chakra Tool Creation Scroll": { jutsu: "Chakra tool creation", shards: 50 }
+};
+
 // Path setup
 const dataPath = path.resolve(__dirname, '../../menma/data');
 const usersPath = path.join(dataPath, 'users.json');
@@ -1124,7 +1140,8 @@ module.exports = {
                 .setThumbnail(interaction.user.displayAvatarURL());
 
             if (scrollName) {
-                const jutsuName = jutsuData.scrolls?.[scrollName]?.jutsu || 'None';
+                const jutsuInfo = SCROLL_JUTSU_INFO[scrollName];
+                const jutsuName = jutsuInfo ? jutsuInfo.jutsu : 'None';
                 embed.setDescription(`You are currently working on **${scrollName}**.
                 It teaches the **${jutsuName}** jutsu.
 
@@ -1164,7 +1181,7 @@ module.exports = {
 
             const embed = new EmbedBuilder()
                 .setColor('#4BB543')
-                .setTitle('ЁЯУЬ Scroll Selected')
+                .setTitle('Scroll Selected')
                 .setDescription(`You are now working on **${matchedScroll}**!\nUse \`/scroll info\` to check progress!`)
                 .setThumbnail(interaction.user.displayAvatarURL());
 

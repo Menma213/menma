@@ -507,7 +507,6 @@ module.exports = {
 
         // If tutorial already completed, show tasks embed
         if (users[userId] && users[userId].tutorialStory) {
-            const scrollsDone = users[userId].tutorialScrollsComplete;
             const trialsDone = users[userId].tutorialTrialsComplete;
             const trainingDone = users[userId].tutorialTrainingComplete;
             const finalDone = users[userId].tutorialFinalComplete;
@@ -517,19 +516,15 @@ module.exports = {
                 .setDescription("Complete the tasks below to finish the tutorial!")
                 .addFields([
                     {
-                        name: "1. Introduction to Scrolls",
-                        value: scrollsDone ? "✅ Completed" : "Learn about scrolls."
-                    },
-                    {
-                        name: "2. Hokage Trials",
+                        name: "1. Hokage Trials",
                         value: trialsDone ? "✅ Completed" : "Complete the Hokage Trials."
                     },
                     {
-                        name: "3. Leveling Up",
+                        name: "2. Leveling Up",
                         value: trainingDone ? "✅ Completed" : "Learn about leveling up."
                     },
                     {
-                        name: "4. Final Information",
+                        name: "3. Final Information",
                         value: finalDone ? "✅ Completed" : "Learn about advanced game mechanics."
                     }
                 ])
@@ -547,129 +542,8 @@ module.exports = {
 
             const asumaWebhook = await getAsumaWebhook(interaction.channel);
 
-            // If scrolls not done, do scroll tutorial
-            if (!scrollsDone) {
-                await safeWebhookSend(interaction.channel, asumaWebhook, {
-                    content: `Next I need you to learn about scrolls. Run the /scrolls info command and you'll hear a voice that is going to guide you. Treat it well, it's gonna be with you no matter where you go.`
-                });
-
-                await delay(2500);
-
-                await safeWebhookSend(interaction.channel, asumaWebhook, {
-                    content: `Press the Continue button to proceed.`,
-                    components: [createContinueRow()]
-                });
-
-                if (!await waitForButton(interaction, userId, 'continue')) {
-                    users[userId].tutorialFinalComplete = true;
-                    fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
-                    await safeWebhookSend(interaction.channel, asumaWebhook, { content: "You didn't continue in time. Tutorial marked as complete. Run /tutorial again if you want to repeat!" });
-                    return;
-                }
-
-                await safeWebhookSend(interaction.channel, asumaWebhook, {
-                    content: `Here's a scroll that will act as an example. It only costs 1 Crystalline Shard for the extraction of the jutsu.`
-                });
-
-                // Add scroll to gift inventory
-                const giftData = JSON.parse(fs.readFileSync(giftPath, 'utf8'));
-                const giftId = Math.floor(Math.random() * 5000) + 5001;
-                const now = Date.now();
-                if (!giftData[userId]) giftData[userId] = [];
-                giftData[userId].push({
-                    id: giftId,
-                    type: 'scroll',
-                    name: 'Infused Chakra Blade Scroll',
-                    from: 'asuma',
-                    date: now
-                });
-                fs.writeFileSync(giftPath, JSON.stringify(giftData, null, 2));
-
-                await safeWebhookSend(interaction.channel, asumaWebhook, {
-                    content: `Infused Chakra Blade Scroll sent to your gift inventory. (Gift ID: ${giftId})`
-                });
-
-                await delay(2500);
-
-                await safeWebhookSend(interaction.channel, asumaWebhook, {
-                    content: `When you're done extracting and equipping the jutsu, press the Done button below. If you have the extracted jutsu equipped, I'll mark this stage as complete.`,
-                    components: [createDoneRow()]
-                });
-
-                // Mark scroll stage as started
-                users[userId] = users[userId] || {};
-                users[userId].tutorialScrollStage = true;
-                fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
-
-                // Wait for user to press "done" and check jutsu.json
-                let hasJutsu = false;
-                while (!hasJutsu) {
-                    if (!await waitForButton(interaction, userId, 'done')) {
-                        await safeWebhookSend(interaction.channel, asumaWebhook, { content: "You didn't respond in time. Run /tutorial again to continue!" });
-                        return;
-                    }
-
-                    // Check if user has the jutsu in usersjutsu array
-                    const jutsuData = JSON.parse(fs.readFileSync(jutsuPath, 'utf8'));
-                    const userJutsuArr = jutsuData[userId]?.usersjutsu || [];
-                    hasJutsu = userJutsuArr.includes("Infused Chakra Blade");
-
-                    if (hasJutsu) {
-                        await safeWebhookSend(interaction.channel, asumaWebhook, {
-                            content: `Stage complete! You have obtained the Infused Chakra Blade jutsu.`
-                        });
-
-                        users[userId].tutorialScrollsComplete = true;
-                        users[userId].tutorialScrollStage = false;
-                        fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
-                    } else {
-                        await safeWebhookSend(interaction.channel, asumaWebhook, {
-                            content: `You don't have the Infused Chakra Blade jutsu equipped yet. Please extract and equip it, then press the Done button again.`,
-                            components: [createDoneRow()]
-                        });
-                    }
-                }
-                return;
-            }
-
-            // Check if user has equipped the jutsu from scroll
-            if (scrollsDone && users[userId].tutorialScrollStage && !users[userId].tutorialScrollsComplete) {
-                await safeWebhookSend(interaction.channel, asumaWebhook, {
-                    content: `Hello again. So have you equipped the scroll yet? Press Done when you have the Infused Chakra Blade jutsu equipped.`,
-                    components: [createDoneRow()]
-                });
-
-                let hasJutsu = false;
-                while (!hasJutsu) {
-                    if (!await waitForButton(interaction, userId, 'done')) {
-                        // If timeout, check jutsu.json anyway
-                    }
-
-                    // Check if user has the jutsu in usersjutsu array
-                    const jutsuData = JSON.parse(fs.readFileSync(jutsuPath, 'utf8'));
-                    const userJutsuArr = jutsuData[userId]?.usersjutsu || [];
-                    hasJutsu = userJutsuArr.includes("Infused Chakra Blade");
-
-                    if (hasJutsu) {
-                        await safeWebhookSend(interaction.channel, asumaWebhook, {
-                            content: `Stage complete! You have obtained the Infused Chakra Blade jutsu.`
-                        });
-
-                        users[userId].tutorialScrollsComplete = true;
-                        users[userId].tutorialScrollStage = false;
-                        fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
-                    } else {
-                        await safeWebhookSend(interaction.channel, asumaWebhook, {
-                            content: `You haven't obtained the Infused Chakra Blade jutsu yet. Please get it and press the Done button again.`,
-                            components: [createDoneRow()]
-                        });
-                    }
-                }
-                return;
-            }
-
-            // If scrolls are done but trials not done, start trials tutorial
-            if (users[userId].tutorialScrollsComplete && !trialsDone) {
+            // If trials not done, start trials tutorial
+            if (!trialsDone) {
                 await safeWebhookSend(interaction.channel, asumaWebhook, {
                     content: "Welcome back. I've told about your strength to the Hokage! They're interested in testing you personally. Go on, give it a try by using `/trials`.",
                     components: [createDoneRow()]
@@ -715,7 +589,7 @@ module.exports = {
             }
 
             // Training section (replaced with leveling)
-            if (users[userId].tutorialTrialsComplete && !trainingDone) {
+            if (trialsDone && !trainingDone) {
                 await safeWebhookSend(interaction.channel, asumaWebhook, {
                     content: "Now it's time to get you leveled up! From doing all those missions you must have enough exp accumulated to at least level once. Level up using /levelup and press Done when you're done.",
                     components: [createDoneRow()]
@@ -776,7 +650,7 @@ module.exports = {
                     await sendContinue("You'll have to pray at that bloodline's shrine for the given times to actually activate the bloodline ability. The bloodline abilities aren't explicitly mentioned, they'll activate if you've met the requirements inside a battle.");
                     await sendContinue("Ranked: Ranked is like any other 1v1 battle mode with elo drop. Climb through ranks and the more the elo you obtain, the more rewards you obtain from the ranked rewards.");
                     await sendContinue("Hokage and Akatsuki Leader: Inside the server, there's gonna be an election for the Hokage every month. Alternately, There's gonna be a tournament for the Akatsuki Leader every month. Both Hokage and Akatsuki Leader have many powerful commands that decide the fate of the village.");
-                    await sendContinue("Combos: You may have probably noticed the existence of combos. Combos are powerful series of attacks that make your attacking arsenal even stronger. Obtaining of the Combos are similar to the obtaining of the scrolls.");
+                    await sendContinue("Combos: You may have probably noticed the existence of combos. Combos are powerful series of attacks that make your attacking arsenal even stronger. You can obtain them through missions or from the shop.");
                     await sendContinue("Mentors: Mentors are the main source of learning jutsus early on when you don't have access to stronger Sranks, Trials and cannot afford the costlier scrolls from the shop.");
                     await sendContinue("Another additional important section of the game is the Perks. Perks come in the form of Shinobi Shards. Shinobi Shards(SS) can then be used to buy anything from the premium side of the game.");
                     // Gamepass message with image

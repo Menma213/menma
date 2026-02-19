@@ -44,6 +44,23 @@ module.exports = {
                     return interaction.editReply({ content: `You don't own a jutsu named "**${itemName}**".` });
                 }
 
+                // Clan Check
+                try {
+                    const jutsusDefinitions = JSON.parse(await fs.readFile(jutsusDefPath, 'utf8'));
+                    const jutsuDef = jutsusDefinitions[matchedJutsu];
+                    if (jutsuDef && jutsuDef.clan) {
+                        const users = JSON.parse(await fs.readFile(usersPath, 'utf8'));
+                        const userBloodline = users[userId]?.bloodline;
+                        if (userBloodline !== jutsuDef.clan) {
+                            return interaction.editReply({
+                                content: `This jutsu is exclusive to the **${jutsuDef.clan}** bloodline. Your bloodline is **${userBloodline || 'None'}**.`
+                            });
+                        }
+                    }
+                } catch (err) {
+                    console.error("Error during clan check:", err);
+                }
+
                 if (matchedJutsu === "Attack") {
                     return interaction.editReply({ content: "The basic Attack cannot be moved from Slot 0." });
                 }

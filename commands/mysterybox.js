@@ -35,10 +35,27 @@ module.exports = {
                 const jutsusDef = JSON.parse(await fs.readFile(jutsusDefPath, 'utf8'));
 
                 // User's Must-Include list
-                const whitelist = ["Carnage", "Lord of Bloodsea", "Last Resort", "Heaven's Supremacy"];
+                const whitelist = ["Lord of Bloodsea", "Last Resort"];
 
                 // User's Blacklist (Absurdly broken or dev jutsus not explicitly requested)
-                const blacklist = ["Attack", "Transformation Jutsu"];
+                const blacklist = [
+                    "Attack",
+                    "Transformation Jutsu",
+                    "Carnage",
+                    "Heaven's Supremacy",
+                    "Heavens supremacy",
+                    "Palace of the dragon king",
+                    "Chakra tool creation",
+                    "Urashiki jutsu steal",
+                    "Takemikazuchi",
+                    "Kinshiki Axe Slash",
+                    "Infinite Tsukuyomi",
+                    "Eight Gates: Gate of Death",
+                    "Night Guy",
+                    "Baryon Mode",
+                    "Kotoamatsukami",
+                    "All-Killing Ash Bones"
+                ];
 
                 const pool = Object.keys(jutsusDef).filter(name => {
                     const j = jutsusDef[name];
@@ -46,15 +63,16 @@ module.exports = {
                     // Always include whitelist
                     if (whitelist.includes(name)) return true;
 
-                    // Always include round-based
-                    if (j.roundBased === true) return true;
-
                     // Filter out core/starting/blacklisted
                     if (blacklist.includes(name)) return false;
+
+                    // Always include round-based IF not blacklisted
+                    if (j.roundBased === true) return true;
+
                     if (j.obtainment === "Starting Jutsu") return false;
 
                     // Block other "absurd" customs or unobtainables unless they were in whitelist/roundbased
-                    if (j.category === "Custom" || j.obtainment === "unobtainable") return false;
+                    if (j.category === "Custom" || j.obtainment === "unobtainable" || j.category === "custom") return false;
                     if (j.category === "Hokage" || j.category === "S-Rank" || j.category === "Jounin") return true;
 
                     // Default to including normal progression jutsus

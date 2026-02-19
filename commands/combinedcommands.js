@@ -1872,6 +1872,11 @@ function executeJutsu(baseUser, baseTarget, effectiveUser, effectiveTarget, juts
                         });
                     }
                 }
+                if (finalResult && finalResult.effects && Array.isArray(finalResult.effects)) {
+                    finalResult.effects.forEach(effect => {
+                        applyEffect(effect, baseUser, baseTarget, effectiveUser, effectiveTarget, finalResult, jutsuName, effectHandlers, false);
+                    });
+                }
                 return finalResult;
             } else {
                 console.error(`Custom script ${jutsu.scriptFile} does not export an 'execute' function.`);
@@ -4022,7 +4027,7 @@ async function runBattle(interaction, player1Id, player2Id, battleType, npcTempl
                 }
                 const effective1 = getEffectiveStats(player1);
                 const effective2 = getEffectiveStats(player2);
-                player2Action = npcChooseMove(player2, player1, effective2, effective1);
+                player2Action = npcChooseMove(player2, player1, effective2, effective1, roundNum + 1);
                 if (player2Action.isRoundActivation && player2Action.jutsuUsed) {
                     player2ActiveJutsus[player2Action.jutsuUsed] = { round: 1 };
                 }
@@ -4706,7 +4711,7 @@ async function runBattle(interaction, player1Id, player2Id, battleType, npcTempl
  * @param {object} effectivePlayer - The player's effective stats.
  * @returns {object} The chosen action result.
  */
-function npcChooseMove(baseNpc, basePlayer, effectiveNpc, effectivePlayer) {
+function npcChooseMove(baseNpc, basePlayer, effectiveNpc, effectivePlayer, currentRound = 1) {
     // Check for stun/flinch/other status effects that prevent action - USE SNAPSHOT
     const statusEffect = (baseNpc.roundStartEffects || baseNpc.activeEffects || []).find(e =>
         e.type === 'status' && ['stun', 'flinch', 'drown'].includes(e.status)
@@ -4737,6 +4742,21 @@ function npcChooseMove(baseNpc, basePlayer, effectiveNpc, effectivePlayer) {
             isStatusEffect: true, // <-- Add this flag for summary
             jutsuUsed: null // So summary doesn't try to look up a jutsu
         };
+    }
+
+
+    // Urashiki Specific Logic: Sequence for first 3 rounds
+    if (baseNpc.name === "Urashiki Otsutsuki" && currentRound <= 3) {
+        let sequenceJutsu = null;
+        if (currentRound === 1) sequenceJutsu = "Chakra tool creation";
+        else if (currentRound === 2) sequenceJutsu = "Urashiki jutsu steal";
+        else if (currentRound === 3) sequenceJutsu = "Palace of the dragon king";
+
+        if (sequenceJutsu && jutsuList[sequenceJutsu]) {
+            const result = executeJutsu(baseNpc, basePlayer, effectiveNpc, effectivePlayer, sequenceJutsu);
+            result.jutsuUsed = sequenceJutsu;
+            return result;
+        }
     }
 
 

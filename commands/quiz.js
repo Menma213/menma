@@ -10,6 +10,7 @@ const PLAYERS_PATH = path.resolve(__dirname, '../../menma/data/players.json');
 
 const TEUCHI_AVATAR = 'https://i.postimg.cc/MZjPTd7g/image.png';
 const DEIDARA_AVATAR = 'https://i.pinimg.com/736x/26/ef/79/26ef7930af90c9db54da5091621b456c.jpg';
+const QUIZ_ROLE_ID = '1389238943823827067';
 
 const delay = ms => new Promise(res => setTimeout(res, ms));
 
@@ -47,6 +48,9 @@ async function startAkatsukiEvent(channel) {
 
     const row = new ActionRowBuilder().addComponents(whatHappenedButton);
 
+    // Ping the role
+    await channel.send(`<@&${QUIZ_ROLE_ID}> Teuchi is under attack!`);
+
     if (teuchiWH) {
         await teuchiWH.send({
             content: "HELP ME!!!",
@@ -56,12 +60,23 @@ async function startAkatsukiEvent(channel) {
             avatarURL: TEUCHI_AVATAR
         });
     } else {
-        await channel.send({ content: "<@&1389238943823827067> HELP ME!!!", embeds: [helpEmbed], components: [row] });
+        await channel.send({ content: "HELP ME!!!", embeds: [helpEmbed], components: [row] });
     }
 
     const participants = new Set();
     const filter = i => i.customId === 'what_happened';
-    const collector = channel.createMessageComponentCollector({ filter, time: 90000 });
+    const WAIT_TIME = 180000; // 3 minutes
+    const collector = channel.createMessageComponentCollector({ filter, time: WAIT_TIME });
+
+    // Countdown warnings
+    const countdowns = [120000, 60000, 30000, 10000];
+    countdowns.forEach(time => {
+        setTimeout(() => {
+            if (participants.size > 0 && !collector.ended) {
+                channel.send(`**Quiz Event**: Starting in **${time / 1000} seconds**! Click the button above to join!`);
+            }
+        }, WAIT_TIME - time);
+    });
 
     collector.on('collect', async i => {
         if (!participants.has(i.user.id)) {
@@ -72,7 +87,7 @@ async function startAkatsukiEvent(channel) {
         }
     });
 
-    await delay(90000); // Wait 1.5 minutes
+    await delay(WAIT_TIME); // Wait 3 minutes
     collector.stop();
 
     if (participants.size === 0) {

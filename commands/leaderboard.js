@@ -1,190 +1,337 @@
-const { SlashCommandBuilder, AttachmentBuilder } = require('discord.js');
+const { SlashCommandBuilder, AttachmentBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const fs = require('fs');
 const path = require('path');
 const { createCanvas, loadImage, registerFont } = require('canvas');
 
-// Register a thematic font if available (e.g., a stylized sans-serif or Asian-inspired font)
-// Fallback to system fonts if not found.
+// Register fonts
 try {
     registerFont(path.join(__dirname, '../fonts/ninjafont.ttf'), { family: 'NinjaFont' });
     registerFont(path.join(__dirname, '../fonts/ninjafont-bold.ttf'), { family: 'NinjaFont', weight: 'bold' });
 } catch (e) {
-    console.warn('Could not register custom "NinjaFont". Using "sans-serif" as fallback. Please ensure font files exist.');
+    console.warn('Could not register custom fonts. Using system defaults.');
 }
+
+// Theme Configuration
+const LEADERBOARD_THEMES = {
+    STRONGEST: {
+        name: 'STRONGEST NINJAS',
+        statLabel: 'Level',
+        statKey: 'level',
+        background: ['#0a0a0a', '#1a1a2e', '#2c043e'],
+        primary: '#f8d56b',
+        secondary: '#302b63',
+        accent: '#f8d56b'
+    },
+    RICHEST: {
+        name: 'THE RICHEST IN THE WORLD',
+        statLabel: 'Ryo',
+        statKey: 'money',
+        background: ['#0a0a0a', '#1a1a2e', '#2c043e'],
+        primary: '#f8d56b',
+        secondary: '#302b63',
+        accent: '#f8d56b'
+    },
+    SHARDS: {
+        name: 'SHINOBI SHARDS',
+        statLabel: 'SS',
+        statKey: 'ss',
+        background: ['#0a0a0a', '#1a1a2e', '#2c043e'],
+        primary: '#f8d56b',
+        secondary: '#302b63',
+        accent: '#f8d56b'
+    },
+    HUNGRIEST: {
+        name: 'HUNGRIEST MAN ALIVE',
+        statLabel: 'Ramen Consumed',
+        statKey: 'ramen',
+        background: ['#0a0a0a', '#1a1a2e', '#2c043e'],
+        primary: '#f8d56b',
+        secondary: '#302b63',
+        accent: '#f8d56b'
+    },
+    RAGING_DEMON: {
+        name: 'THE RAGING DEMON',
+        statLabel: 'Wins',
+        statKey: 'wins',
+        background: ['#0a0a0a', '#1a1a2e', '#2c043e'],
+        primary: '#f8d56b',
+        secondary: '#302b63',
+        accent: '#f8d56b'
+    }
+};
+
+// Cooldown management
+const cooldowns = new Map();
 
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('leaderboard')
-        .setDescription('Displays leaderboards for ninjas or clans.')
+        .setDescription('Display various ninja leaderboards')
         .addStringOption(option =>
             option.setName('type')
-                .setDescription('Type of leaderboard to display')
+                .setDescription('Select leaderboard type')
                 .setRequired(false)
                 .addChoices(
-                    { name: 'Ninja Leaderboard', value: 'ninja' },
-                    { name: 'Clan Leaderboard', value: 'clan' }
+                    { name: 'Strongest Ninjas', value: 'strongest' },
+                    { name: 'Richest in World (Ryo)', value: 'richest' },
+                    { name: 'Shinobi Shards (SS)', value: 'shards' },
+                    { name: 'Hungriest Man Alive', value: 'hungriest' },
+                    { name: 'Raging Demon (Wins)', value: 'raging_demon' }
                 )),
     async execute(interaction) {
+        // Cooldown check
+        const COOLDOWN_SECONDS = 5;
+        const currentTime = Date.now();
+        const userId = interaction.user.id;
+
+        if (cooldowns.has(userId)) {
+            const lastUsed = cooldowns.get(userId);
+            const timeElapsed = currentTime - lastUsed;
+            const timeLeft = (COOLDOWN_SECONDS * 1000) - timeElapsed;
+
+            if (timeLeft > 0) {
+                const secondsLeft = Math.ceil(timeLeft / 1000);
+                return await interaction.reply({
+                    content: `Please wait ${secondsLeft} more second(s) before using this command again.`,
+                    ephemeral: true
+                });
+            }
+        }
+        cooldowns.set(userId, currentTime);
+
         await interaction.deferReply();
 
-        const leaderboardType = interaction.options.getString('type') || 'ninja';
+        try {
+            const leaderboardType = interaction.options.getString('type') || 'strongest';
 
-        if (leaderboardType === 'clan') {
-            // Clan Leaderboard
-            try {
-                const clansPath = path.resolve(__dirname, '../data/clans.json');
-                const blueprintsPath = path.resolve(__dirname, '../data/blueprints.json');
+            // Create buttons for navigation
+            const row = new ActionRowBuilder()
+                .addComponents(
+                    new ButtonBuilder()
+                        .setCustomId('strongest')
+                        .setLabel('Strongest')
+                        .setStyle(leaderboardType === 'strongest' ? ButtonStyle.Primary : ButtonStyle.Secondary),
+                    new ButtonBuilder()
+                        .setCustomId('richest')
+                        .setLabel('Richest')
+                        .setStyle(leaderboardType === 'richest' ? ButtonStyle.Primary : ButtonStyle.Secondary),
+                    new ButtonBuilder()
+                        .setCustomId('shards')
+                        .setLabel('Shards')
+                        .setStyle(leaderboardType === 'shards' ? ButtonStyle.Primary : ButtonStyle.Secondary),
+                    new ButtonBuilder()
+                        .setCustomId('hungriest')
+                        .setLabel('Hungriest')
+                        .setStyle(leaderboardType === 'hungriest' ? ButtonStyle.Primary : ButtonStyle.Secondary),
+                    new ButtonBuilder()
+                        .setCustomId('raging_demon')
+                        .setLabel('Wins')
+                        .setStyle(leaderboardType === 'raging_demon' ? ButtonStyle.Primary : ButtonStyle.Secondary)
+                );
 
-                if (!fs.existsSync(clansPath)) {
-                    return interaction.editReply({ content: 'Error: Clan data file not found.', ephemeral: true });
-                }
+            const imageBuffer = await generateLeaderboardImage(leaderboardType, interaction.client);
+            const attachment = new AttachmentBuilder(imageBuffer, { name: `${leaderboardType}_leaderboard.png` });
 
-                const clansData = JSON.parse(fs.readFileSync(clansPath, 'utf8'));
-                const blueprints = fs.existsSync(blueprintsPath) ? JSON.parse(fs.readFileSync(blueprintsPath, 'utf8')) : [];
+            const message = await interaction.editReply({
+                files: [attachment],
+                components: [row]
+            });
 
-                // Calculate power for each clan and filter out example clans
-                const clanArray = [];
-                for (const [clanId, clan] of Object.entries(clansData)) {
-                    if (clanId.startsWith('_')) continue; // Skip metadata entries
+            // Create button interaction collector
+            const collector = message.createMessageComponentCollector({
+                time: 60000
+            });
 
-                    let clanPower = 0;
-                    if (clan.weapons) {
-                        for (const [wName, count] of Object.entries(clan.weapons)) {
-                            const bp = blueprints.find(b => b.name === wName);
-                            if (bp) clanPower += bp.power * count;
-                        }
-                    }
-
-                    clanArray.push({
-                        id: clanId,
-                        name: clan.name,
-                        power: clanPower,
-                        level: clan.level || 1,
-                        members: clan.members?.length || 0,
-                        territories: clan.controlledTerritories?.length || 0,
-                        image: clan.image,
-                        color: clan.color || '#0099ff'
+            collector.on('collect', async (i) => {
+                if (i.user.id !== interaction.user.id) {
+                    return await i.reply({
+                        content: 'These buttons are not for you!',
+                        ephemeral: true
                     });
                 }
 
-                // Sort by power
-                clanArray.sort((a, b) => b.power - a.power);
-                const topClans = clanArray.slice(0, 5);
+                await i.deferUpdate();
 
-                if (topClans.length === 0) {
-                    return interaction.editReply({ content: 'No clans found. Create a clan to get started!', ephemeral: true });
+                try {
+                    const newImageBuffer = await generateLeaderboardImage(i.customId, interaction.client);
+                    const newAttachment = new AttachmentBuilder(newImageBuffer, {
+                        name: `${i.customId}_leaderboard.png`
+                    });
+
+                    // Update buttons
+                    const newRow = new ActionRowBuilder()
+                        .addComponents(
+                            new ButtonBuilder()
+                                .setCustomId('strongest')
+                                .setLabel('Strongest')
+                                .setStyle(i.customId === 'strongest' ? ButtonStyle.Primary : ButtonStyle.Secondary),
+                            new ButtonBuilder()
+                                .setCustomId('richest')
+                                .setLabel('Richest')
+                                .setStyle(i.customId === 'richest' ? ButtonStyle.Primary : ButtonStyle.Secondary),
+                            new ButtonBuilder()
+                                .setCustomId('shards')
+                                .setLabel('Shards')
+                                .setStyle(i.customId === 'shards' ? ButtonStyle.Primary : ButtonStyle.Secondary),
+                            new ButtonBuilder()
+                                .setCustomId('hungriest')
+                                .setLabel('Hungriest')
+                                .setStyle(i.customId === 'hungriest' ? ButtonStyle.Primary : ButtonStyle.Secondary),
+                            new ButtonBuilder()
+                                .setCustomId('raging_demon')
+                                .setLabel('Wins')
+                                .setStyle(i.customId === 'raging_demon' ? ButtonStyle.Primary : ButtonStyle.Secondary)
+                        );
+
+                    await i.editReply({
+                        files: [newAttachment],
+                        components: [newRow]
+                    });
+                } catch (error) {
+                    console.error('Error updating leaderboard:', error);
+                    await i.editReply({
+                        content: 'Error updating leaderboard. Please try again.',
+                        components: []
+                    });
                 }
-
-                const imagePath = await generateClanLeaderboardImage(topClans);
-                const attachment = new AttachmentBuilder(imagePath);
-                await interaction.editReply({ files: [attachment] });
-
-                fs.unlink(imagePath, (err) => {
-                    if (err) console.error("Error deleting clan leaderboard image:", err);
-                });
-
-            } catch (error) {
-                console.error("Error in clan leaderboard:", error);
-                await interaction.editReply({ content: 'An unexpected error occurred while generating the clan leaderboard.', ephemeral: true });
-            }
-            return;
-        }
-
-        // Ninja Leaderboard (original code)
-        try {
-            const usersPath = path.resolve(__dirname, '../../menma/data/players.json');
-            if (!fs.existsSync(usersPath)) {
-                return interaction.editReply({ content: 'Error: User data file not found.', ephemeral: true });
-            }
-            const usersData = fs.readFileSync(usersPath, 'utf8');
-            let users;
-            try {
-                users = JSON.parse(usersData);
-            } catch (err) {
-                console.error("Error parsing users.json:", err);
-                return interaction.editReply({ content: 'Error reading user data. The file might be corrupted.', ephemeral: true });
-            }
-
-            // Filter and sort users by level, excluding Level 1
-            const allUsers = [];
-            for (const id in users) {
-                const user = users[id];
-                if (user && typeof user.level === 'number' && !isNaN(user.level) && user.level > 1) {
-                    let username = user.username;
-                    if (!username) {
-                        try {
-                            const discordUser = await interaction.client.users.fetch(id);
-                            username = discordUser.username;
-                        } catch (e) {
-                            console.warn(`Could not fetch username for user ID ${id}. Using placeholder.`);
-                            username = 'Unknown Ninja';
-                        }
-                    }
-                    allUsers.push({ id, username, ...user });
-                }
-            }
-
-            allUsers.sort((a, b) => {
-                if (b.level !== a.level) return b.level - a.level;
-                return a.username.localeCompare(b.username);
             });
 
-            const topUsers = allUsers.slice(0, 10);
-
-            if (topUsers.length === 0) {
-                return interaction.editReply({ content: 'No ninjas found on the leaderboard (level 2 or higher required). Keep grinding!', ephemeral: true });
-            }
-
-            // Fetch avatar URLs for the top 3 users for the custom display
-            const topUserAvatars = await Promise.all(topUsers.slice(0, 3).map(async (user) => {
+            collector.on('end', async () => {
                 try {
-                    const discordUser = await interaction.client.users.fetch(user.id);
-                    return {
-                        ...user,
-                        avatarUrl: discordUser.displayAvatarURL({ extension: 'png', size: 128 }),
-                        username: discordUser.username // Update username just in case
-                    };
-                } catch {
-                    return {
-                        ...user,
-                        avatarUrl: 'https://cdn.discordapp.com/embed/avatars/0.png',
-                        username: user.username || 'Unknown Ninja'
-                    };
+                    await interaction.editReply({ components: [] });
+                } catch (error) {
+                    console.error('Error removing buttons:', error);
                 }
-            }));
-
-            // Pass the first 3 users with avatar info, and the full list for the rest of the table
-            const imagePath = await generateNinjaLeaderboardImage(topUserAvatars, topUsers);
-            const attachment = new AttachmentBuilder(imagePath);
-            await interaction.editReply({ files: [attachment] });
-
-            fs.unlink(imagePath, (err) => {
-                if (err) console.error("Error deleting leaderboard image:", err);
             });
 
         } catch (error) {
             console.error("Error in leaderboard command:", error);
-            await interaction.editReply({ content: 'An unexpected error occurred while generating the leaderboard.', ephemeral: true });
+            cooldowns.delete(userId);
+            await interaction.editReply({
+                content: 'An unexpected error occurred while generating the leaderboard.',
+                components: []
+            });
         }
     },
 };
 
-// New and improved leaderboard image generation function
-async function generateNinjaLeaderboardImage(top3Avatars, leaderboardData) {
+// Load leaderboard data
+async function loadLeaderboardData(statType) {
+    const usersPath = path.resolve(__dirname, '../../menma/data/users.json');
+    const playersPath = path.resolve(__dirname, '../../menma/data/players.json');
+
+    if (!fs.existsSync(usersPath)) return [];
+
+    try {
+        const usersData = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
+        const playersData = fs.existsSync(playersPath) ? JSON.parse(fs.readFileSync(playersPath, 'utf8')) : {};
+        const allUsers = [];
+
+        for (const id in usersData) {
+            const user = usersData[id];
+            const player = playersData[id] || {};
+            let value, displayValue;
+
+            switch (statType) {
+                case 'richest':
+                    value = player.money || 0;
+                    displayValue = `${value.toLocaleString()} Ryo`;
+                    break;
+                case 'shards':
+                    value = player.ss || player.SS || 0;
+                    displayValue = `${value.toLocaleString()} SS`;
+                    break;
+                case 'hungriest':
+                    value = player.ramen || 0;
+                    displayValue = `${value} 🍜`;
+                    break;
+                case 'raging_demon':
+                    value = user.wins || 0;
+                    displayValue = `${value} Wins`;
+                    break;
+                case 'strongest':
+                default:
+                    value = user.level || 1;
+                    displayValue = `Lvl ${value}`;
+                    break;
+            }
+
+            if (value > 0 || statType === 'strongest') {
+                allUsers.push({
+                    id,
+                    username: user.username || 'Unknown Ninja',
+                    value,
+                    displayValue,
+                    avatarUrl: user.avatar ?
+                        `https://cdn.discordapp.com/avatars/${id}/${user.avatar}.png?size=256` :
+                        `https://cdn.discordapp.com/embed/avatars/${parseInt(id.slice(-1)) % 5}.png`
+                });
+            }
+        }
+
+        allUsers.sort((a, b) => b.value - a.value);
+        return allUsers.slice(0, 10);
+    } catch (error) {
+        console.error(`Error reading ${statType} leaderboard data:`, error);
+        return [];
+    }
+}
+
+// Main image generation function
+async function generateLeaderboardImage(type, client) {
+    const theme = LEADERBOARD_THEMES[type.toUpperCase()] || LEADERBOARD_THEMES.STRONGEST;
+    const statType = type;
+
+    let leaderboardData = await loadLeaderboardData(statType);
+
+    if (leaderboardData.length === 0) {
+        return await generateEmptyLeaderboard(theme);
+    }
+
+    // Resolve avatars and usernames
+    const usersWithResolvedData = await Promise.all(
+        leaderboardData.map(async (user) => {
+            try {
+                let finalAvatarUrl = user.avatarUrl;
+                let resolvedUsername = user.username;
+
+                const discordUser = await client.users.fetch(user.id).catch(() => null);
+
+                if (discordUser) {
+                    finalAvatarUrl = discordUser.displayAvatarURL({ extension: 'png', size: 256 });
+                    resolvedUsername = discordUser.username;
+                }
+
+                return {
+                    ...user,
+                    username: resolvedUsername,
+                    avatarUrl: finalAvatarUrl
+                };
+            } catch {
+                return user;
+            }
+        })
+    );
+
+    return await generateNinjaLeaderboardImage(usersWithResolvedData, theme);
+}
+
+// Image generation following oldlb.js style
+async function generateNinjaLeaderboardImage(leaderboardData, theme) {
     const width = 800;
     const height = 600;
     const canvas = createCanvas(width, height);
     const ctx = canvas.getContext('2d');
 
-    // --- Background: Dark, mystical mountain scene ---
+    // Background
     const bgGradient = ctx.createLinearGradient(0, 0, 0, height);
-    bgGradient.addColorStop(0, '#0a0a0a'); // Very dark top
-    bgGradient.addColorStop(0.5, '#1a1a2e'); // Medium-dark
-    bgGradient.addColorStop(1, '#2c043e'); // Dark purple bottom
+    bgGradient.addColorStop(0, theme.background[0]);
+    bgGradient.addColorStop(0.5, theme.background[1]);
+    bgGradient.addColorStop(1, theme.background[2]);
     ctx.fillStyle = bgGradient;
     ctx.fillRect(0, 0, width, height);
 
-    // Subtle mountain range silhouette in the background
+    // Mountain silhouette
     ctx.save();
     ctx.fillStyle = 'rgba(25, 25, 40, 0.7)';
     ctx.beginPath();
@@ -199,33 +346,34 @@ async function generateNinjaLeaderboardImage(top3Avatars, leaderboardData) {
     ctx.fill();
     ctx.restore();
 
-    // --- Title ---
+    // Title
     ctx.font = 'bold 50px NinjaFont, sans-serif';
-    ctx.fillStyle = '#f8d56b';
+    ctx.fillStyle = theme.primary;
     ctx.textAlign = 'center';
     ctx.shadowColor = 'rgba(255, 215, 0, 0.8)';
     ctx.shadowBlur = 15;
-    ctx.fillText('Ninja Leaderboard', width / 2, 70);
+    ctx.fillText(theme.name, width / 2, 70);
     ctx.shadowBlur = 0;
 
-    // --- Prominent display for the top 3 users ---
+    // Top 3 positions
     const topPositions = [
-        { x: width * 0.5, y: height * 0.35, size: 120, rank: 1, color: '#FFD700' }, // Gold for 1st
-        { x: width * 0.25, y: height * 0.45, size: 100, rank: 2, color: '#C0C0C0' }, // Silver for 2nd
-        { x: width * 0.75, y: height * 0.45, size: 100, rank: 3, color: '#CD7F32' }  // Bronze for 3rd
+        { x: width * 0.5, y: height * 0.35, size: 120, rank: 1, color: '#FFD700' },
+        { x: width * 0.25, y: height * 0.45, size: 100, rank: 2, color: '#C0C0C0' },
+        { x: width * 0.75, y: height * 0.45, size: 100, rank: 3, color: '#CD7F32' }
     ];
 
-    for (let i = 0; i < top3Avatars.length && i < 3; i++) {
-        const user = top3Avatars[i];
+    // Draw top 3
+    for (let i = 0; i < Math.min(3, leaderboardData.length); i++) {
+        const user = leaderboardData[i];
         const pos = topPositions[i];
 
-        // Draw rank number
+        // Rank number
         ctx.font = 'bold 36px NinjaFont, sans-serif';
         ctx.fillStyle = pos.color;
         ctx.textAlign = 'center';
         ctx.fillText(`#${pos.rank}`, pos.x, pos.y - pos.size / 2 - 25);
 
-        // Draw avatar with gradient border
+        // Avatar
         try {
             const avatarImg = await loadImage(user.avatarUrl);
             ctx.save();
@@ -236,7 +384,7 @@ async function generateNinjaLeaderboardImage(top3Avatars, leaderboardData) {
             ctx.drawImage(avatarImg, pos.x - pos.size / 2, pos.y - pos.size / 2, pos.size, pos.size);
             ctx.restore();
 
-            // Custom border/aura for the top 3
+            // Border
             ctx.save();
             ctx.strokeStyle = pos.color;
             ctx.lineWidth = 6;
@@ -246,14 +394,13 @@ async function generateNinjaLeaderboardImage(top3Avatars, leaderboardData) {
             ctx.restore();
         } catch (e) {
             console.error(`Failed to load avatar for user ${user.id}:`, e);
-            // Fallback: draw a placeholder circle
             ctx.fillStyle = pos.color;
             ctx.beginPath();
             ctx.arc(pos.x, pos.y, pos.size / 2, 0, Math.PI * 2);
             ctx.fill();
         }
 
-        // Draw username and level
+        // Username and value
         ctx.font = '22px NinjaFont, sans-serif';
         ctx.fillStyle = '#fff';
         ctx.textAlign = 'center';
@@ -261,10 +408,10 @@ async function generateNinjaLeaderboardImage(top3Avatars, leaderboardData) {
 
         ctx.font = '18px NinjaFont, sans-serif';
         ctx.fillStyle = '#aaa';
-        ctx.fillText(`Lvl ${user.level}`, pos.x, pos.y + pos.size / 2 + 55);
+        ctx.fillText(user.displayValue, pos.x, pos.y + pos.size / 2 + 55);
     }
 
-    // --- Sleek list for ranks 4-10 ---
+    // List for ranks 4-10
     let y = height * 0.65;
     const itemHeight = 45;
     const padding = 20;
@@ -272,17 +419,17 @@ async function generateNinjaLeaderboardImage(top3Avatars, leaderboardData) {
     for (let i = 3; i < leaderboardData.length; i++) {
         const user = leaderboardData[i];
 
-        // Draw a minimalist, semi-transparent row background
+        // Row background
         ctx.save();
         ctx.globalAlpha = 0.3;
-        ctx.fillStyle = '#3a3a5a'; // Dark purple-blue background
+        ctx.fillStyle = '#3a3a5a';
         roundRect(ctx, padding, y, width - padding * 2, itemHeight, 10);
         ctx.fill();
         ctx.restore();
 
         // Rank number
         ctx.font = 'bold 24px NinjaFont, sans-serif';
-        ctx.fillStyle = '#f8d56b';
+        ctx.fillStyle = theme.primary;
         ctx.textAlign = 'left';
         ctx.fillText(`#${i + 1}`, padding + 20, y + itemHeight / 2 + 8);
 
@@ -292,30 +439,55 @@ async function generateNinjaLeaderboardImage(top3Avatars, leaderboardData) {
         ctx.textAlign = 'left';
         ctx.fillText(user.username, padding + 70, y + itemHeight / 2 + 8);
 
-        // Level
+        // Value
         ctx.font = 'bold 18px NinjaFont, sans-serif';
         ctx.fillStyle = '#ccc';
         ctx.textAlign = 'right';
-        ctx.fillText(`Lvl ${user.level}`, width - padding - 20, y + itemHeight / 2 + 8);
+        ctx.fillText(user.displayValue, width - padding - 20, y + itemHeight / 2 + 8);
 
         y += itemHeight + 10;
     }
 
-    // Save the final image to a temporary file
-    const tempDir = path.join(__dirname, '../temp');
-    if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir, { recursive: true });
-    const imagePath = path.join(tempDir, `leaderboard_${Date.now()}.png`);
-    const out = fs.createWriteStream(imagePath);
-    const stream = canvas.createPNGStream();
-    await new Promise((resolve, reject) => {
-        stream.pipe(out);
-        out.on('finish', resolve);
-        out.on('error', reject);
-    });
-    return imagePath;
+    return canvas.toBuffer('image/png');
 }
 
-// Helper function for drawing rounded rectangles (optimized)
+// Empty leaderboard
+async function generateEmptyLeaderboard(theme) {
+    const width = 800;
+    const height = 600;
+    const canvas = createCanvas(width, height);
+    const ctx = canvas.getContext('2d');
+
+    // Background
+    const bgGradient = ctx.createLinearGradient(0, 0, 0, height);
+    bgGradient.addColorStop(0, theme.background[0]);
+    bgGradient.addColorStop(0.5, theme.background[1]);
+    bgGradient.addColorStop(1, theme.background[2]);
+    ctx.fillStyle = bgGradient;
+    ctx.fillRect(0, 0, width, height);
+
+    // Title
+    ctx.font = 'bold 50px NinjaFont, sans-serif';
+    ctx.fillStyle = theme.primary;
+    ctx.textAlign = 'center';
+    ctx.shadowColor = 'rgba(255, 215, 0, 0.8)';
+    ctx.shadowBlur = 15;
+    ctx.fillText(theme.name, width / 2, 70);
+    ctx.shadowBlur = 0;
+
+    // Empty message
+    ctx.font = 'bold 36px NinjaFont, sans-serif';
+    ctx.fillStyle = theme.accent;
+    ctx.fillText('No warriors found...', width / 2, height / 2);
+
+    ctx.font = '24px NinjaFont, sans-serif';
+    ctx.fillStyle = '#cccccc';
+    ctx.fillText('Be the first to claim your spot!', width / 2, height / 2 + 50);
+
+    return canvas.toBuffer('image/png');
+}
+
+// Helper function for rounded rectangles
 function roundRect(ctx, x, y, w, h, r) {
     if (w < 2 * r) r = w / 2;
     if (h < 2 * r) r = h / 2;
