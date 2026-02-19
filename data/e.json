@@ -1,295 +1,4410 @@
 {
-    "Popeyes": {
-        "name": "Popeyes",
-        "image": "https://upload.wikimedia.org/wikipedia/commons/6/66/Popeyes_Louisiana_Kitchen_%2851195358373%29.jpg",
-        "leader": "835408109899219004",
-        "coLeader": null,
-        "elders": [],
-        "members": [
-            "835408109899219004"
+    "843680216022122516": {
+        "usersjutsu": [
+            "Transformation Jutsu",
+            "Cherry Blossom Impact",
+            "asura",
+            "Analysis",
+            "Fireball Jutsu",
+            "Shadow Clone Jutsu",
+            "Mystic Palm",
+            "Summon Ninken",
+            "Parry"
         ],
-        "treasury": 2,
-        "level": 1,
-        "xp": 0,
-        "controlledTerritories": [],
-        "rules": "GRIND 24/7",
-        "materials": {
-            "rope": 12,
-            "metal": 27,
-            "gun_powder": 30,
-            "iron": 9,
-            "wood": 15,
-            "copper": 6
-        },
-        "weapons": {},
-        "contributions": {},
-        "power": 0,
-        "power_penalty": 0
+        "scrolls": [
+            "Needle Assault Scroll",
+            "Infused Chakra Blade Scroll"
+        ],
+        "combos": [
+            "Intermediate Combo",
+            "Basic Combo"
+        ]
     },
-    "Team Blank": {
-        "name": "Team Blank",
-        "image": "https://cdn.discordapp.com/attachments/1381268583107264605/1444022577377968288/c6019eWQHMBY66ybpNVXZdPA5YNaio4NZZeb.jpg?ex=692b3253&is=6929e0d3&hm=72b5fb60d64e4414aa219ea1de9eeef8a8420dd435f657d7550d0e7e48841cef&",
-        "leader": "961918563382362122",
-        "coLeader": null,
-        "elders": [],
-        "members": [
-            "961918563382362122"
+    "799979545046155284": {
+        "usersjutsu": [
+            "Transformation Jutsu",
+            "asura",
+            "Serpents Wrath",
+            "Shadow Clone Jutsu",
+            "Fireball Jutsu",
+            "Analysis",
+            "Mystic Palms",
+            "Parry",
+            "Mystic Palm",
+            "Smoke Bomb",
+            "Sexy Jutsu",
+            "Rasenshuriken",
+            "Flying Raijin Jutsu",
+            "Summon Ninken",
+            "Infused Chakra Blade",
+            "One Thousand Years of Death",
+            "Creation Rebirth",
+            "Burning Ash",
+            "Water Dragon Jutsu",
+            "Great Forest Crumbling",
+            "Black Flash: Deaths Awakened Itself",
+            "Lightning Hound",
+            "Shadow Clone Jutsu: 1000 clones",
+            "Kirin: Lightning Storm",
+            "Explosive Paper Clone",
+            "Summon Manda",
+            "Tenseigan Chakra Mode",
+            "Amaterasu",
+            "Twin Lion Fist",
+            "Demonic Transformation",
+            "Asura's Blade of Execution",
+            "9th form: Rengoku",
+            "Improved Mystic Palm",
+            "Meteoric Burst",
+            "Guillotine Drop",
+            "Eight Gates",
+            "Snow Clone",
+            "Planetary Devastation",
+            "Blizzard Strike",
+            "Ice Shards",
+            "Ice Prison",
+            "Primary Lotus",
+            "Twin Rising Dragons",
+            "Crystal Palace",
+            "Wheel of Fate Adaptation",
+            "World Cutting Slash",
+            "Pee Pee Poo Poo",
+            "Infused Chakra Blade: Enhanced",
+            "Sixty Four Palms",
+            "Mystic Palm Enhanced",
+            "Susanoo",
+            "Amaterasu: Infinite Flames",
+            "Tsukuyomi",
+            "Almighty Push",
+            "Praise Jashin",
+            "Kamui",
+            "Shadow Strangle",
+            "Lightning Blade",
+            "Silent Assassination",
+            "Needle Assault",
+            "Gum Gum Gatling",
+            "Cherry Blossom Impact",
+            "Izanami"
         ],
-        "treasury": 0,
-        "level": 1,
-        "xp": 0,
-        "controlledTerritories": [],
-        "rules": "only cool people allowed",
-        "materials": {},
-        "weapons": {},
-        "contributions": {},
-        "power_penalty": 0
+        "combos": [
+            "Basic Combo",
+            "Intermediate Combo",
+            "Shadow Tactician",
+            "Kakashi's Legacy",
+            "Hidden Mist Duo",
+            "Team 7 Classic"
+        ],
+        "scrolls": [
+            "Needle Assault Scroll",
+            "Silent Assassination Scroll",
+            "Infused Chakra Blade Scroll",
+            "Chidori: Enchanced",
+            "Tenseigan Scroll",
+            "Amaterasu",
+            "Summon Manda",
+            "Asura's Blade of Execution",
+            "9th form: Rengoku",
+            "Lightning Blade: All Out",
+            "Almighty Push",
+            "Amaterasu: Infinite Flames",
+            "Tsukuyomi",
+            "Kamui",
+            "Praise Jashin",
+            "Susanoo",
+            "Izanami"
+        ],
+        "items": {
+            "Crystalline Shard": 535,
+            "Ay Token": 1,
+            "Zoro's Locket": 9,
+            "Christmas Token": 11,
+            "wood": 35
+        }
     },
-    "Kamizuru": {
-        "name": "Kamizuru",
-        "image": "https://cdn.discordapp.com/attachments/999072671855804499/1445312598089269248/82861b6a962a0c113dc547ee86d004c4.jpg?ex=692fe3bf&is=692e923f&hm=56f356a29959f5e500c30654100966d45a94f4fd18c98d41d72541958d9ee98e&",
-        "leader": "799979545046155284",
-        "coLeader": "818893461881094175",
-        "elders": [
-            "766465809639669840"
+    "737913304214667345": {
+        "usersjutsu": [
+            "Transformation Jutsu",
+            "asura",
+            "One Thousand Years of Death",
+            "Creation Rebirth",
+            "Burning Ash",
+            "Water Dragon Jutsu",
+            "Flying Raijin Jutsu",
+            "Great Forest Crumbling",
+            "Rasenshuriken"
         ],
-        "members": [
-            "799979545046155284",
-            "1128111341903818752",
-            "616710232206475271",
-            "1123162433507311677",
-            "1309017261645758484",
-            "135275438556708873",
-            "766465809639669840",
-            "818893461881094175",
-            "1453436128483868713",
-            "1453436128483868713",
-            "1303374282130198538",
-            "983939927156871208",
-            "1302557566672310294",
-            "874591871412879361",
-            "518732237303447592"
-        ],
-        "treasury": 402681979,
-        "level": 4,
-        "xp": 100,
-        "controlledTerritories": [
-            "village_of_sand",
-            "village_of_sound"
-        ],
-        "rules": "Join us and we'll be great than all clan",
-        "materials": {
-            "rope": 23576,
-            "gun_powder": 39251,
-            "copper": 32317,
-            "iron": 44963,
-            "metal": 36861,
-            "wood": 42149,
-            "rare_resin": 154,
-            "lightning_resin": 1,
-            "mythical_sand": 0
-        },
-        "weapons": {
-            "Chakra Blade": 3068,
-            "Chakra Canon": 113,
-            "Ninjutsu Drones": 128,
-            "Jutsu Absorption Arm": 3,
-            "Sand Mines": 1
-        },
-        "contributions": {},
-        "buffs": {
-            "tier": 1,
-            "active": true,
-            "multiplier": 20
-        },
-        "power": 0,
-        "lastDistribution": 1769599288139,
-        "power_penalty": 0
+        "scrolls": [
+            "Serpents Wrath Scroll"
+        ]
     },
-    "Divine Demon Cult": {
-        "name": "Divine Demon Cult",
-        "image": "https://tenor.com/view/vermelho-gif-6895727708364745387",
-        "leader": "961918563382362122",
-        "coLeader": "835408109899219004",
-        "elders": [],
-        "members": [
-            "961918563382362122",
-            "835408109899219004"
+    "1112750369609633792": {
+        "usersjutsu": [
+            "Transformation Jutsu",
+            "asura",
+            "Sexy Jutsu",
+            "Summon Ninken",
+            "Shadow Clone Jutsu",
+            "Silent Assassination",
+            "Serpents Wrath",
+            "Needle Assault"
         ],
-        "treasury": 1079996669998,
-        "level": 10,
-        "xp": 0,
-        "controlledTerritories": [
-            "land_of_wind",
-            "land_of_fire"
-        ],
-        "rules": "if you leave the clan you have to be yeeted",
-        "materials": {
-            "iron": 12,
-            "wood": 6,
-            "metal": 17,
-            "gun_powder": 19,
-            "rope": 20,
-            "copper": 13
-        },
-        "weapons": {
-            "Chakra Canon": 3484042742
-        },
-        "contributions": {},
-        "power": 0,
-        "buffs": {
-            "tier": 1000,
-            "active": true,
-            "multiplier": 2000000
-        },
-        "lastDistribution": 1769187312780,
-        "power_penalty": 0
+        "scrolls": []
     },
-    "Rebellion : 真": {
-        "name": "Rebellion : 真",
-        "image": "https://ih1.redbubble.net/image.1423403541.8211/bg,f8f8f8-flat,750x,075,f-pad,750x1000,f8f8f8.jpg",
-        "leader": "1409902593949433958",
-        "coLeader": "820580034376105995",
-        "elders": [
-            "1409902593949433958",
-            "1303128250079383583"
+    "920673413268377670": {
+        "usersjutsu": [
+            "Transformation Jutsu",
+            "asura"
         ],
-        "members": [
-            "1409902593949433958",
-            "420101737173483541",
-            "615547555807494175",
-            "820580034376105995",
-            "1336261859224981594",
-            "1303128250079383583",
-            "787929150686101555",
-            "938325776883929108",
-            "791252443039924255",
-            "1448652877424758856",
-            "772230265565216798",
-            "1243438862139916308",
-            "930983759975706655",
-            "1442562014328127549",
-            "1467587909602509078",
-            "1320073283982327884"
-        ],
-        "treasury": 1108995,
-        "level": 5,
-        "xp": 1000,
-        "controlledTerritories": [
-            "village_of_sound",
-            "village_of_sand",
-            "land_of_water",
-            "valley_of_the_end",
-            "hidden_village_of_sand",
-            "country_of_rain",
-            "land_of_earth",
-            "hidden_village_of_sound",
-            "land_of_lightning"
-        ],
-        "rules": "Dear Member,\n\nIf you desire to join The 'Rebellion' Please follow the TOS. \n\nThe following Terms & Conditions are:\n•No sharing information with outsiders.\n•No leaving the clan in under 3 months of joining.\n•No inside sabatoging\n•No breaking these rules.\n\n__Consequences__\n\n• All stats lowered by 1/4.",
-        "materials": {
-            "wood": 16781,
-            "iron": 18924,
-            "rope": 1271,
-            "gun_powder": 14664,
-            "copper": 9525,
-            "metal": 12491,
-            "rare_resin": 160,
-            "holy_waters": 2,
-            "a_piece_of_earth": 1,
-            "lightning_resin": 1
-        },
-        "weapons": {
-            "Chakra Blade": 4357,
-            "Ninjutsu Drones": 18
-        },
-        "contributions": {},
-        "power": 109675,
-        "buffs": {
-            "tier": 1,
-            "active": true,
-            "multiplier": 20
-        },
-        "lastDistribution": 1769838955351,
-        "power_penalty": 0
+        "scrolls": [
+            "Needle Assault Scroll"
+        ]
     },
-    "ℭ𝔯𝔢𝔢𝔡: 鬼": {
-        "name": "ℭ𝔯𝔢𝔢𝔡: 鬼",
-        "image": "https://share.google/2Ck1wZM6ZHMewqqbY",
-        "leader": "711146181794988064",
-        "coLeader": null,
-        "elders": [],
-        "members": [
-            "711146181794988064",
-            "811203159401693196",
-            "890669412917592114",
-            "890668763085672458"
+    "728522737009819649": {
+        "usersjutsu": [
+            "Transformation Jutsu",
+            "Needle Assault",
+            "Infused Chakra Blade",
+            "One Thousand Years of Death",
+            "Creation Rebirth"
         ],
-        "treasury": 67000000,
-        "level": 3,
-        "xp": 0,
-        "controlledTerritories": [],
-        "rules": "No rules set.",
-        "materials": {
-            "rope": 321,
-            "copper": 1938,
-            "metal": 2098,
-            "gun_powder": 2584,
-            "iron": 3310,
-            "wood": 2994,
-            "rare_resin": 4,
-            "lightning_resin": 2
-        },
-        "weapons": {
-            "Chakra Canon": 88,
-            "Chakra Blade": 18,
-            "Ninjutsu Drones": 12,
-            "Jutsu Absorption Arm": 2
-        },
-        "contributions": {},
-        "power": 0,
-        "buffs": {
-            "tier": 1,
-            "active": true,
-            "multiplier": 20
-        },
-        "lastDistribution": 1769613075649,
-        "power_penalty": 0
+        "scrolls": [
+            "Needle Assault Scroll"
+        ],
+        "items": {
+            "Crystalline Shard": 1
+        }
     },
-    "Jedi Order": {
-        "name": "Jedi Order",
-        "image": "https://www.worldanvil.com/w/star-wars3A-fate-of-the-galaxy-mandalorian-bbq/a/jedi-order-organization",
-        "leader": "741142009670271010",
-        "coLeader": null,
-        "elders": [],
-        "members": [
-            "741142009670271010"
+    "826183795417022555": {
+        "usersjutsu": [
+            "Transformation Jutsu",
+            "Shadow Clone Jutsu",
+            "Serpents Wrath"
         ],
-        "treasury": 10000000,
-        "level": 1,
-        "xp": 0,
-        "controlledTerritories": [],
-        "rules": "Follow the Jedi Code",
-        "materials": {
-            "metal": 60,
-            "wood": 34,
-            "iron": 78,
-            "copper": 65,
-            "gun_powder": 116,
-            "rope": 28
+        "combos": [
+            "Basic Combo"
+        ]
+    },
+    "1355490065899585737": {
+        "usersjutsu": [
+            "asura",
+            "Transformation Jutsu",
+            "Mystic Palm",
+            "Creation Rebirth",
+            "Water Prison",
+            "Rasengan",
+            "Water Dragon Jutsu",
+            "Great Forest Crumbling",
+            "Reaper Death Seal",
+            "Flying Raijin Jutsu",
+            "Analysis",
+            "Infused Chakra Blade",
+            "Sexy Jutsu",
+            "Smoke Bomb",
+            "Attack",
+            "Rasenshuriken",
+            "Fireball Jutsu",
+            "Shadow Clone Jutsu",
+            "Silent Assassination",
+            "Kirin",
+            "Summon Ninken",
+            "Needle Assault",
+            "Lightning Blade",
+            "One Thousand Years of Death",
+            "Burning Ash",
+            "Infused Chakra Blade",
+            "Infused Chakra Blade",
+            "The Grand Rebellion"
+        ],
+        "combos": [
+            "Basic Combo"
+        ],
+        "scrolls": [
+            "Needle Assault Scroll",
+            "Serpents Wrath Scroll",
+            "Infused Chakra Blade Scroll",
+            "Kamehameha Scroll"
+        ],
+        "items": {
+            "Crystalline Shard": 2
+        }
+    },
+    "818893461881094175": {
+        "usersjutsu": [
+            "Transformation Jutsu",
+            "Shadow Clone Jutsu",
+            "Analysis",
+            "Mystic Palm",
+            "Summon Ninken",
+            "Fireball Jutsu",
+            "Parry",
+            "Infused Chakra Blade",
+            "One Thousand Years of Death",
+            "Creation Rebirth",
+            "Burning Ash",
+            "Lightning Hound",
+            "Shadow Clone Jutsu: 1000 clones",
+            "Kirin: Lightning Storm",
+            "Puppet Kazekage",
+            "Set Your Face Ablaze",
+            "Water Dragon Jutsu",
+            "Flying Raijin Jutsu",
+            "Great Forest Crumbling",
+            "Explosive Paper Clone",
+            "Tenseigan Chakra Mode",
+            "Human Boulder",
+            "Kamehameha",
+            "9th form: Rengoku",
+            "Amaterasu",
+            "Rasenshuriken",
+            "A Twins Sacrifice",
+            "Dynamic Entry",
+            "Infused Chakra Blade: Enhanced",
+            "Summon Manda",
+            "Leaf Whirlwind",
+            "Guillotine Drop",
+            "Sixty Four Palms",
+            "Lightning Blade",
+            "Lightning Blade: All Out",
+            "Cherry Blossom Impact",
+            "Sexy Jutsu",
+            "Kirin",
+            "Asura's Blade of Execution",
+            "Shadow Possession",
+            "Rasengan",
+            "Primary Lotus",
+            "Ice Prison",
+            "Twin Rising Dragons",
+            "Planetary Devastation",
+            "Blizzard Strike",
+            "Crystal Palace",
+            "Rock Throw",
+            "Needle Assault",
+            "Shadow Strangle",
+            "Eight Gates",
+            "Serpents Wrath",
+            "Ephemeral",
+            "Twin Lion Fist",
+            "Ruri'iro Kujaku",
+            "FLOWING RED SCALE",
+            "PIERCING BLOOD: CONVERGENCE MAXIMUM",
+            "Mystic Palm Enhanced",
+            "Ninpo: Ascetic Blaze",
+            "Amaterasu: Infinite Flames",
+            "Susanoo",
+            "Kamui",
+            "Praise Jashin",
+            "Tsukuyomi",
+            "Almighty Push",
+            "Izanami",
+            "Raiders Tower",
+            "Dimensional Slash"
+        ],
+        "combos": [
+            "Basic Combo",
+            "Intermediate Combo",
+            "Hokage's Will"
+        ],
+        "scrolls": [
+            "Chidori: Enchanced",
+            "Tenseigan Scroll",
+            "Summon Manda",
+            "Amaterasu",
+            "9th form: Rengoku",
+            "Lightning Blade: All Out",
+            "Asura's Blade of Execution",
+            "Susanoo",
+            "Kamui",
+            "Amaterasu: Infinite Flames",
+            "Praise Jashin",
+            "Tsukuyomi",
+            "Almighty Push",
+            "Izanami"
+        ],
+        "items": {
+            "Crystalline Shard": 341,
+            "Ay Token": 1,
+            "Zoro's Locket": 4,
+            "Christmas Token": 0
+        }
+    },
+    "1239968214130102424": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ],
+        "scrolls": [
+            "Needle Assault Scroll",
+            "Infused Chakra Blade Scroll"
+        ]
+    },
+    "1354836327467847864": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "1239065381373476894": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ],
+        "scrolls": [
+            "Needle Assault Scroll",
+            "Silent Assassination Scroll"
+        ]
+    },
+    "1383619165843230730": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "1071680680616001557": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ],
+        "scrolls": [
+            "Needle Assault Scroll"
+        ]
+    },
+    "1311760847307145257": {
+        "usersjutsu": [
+            "Infused Chakra Blade",
+            "Rasenshuriken",
+            "Fireball Jutsu",
+            "Silent Assassination",
+            "Attack",
+            "Sexy Jutsu",
+            "Needle Assault",
+            "Water Dragon Jutsu",
+            "Kirin",
+            "Flying Raijin Jutsu",
+            "Cherry Blossom Impact",
+            "Lightning Blade",
+            "Summon Ninken",
+            "Smoke Bomb",
+            "Creation Rebirth",
+            "Serpents Wrath",
+            "Transformation Jutsu",
+            "Great Forest Crumbling",
+            "Analysis",
+            "asura"
+        ],
+        "scrolls": [
+            "Needle Assault Scroll"
+        ]
+    },
+    "639430297103892540": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "1248723016985219197": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "1356764657708302558": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "527195539268173834": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "771097474798452747": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "939113531440254997": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "709880778313433089": {
+        "usersjutsu": [
+            "Transformation Jutsu",
+            "Fireball Jutsu",
+            "Needle Assault"
+        ],
+        "scrolls": [
+            "Infused Chakra Blade Scroll"
+        ]
+    },
+    "744791232189825176": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "874591871412879361": {
+        "usersjutsu": [
+            "Transformation Jutsu",
+            "Needle Assault",
+            "asura",
+            "One Thousand Years of Death",
+            "Creation Rebirth",
+            "Burning Ash",
+            "Water Dragon Jutsu",
+            "Flying Raijin Jutsu",
+            "Great Forest Crumbling",
+            "Rasenshuriken",
+            "Analysis",
+            "Mystic Palm",
+            "Summon Ninken",
+            "Shadow Clone Jutsu",
+            "Fireball Jutsu",
+            "Infused Chakra Blade",
+            "Thunder Shock",
+            "Ephemeral",
+            "Lightning Blade: All Out",
+            "Eight Gates",
+            "Mystic Palm Enhanced",
+            "Serpents Wrath",
+            "Shadow Strangle",
+            "Dynamic Entry",
+            "Sixty Four Palms",
+            "Amaterasu: Infinite Flames",
+            "Asura's Blade of Execution",
+            "Praise Jashin",
+            "Susanoo",
+            "Tenseigan Chakra Mode",
+            "Puppet Kazekage",
+            "Infused Chakra Blade: Enhanced",
+            "Cherry Blossom Impact",
+            "Detroit Smash",
+            "Gum Gum Gatling",
+            "Smoke Bomb",
+            "Amaterasu",
+            "Rasengan",
+            "Silent Assassination",
+            "Lightning Blade",
+            "Iai Chop Form 7:Nichirin",
+            "Izanami"
+        ],
+        "scrolls": [
+            "Serpents Wrath Scroll",
+            "9th form: Rengoku",
+            "Amaterasu: Infinite Flames",
+            "Praise Jashin",
+            "Susanoo",
+            "Tenseigan Scroll",
+            "Izanami",
+            "Amaterasu"
+        ],
+        "items": {
+            "Crystalline Shard": 7,
+            "Zoro's Locket": 2
         },
-        "weapons": {
-            "Chakra Blade": 1,
-            "Ninjutsu Drones": 1
+        "combos": [
+            "Team 7 Classic",
+            "Shadow Tactician",
+            "Hokage's Will",
+            "Hidden Mist Duo",
+            "Kakashi's Legacy"
+        ]
+    },
+    "701643179212013568": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "254833691438743552": {
+        "usersjutsu": [
+            "Transformation Jutsu",
+            "asura",
+            "Lord of Bloodsea",
+            "Heaven Slaughter",
+            "One Thousand Years of Death",
+            "Creation Rebirth",
+            "Lightning Hound",
+            "Shadow Clone Jutsu: 1000 clones",
+            "Explosive Paper Clone",
+            "Kirin: Lightning Storm",
+            "Guillotine Drop"
+        ],
+        "scrolls": [
+            "Tenseigan Scroll"
+        ],
+        "items": {
+            "Crystalline Shard": 4105,
+            "Ay Token": 2785
+        }
+    },
+    "554444611226173460": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ],
+        "scrolls": [
+            "Needle Assault Scroll"
+        ]
+    },
+    "880925257836408882": {
+        "usersjutsu": [],
+        "scrolls": [
+            "Needle Assault Scroll"
+        ]
+    },
+    "1210567723097001996": {
+        "usersjutsu": [],
+        "scrolls": [
+            "Needle Assault Scroll"
+        ]
+    },
+    "1397418229642559629": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "966850707674267728": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "1042609880021876836": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "1391135014552342660": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "1394844944233009243": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "770828909251919893": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "1252635305178042390": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "615547555807494175": {
+        "usersjutsu": [
+            "Transformation Jutsu",
+            "Twin Rising Dragons",
+            "Ice Prison",
+            "Explosive Paper Clone",
+            "Carnage",
+            "One Thousand Years of Death",
+            "Creation Rebirth",
+            "Burning Ash",
+            "Serpents Wrath",
+            "Almighty Push",
+            "Water Dragon Jutsu"
+        ],
+        "items": {
+            "Christmas Token": 70
         },
-        "contributions": {},
-        "lastDistribution": 1770689229121,
-        "power": 0,
-        "buffs": {
-            "tier": 1,
-            "active": true,
-            "multiplier": 20
+        "scrolls": [
+            "Almighty Push",
+            "Tenseigan Scroll"
+        ]
+    },
+    "1369736280807575552": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "1121181029579886612": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "1368966351103856753": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "776457117515251712": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ],
+        "scrolls": []
+    },
+    "903759245034536980": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ],
+        "scrolls": []
+    },
+    "994101966395416598": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "1303128250079383583": {
+        "usersjutsu": [
+            "Transformation Jutsu",
+            "Infused Chakra Blade",
+            "One Thousand Years of Death",
+            "Creation Rebirth",
+            "Burning Ash",
+            "Fireball Jutsu",
+            "Analysis",
+            "Shadow Clone Jutsu",
+            "Mystic Palm",
+            "Summon Ninken",
+            "Shadow Clone Jutsu: 1000 clones",
+            "Lightning Hound",
+            "9th form: Rengoku",
+            "Explosive Paper Clone",
+            "Kirin: Lightning Storm",
+            "Amaterasu",
+            "Blades of Judgement",
+            "Tenseigan Chakra Mode",
+            "Water Dragon Jutsu",
+            "Flying Raijin Jutsu",
+            "Great Forest Crumbling",
+            "Rasenshuriken",
+            "Kaioken",
+            "Limit Ultra Kamehameha",
+            "Punisher Shield",
+            "Singularity Pulse: Requiem of the Stars",
+            "Snow Clone",
+            "Blizzard Strike",
+            "Ice Shards",
+            "Ice Prison",
+            "Primary Lotus",
+            "Planetary Devastation",
+            "Twin Rising Dragons",
+            "Seventh Form: Haze Dance",
+            "Rebirth Protocol",
+            "Asura's Blade of Execution",
+            "Needle Assault",
+            "Special Beam Cannon",
+            "Guillotine Drop",
+            "Susanoo",
+            "Sexy Jutsu",
+            "Infused Chakra Blade: Enhanced"
+        ],
+        "scrolls": [
+            "Chidori: Enchanced",
+            "9th form: Rengoku",
+            "Tenseigan Scroll",
+            "Amaterasu",
+            "Kamui",
+            "Tsukuyomi",
+            "Susanoo"
+        ],
+        "combos": [
+            "Intermediate Combo",
+            "Basic Combo"
+        ],
+        "items": {
+            "Crystalline Shard": 189,
+            "Ay Token": 228,
+            "Zoro's Locket": 3,
+            "Christmas Token": 41
+        }
+    },
+    "528291369018720267": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ],
+        "scrolls": []
+    },
+    "1191077759036952708": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "1111082162716950568": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ],
+        "scrolls": []
+    },
+    "1247270560824823850": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "1245000848090726435": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "1337437875465355344": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "687398463029510146": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "436634341603278859": {
+        "usersjutsu": [
+            "Transformation Jutsu",
+            "Analysis",
+            "Summon Ninken",
+            "Fireball Jutsu",
+            "Parry",
+            "Shadow Clone Jutsu",
+            "Mystic Palm",
+            "Rasengan",
+            "Summon Manda",
+            "Amaterasu",
+            "Lightning Hound",
+            "Shadow Clone Jutsu: 1000 clones",
+            "Explosive Paper Clone",
+            "Kirin: Lightning Storm",
+            "9th form: Rengoku",
+            "Human Boulder",
+            "Puppet Kazekage",
+            "Infused Chakra Blade",
+            "One Thousand Years of Death",
+            "Creation Rebirth",
+            "Burning Ash",
+            "Water Dragon Jutsu",
+            "Flying Raijin Jutsu",
+            "Great Forest Crumbling",
+            "Rasenshuriken",
+            "Tenseigan Chakra Mode"
+        ],
+        "combos": [
+            "Intermediate Combo",
+            "Basic Combo"
+        ],
+        "items": {
+            "Crystalline Shard": 198,
+            "Zoro's Locket": 2,
+            "Ay Token": 170
         },
-        "power_penalty": 0
+        "scrolls": [
+            "Summon Manda",
+            "Tenseigan Scroll"
+        ]
+    },
+    "449222713672859656": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "635137522166399006": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "420101737173483541": {
+        "usersjutsu": [
+            "Transformation Jutsu",
+            "Shadow Clone Jutsu",
+            "One Thousand Years of Death",
+            "Infused Chakra Blade",
+            "Burning Ash",
+            "Summon Manda",
+            "Amaterasu",
+            "Summon Ninken",
+            "Analysis",
+            "Water Dragon Jutsu",
+            "Flying Raijin Jutsu",
+            "Great Forest Crumbling",
+            "Creation Rebirth",
+            "Rasenshuriken",
+            "Lightning Hound",
+            "Shadow Clone Jutsu: 1000 clones",
+            "Kirin: Lightning Storm",
+            "Explosive Paper Clone",
+            "Guillotine Drop",
+            "Sexy Jutsu",
+            "Tenseigan Chakra Mode",
+            "Super Saiyan",
+            "Mystic Palm",
+            "Lightning Blade: All Out",
+            "Planetary Devastation",
+            "Twin Rising Dragons",
+            "Blizzard Strike",
+            "Primary Lotus",
+            "Ice Prison"
+        ],
+        "items": {
+            "Crystalline Shard": 504,
+            "Ay Token": 305,
+            "Christmas Token": 40
+        },
+        "scrolls": [
+            "Chidori: Enchanced",
+            "9th form: Rengoku",
+            "Summon Manda",
+            "Amaterasu",
+            "Tenseigan Scroll"
+        ]
+    },
+    "1378222935977889843": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "390864647042891776": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "247091818821451777": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "1194165534418272256": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ],
+        "items": {
+            "Crystalline Shard": 2
+        },
+        "scrolls": [
+            "Chidori: Enchanced"
+        ]
+    },
+    "1317887688745025627": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "1289721832135589960": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "1210841218771193856": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "1409902593949433958": {
+        "usersjutsu": [
+            "One Thousand Years of Death",
+            "Creation Rebirth",
+            "Fireball Jutsu",
+            "The Grand Rebellion",
+            "Azora Raizen",
+            "Burning Ash",
+            "Water Dragon Jutsu",
+            "Flying Raijin Jutsu",
+            "Great Forest Crumbling",
+            "Infused Chakra Blade",
+            "Azora Tenpo",
+            "Rasenshuriken",
+            "Get Flexed on",
+            "Shadow Clone Jutsu: 1000 clones",
+            "Lightning Hound",
+            "Kirin: Lightning Storm",
+            "Explosive Paper Clone",
+            "Guillotine Drop",
+            "Shadow Clone Jutsu: 1000 Clones",
+            "Asura's Blade of Execution",
+            "Reversal : Nil",
+            "9th form: Rengoku",
+            "Amaterasu",
+            "Tenseigan Chakra Mode",
+            "Mystic Palm",
+            "Analysis",
+            "Authentic Mutual Love",
+            "Lightning Blade: All Out",
+            "Izanagi",
+            "Blizzard Strike",
+            "Ice Shards",
+            "Planetary Devastation",
+            "Ice Prison",
+            "Snow Clone",
+            "Twin Rising Dragons",
+            "Infused Chakra Blade: Enhanced",
+            "Attack",
+            "Pee Pee Poo Poo",
+            "Tsukuyomi",
+            "Amaterasu: Infinite Flames",
+            "Almighty Push",
+            "Kamui",
+            "Sexy Jutsu",
+            "Sixty Four Palms",
+            "Lightning Blade",
+            "Shadow Strangle",
+            "Leaf Whirlwind",
+            "Dynamic Entry",
+            "Shadow Clone Jutsu",
+            "Summon Ninken",
+            "Thirty Two Palms",
+            "Kirin",
+            "Cherry Blossom Impact",
+            "Rasengan",
+            "Ephemeral",
+            "Mystic Palm Enhanced",
+            "Twin Lion Fist",
+            "Primary Lotus",
+            "Eight Gates",
+            "Praise Jashin",
+            "Susanoo",
+            "Smoke Bomb",
+            "Silent Assassination",
+            "Needle Assault",
+            "Gum Gum Gatling",
+            "Detroit Smash",
+            "Getsuga Tensho"
+        ],
+        "items": {
+            "Crystalline Shard": 175,
+            "Zoro's Locket": 2,
+            "Ay Token": 10,
+            "Christmas Token": 72,
+            "iron_ore": 5,
+            "stone": 14,
+            "wood": 10
+        },
+        "scrolls": [
+            "Asura's Blade of Execution",
+            "Tenseigan Scroll",
+            "Amaterasu",
+            "Summon Manda",
+            "9th form: Rengoku",
+            "Almighty Push",
+            "Tsukuyomi",
+            "Kamui",
+            "Amaterasu: Infinite Flames",
+            "Lightning Blade: All Out",
+            "Praise Jashin",
+            "Susanoo"
+        ],
+        "combos": [
+            "Shadow Tactician",
+            "Hidden Mist Duo"
+        ]
+    },
+    "420661520918380544": {
+        "usersjutsu": [
+            "Transformation Jutsu",
+            "Summon Ninken",
+            "Infused Chakra Blade",
+            "One Thousand Years of Death",
+            "Fireball Jutsu",
+            "Summon Manda",
+            "Creation Rebirth",
+            "Amaterasu",
+            "Crimson Lightning Dragon",
+            "Burning Ash",
+            "Analysis",
+            "Heavenly Palm of Annihilation",
+            "Asura's Blade of Execution",
+            "Water Dragon Jutsu",
+            "Flying Raijin Jutsu",
+            "Great Forest Crumbling",
+            "Rasenshuriken",
+            "Shadow Clone Jutsu: 1000 clones",
+            "Lightning Hound",
+            "Kirin: Lightning Storm"
+        ],
+        "scrolls": [
+            "Infused Chakra Blade Scroll",
+            "Amaterasu",
+            "9th form: Rengoku",
+            "Chidori: Enchanced",
+            "Asura's Blade of Execution"
+        ],
+        "items": {
+            "Crystalline Shard": 115,
+            "Zoro's Locket": 5,
+            "Ay Token": 40
+        },
+        "combos": [
+            "Intermediate Combo",
+            "Basic Combo"
+        ]
+    },
+    "596375919510159371": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "1264838223297908912": {
+        "usersjutsu": [
+            "Transformation Jutsu",
+            "Shadow Clone Jutsu",
+            "Fireball Jutsu"
+        ]
+    },
+    "869947662626062457": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "845875435924619324": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "678406353202708484": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "723666263544561765": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ],
+        "items": {
+            "Crystalline Shard": 2
+        }
+    },
+    "923819606450270219": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "646149279437553664": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ],
+        "items": {
+            "Crystalline Shard": 6
+        },
+        "scrolls": [
+            "Chidori: Enchanced",
+            "Amaterasu"
+        ]
+    },
+    "1090999654763741284": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "450496711123795979": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "343110437350670339": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "726798301680107621": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "1062014672896794715": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "261684298694918144": {
+        "usersjutsu": [
+            "Transformation Jutsu",
+            "Fireball Jutsu",
+            "Shadow Clone Jutsu",
+            "Mystic Palm",
+            "Summon Ninken",
+            "Parry",
+            "Analysis",
+            "One Thousand Years of Death",
+            "Infused Chakra Blade",
+            "Creation Rebirth",
+            "Burning Ash"
+        ],
+        "combos": [
+            "Basic Combo"
+        ],
+        "items": {
+            "Crystalline Shard": 15
+        },
+        "scrolls": [
+            "9th form: Rengoku",
+            "Summon Manda",
+            "Infused Chakra Blade Scroll"
+        ]
+    },
+    "435086873069617157": {
+        "usersjutsu": [
+            "Transformation Jutsu",
+            "One Thousand Years of Death"
+        ]
+    },
+    "1156072351738368020": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "1329198150090489868": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "953705770799738910": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "852084810381787186": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "844177296957243402": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "608441966824521767": {
+        "usersjutsu": [
+            "Transformation Jutsu",
+            "One Thousand Years of Death"
+        ]
+    },
+    "1296885597205430302": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "169869057300889601": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ],
+        "combos": [
+            "Intermediate Combo"
+        ]
+    },
+    "731954948681760768": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "1148979590660898856": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "1333019992463114271": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "1073307267115515904": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "1406256583112917094": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "250160994590916609": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "809433522972524585": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "1130385614072709182": {
+        "usersjutsu": [
+            "Transformation Jutsu",
+            "Puppet Kazekage",
+            "Lightning Hound",
+            "Kirin: Lightning Storm",
+            "Explosive Paper Clone",
+            "Shadow Clone Jutsu: 1000 clones"
+        ],
+        "items": {
+            "Crystalline Shard": 31,
+            "Ay Token": 30
+        },
+        "scrolls": [
+            "Chidori: Enchanced"
+        ]
+    },
+    "353296548391813124": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "1157537116457279490": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "1088952418261270629": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "362536562698878976": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "758439182687010838": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "913185563023142933": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "133283939384164353": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "270026736551460864": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "669480725250048002": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "330689194492166145": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "479559410927009823": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "292868813010239499": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "1357416855152754849": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "317891686564888576": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "813347661235093504": {
+        "usersjutsu": [
+            "Transformation Jutsu",
+            "Summon Ninken"
+        ]
+    },
+    "717265638107643958": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "933050349437218890": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "523956555402575873": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "311228416047185923": {
+        "usersjutsu": [
+            "Transformation Jutsu",
+            "Fireball Jutsu",
+            "Shadow Clone Jutsu",
+            "Analysis",
+            "Ice Mirrors"
+        ],
+        "items": {
+            "Crystalline Shard": 2
+        }
+    },
+    "1337573368253255702": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "751399594918805667": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "1130315410319872031": {
+        "usersjutsu": [
+            "Transformation Jutsu",
+            "Shadow Clone Jutsu",
+            "Analysis",
+            "Fireball Jutsu",
+            "Mystic Palm",
+            "Summon Ninken",
+            "One Thousand Years of Death",
+            "Amaterasu",
+            "Lightning Hound",
+            "Kirin: Lightning Storm",
+            "Explosive Paper Clone",
+            "Shadow Clone Jutsu: 1000 clones",
+            "Creation Rebirth",
+            "Burning Ash",
+            "10%",
+            "Water Dragon Jutsu",
+            "Flying Raijin Jutsu",
+            "Great Forest Crumbling",
+            "Rasenshuriken",
+            "Tenseigan Chakra Mode",
+            "Guillotine Drop"
+        ],
+        "items": {
+            "Crystalline Shard": 199,
+            "Ay Token": 161
+        },
+        "scrolls": [
+            "Amaterasu",
+            "Lightning Blade: All Out",
+            "Tenseigan Scroll"
+        ]
+    },
+    "655014929090215967": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "1421153106703417445": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "367862244916068353": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "270037572409884673": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ],
+        "scrolls": [
+            "Infused Chakra Blade Scroll"
+        ]
+    },
+    "409742447661285386": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "505591703919656962": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "930983759975706655": {
+        "usersjutsu": [
+            "Transformation Jutsu",
+            "Human Boulder",
+            "Explosive Paper Clone",
+            "Ninpo: Ascetic Blaze",
+            "Analysis",
+            "One Thousand Years of Death",
+            "Creation Rebirth",
+            "Burning Ash",
+            "Infused Chakra Blade",
+            "Water Dragon Jutsu",
+            "Flying Raijin Jutsu",
+            "Great Forest Crumbling",
+            "Rasenshuriken"
+        ],
+        "combos": [
+            "Intermediate Combo"
+        ],
+        "items": {
+            "Crystalline Shard": 6,
+            "Ay Token": 10
+        },
+        "scrolls": [
+            "Infused Chakra Blade Scroll",
+            "Tenseigan Scroll"
+        ]
+    },
+    "1217870452253397082": {
+        "usersjutsu": [
+            "Carnage"
+        ]
+    },
+    "1117633529346527252": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "654746264109318164": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "1128111341903818752": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "1352510388130021431": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "823994548333051924": {
+        "usersjutsu": [
+            "Transformation Jutsu",
+            "Lightning Hound",
+            "9th form: Rengoku",
+            "Summon Manda",
+            "One Thousand Years of Death",
+            "Amaterasu",
+            "Creation Rebirth",
+            "Burning Ash",
+            "Tenseigan Chakra Mode",
+            "Water Dragon Jutsu",
+            "Flying Raijin Jutsu",
+            "Great Forest Crumbling",
+            "Rasenshuriken",
+            "Shadow Clone Jutsu: 1000 clones",
+            "Kirin: Lightning Storm",
+            "Analysis",
+            "Asura's Blade of Execution",
+            "Lightning Blade: All Out",
+            "Twin Rising Dragons",
+            "Ice Prison",
+            "Blizzard Strike",
+            "Primary Lotus",
+            "Demon Cloak",
+            "Amaterasu: Infinite Flames",
+            "Praise Jashin",
+            "Almighty Push",
+            "Kamui",
+            "Susanoo",
+            "Tsukuyomi"
+        ],
+        "items": {
+            "Crystalline Shard": 127,
+            "Ay Token": 20,
+            "Zoro's Locket": 9,
+            "Christmas Token": 38
+        },
+        "scrolls": [
+            "9th form: Rengoku",
+            "Summon Manda",
+            "Amaterasu",
+            "Tenseigan Scroll",
+            "Chidori: Enchanced",
+            "Asura's Blade of Execution",
+            "Amaterasu: Infinite Flames",
+            "Praise Jashin",
+            "Almighty Push",
+            "Kamui",
+            "Susanoo",
+            "Tsukuyomi",
+            "Lightning Blade: All Out"
+        ]
+    },
+    "1110989485946187877": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "1073157170213945424": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ],
+        "combos": [
+            "Intermediate Combo"
+        ]
+    },
+    "1255807800269865021": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "1185345160628936806": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "1070799702410407996": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "493958402574254080": {
+        "usersjutsu": [
+            "Transformation Jutsu",
+            "Infused Chakra Blade",
+            "Kirin: Lightning Storm",
+            "Lightning Hound",
+            "Explosive Paper Clone",
+            "Analysis",
+            "Shadow Clone Jutsu: 1000 clones",
+            "Gyakuten no Horu",
+            "One Thousand Years of Death",
+            "Mystic Palm",
+            "Fire Style: Nuclear Armageddon",
+            "Creation Rebirth",
+            "Burning Ash",
+            "Tenseigan Chakra Mode",
+            "Human Boulder",
+            "Puppet Kazekage",
+            "Lightning Blade: All out",
+            "Summon Manda",
+            "Water Dragon Jutsu",
+            "Flying Raijin Jutsu",
+            "Great Forest Crumbling",
+            "Rasenshuriken",
+            "9th form: Rengoku",
+            "Improved Mystic Palm",
+            "Ephemeral",
+            "Amaterasu"
+        ],
+        "scrolls": [
+            "Infused Chakra Blade Scroll",
+            "Tenseigan Scroll",
+            "Chidori: Enchanced",
+            "Amaterasu",
+            "Lightning Blade: All Out"
+        ],
+        "items": {
+            "Crystalline Shard": 230,
+            "Zoro's Locket": 1,
+            "Ay Token": 10
+        },
+        "combos": [
+            "Intermediate Combo"
+        ]
+    },
+    "469636822230630400": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "780790863189639208": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "723700031022170247": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "1416409488696803429": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "1185324167109820536": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "1248574793196765257": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "435545144687722501": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "1324009338284806265": {
+        "usersjutsu": [
+            "Transformation Jutsu",
+            "Fireball Jutsu",
+            "Shadow Clone Jutsu",
+            "Summon Ninken",
+            "Sexy Jutsu",
+            "Infused Chakra Blade",
+            "Kirin",
+            "Explosive Paper Clone"
+        ],
+        "scrolls": [
+            "Infused Chakra Blade Scroll"
+        ],
+        "items": {
+            "Crystalline Shard": 46,
+            "Ay Token": 20
+        },
+        "combos": [
+            "Intermediate Combo"
+        ]
+    },
+    "916390011417542677": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "1410651013018292356": {
+        "usersjutsu": [
+            "Summon Ninken",
+            "Lightning Blade",
+            "Fireball Jutsu",
+            "Kirin",
+            "Needle Assault",
+            "Puppet Kazekage",
+            "Transformation Jutsu"
+        ],
+        "scrolls": [],
+        "combos": [
+            "Basic Combo",
+            "Intermediate Combo"
+        ]
+    },
+    "1299496796514680905": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "991370704807268423": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "815696379820900383": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "1400214380880335009": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "954633398620684288": {
+        "usersjutsu": [
+            "Transformation Jutsu",
+            "Analysis"
+        ],
+        "items": {
+            "Crystalline Shard": 2
+        }
+    },
+    "1129152571852996638": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "703975295543279617": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "1237068444629733467": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "538574004664008726": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "1028384861536399440": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "928116862187864065": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "273100630598483968": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "1429138003569414385": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "323791474800197633": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "961252876083142776": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "690320989095329812": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "935589043511623820": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "1177640597054566441": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "1366455974776541227": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "1439829738326724662": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "975250882495148074": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "912724225276641330": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "1232402028127457350": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "758406269077291018": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "1057885572196204554": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "983363815565582377": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "784252973059407882": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ],
+        "scrolls": [
+            "Infused Chakra Blade Scroll"
+        ]
+    },
+    "966043611185680524": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "1425489765095964682": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "1411352853536051221": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ],
+        "scrolls": [
+            "Infused Chakra Blade Scroll"
+        ]
+    },
+    "996513757415092275": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "576692561641734174": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ],
+        "scrolls": [
+            "Infused Chakra Blade Scroll"
+        ]
+    },
+    "1316051731993460798": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "1442717299630018653": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "1086277855144579156": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "611198325651275815": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "1198710489870516316": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "1263312156703854603": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "769141500755836928": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "1433164235755749488": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "767121131835883590": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "1285893427866898462": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "766465809639669840": {
+        "usersjutsu": [
+            "Transformation Jutsu",
+            "Infused Chakra Blade",
+            "Lightning Blade: All Out",
+            "One Thousand Years of Death",
+            "Creation Rebirth",
+            "Lightning Hound",
+            "Burning Ash",
+            "Water Dragon Jutsu",
+            "Flying Raijin Jutsu",
+            "Great Forest Crumbling",
+            "Rasenshuriken",
+            "Analysis",
+            "Seventh Form: Haze Dance",
+            "Shadow Clone Jutsu",
+            "Summon Ninken",
+            "Rasengan",
+            "Improved Mystic Palm",
+            "Seventh Form: Flaming Thunder God",
+            "Explosive Paper Clone",
+            "Shadow Clone Jutsu: 1000 clones",
+            "Kirin: Lightning Storm",
+            "Tenseigan Chakra Mode",
+            "Planetary Devastation",
+            "Ice Shards",
+            "Snow Clone",
+            "Mystic Palm",
+            "Amaterasu",
+            "Summon Manda",
+            "Primary Lotus",
+            "Twin Rising Dragons",
+            "Blizzard Strike",
+            "Ice Prison",
+            "Sixty Four Palms",
+            "Serpents Wrath",
+            "9th form: Rengoku",
+            "Asura's Blade of Execution",
+            "Black Vortex Cataclysm",
+            "Four Violet Flames Formation",
+            "Pee Pee Poo Poo",
+            "Needle Assault",
+            "Perfect Sage",
+            "Silent Assassination",
+            "Eight Gates",
+            "Shadow Strangle",
+            "Ephemeral",
+            "Sexy Jutsu",
+            "Mystic Palm Enhanced",
+            "Tsukuyomi",
+            "Susanoo",
+            "Amaterasu: Infinite Flames",
+            "Almighty Push",
+            "Praise Jashin",
+            "Kamui",
+            "Izanami",
+            "Gum Gum Gatling",
+            "Lightning Blade",
+            "Fireball Jutsu",
+            "Cherry Blossom Impact",
+            "Detroit Smash"
+        ],
+        "items": {
+            "Crystalline Shard": 318,
+            "Ay Token": 136,
+            "Christmas Token": 0,
+            "crystal_shard": 12,
+            "iron_ore": 13,
+            "Zoro's Locket": 6,
+            "Pocket Watch": 2
+        },
+        "scrolls": [
+            "Tenseigan Scroll",
+            "Asura's Blade of Execution",
+            "Lightning Blade: All Out",
+            "9th form: Rengoku",
+            "Amaterasu",
+            "Summon Manda",
+            "Tsukuyomi",
+            "Susanoo",
+            "Amaterasu: Infinite Flames",
+            "Almighty Push",
+            "Praise Jashin",
+            "Kamui",
+            "Izanami"
+        ],
+        "combos": [
+            "Intermediate Combo",
+            "Kakashi's Legacy",
+            "Hidden Mist Duo",
+            "Team 7 Classic"
+        ]
+    },
+    "495235192190009345": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "638801018943176724": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "701483740337274880": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "1403336950663872663": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "483324503292641309": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "253907708800008193": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "616710232206475271": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "494637954799763467": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ],
+        "items": {
+            "Christmas Token": 6,
+            "iron_ore": 14,
+            "wood": 9
+        }
+    },
+    "167673799179763713": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ],
+        "items": {
+            "Crystalline Shard": 2
+        }
+    },
+    "1123162433507311677": {
+        "usersjutsu": [
+            "Transformation Jutsu",
+            "Shadow Clone Jutsu",
+            "Fireball Jutsu",
+            "Analysis",
+            "Mystic Palm",
+            "Summon Ninken",
+            "Parry",
+            "Ice Prison",
+            "Twin Rising Dragons",
+            "Primary Lotus",
+            "One Thousand Years of Death",
+            "Planetary Devastation",
+            "Blizzard Strike",
+            "Creation Rebirth",
+            "Burning Ash",
+            "Seventh Form: Flaming Thunder God",
+            "Water Dragon Jutsu",
+            "Needle Assault",
+            "Flying Raijin Jutsu",
+            "Great Forest Crumbling",
+            "Amaterasu",
+            "Rasenshuriken",
+            "9th form: Rengoku",
+            "Lightning Blade: All Out",
+            "Asura's Blade of Execution",
+            "Set Your Face Ablaze",
+            "Ruri'iro Kujaku",
+            "Ninpo: Ascetic Blaze",
+            "FLOWING RED SCALE",
+            "PIERCING BLOOD: CONVERGENCE MAXIMUM",
+            "A Twins Sacrifice"
+        ],
+        "items": {
+            "Christmas Token": 0,
+            "Crystalline Shard": 59,
+            "Zoro's Locket": 1
+        },
+        "scrolls": [
+            "Amaterasu",
+            "9th form: Rengoku",
+            "Lightning Blade: All Out",
+            "Tenseigan Scroll"
+        ]
+    },
+    "757969874130829505": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "1257046447917109318": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "1425847648543309928": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "1206690110226038827": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "1421904237608177845": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "898809992528928789": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "933834435592323083": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "1424128035883323476": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "971564454116483182": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "961918563382362122": {
+        "usersjutsu": [
+            "Transformation Jutsu",
+            "Heaven's Supremacy",
+            "Kirin: Lightning Storm",
+            "One Thousand Years of Death",
+            "Creation Rebirth",
+            "Burning Ash",
+            "Water Dragon Jutsu",
+            "Flying Raijin Jutsu",
+            "Great Forest Crumbling",
+            "Rasenshuriken",
+            "Carnage",
+            "World Cutting Slash",
+            "Pee Pee Poo Poo",
+            "Full Counter",
+            "Izanagi",
+            "Izanami",
+            "Guillotine Drop",
+            "Tsukuyomi",
+            "Susanoo",
+            "Three Thousand Worlds",
+            "Ikari",
+            "Raiders Tower",
+            "Banana Killer",
+            "Gum Gum Gatling",
+            "Infinite Void",
+            "Dimensional Slash",
+            "Galick Gun",
+            "Amaterasu: Infinite Flames",
+            "Analysis"
+        ],
+        "scrolls": [
+            "Tenseigan Scroll"
+        ]
+    },
+    "174997486874656768": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "648626814138318894": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "1310429099017240689": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "557342571886673920": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "983939927156871208": {
+        "usersjutsu": [
+            "Transformation Jutsu",
+            "Water Clone"
+        ]
+    },
+    "807323161698762792": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "775292287017811978": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "139501897311584256": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "343911839593136140": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "239165788638937089": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "1309017261645758484": {
+        "usersjutsu": [
+            "Transformation Jutsu",
+            "Shadow Clone Jutsu"
+        ]
+    },
+    "1328871192840634430": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "789225036196085760": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "820580034376105995": {
+        "usersjutsu": [
+            "Transformation Jutsu",
+            "Needle Assault",
+            "Silent Assassination",
+            "Fireball Jutsu",
+            "Shadow Clone Jutsu",
+            "Analysis",
+            "The Grand Rebellion",
+            "Summon Ninken",
+            "Mystic Palm",
+            "Parry",
+            "Kirin",
+            "Lightning Blade",
+            "Sexy Jutsu",
+            "Dynamic Entry",
+            "Infused Chakra Blade: Enhanced",
+            "Leaf Whirlwind",
+            "Shadow Possession",
+            "One Thousand Years of Death",
+            "Rasengan",
+            "Creation Rebirth",
+            "Burning Ash",
+            "Amaterasu",
+            "Water Dragon Jutsu",
+            "Flying Raijin Jutsu",
+            "Great Forest Crumbling",
+            "Rasenshuriken",
+            "9th form: Rengoku",
+            "Lightning Blade: All Out",
+            "Ephemeral",
+            "Eight Gates",
+            "Asura's Blade of Execution",
+            "Tenseigan Chakra Mode",
+            "Human Boulder",
+            "Puppet Kazekage",
+            "Serpents Wrath",
+            "King of Hell",
+            "Primary Lotus",
+            "Blizzard Strike",
+            "Improved Mystic Palm",
+            "Unified Will",
+            "Summon Manda",
+            "Twin Lion Fist",
+            "Shadow Strangle",
+            "Cherry Blossom Impact",
+            "Mystic Palm Enhanced",
+            "Infused Chakra Blade",
+            "Tsukuyomi",
+            "Praise Jashin",
+            "Susanoo",
+            "Almighty Push",
+            "Amaterasu: Infinite Flames",
+            "Kamui",
+            "Izanami",
+            "Dimensional Slash",
+            "Sixty Four Palms",
+            "Thirty Two Palms",
+            "Smoke Bomb",
+            "Kamehameha"
+        ],
+        "items": {
+            "Christmas Token": 0,
+            "Crystalline Shard": 290,
+            "Zoro's Locket": 21
+        },
+        "combos": [
+            "Intermediate Combo",
+            "Basic Combo",
+            "Kakashi's Legacy",
+            "Shadow Tactician",
+            "Hidden Mist Duo",
+            "Team 7 Classic"
+        ],
+        "scrolls": [
+            "Amaterasu",
+            "Lightning Blade: All Out",
+            "9th form: Rengoku",
+            "Asura's Blade of Execution",
+            "Tenseigan Scroll",
+            "Summon Manda",
+            "Tsukuyomi",
+            "Praise Jashin",
+            "Susanoo",
+            "Almighty Push",
+            "Amaterasu: Infinite Flames",
+            "Kamui",
+            "Izanami"
+        ]
+    },
+    "1215055297492819978": {
+        "usersjutsu": [
+            "Transformation Jutsu",
+            "Thirty Two Palms",
+            "Infused Chakra Blade",
+            "Needle Assault",
+            "One Thousand Years of Death",
+            "Creation Rebirth",
+            "Serpents Wrath",
+            "Burning Ash"
+        ],
+        "scrolls": [
+            "Infused Chakra Blade Scroll"
+        ],
+        "items": {
+            "Crystalline Shard": 1
+        },
+        "combos": [
+            "Intermediate Combo"
+        ]
+    },
+    "1086309931864559616": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "714197971947880518": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "775935240060796940": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "760489168899276842": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ],
+        "items": {
+            "Crystalline Shard": 2
+        }
+    },
+    "511590474876715010": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "778213616163356674": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "512009014867918859": {
+        "usersjutsu": [
+            "Transformation Jutsu",
+            "Needle Assault"
+        ],
+        "scrolls": [
+            "Infused Chakra Blade Scroll"
+        ]
+    },
+    "835408109899219004": {
+        "usersjutsu": [
+            "Transformation Jutsu",
+            "Carnage",
+            "Infused Chakra Blade",
+            "One Thousand Years of Death",
+            "Creation Rebirth",
+            "Burning Ash",
+            "Water Dragon Jutsu",
+            "Flying Raijin Jutsu",
+            "Great Forest Crumbling",
+            "Rasenshuriken",
+            "Wheel of Fate Adaptation",
+            "Analysis",
+            "Meteoric Burst",
+            "Silent Assassination",
+            "Rebirth Protocol",
+            "King of Hell",
+            "Ruri'iro Kujaku",
+            "Black Vortex Cataclysm",
+            "Last Resort",
+            "Punisher Shield",
+            "200% Hollow Purple",
+            "Hakai Release",
+            "Dragon Emperor Life Destructor",
+            "Four Violet Flames Formation",
+            "Summon Shrek",
+            "Lord of Bloodsea",
+            "Twin Rising Dragons",
+            "Summon Ninken",
+            "Fireball Jutsu",
+            "Kaioken",
+            "Sixty Four Palms",
+            "Unified Will",
+            "Full Counter",
+            "World Cutting Slash",
+            "Azora Raizen",
+            "Puppet Kazekage",
+            "Perfect Sage",
+            "Gold Experience Requiem",
+            "Violent Fierce God Slicer",
+            "Crystal Palace",
+            "Mystic Palm",
+            "Izanami",
+            "C3",
+            "Special Beam Cannon",
+            "Indra's Arrow",
+            "Asura's Blade of Execution",
+            "Sand Bullet",
+            "Planetary Devastation",
+            "Almighty Push",
+            "Amaterasu",
+            "Amaterasu: Infinite Flames",
+            "Banana Killer",
+            "Bull Charge",
+            "Tiger Hunt",
+            "Three Thousand Worlds",
+            "Ashura: Makyusen",
+            "Ikari",
+            "The Grand Rebellion",
+            "PIERCING BLOOD: CONVERGENCE MAXIMUM",
+            "Water Prison",
+            "TAILED BEAST ART: VERMILLION PULSE",
+            "Iai Chop Form 7:Nichirin"
+        ],
+        "scrolls": [
+            "Infused Chakra Blade Scroll",
+            "Tenseigan Scroll",
+            "Almighty Push"
+        ],
+        "items": {
+            "Crystalline Shard": 8
+        }
+    },
+    "1267862418441240596": {
+        "usersjutsu": [
+            "Transformation Jutsu",
+            "Monster Claw",
+            "Silent Assassination",
+            "Needle Assault",
+            "Shadow Clone Jutsu",
+            "Analysis",
+            "Fireball Jutsu",
+            "Kirin",
+            "Sexy Jutsu",
+            "Rasengan",
+            "One Thousand Years of Death",
+            "Creation Rebirth",
+            "Eight Gates",
+            "Parry",
+            "Ephemeral",
+            "Burning Ash"
+        ],
+        "combos": [
+            "Basic Combo",
+            "Intermediate Combo"
+        ],
+        "items": {
+            "Crystalline Shard": 16
+        },
+        "scrolls": [
+            "Lightning Blade: All Out"
+        ]
+    },
+    "832639694126448710": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "1003462305494880378": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "1336261859224981594": {
+        "usersjutsu": [
+            "Transformation Jutsu",
+            "Shadow Clone Jutsu",
+            "Web Trap",
+            "Needle Assault",
+            "Silent Assassination",
+            "Serpents Wrath",
+            "Analysis",
+            "Mystic Palm"
+        ],
+        "items": {
+            "Crystalline Shard": 16,
+            "Zoro's Locket": 2
+        },
+        "scrolls": [
+            "Amaterasu",
+            "9th form: Rengoku"
+        ]
+    },
+    "1066697102345912340": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "283317748438925312": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "747563905282343043": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "1305791155090358283": {
+        "usersjutsu": [
+            "Transformation Jutsu",
+            "Needle Assault",
+            "Twin Rising Dragons"
+        ],
+        "items": {
+            "Crystalline Shard": 4
+        },
+        "scrolls": [
+            "9th form: Rengoku"
+        ],
+        "combos": [
+            "Intermidiate Combo"
+        ]
+    },
+    "791252443039924255": {
+        "usersjutsu": [
+            "Transformation Jutsu",
+            "Infused Chakra Blade",
+            "Needle Assault",
+            "Human Boulder",
+            "Analysis",
+            "Shadow Clone Jutsu",
+            "Fireball Jutsu",
+            "Lightning Blade",
+            "Eight Gates",
+            "Amaterasu"
+        ],
+        "scrolls": [
+            "Amaterasu"
+        ],
+        "items": {
+            "Crystalline Shard": 11,
+            "Zoro's Locket": 1
+        },
+        "combos": [
+            "Intermediate Combo"
+        ]
+    },
+    "714104614512885770": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ],
+        "items": {
+            "Crystalline Shard": 4
+        }
+    },
+    "1080877450763980831": {
+        "usersjutsu": [
+            "Transformation Jutsu",
+            "Blizzard Strike"
+        ]
+    },
+    "576474741565816854": {
+        "usersjutsu": [
+            "Transformation Jutsu",
+            "Needle Assault"
+        ]
+    },
+    "636694840876335164": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ],
+        "scrolls": [
+            "Infused Chakra Blade Scroll"
+        ]
+    },
+    "251077823433801728": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "423703410206965760": {
+        "usersjutsu": [
+            "Transformation Jutsu",
+            "Puppet Kazekage",
+            "Needle Assault"
+        ]
+    },
+    "1356103829837451355": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "711146181794988064": {
+        "usersjutsu": [
+            "Transformation Jutsu",
+            "Needle Assault",
+            "Kirin",
+            "Infused Chakra Blade",
+            "Serpents Wrath",
+            "Silent Assassination",
+            "One Thousand Years of Death",
+            "Puppet Kazekage",
+            "Creation Rebirth",
+            "Analysis",
+            "Shadow Clone Jutsu",
+            "Fireball Jutsu",
+            "Mystic Palm",
+            "Summon Ninken",
+            "Parry",
+            "Lightning Blade",
+            "Infused Chakra Blade: Enhanced",
+            "Sexy Jutsu",
+            "Dynamic Entry",
+            "Shadow Possession",
+            "Cherry Blossom Impact",
+            "Amaterasu",
+            "Burning Ash",
+            "Leaf Whirlwind",
+            "Water Dragon Jutsu",
+            "Primary Lotus",
+            "Rasengan",
+            "Ephemeral",
+            "Lightning Blade: All Out",
+            "Eight Gates",
+            "Twin Lion Fist",
+            "Shadow Strangle",
+            "Flying Raijin Jutsu",
+            "Great Forest Crumbling",
+            "Rasenshuriken",
+            "Asura's Blade of Execution",
+            "Tenseigan Chakra Mode",
+            "Full Counter",
+            "9th form: Rengoku",
+            "Summon Manda",
+            "Pee Pee Poo Poo",
+            "Gold Experience Requiem",
+            "Violent Fierce God Slicer",
+            "Mystic Palm Enhanced"
+        ],
+        "scrolls": [
+            "Amaterasu",
+            "Tenseigan Scroll",
+            "Infused Chakra Blade Scroll",
+            "9th form: Rengoku",
+            "Summon Manda"
+        ],
+        "items": {
+            "Crystalline Shard": 184,
+            "Zoro's Locket": 13
+        },
+        "combos": [
+            "Intermediate Combo"
+        ]
+    },
+    "1393342409009795123": {
+        "usersjutsu": [
+            "Transformation Jutsu",
+            "Needle Assault"
+        ]
+    },
+    "689601916506079317": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "1202275260637138967": {
+        "usersjutsu": [
+            "Transformation Jutsu",
+            "Lightning Blade",
+            "Infused Chakra Blade",
+            "One Thousand Years of Death",
+            "Needle Assault",
+            "Serpents Wrath",
+            "Creation Rebirth",
+            "Burning Ash",
+            "Dragon Emperor Life Destructor",
+            "Water Dragon Jutsu",
+            "Flying Raijin Jutsu",
+            "Great Forest Crumbling",
+            "Rasenshuriken"
+        ]
+    },
+    "178263754251698176": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "148210108919316480": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "1462032658530828309": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "1015551518956589078": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "1192106651344441414": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "1459687907768926404": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "891089077988892692": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "971110549414871140": {
+        "usersjutsu": [
+            "Transformation Jutsu"
+        ]
+    },
+    "135275438556708873": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu",
+            "Infused Chakra Blade",
+            "One Thousand Years of Death",
+            "Creation Rebirth",
+            "Needle Assault",
+            "Serpents Wrath",
+            "Summon Shrek",
+            "Burning Ash",
+            "Water Dragon Jutsu",
+            "Flying Raijin Jutsu",
+            "Great Forest Crumbling",
+            "Rasenshuriken",
+            "9th form: Rengoku",
+            "Lightning Blade: All Out",
+            "Analysis",
+            "Summon Ninken",
+            "Shadow Possession",
+            "Puppet Kazekage"
+        ],
+        "combos": [],
+        "scrolls": [
+            "Infused Chakra Blade Scroll",
+            "Tenseigan Scroll"
+        ],
+        "items": {
+            "Crystalline Shard": 5
+        },
+        "rankeditems": []
+    },
+    "892711988923338792": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu"
+        ],
+        "combos": [],
+        "scrolls": [],
+        "items": {},
+        "rankeditems": []
+    },
+    "1000836510058303559": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu",
+            "Needle Assault"
+        ],
+        "combos": [],
+        "scrolls": [],
+        "items": {},
+        "rankeditems": []
+    },
+    "1066798426966208552": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu",
+            "Shadow Strangle",
+            "Needle Assault"
+        ],
+        "combos": [],
+        "scrolls": [
+            "Infused Chakra Blade Scroll"
+        ],
+        "items": {},
+        "rankeditems": []
+    },
+    "1259372885630521405": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu"
+        ],
+        "combos": [],
+        "scrolls": [],
+        "items": {},
+        "rankeditems": []
+    },
+    "1341334288716533831": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu",
+            "The Grand Rebellion"
+        ],
+        "combos": [],
+        "scrolls": [],
+        "items": {},
+        "rankeditems": []
+    },
+    "1192527669217218711": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu"
+        ],
+        "combos": [],
+        "scrolls": [],
+        "items": {},
+        "rankeditems": []
+    },
+    "1117186377570861056": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu"
+        ],
+        "combos": [],
+        "scrolls": [],
+        "items": {},
+        "rankeditems": []
+    },
+    "1281721691902574687": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu"
+        ],
+        "combos": [],
+        "scrolls": [],
+        "items": {},
+        "rankeditems": []
+    },
+    "1464867919493202032": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu",
+            "Infused Chakra Blade",
+            "Needle Assault",
+            "Analysis",
+            "Puppet Master",
+            "One Thousand Years of Death",
+            "Creation Rebirth",
+            "Summon Ninken",
+            "Lightning Blade: All Out",
+            "Burning Ash"
+        ],
+        "combos": [],
+        "scrolls": [
+            "Summon Manda",
+            "Infused Chakra Blade Scroll"
+        ],
+        "items": {
+            "Crystalline Shard": 5
+        },
+        "rankeditems": []
+    },
+    "636089119390302209": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu"
+        ],
+        "combos": [],
+        "scrolls": [],
+        "items": {},
+        "rankeditems": []
+    },
+    "1133597719634657350": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu"
+        ],
+        "combos": [],
+        "scrolls": [],
+        "items": {},
+        "rankeditems": []
+    },
+    "1446349184163774520": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu"
+        ],
+        "combos": [],
+        "scrolls": [],
+        "items": {},
+        "rankeditems": []
+    },
+    "1351531759379939329": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu"
+        ],
+        "combos": [],
+        "scrolls": [],
+        "items": {},
+        "rankeditems": []
+    },
+    "1453436128483868713": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu",
+            "Crystal Palace",
+            "Analysis",
+            "Lightning Blade",
+            "Improved Mystic Palm",
+            "Needle Assault",
+            "Rasengan",
+            "One Thousand Years of Death",
+            "Creation Rebirth",
+            "Burning Ash",
+            "Infused Chakra Blade",
+            "Lightning Blade: All Out",
+            "Water Dragon Jutsu",
+            "Eight Gates",
+            "Silent Assassination",
+            "Ephemeral",
+            "Summon Ninken",
+            "Kirin",
+            "Flying Raijin Jutsu",
+            "Serpents Wrath",
+            "Shadow Possession",
+            "Mystic Palm Enhanced",
+            "Great Forest Crumbling",
+            "Rasenshuriken",
+            "Indra's Arrow",
+            "Tenseigan Chakra Mode",
+            "Asura's Blade of Execution",
+            "Tsukuyomi",
+            "Susanoo",
+            "Amaterasu: Infinite Flames",
+            "Shadow Strangle",
+            "Twin Lion Fist",
+            "Kamui",
+            "Almighty Push",
+            "Praise Jashin",
+            "Infused Chakra Blade: Enhanced",
+            "Izanami",
+            "Gum Gum Gatling",
+            "Dimensional Slash",
+            "TAILED BEAST ART: VERMILLION PULSE",
+            "Sixty Four Palms",
+            "Mystic Palm",
+            "Detroit Smash",
+            "Smoke Bomb"
+        ],
+        "combos": [
+            "Hokage's Will",
+            "Hidden Mist Duo",
+            "Shadow Tactician"
+        ],
+        "scrolls": [
+            "Infused Chakra Blade Scroll",
+            "9th form: Rengoku",
+            "Amaterasu",
+            "Lightning Blade: All Out",
+            "Summon Manda",
+            "Tenseigan Scroll",
+            "Tsukuyomi",
+            "Susanoo",
+            "Amaterasu: Infinite Flames",
+            "Kamui",
+            "Almighty Push",
+            "Praise Jashin",
+            "Izanami"
+        ],
+        "items": {
+            "Crystalline Shard": 795,
+            "Zoro's Locket": 4,
+            "Pocket Watch": 1
+        },
+        "rankeditems": []
+    },
+    "811203159401693196": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu",
+            "Needle Assault",
+            "Rasengan",
+            "Silent Assassination",
+            "Infused Chakra Blade"
+        ],
+        "combos": [
+            "Intermediate Combo"
+        ],
+        "scrolls": [],
+        "items": {},
+        "rankeditems": []
+    },
+    "938325776883929108": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu",
+            "Infused Chakra Blade",
+            "Needle Assault",
+            "Rasenshuriken",
+            "One Thousand Years of Death",
+            "Creation Rebirth",
+            "Burning Ash",
+            "Mystic Palm",
+            "Rasengan",
+            "Amaterasu",
+            "Serpents Wrath",
+            "Water Dragon Jutsu",
+            "Flying Raijin Jutsu",
+            "Great Forest Crumbling",
+            "Analysis",
+            "Susanoo",
+            "Asura's Blade of Execution",
+            "Tenseigan Chakra Mode",
+            "Infinite Void"
+        ],
+        "combos": [
+            "Intermediate Combo"
+        ],
+        "scrolls": [
+            "Infused Chakra Blade Scroll",
+            "Summon Manda",
+            "Susanoo",
+            "Lightning Blade: All Out",
+            "Tenseigan Scroll"
+        ],
+        "items": {
+            "Crystalline Shard": 1,
+            "Zoro's Locket": 2
+        },
+        "rankeditems": []
+    },
+    "1129254239420551188": {
+        "usersjutsu": [
+            "Special Beam Canon"
+        ]
+    },
+    "890669412917592114": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu",
+            "Infused Chakra Blade",
+            "Explosive Paper Clone"
+        ],
+        "combos": [],
+        "scrolls": [],
+        "items": {
+            "Crystalline Shard": 1
+        },
+        "rankeditems": []
+    },
+    "787929150686101555": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu",
+            "Needle Assault"
+        ],
+        "combos": [],
+        "scrolls": [
+            "Infused Chakra Blade Scroll"
+        ],
+        "items": {},
+        "rankeditems": []
+    },
+    "1415035242619736175": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu",
+            "Rasenshuriken",
+            "Needle Assault"
+        ],
+        "combos": [],
+        "scrolls": [],
+        "items": {},
+        "rankeditems": []
+    },
+    "1242808719453196290": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu"
+        ],
+        "combos": [],
+        "scrolls": [],
+        "items": {},
+        "rankeditems": []
+    },
+    "1466794905761484994": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu"
+        ],
+        "combos": [],
+        "scrolls": [],
+        "items": {},
+        "rankeditems": []
+    },
+    "1466798629921751103": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu"
+        ],
+        "combos": [],
+        "scrolls": [],
+        "items": {},
+        "rankeditems": []
+    },
+    "1466800602771361803": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu"
+        ],
+        "combos": [],
+        "scrolls": [],
+        "items": {},
+        "rankeditems": []
+    },
+    "930349156961239070": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu"
+        ],
+        "combos": [],
+        "scrolls": [],
+        "items": {},
+        "rankeditems": []
+    },
+    "1341946327126507522": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu",
+            "Needle Assault",
+            "Infused Chakra Blade",
+            "Iron Sand",
+            "One Thousand Years of Death",
+            "Creation Rebirth",
+            "Burning Ash",
+            "Water Dragon Jutsu",
+            "Serpents Wrath",
+            "Fireball Jutsu",
+            "Flying Raijin Jutsu",
+            "Great Forest Crumbling",
+            "Rasenshuriken",
+            "Lightning Blade: All Out",
+            "Kirin",
+            "Sexy Jutsu",
+            "Dynamic Entry",
+            "Infused Chakra Blade: Enhanced",
+            "Summon Manda"
+        ],
+        "combos": [],
+        "scrolls": [
+            "Infused Chakra Blade Scroll",
+            "Tenseigan Scroll",
+            "Amaterasu"
+        ],
+        "items": {
+            "Crystalline Shard": 9
+        },
+        "rankeditems": []
+    },
+    "919819285067595786": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu",
+            "One Thousand Years of Death",
+            "Summon Ninken",
+            "Lightning Blade",
+            "Shadow Clone Jutsu",
+            "Fireball Jutsu",
+            "Cherry Blossom Impact",
+            "Silent Assassination",
+            "Needle Assault",
+            "Water Dragon Jutsu",
+            "Gum Gum Gatling",
+            "Flying Raijin Jutsu",
+            "Rasengan",
+            "Great Forest Crumbling"
+        ],
+        "combos": [
+            "Kakashi's Legacy",
+            "Team 7 Classic",
+            "Hidden Mist Duo",
+            "Hokage's Will"
+        ],
+        "scrolls": [
+            "9th form: Rengoku",
+            "Lightning Blade: All Out",
+            "Summon Manda",
+            "Amaterasu"
+        ],
+        "items": {
+            "Crystalline Shard": 64,
+            "Zoro's Locket": 2
+        },
+        "rankeditems": []
+    },
+    "1311375059277058158": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu"
+        ],
+        "combos": [],
+        "scrolls": [],
+        "items": {},
+        "rankeditems": []
+    },
+    "889685403278397480": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu"
+        ],
+        "combos": [],
+        "scrolls": [],
+        "items": {},
+        "rankeditems": []
+    },
+    "1431505039263928460": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu"
+        ],
+        "combos": [],
+        "scrolls": [],
+        "items": {},
+        "rankeditems": []
+    },
+    "880223106155806750": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu"
+        ],
+        "combos": [],
+        "scrolls": [],
+        "items": {},
+        "rankeditems": []
+    },
+    "890668763085672458": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu"
+        ],
+        "combos": [],
+        "scrolls": [],
+        "items": {},
+        "rankeditems": []
+    },
+    "1191855993592746134": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu"
+        ],
+        "combos": [],
+        "scrolls": [],
+        "items": {},
+        "rankeditems": []
+    },
+    "1467198271062675468": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu"
+        ],
+        "combos": [],
+        "scrolls": [],
+        "items": {},
+        "rankeditems": []
+    },
+    "1467200660758990922": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu",
+            "Kamehameha",
+            "Getsuga Tensho",
+            "Silent Assassination",
+            "Needle Assault",
+            "Water Dragon Jutsu",
+            "Summon Ninken",
+            "Lightning Blade",
+            "Shadow Clone Jutsu",
+            "Analysis",
+            "Shadow Strangle",
+            "Smoke Bomb"
+        ],
+        "combos": [
+            "Hidden Mist Duo",
+            "Kakashi's Legacy",
+            "Shadow Tactician"
+        ],
+        "scrolls": [],
+        "items": {},
+        "rankeditems": []
+    },
+    "1448652877424758856": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu"
+        ],
+        "combos": [],
+        "scrolls": [],
+        "items": {},
+        "rankeditems": []
+    },
+    "1140404569923395668": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu",
+            "Human Boulder"
+        ],
+        "combos": [
+            "Intermediate Combo"
+        ],
+        "scrolls": [],
+        "items": {},
+        "rankeditems": []
+    },
+    "772230265565216798": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu"
+        ],
+        "combos": [],
+        "scrolls": [],
+        "items": {},
+        "rankeditems": []
+    },
+    "1243438862139916308": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu",
+            "Kirin: Lightning Storm",
+            "Infused Chakra Blade",
+            "Needle Assault",
+            "Rasengan",
+            "One Thousand Years of Death",
+            "Creation Rebirth"
+        ],
+        "combos": [],
+        "scrolls": [
+            "Infused Chakra Blade Scroll"
+        ],
+        "items": {
+            "Crystalline Shard": 1
+        },
+        "rankeditems": []
+    },
+    "881013581364207616": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu"
+        ],
+        "combos": [],
+        "scrolls": [],
+        "items": {},
+        "rankeditems": []
+    },
+    "1442562014328127549": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu",
+            "Puppet Kazekage",
+            "Human Boulder",
+            "Needle Assault",
+            "Kirin: Lightning Storm"
+        ],
+        "combos": [],
+        "scrolls": [],
+        "items": {},
+        "rankeditems": []
+    },
+    "123227974802604034": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu"
+        ],
+        "combos": [],
+        "scrolls": [],
+        "items": {},
+        "rankeditems": []
+    },
+    "1442711547645526097": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu"
+        ],
+        "combos": [],
+        "scrolls": [],
+        "items": {},
+        "rankeditems": []
+    },
+    "1290443658083958857": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu"
+        ],
+        "combos": [],
+        "scrolls": [],
+        "items": {},
+        "rankeditems": []
+    },
+    "1431441368860856392": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu"
+        ],
+        "combos": [],
+        "scrolls": [],
+        "items": {},
+        "rankeditems": []
+    },
+    "1127771123195596830": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu"
+        ],
+        "combos": [],
+        "scrolls": [],
+        "items": {},
+        "rankeditems": []
+    },
+    "1467470156434243617": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu",
+            "Kamehameha"
+        ],
+        "combos": [],
+        "scrolls": [],
+        "items": {},
+        "rankeditems": []
+    },
+    "1467478771878854800": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu",
+            "Flying Raijin Jutsu"
+        ],
+        "combos": [],
+        "scrolls": [],
+        "items": {},
+        "rankeditems": []
+    },
+    "1381411174498832445": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu"
+        ],
+        "combos": [],
+        "scrolls": [],
+        "items": {},
+        "rankeditems": []
+    },
+    "748085133223002123": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu"
+        ],
+        "combos": [],
+        "scrolls": [],
+        "items": {},
+        "rankeditems": []
+    },
+    "1429814567638401179": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu"
+        ],
+        "combos": [],
+        "scrolls": [],
+        "items": {},
+        "rankeditems": []
+    },
+    "1377742986510860429": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu"
+        ],
+        "combos": [],
+        "scrolls": [],
+        "items": {},
+        "rankeditems": []
+    },
+    "1411098236407779548": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu"
+        ],
+        "combos": [],
+        "scrolls": [],
+        "items": {},
+        "rankeditems": []
+    },
+    "919887146180026408": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu"
+        ],
+        "combos": [],
+        "scrolls": [],
+        "items": {},
+        "rankeditems": []
+    },
+    "741142009670271010": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu",
+            "Carnage",
+            "Needle Assault",
+            "One Thousand Years of Death",
+            "Creation Rebirth",
+            "Burning Ash",
+            "Water Dragon Jutsu",
+            "Flying Raijin Jutsu",
+            "Great Forest Crumbling",
+            "Rasenshuriken",
+            "Summon Manda",
+            "Kamui",
+            "Susanoo",
+            "Tsukuyomi",
+            "Almighty Push",
+            "Praise Jashin",
+            "Amaterasu: Infinite Flames",
+            "Summon Ninken",
+            "Lightning Blade",
+            "Shadow Clone Jutsu",
+            "Izanami",
+            "Tenseigan Chakra Mode",
+            "Analysis",
+            "Shadow Strangle",
+            "Smoke Bomb",
+            "Rasengan",
+            "9th form: Rengoku",
+            "The Force: Awakens"
+        ],
+        "combos": [
+            "Intermediate Combo",
+            "Kakashi's Legacy",
+            "Shadow Tactician",
+            "Hokage's Will"
+        ],
+        "scrolls": [
+            "Lightning Blade: All Out",
+            "Kamui",
+            "Susanoo",
+            "Tsukuyomi",
+            "Almighty Push",
+            "Praise Jashin",
+            "Amaterasu: Infinite Flames",
+            "Izanami",
+            "Summon Manda",
+            "Tenseigan Scroll",
+            "Amaterasu"
+        ],
+        "items": {
+            "Crystalline Shard": 31,
+            "Zoro's Locket": 4
+        },
+        "rankeditems": []
+    },
+    "1201212892125610084": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu"
+        ],
+        "combos": [],
+        "scrolls": [],
+        "items": {},
+        "rankeditems": []
+    },
+    "1467587909602509078": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu",
+            "Ninpo: Ascetic Blaze",
+            "Infused Chakra Blade"
+        ],
+        "combos": [],
+        "scrolls": [
+            "Infused Chakra Blade Scroll"
+        ],
+        "items": {
+            "Crystalline Shard": 1
+        },
+        "rankeditems": []
+    },
+    "1023825001268387860": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu"
+        ],
+        "combos": [],
+        "scrolls": [],
+        "items": {},
+        "rankeditems": []
+    },
+    "1467623069274341376": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu"
+        ],
+        "combos": [],
+        "scrolls": [],
+        "items": {},
+        "rankeditems": []
+    },
+    "1467623894839066868": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu"
+        ],
+        "combos": [],
+        "scrolls": [],
+        "items": {},
+        "rankeditems": []
+    },
+    "1467624641387565170": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu"
+        ],
+        "combos": [],
+        "scrolls": [],
+        "items": {},
+        "rankeditems": []
+    },
+    "829809369847431229": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu"
+        ],
+        "combos": [],
+        "scrolls": [],
+        "items": {},
+        "rankeditems": []
+    },
+    "437016873104834561": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu"
+        ],
+        "combos": [],
+        "scrolls": [],
+        "items": {},
+        "rankeditems": []
+    },
+    "1023619464652132412": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu",
+            "Human Boulder",
+            "Eight Gates",
+            "Needle Assault",
+            "Silent Assassination",
+            "Shadow Clone Jutsu",
+            "Fireball Jutsu",
+            "Serpents Wrath",
+            "Kirin"
+        ],
+        "combos": [
+            "Intermediate Combo"
+        ],
+        "scrolls": [],
+        "items": {
+            "Crystalline Shard": 2
+        },
+        "rankeditems": []
+    },
+    "1146966849335074826": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu",
+            "Needle Assault",
+            "Human Boulder",
+            "Seventh Form: Flaming Thunder God",
+            "One Thousand Years of Death",
+            "Creation Rebirth",
+            "Burning Ash",
+            "Amaterasu",
+            "Infused Chakra Blade",
+            "Water Dragon Jutsu",
+            "Flying Raijin Jutsu",
+            "Mystic Palm",
+            "Shadow Clone Jutsu",
+            "Fireball Jutsu",
+            "Summon Ninken",
+            "Analysis",
+            "Thirty Two Palms",
+            "Sixty Four Palms",
+            "Twin Lion Fist",
+            "Sexy Jutsu",
+            "Eight Gates",
+            "Dynamic Entry",
+            "Leaf Whirlwind",
+            "Primary Lotus",
+            "Lightning Blade: All Out",
+            "Great Forest Crumbling",
+            "Rasenshuriken",
+            "Serpents Wrath"
+        ],
+        "combos": [],
+        "scrolls": [],
+        "items": {
+            "Crystalline Shard": 7
+        },
+        "rankeditems": []
+    },
+    "488797920854933504": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu"
+        ],
+        "combos": [],
+        "scrolls": [],
+        "items": {},
+        "rankeditems": []
+    },
+    "1426233098521022637": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu"
+        ],
+        "combos": [],
+        "scrolls": [],
+        "items": {},
+        "rankeditems": []
+    },
+    "881865831783489597": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu"
+        ],
+        "combos": [],
+        "scrolls": [],
+        "items": {},
+        "rankeditems": []
+    },
+    "1130895547251826801": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu"
+        ],
+        "combos": [],
+        "scrolls": [],
+        "items": {},
+        "rankeditems": []
+    },
+    "1468299518490574909": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu",
+            "One Thousand Years of Death"
+        ],
+        "combos": [],
+        "scrolls": [],
+        "items": {},
+        "rankeditems": []
+    },
+    "1468301363489276057": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu"
+        ],
+        "combos": [],
+        "scrolls": [],
+        "items": {},
+        "rankeditems": []
+    },
+    "553999404001001482": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu",
+            "Planetary Devastation",
+            "Infused Chakra Blade",
+            "Needle Assault",
+            "One Thousand Years of Death",
+            "Creation Rebirth",
+            "Fireball Jutsu",
+            "Serpents Wrath",
+            "Lightning Blade",
+            "Lightning Blade: All Out",
+            "Burning Ash",
+            "Ephemeral",
+            "Amaterasu",
+            "Water Dragon Jutsu",
+            "Flying Raijin Jutsu",
+            "Great Forest Crumbling",
+            "Tenseigan Chakra Mode",
+            "Rasenshuriken",
+            "Mystic Palm"
+        ],
+        "combos": [
+            "Intermediate Combo"
+        ],
+        "scrolls": [
+            "Infused Chakra Blade Scroll",
+            "Lightning Blade: All Out",
+            "Amaterasu"
+        ],
+        "items": {
+            "Crystalline Shard": 65,
+            "Zoro's Locket": 2
+        },
+        "rankeditems": []
+    },
+    "1303374282130198538": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu",
+            "Amaterasu: Infinite Flames",
+            "Infused Chakra Blade"
+        ],
+        "combos": [],
+        "scrolls": [
+            "Summon Manda"
+        ],
+        "items": {
+            "Crystalline Shard": 1
+        },
+        "rankeditems": []
+    },
+    "1302557566672310294": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu",
+            "Infused Chakra Blade",
+            "Kirin",
+            "Needle Assault",
+            "Ephemeral",
+            "Puppet Kazekage",
+            "Lightning Blade: All Out",
+            "Twin Lion Fist",
+            "Silent Assassination",
+            "Serpents Wrath",
+            "One Thousand Years of Death"
+        ],
+        "combos": [
+            "Intermediate Combo"
+        ],
+        "scrolls": [],
+        "items": {
+            "Crystalline Shard": 3
+        },
+        "rankeditems": []
+    },
+    "1320073283982327884": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu",
+            "Twin Lion Fist",
+            "Infused Chakra Blade",
+            "Needle Assault",
+            "One Thousand Years of Death",
+            "Creation Rebirth",
+            "Fireball Jutsu",
+            "Rasengan",
+            "Analysis",
+            "Burning Ash",
+            "Water Dragon Jutsu",
+            "Flying Raijin Jutsu",
+            "Great Forest Crumbling",
+            "Rasenshuriken",
+            "Susanoo",
+            "Kamui",
+            "Ikari",
+            "Serpents Wrath",
+            "Shadow Strangle",
+            "Smoke Bomb",
+            "Summon Ninken",
+            "Lightning Blade",
+            "Shadow Clone Jutsu",
+            "Silent Assassination",
+            "Cherry Blossom Impact",
+            "Almighty Push"
+        ],
+        "combos": [
+            "Shadow Tactician",
+            "Kakashi's Legacy",
+            "Hidden Mist Duo",
+            "Team 7 Classic"
+        ],
+        "scrolls": [
+            "Infused Chakra Blade Scroll",
+            "Tenseigan Scroll",
+            "Susanoo",
+            "Kamui",
+            "Almighty Push"
+        ],
+        "items": {
+            "Crystalline Shard": 7
+        },
+        "rankeditems": []
+    },
+    "1266483426555334688": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu"
+        ],
+        "combos": [],
+        "scrolls": [],
+        "items": {},
+        "rankeditems": []
+    },
+    "552026016827310081": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu",
+            "Infused Chakra Blade",
+            "Smoke Bomb",
+            "Fireball Jutsu",
+            "Shadow Clone Jutsu",
+            "Thirty Two Palms"
+        ],
+        "combos": [],
+        "scrolls": [],
+        "items": {
+            "Crystalline Shard": 1,
+            "Zoro's Locket": 1
+        },
+        "rankeditems": []
+    },
+    "1369151302893834242": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu"
+        ],
+        "combos": [],
+        "scrolls": [],
+        "items": {},
+        "rankeditems": []
+    },
+    "834300675659530261": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu"
+        ],
+        "combos": [],
+        "scrolls": [],
+        "items": {},
+        "rankeditems": []
+    },
+    "619879176316649482": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu"
+        ],
+        "combos": [],
+        "scrolls": [],
+        "items": {},
+        "rankeditems": []
+    },
+    "776482384099016737": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu"
+        ],
+        "combos": [],
+        "scrolls": [],
+        "items": {},
+        "rankeditems": []
+    },
+    "1451906526209114132": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu"
+        ],
+        "combos": [],
+        "scrolls": [
+            "Infused Chakra Blade Scroll"
+        ],
+        "items": {},
+        "rankeditems": []
+    },
+    "749126543342567466": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu"
+        ],
+        "combos": [],
+        "scrolls": [],
+        "items": {},
+        "rankeditems": []
+    },
+    "529892643165962250": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu"
+        ],
+        "combos": [],
+        "scrolls": [],
+        "items": {},
+        "rankeditems": []
+    },
+    "394244791224762369": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu"
+        ],
+        "combos": [],
+        "scrolls": [],
+        "items": {},
+        "rankeditems": []
+    },
+    "542377160334114816": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu"
+        ],
+        "combos": [],
+        "scrolls": [],
+        "items": {},
+        "rankeditems": []
+    },
+    "1284426943294341204": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu"
+        ],
+        "combos": [],
+        "scrolls": [],
+        "items": {},
+        "rankeditems": []
+    },
+    "1301191654291804241": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu",
+            "Thirty Two Palms"
+        ],
+        "combos": [],
+        "scrolls": [],
+        "items": {},
+        "rankeditems": []
+    },
+    "1228254807442063390": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu"
+        ],
+        "combos": [],
+        "scrolls": [],
+        "items": {},
+        "rankeditems": []
+    },
+    "819435695478800414": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu",
+            "Needle Assault",
+            "Bull Charge",
+            "Infused Chakra Blade",
+            "Shadow Clone Jutsu",
+            "Rasengan",
+            "Analysis",
+            "One Thousand Years of Death",
+            "Creation Rebirth",
+            "Burning Ash",
+            "Water Dragon Jutsu",
+            "Kamehameha",
+            "Silent Assassination",
+            "Shadow Strangle",
+            "Smoke Bomb",
+            "Flying Raijin Jutsu",
+            "Great Forest Crumbling",
+            "Mystic Palm",
+            "Rasenshuriken"
+        ],
+        "combos": [
+            "Hidden Mist Duo",
+            "Shadow Tactician"
+        ],
+        "scrolls": [
+            "Infused Chakra Blade Scroll"
+        ],
+        "items": {},
+        "rankeditems": []
+    },
+    "1471592850197053581": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu",
+            "Last Resort"
+        ],
+        "combos": [],
+        "scrolls": [],
+        "items": {},
+        "rankeditems": []
+    },
+    "1471596073272344818": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu",
+            "Shadow Clone Jutsu"
+        ],
+        "combos": [],
+        "scrolls": [],
+        "items": {},
+        "rankeditems": []
+    },
+    "1471597546135879741": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu",
+            "Puppet Kazekage"
+        ],
+        "combos": [],
+        "scrolls": [],
+        "items": {},
+        "rankeditems": []
+    },
+    "1208214039545651361": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu"
+        ],
+        "combos": [],
+        "scrolls": [],
+        "items": {},
+        "rankeditems": []
+    },
+    "782907937290846228": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu",
+            "Full Power Strike",
+            "Silent Assassination",
+            "Serpents Wrath",
+            "Infused Chakra Blade",
+            "One Thousand Years of Death",
+            "Creation Rebirth"
+        ],
+        "combos": [],
+        "scrolls": [],
+        "items": {
+            "Crystalline Shard": 1
+        },
+        "rankeditems": []
+    },
+    "1446536644286087280": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu"
+        ],
+        "combos": [],
+        "scrolls": [],
+        "items": {},
+        "rankeditems": []
+    },
+    "1056629700992176170": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu",
+            "Summon Manda",
+            "Analysis",
+            "Puppet Kazekage",
+            "Mystic Palm",
+            "Shadow Clone Jutsu",
+            "Needle Assault",
+            "Silent Assassination",
+            "Water Dragon Jutsu",
+            "Infused Chakra Blade",
+            "One Thousand Years of Death",
+            "Creation Rebirth",
+            "Burning Ash",
+            "Fireball Jutsu",
+            "Serpents Wrath",
+            "Flying Raijin Jutsu",
+            "Great Forest Crumbling",
+            "Rasengan",
+            "Cherry Blossom Impact"
+        ],
+        "combos": [
+            "Hidden Mist Duo",
+            "Hokage's Will",
+            "Team 7 Classic"
+        ],
+        "scrolls": [],
+        "items": {
+            "Crystalline Shard": 1
+        },
+        "rankeditems": []
+    },
+    "679164230716620811": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu"
+        ],
+        "combos": [],
+        "scrolls": [],
+        "items": {},
+        "rankeditems": []
+    },
+    "1361992385365676053": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu",
+            "Susanoo"
+        ],
+        "combos": [],
+        "scrolls": [],
+        "items": {},
+        "rankeditems": []
+    },
+    "862455823099363368": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu",
+            "Sand Bullet"
+        ],
+        "combos": [],
+        "scrolls": [],
+        "items": {},
+        "rankeditems": []
+    },
+    "743404375740776518": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu"
+        ],
+        "combos": [],
+        "scrolls": [],
+        "items": {},
+        "rankeditems": []
+    },
+    "518732237303447592": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu",
+            "Needle Assault",
+            "Corrupted Ice Prison",
+            "Infused Chakra Blade",
+            "Analysis",
+            "Silent Assassination",
+            "One Thousand Years of Death",
+            "Creation Rebirth",
+            "Burning Ash",
+            "Water Dragon Jutsu",
+            "Shadow Clone Jutsu",
+            "Lightning Blade",
+            "Infused Chakra Blade: Enhanced",
+            "Mystic Palm Enhanced",
+            "Flying Raijin Jutsu",
+            "Great Forest Crumbling",
+            "Rasenshuriken",
+            "Puppet Kazekage",
+            "Lightning Blade: All Out",
+            "Tenseigan Chakra Mode",
+            "Kamui",
+            "Praise Jashin"
+        ],
+        "combos": [],
+        "scrolls": [
+            "Infused Chakra Blade Scroll",
+            "Tenseigan Scroll",
+            "Kamui",
+            "Praise Jashin",
+            "Amaterasu",
+            "9th form: Rengoku"
+        ],
+        "items": {
+            "Crystalline Shard": 16
+        },
+        "rankeditems": []
+    },
+    "1050314706675585094": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu"
+        ],
+        "combos": [],
+        "scrolls": [],
+        "items": {},
+        "rankeditems": []
+    },
+    "1408981864600834159": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu"
+        ],
+        "combos": [],
+        "scrolls": [],
+        "items": {},
+        "rankeditems": []
+    },
+    "822757869253689356": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu",
+            "Emperor of the skies"
+        ],
+        "combos": [],
+        "scrolls": [],
+        "items": {},
+        "rankeditems": []
+    },
+    "1368549025787150356": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu",
+            "Tiger Hunt",
+            "Infused Chakra Blade"
+        ],
+        "combos": [],
+        "scrolls": [],
+        "items": {},
+        "rankeditems": []
+    },
+    "147153347680534528": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu",
+            "Needle Assault"
+        ],
+        "combos": [],
+        "scrolls": [],
+        "items": {},
+        "rankeditems": []
+    },
+    "211707675640070146": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu"
+        ],
+        "combos": [],
+        "scrolls": [],
+        "items": {},
+        "rankeditems": []
+    },
+    "837658052584407050": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu",
+            "Needle Assault"
+        ],
+        "combos": [
+            "Intermediate Combo"
+        ],
+        "scrolls": [],
+        "items": {},
+        "rankeditems": []
+    },
+    "1407001668012212285": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu",
+            "Primary Lotus",
+            "Infused Chakra Blade",
+            "Fireball Jutsu"
+        ],
+        "combos": [],
+        "scrolls": [],
+        "items": {},
+        "rankeditems": []
+    },
+    "1267125594433523895": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu",
+            "Summon Ninken",
+            "Infused Chakra Blade",
+            "Shadow Clone Jutsu"
+        ],
+        "combos": [],
+        "scrolls": [],
+        "items": {},
+        "rankeditems": []
+    },
+    "1073749595600977970": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu",
+            "Needle Assault"
+        ],
+        "combos": [],
+        "scrolls": [
+            "Infused Chakra Blade Scroll"
+        ],
+        "items": {},
+        "rankeditems": []
+    },
+    "856856850665046016": {
+        "usersjutsu": [
+            "Attack",
+            "Transformation Jutsu"
+        ],
+        "combos": [],
+        "scrolls": [],
+        "items": {},
+        "rankeditems": []
     }
 }
