@@ -11,16 +11,31 @@ const allowedTeacherIds = ["835408109899219004", "961918563382362122"];
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('teach')
-        .setDescription('[ADMIN] Teach a jutsu to a user')
-        .addUserOption(option => 
-            option.setName('student')
-                .setDescription('User to teach the jutsu to')
-                .setRequired(true))
-        .addStringOption(option =>
-            option.setName('jutsu')
-                .setDescription('Jutsu to teach')
-                .setRequired(true)
-                .setAutocomplete(true)),
+        .setDescription('[ADMIN] Manage user jutsu')
+        .addSubcommand(sub =>
+            sub.setName('give')
+                .setDescription('Teach a jutsu to a user')
+                .addUserOption(option => 
+                    option.setName('student')
+                        .setDescription('User to teach the jutsu to')
+                        .setRequired(true))
+                .addStringOption(option =>
+                    option.setName('jutsu')
+                        .setDescription('Jutsu to teach')
+                        .setRequired(true)
+                        .setAutocomplete(true)))
+        .addSubcommand(sub =>
+            sub.setName('remove')
+                .setDescription('Remove a jutsu from a user')
+                .addUserOption(option => 
+                    option.setName('student')
+                        .setDescription('User to remove the jutsu from')
+                        .setRequired(true))
+                .addStringOption(option =>
+                    option.setName('jutsu')
+                        .setDescription('Jutsu to remove')
+                        .setRequired(true)
+                        .setAutocomplete(true))),
 
     async autocomplete(interaction) {
         try {
@@ -48,10 +63,14 @@ module.exports = {
         try {
             // Permission check
             if (!allowedTeacherIds.includes(interaction.user.id)) {
-                return interaction.reply("❌ You are not authorized to use this command.");
+                return interaction.reply({ content: "❌ You are not authorized to use this command.", ephemeral: true });
             }
 
-            // Load all data files with error handling
+            const subcommand = interaction.options.getSubcommand();
+            const student = interaction.options.getUser('student');
+            const jutsuKey = interaction.options.getString('jutsu');
+
+            // Load files
             let jutsus, jutsuData;
             try {
                 jutsus = JSON.parse(fs.readFileSync(jutsusPath));
@@ -61,39 +80,52 @@ module.exports = {
                 return interaction.reply("❌ Failed to load data files.");
             }
 
-            // Get command options
-            const student = interaction.options.getUser('student');
-            const jutsuKey = interaction.options.getString('jutsu');
-
-            // Validate jutsu exists in global storage
+            // Validate jutsu exists
             if (!jutsus[jutsuKey]) {
                 return interaction.reply("❌ That jutsu doesn't exist in the global registry.");
             }
 
             const jutsuName = jutsus[jutsuKey].name;
 
-            // Initialize student's jutsu registry if needed
+            // Ensure student has registry
             if (!jutsuData[student.id]) {
                 jutsuData[student.id] = { usersjutsu: [] };
             }
 
-            // Check if student already knows the jutsu
-            if (jutsuData[student.id].usersjutsu.includes(jutsuKey)) {
-                return interaction.reply(`ℹ️ ${student.username} already knows ${jutsuName}.`);
-            }
+            // =========================
+            // GIVE JUTSU
+            // =========================
+            if (subcommand === 'give') {
 
-            // Add jutsu to student's registry
-            jutsuData[student.id].usersjutsu.push(jutsuKey);
+                if (jutsuData[student.id].usersjutsu.includes(jutsuKey)) {
+                    return interaction.reply(`ℹ️ ${student.username} already knows ${jutsuName}.`);
+                }
 
-            // Save changes with error handling
-            try {
+                jutsuData[student.id].usersjutsu.push(jutsuKey);
+
                 fs.writeFileSync(jutsuDataPath, JSON.stringify(jutsuData, null, 2));
-            } catch (err) {
-                console.error('File write error:', err);
-                return interaction.reply("❌ Failed to save changes to database.");
+
+                return interaction.reply(`✅ Successfully taught ${jutsuName} to ${student.username}!`);
             }
 
-            return interaction.reply(`✅ Successfully taught ${jutsuName} to ${student.username}!`);
+            // =========================
+            // REMOVE JUTSU (UNTEACH)
+            // =========================
+            if (subcommand === 'remove') {
+
+                if (!jutsuData[student.id].usersjutsu.includes(jutsuKey)) {
+                    return interaction.reply(`ℹ️ ${student.username} does not know ${jutsuName}.`);
+                }
+
+                // Remove the jutsu
+                jutsuData[student.id].usersjutsu = 
+                    jutsuData[student.id].usersjutsu.filter(j => j !== jutsuKey);
+
+                fs.writeFileSync(jutsuDataPath, JSON.stringify(jutsuData, null, 2));
+
+                return interaction.reply(`🗑️ Successfully removed ${jutsuName} from ${student.username}!`);
+            }
+
         } catch (error) {
             console.error('Error in teach command:', error);
             return interaction.reply("❌ An unexpected error occurred while processing this command.");
