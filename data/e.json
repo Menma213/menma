@@ -1,4410 +1,4022 @@
 {
-    "843680216022122516": {
-        "usersjutsu": [
-            "Transformation Jutsu",
-            "Cherry Blossom Impact",
-            "asura",
-            "Analysis",
-            "Fireball Jutsu",
-            "Shadow Clone Jutsu",
-            "Mystic Palm",
-            "Summon Ninken",
-            "Parry"
-        ],
-        "scrolls": [
-            "Needle Assault Scroll",
-            "Infused Chakra Blade Scroll"
-        ],
-        "combos": [
-            "Intermediate Combo",
-            "Basic Combo"
-        ]
-    },
-    "799979545046155284": {
-        "usersjutsu": [
-            "Transformation Jutsu",
-            "asura",
-            "Serpents Wrath",
-            "Shadow Clone Jutsu",
-            "Fireball Jutsu",
-            "Analysis",
-            "Mystic Palms",
-            "Parry",
-            "Mystic Palm",
-            "Smoke Bomb",
-            "Sexy Jutsu",
-            "Rasenshuriken",
-            "Flying Raijin Jutsu",
-            "Summon Ninken",
-            "Infused Chakra Blade",
-            "One Thousand Years of Death",
-            "Creation Rebirth",
-            "Burning Ash",
-            "Water Dragon Jutsu",
-            "Great Forest Crumbling",
-            "Black Flash: Deaths Awakened Itself",
-            "Lightning Hound",
-            "Shadow Clone Jutsu: 1000 clones",
-            "Kirin: Lightning Storm",
-            "Explosive Paper Clone",
-            "Summon Manda",
-            "Tenseigan Chakra Mode",
-            "Amaterasu",
-            "Twin Lion Fist",
-            "Demonic Transformation",
-            "Asura's Blade of Execution",
-            "9th form: Rengoku",
-            "Improved Mystic Palm",
-            "Meteoric Burst",
-            "Guillotine Drop",
-            "Eight Gates",
-            "Snow Clone",
-            "Planetary Devastation",
-            "Blizzard Strike",
-            "Ice Shards",
-            "Ice Prison",
-            "Primary Lotus",
-            "Twin Rising Dragons",
-            "Crystal Palace",
-            "Wheel of Fate Adaptation",
-            "World Cutting Slash",
-            "Pee Pee Poo Poo",
-            "Infused Chakra Blade: Enhanced",
-            "Sixty Four Palms",
-            "Mystic Palm Enhanced",
-            "Susanoo",
-            "Amaterasu: Infinite Flames",
-            "Tsukuyomi",
-            "Almighty Push",
-            "Praise Jashin",
-            "Kamui",
-            "Shadow Strangle",
-            "Lightning Blade",
-            "Silent Assassination",
-            "Needle Assault",
-            "Gum Gum Gatling",
-            "Cherry Blossom Impact",
-            "Izanami"
-        ],
-        "combos": [
-            "Basic Combo",
-            "Intermediate Combo",
-            "Shadow Tactician",
-            "Kakashi's Legacy",
-            "Hidden Mist Duo",
-            "Team 7 Classic"
-        ],
-        "scrolls": [
-            "Needle Assault Scroll",
-            "Silent Assassination Scroll",
-            "Infused Chakra Blade Scroll",
-            "Chidori: Enchanced",
-            "Tenseigan Scroll",
-            "Amaterasu",
-            "Summon Manda",
-            "Asura's Blade of Execution",
-            "9th form: Rengoku",
-            "Lightning Blade: All Out",
-            "Almighty Push",
-            "Amaterasu: Infinite Flames",
-            "Tsukuyomi",
-            "Kamui",
-            "Praise Jashin",
-            "Susanoo",
-            "Izanami"
-        ],
-        "items": {
-            "Crystalline Shard": 535,
-            "Ay Token": 1,
-            "Zoro's Locket": 9,
-            "Christmas Token": 11,
-            "wood": 35
-        }
-    },
-    "737913304214667345": {
-        "usersjutsu": [
-            "Transformation Jutsu",
-            "asura",
-            "One Thousand Years of Death",
-            "Creation Rebirth",
-            "Burning Ash",
-            "Water Dragon Jutsu",
-            "Flying Raijin Jutsu",
-            "Great Forest Crumbling",
-            "Rasenshuriken"
-        ],
-        "scrolls": [
-            "Serpents Wrath Scroll"
-        ]
-    },
-    "1112750369609633792": {
-        "usersjutsu": [
-            "Transformation Jutsu",
-            "asura",
-            "Sexy Jutsu",
-            "Summon Ninken",
-            "Shadow Clone Jutsu",
-            "Silent Assassination",
-            "Serpents Wrath",
-            "Needle Assault"
-        ],
-        "scrolls": []
+    "1018526599043354725": {
+        "level": 1,
+        "exp": 555,
+        "money": 15735,
+        "ramen": 1,
+        "ss": null,
+        "elo": null
     },
     "920673413268377670": {
-        "usersjutsu": [
-            "Transformation Jutsu",
-            "asura"
-        ],
-        "scrolls": [
-            "Needle Assault Scroll"
-        ]
+        "level": 1,
+        "exp": 980,
+        "money": 16550,
+        "ramen": 1,
+        "ss": null,
+        "elo": null
     },
-    "728522737009819649": {
-        "usersjutsu": [
-            "Transformation Jutsu",
-            "Needle Assault",
-            "Infused Chakra Blade",
-            "One Thousand Years of Death",
-            "Creation Rebirth"
-        ],
-        "scrolls": [
-            "Needle Assault Scroll"
-        ],
-        "items": {
-            "Crystalline Shard": 1
-        }
+    "1112750369609633792": {
+        "level": 16,
+        "exp": 41865,
+        "money": 19430,
+        "ramen": 1,
+        "ss": null,
+        "elo": null
     },
     "826183795417022555": {
-        "usersjutsu": [
-            "Transformation Jutsu",
-            "Shadow Clone Jutsu",
-            "Serpents Wrath"
-        ],
-        "combos": [
-            "Basic Combo"
-        ]
-    },
-    "1355490065899585737": {
-        "usersjutsu": [
-            "asura",
-            "Transformation Jutsu",
-            "Mystic Palm",
-            "Creation Rebirth",
-            "Water Prison",
-            "Rasengan",
-            "Water Dragon Jutsu",
-            "Great Forest Crumbling",
-            "Reaper Death Seal",
-            "Flying Raijin Jutsu",
-            "Analysis",
-            "Infused Chakra Blade",
-            "Sexy Jutsu",
-            "Smoke Bomb",
-            "Attack",
-            "Rasenshuriken",
-            "Fireball Jutsu",
-            "Shadow Clone Jutsu",
-            "Silent Assassination",
-            "Kirin",
-            "Summon Ninken",
-            "Needle Assault",
-            "Lightning Blade",
-            "One Thousand Years of Death",
-            "Burning Ash",
-            "Infused Chakra Blade",
-            "Infused Chakra Blade",
-            "The Grand Rebellion"
-        ],
-        "combos": [
-            "Basic Combo"
-        ],
-        "scrolls": [
-            "Needle Assault Scroll",
-            "Serpents Wrath Scroll",
-            "Infused Chakra Blade Scroll",
-            "Kamehameha Scroll"
-        ],
-        "items": {
-            "Crystalline Shard": 2
-        }
-    },
-    "818893461881094175": {
-        "usersjutsu": [
-            "Transformation Jutsu",
-            "Shadow Clone Jutsu",
-            "Analysis",
-            "Mystic Palm",
-            "Summon Ninken",
-            "Fireball Jutsu",
-            "Parry",
-            "Infused Chakra Blade",
-            "One Thousand Years of Death",
-            "Creation Rebirth",
-            "Burning Ash",
-            "Lightning Hound",
-            "Shadow Clone Jutsu: 1000 clones",
-            "Kirin: Lightning Storm",
-            "Puppet Kazekage",
-            "Set Your Face Ablaze",
-            "Water Dragon Jutsu",
-            "Flying Raijin Jutsu",
-            "Great Forest Crumbling",
-            "Explosive Paper Clone",
-            "Tenseigan Chakra Mode",
-            "Human Boulder",
-            "Kamehameha",
-            "9th form: Rengoku",
-            "Amaterasu",
-            "Rasenshuriken",
-            "A Twins Sacrifice",
-            "Dynamic Entry",
-            "Infused Chakra Blade: Enhanced",
-            "Summon Manda",
-            "Leaf Whirlwind",
-            "Guillotine Drop",
-            "Sixty Four Palms",
-            "Lightning Blade",
-            "Lightning Blade: All Out",
-            "Cherry Blossom Impact",
-            "Sexy Jutsu",
-            "Kirin",
-            "Asura's Blade of Execution",
-            "Shadow Possession",
-            "Rasengan",
-            "Primary Lotus",
-            "Ice Prison",
-            "Twin Rising Dragons",
-            "Planetary Devastation",
-            "Blizzard Strike",
-            "Crystal Palace",
-            "Rock Throw",
-            "Needle Assault",
-            "Shadow Strangle",
-            "Eight Gates",
-            "Serpents Wrath",
-            "Ephemeral",
-            "Twin Lion Fist",
-            "Ruri'iro Kujaku",
-            "FLOWING RED SCALE",
-            "PIERCING BLOOD: CONVERGENCE MAXIMUM",
-            "Mystic Palm Enhanced",
-            "Ninpo: Ascetic Blaze",
-            "Amaterasu: Infinite Flames",
-            "Susanoo",
-            "Kamui",
-            "Praise Jashin",
-            "Tsukuyomi",
-            "Almighty Push",
-            "Izanami",
-            "Raiders Tower",
-            "Dimensional Slash"
-        ],
-        "combos": [
-            "Basic Combo",
-            "Intermediate Combo",
-            "Hokage's Will"
-        ],
-        "scrolls": [
-            "Chidori: Enchanced",
-            "Tenseigan Scroll",
-            "Summon Manda",
-            "Amaterasu",
-            "9th form: Rengoku",
-            "Lightning Blade: All Out",
-            "Asura's Blade of Execution",
-            "Susanoo",
-            "Kamui",
-            "Amaterasu: Infinite Flames",
-            "Praise Jashin",
-            "Tsukuyomi",
-            "Almighty Push",
-            "Izanami"
-        ],
-        "items": {
-            "Crystalline Shard": 341,
-            "Ay Token": 1,
-            "Zoro's Locket": 4,
-            "Christmas Token": 0
-        }
-    },
-    "1239968214130102424": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ],
-        "scrolls": [
-            "Needle Assault Scroll",
-            "Infused Chakra Blade Scroll"
-        ]
-    },
-    "1354836327467847864": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
-    },
-    "1239065381373476894": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ],
-        "scrolls": [
-            "Needle Assault Scroll",
-            "Silent Assassination Scroll"
-        ]
+        "level": 1,
+        "exp": 760,
+        "money": 16040,
+        "ramen": 1,
+        "ss": null,
+        "elo": null
     },
     "1383619165843230730": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 0,
+        "money": 10000,
+        "ramen": 1,
+        "ss": null,
+        "elo": null
     },
     "1071680680616001557": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ],
-        "scrolls": [
-            "Needle Assault Scroll"
-        ]
-    },
-    "1311760847307145257": {
-        "usersjutsu": [
-            "Infused Chakra Blade",
-            "Rasenshuriken",
-            "Fireball Jutsu",
-            "Silent Assassination",
-            "Attack",
-            "Sexy Jutsu",
-            "Needle Assault",
-            "Water Dragon Jutsu",
-            "Kirin",
-            "Flying Raijin Jutsu",
-            "Cherry Blossom Impact",
-            "Lightning Blade",
-            "Summon Ninken",
-            "Smoke Bomb",
-            "Creation Rebirth",
-            "Serpents Wrath",
-            "Transformation Jutsu",
-            "Great Forest Crumbling",
-            "Analysis",
-            "asura"
-        ],
-        "scrolls": [
-            "Needle Assault Scroll"
-        ]
+        "level": 1,
+        "exp": 430,
+        "money": 15520,
+        "ramen": 1,
+        "ss": null,
+        "elo": null
     },
     "639430297103892540": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 0,
+        "money": 10000,
+        "ramen": 1,
+        "ss": null,
+        "elo": null
     },
     "1248723016985219197": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 0,
+        "money": 10000,
+        "ramen": 1,
+        "ss": null,
+        "elo": null
     },
     "1356764657708302558": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 0,
+        "money": 10000,
+        "ramen": 1,
+        "ss": null,
+        "elo": null
     },
     "527195539268173834": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 1135,
+        "money": 16650,
+        "ramen": 1,
+        "ss": null,
+        "elo": null
     },
     "771097474798452747": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 0,
+        "money": 10000,
+        "ramen": 1,
+        "ss": null,
+        "elo": null
     },
     "939113531440254997": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
-    },
-    "709880778313433089": {
-        "usersjutsu": [
-            "Transformation Jutsu",
-            "Fireball Jutsu",
-            "Needle Assault"
-        ],
-        "scrolls": [
-            "Infused Chakra Blade Scroll"
-        ]
+        "level": 1,
+        "exp": 229.5851447748956,
+        "money": 16735,
+        "ramen": 1,
+        "ss": null,
+        "elo": null
     },
     "744791232189825176": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
-    },
-    "874591871412879361": {
-        "usersjutsu": [
-            "Transformation Jutsu",
-            "Needle Assault",
-            "asura",
-            "One Thousand Years of Death",
-            "Creation Rebirth",
-            "Burning Ash",
-            "Water Dragon Jutsu",
-            "Flying Raijin Jutsu",
-            "Great Forest Crumbling",
-            "Rasenshuriken",
-            "Analysis",
-            "Mystic Palm",
-            "Summon Ninken",
-            "Shadow Clone Jutsu",
-            "Fireball Jutsu",
-            "Infused Chakra Blade",
-            "Thunder Shock",
-            "Ephemeral",
-            "Lightning Blade: All Out",
-            "Eight Gates",
-            "Mystic Palm Enhanced",
-            "Serpents Wrath",
-            "Shadow Strangle",
-            "Dynamic Entry",
-            "Sixty Four Palms",
-            "Amaterasu: Infinite Flames",
-            "Asura's Blade of Execution",
-            "Praise Jashin",
-            "Susanoo",
-            "Tenseigan Chakra Mode",
-            "Puppet Kazekage",
-            "Infused Chakra Blade: Enhanced",
-            "Cherry Blossom Impact",
-            "Detroit Smash",
-            "Gum Gum Gatling",
-            "Smoke Bomb",
-            "Amaterasu",
-            "Rasengan",
-            "Silent Assassination",
-            "Lightning Blade",
-            "Iai Chop Form 7:Nichirin",
-            "Izanami"
-        ],
-        "scrolls": [
-            "Serpents Wrath Scroll",
-            "9th form: Rengoku",
-            "Amaterasu: Infinite Flames",
-            "Praise Jashin",
-            "Susanoo",
-            "Tenseigan Scroll",
-            "Izanami",
-            "Amaterasu"
-        ],
-        "items": {
-            "Crystalline Shard": 7,
-            "Zoro's Locket": 2
-        },
-        "combos": [
-            "Team 7 Classic",
-            "Shadow Tactician",
-            "Hokage's Will",
-            "Hidden Mist Duo",
-            "Kakashi's Legacy"
-        ]
+        "level": 1,
+        "exp": 100,
+        "money": 15000,
+        "ramen": 1,
+        "ss": null,
+        "elo": null
     },
     "701643179212013568": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
-    },
-    "254833691438743552": {
-        "usersjutsu": [
-            "Transformation Jutsu",
-            "asura",
-            "Lord of Bloodsea",
-            "Heaven Slaughter",
-            "One Thousand Years of Death",
-            "Creation Rebirth",
-            "Lightning Hound",
-            "Shadow Clone Jutsu: 1000 clones",
-            "Explosive Paper Clone",
-            "Kirin: Lightning Storm",
-            "Guillotine Drop"
-        ],
-        "scrolls": [
-            "Tenseigan Scroll"
-        ],
-        "items": {
-            "Crystalline Shard": 4105,
-            "Ay Token": 2785
-        }
+        "level": 1,
+        "exp": 100,
+        "money": 15000,
+        "ramen": 1,
+        "ss": null,
+        "elo": null
     },
     "554444611226173460": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ],
-        "scrolls": [
-            "Needle Assault Scroll"
-        ]
+        "level": 1,
+        "exp": 555,
+        "money": 15735,
+        "ramen": 1,
+        "ss": null,
+        "elo": null
+    },
+    "254833691438743552": {
+        "level": 200,
+        "exp": 11150,
+        "money": 40681155,
+        "ramen": 378,
+        "ss": 100,
+        "elo": 40,
+        "backup": {
+            "health": 21744,
+            "power": 17308,
+            "defense": 16332,
+            "chakra": 15
+        }
+    },
+    "799979545046155284": {
+        "level": 905,
+        "exp": 26976.5,
+        "money": 75228379,
+        "ramen": 479,
+        "ss": 37,
+        "elo": 60,
+        "backup": {
+            "health": 100395,
+            "power": 124894,
+            "defense": 113312,
+            "chakra": 15
+        },
+        "lastClaim": "2026-02-18T04:49:52.787Z",
+        "nextClaim": "2026-02-19T04:49:52.787Z",
+        "power": "25000",
+        "premiumRoles": [],
+        "missions_completed": 1220,
+        "adtokens": 62
+    },
+    "1311760847307145257": {
+        "level": 1,
+        "exp": 0.1,
+        "money": 14959,
+        "ramen": 1,
+        "ss": null,
+        "elo": null
     },
     "880925257836408882": {
-        "usersjutsu": [],
-        "scrolls": [
-            "Needle Assault Scroll"
-        ]
-    },
-    "1210567723097001996": {
-        "usersjutsu": [],
-        "scrolls": [
-            "Needle Assault Scroll"
-        ]
-    },
-    "1397418229642559629": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
-    },
-    "966850707674267728": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
-    },
-    "1042609880021876836": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
-    },
-    "1391135014552342660": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
-    },
-    "1394844944233009243": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
-    },
-    "770828909251919893": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
-    },
-    "1252635305178042390": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
-    },
-    "615547555807494175": {
-        "usersjutsu": [
-            "Transformation Jutsu",
-            "Twin Rising Dragons",
-            "Ice Prison",
-            "Explosive Paper Clone",
-            "Carnage",
-            "One Thousand Years of Death",
-            "Creation Rebirth",
-            "Burning Ash",
-            "Serpents Wrath",
-            "Almighty Push",
-            "Water Dragon Jutsu"
-        ],
-        "items": {
-            "Christmas Token": 70
-        },
-        "scrolls": [
-            "Almighty Push",
-            "Tenseigan Scroll"
-        ]
-    },
-    "1369736280807575552": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
-    },
-    "1121181029579886612": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
-    },
-    "1368966351103856753": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
-    },
-    "776457117515251712": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ],
-        "scrolls": []
-    },
-    "903759245034536980": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ],
-        "scrolls": []
-    },
-    "994101966395416598": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
-    },
-    "1303128250079383583": {
-        "usersjutsu": [
-            "Transformation Jutsu",
-            "Infused Chakra Blade",
-            "One Thousand Years of Death",
-            "Creation Rebirth",
-            "Burning Ash",
-            "Fireball Jutsu",
-            "Analysis",
-            "Shadow Clone Jutsu",
-            "Mystic Palm",
-            "Summon Ninken",
-            "Shadow Clone Jutsu: 1000 clones",
-            "Lightning Hound",
-            "9th form: Rengoku",
-            "Explosive Paper Clone",
-            "Kirin: Lightning Storm",
-            "Amaterasu",
-            "Blades of Judgement",
-            "Tenseigan Chakra Mode",
-            "Water Dragon Jutsu",
-            "Flying Raijin Jutsu",
-            "Great Forest Crumbling",
-            "Rasenshuriken",
-            "Kaioken",
-            "Limit Ultra Kamehameha",
-            "Punisher Shield",
-            "Singularity Pulse: Requiem of the Stars",
-            "Snow Clone",
-            "Blizzard Strike",
-            "Ice Shards",
-            "Ice Prison",
-            "Primary Lotus",
-            "Planetary Devastation",
-            "Twin Rising Dragons",
-            "Seventh Form: Haze Dance",
-            "Rebirth Protocol",
-            "Asura's Blade of Execution",
-            "Needle Assault",
-            "Special Beam Cannon",
-            "Guillotine Drop",
-            "Susanoo",
-            "Sexy Jutsu",
-            "Infused Chakra Blade: Enhanced"
-        ],
-        "scrolls": [
-            "Chidori: Enchanced",
-            "9th form: Rengoku",
-            "Tenseigan Scroll",
-            "Amaterasu",
-            "Kamui",
-            "Tsukuyomi",
-            "Susanoo"
-        ],
-        "combos": [
-            "Intermediate Combo",
-            "Basic Combo"
-        ],
-        "items": {
-            "Crystalline Shard": 189,
-            "Ay Token": 228,
-            "Zoro's Locket": 3,
-            "Christmas Token": 41
-        }
-    },
-    "528291369018720267": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ],
-        "scrolls": []
-    },
-    "1191077759036952708": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
-    },
-    "1111082162716950568": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ],
-        "scrolls": []
-    },
-    "1247270560824823850": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
-    },
-    "1245000848090726435": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
-    },
-    "1337437875465355344": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
-    },
-    "687398463029510146": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
-    },
-    "436634341603278859": {
-        "usersjutsu": [
-            "Transformation Jutsu",
-            "Analysis",
-            "Summon Ninken",
-            "Fireball Jutsu",
-            "Parry",
-            "Shadow Clone Jutsu",
-            "Mystic Palm",
-            "Rasengan",
-            "Summon Manda",
-            "Amaterasu",
-            "Lightning Hound",
-            "Shadow Clone Jutsu: 1000 clones",
-            "Explosive Paper Clone",
-            "Kirin: Lightning Storm",
-            "9th form: Rengoku",
-            "Human Boulder",
-            "Puppet Kazekage",
-            "Infused Chakra Blade",
-            "One Thousand Years of Death",
-            "Creation Rebirth",
-            "Burning Ash",
-            "Water Dragon Jutsu",
-            "Flying Raijin Jutsu",
-            "Great Forest Crumbling",
-            "Rasenshuriken",
-            "Tenseigan Chakra Mode"
-        ],
-        "combos": [
-            "Intermediate Combo",
-            "Basic Combo"
-        ],
-        "items": {
-            "Crystalline Shard": 198,
-            "Zoro's Locket": 2,
-            "Ay Token": 170
-        },
-        "scrolls": [
-            "Summon Manda",
-            "Tenseigan Scroll"
-        ]
-    },
-    "449222713672859656": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
-    },
-    "635137522166399006": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
-    },
-    "420101737173483541": {
-        "usersjutsu": [
-            "Transformation Jutsu",
-            "Shadow Clone Jutsu",
-            "One Thousand Years of Death",
-            "Infused Chakra Blade",
-            "Burning Ash",
-            "Summon Manda",
-            "Amaterasu",
-            "Summon Ninken",
-            "Analysis",
-            "Water Dragon Jutsu",
-            "Flying Raijin Jutsu",
-            "Great Forest Crumbling",
-            "Creation Rebirth",
-            "Rasenshuriken",
-            "Lightning Hound",
-            "Shadow Clone Jutsu: 1000 clones",
-            "Kirin: Lightning Storm",
-            "Explosive Paper Clone",
-            "Guillotine Drop",
-            "Sexy Jutsu",
-            "Tenseigan Chakra Mode",
-            "Super Saiyan",
-            "Mystic Palm",
-            "Lightning Blade: All Out",
-            "Planetary Devastation",
-            "Twin Rising Dragons",
-            "Blizzard Strike",
-            "Primary Lotus",
-            "Ice Prison"
-        ],
-        "items": {
-            "Crystalline Shard": 504,
-            "Ay Token": 305,
-            "Christmas Token": 40
-        },
-        "scrolls": [
-            "Chidori: Enchanced",
-            "9th form: Rengoku",
-            "Summon Manda",
-            "Amaterasu",
-            "Tenseigan Scroll"
-        ]
-    },
-    "1378222935977889843": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
-    },
-    "390864647042891776": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
-    },
-    "247091818821451777": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
-    },
-    "1194165534418272256": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ],
-        "items": {
-            "Crystalline Shard": 2
-        },
-        "scrolls": [
-            "Chidori: Enchanced"
-        ]
-    },
-    "1317887688745025627": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
-    },
-    "1289721832135589960": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
-    },
-    "1210841218771193856": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 0.1,
+        "money": 15000,
+        "ramen": 1,
+        "ss": null,
+        "elo": null
     },
     "1409902593949433958": {
-        "usersjutsu": [
-            "One Thousand Years of Death",
-            "Creation Rebirth",
-            "Fireball Jutsu",
-            "The Grand Rebellion",
-            "Azora Raizen",
-            "Burning Ash",
-            "Water Dragon Jutsu",
-            "Flying Raijin Jutsu",
-            "Great Forest Crumbling",
-            "Infused Chakra Blade",
-            "Azora Tenpo",
-            "Rasenshuriken",
-            "Get Flexed on",
-            "Shadow Clone Jutsu: 1000 clones",
-            "Lightning Hound",
-            "Kirin: Lightning Storm",
-            "Explosive Paper Clone",
-            "Guillotine Drop",
-            "Shadow Clone Jutsu: 1000 Clones",
-            "Asura's Blade of Execution",
-            "Reversal : Nil",
-            "9th form: Rengoku",
-            "Amaterasu",
-            "Tenseigan Chakra Mode",
-            "Mystic Palm",
-            "Analysis",
-            "Authentic Mutual Love",
-            "Lightning Blade: All Out",
-            "Izanagi",
-            "Blizzard Strike",
-            "Ice Shards",
-            "Planetary Devastation",
-            "Ice Prison",
-            "Snow Clone",
-            "Twin Rising Dragons",
-            "Infused Chakra Blade: Enhanced",
-            "Attack",
-            "Pee Pee Poo Poo",
-            "Tsukuyomi",
-            "Amaterasu: Infinite Flames",
-            "Almighty Push",
-            "Kamui",
-            "Sexy Jutsu",
-            "Sixty Four Palms",
-            "Lightning Blade",
-            "Shadow Strangle",
-            "Leaf Whirlwind",
-            "Dynamic Entry",
-            "Shadow Clone Jutsu",
-            "Summon Ninken",
-            "Thirty Two Palms",
-            "Kirin",
-            "Cherry Blossom Impact",
-            "Rasengan",
-            "Ephemeral",
-            "Mystic Palm Enhanced",
-            "Twin Lion Fist",
-            "Primary Lotus",
-            "Eight Gates",
-            "Praise Jashin",
-            "Susanoo",
-            "Smoke Bomb",
-            "Silent Assassination",
-            "Needle Assault",
-            "Gum Gum Gatling",
-            "Detroit Smash",
-            "Getsuga Tensho"
-        ],
-        "items": {
-            "Crystalline Shard": 175,
-            "Zoro's Locket": 2,
-            "Ay Token": 10,
-            "Christmas Token": 72,
-            "iron_ore": 5,
-            "stone": 14,
-            "wood": 10
+        "level": 655,
+        "exp": 18477.5,
+        "money": 10061457,
+        "ramen": 134,
+        "ss": 51,
+        "elo": 210,
+        "backup": {
+            "health": 21774,
+            "power": 51368,
+            "defense": 59248,
+            "chakra": 15
         },
-        "scrolls": [
-            "Asura's Blade of Execution",
-            "Tenseigan Scroll",
-            "Amaterasu",
-            "Summon Manda",
-            "9th form: Rengoku",
-            "Almighty Push",
-            "Tsukuyomi",
-            "Kamui",
-            "Amaterasu: Infinite Flames",
-            "Lightning Blade: All Out",
-            "Praise Jashin",
-            "Susanoo"
+        "lastClaim": "2026-02-08T06:35:14.293Z",
+        "nextClaim": "2026-02-09T06:35:14.293Z",
+        "premiumRoles": [
+            {
+                "roleId": "1385641469507010640",
+                "expiresAt": 1772456325884
+            }
         ],
-        "combos": [
-            "Shadow Tactician",
-            "Hidden Mist Duo"
-        ]
+        "missions_completed": 633,
+        "adtokens": 49
+    },
+    "1210567723097001996": {
+        "level": 1,
+        "exp": 0.1,
+        "money": 15000,
+        "ramen": 1,
+        "ss": null,
+        "elo": null
+    },
+    "1397418229642559629": {
+        "level": 1,
+        "exp": 2.9,
+        "money": 16520,
+        "ramen": 1,
+        "ss": null,
+        "elo": null
+    },
+    "1354836327467847864": {
+        "level": 1,
+        "exp": 0.1,
+        "money": 15000,
+        "ramen": 1,
+        "ss": null,
+        "elo": null
+    },
+    "874591871412879361": {
+        "level": 677,
+        "exp": 3836.5,
+        "money": 63572244,
+        "ramen": 216,
+        "ss": 500,
+        "elo": 40,
+        "backup": {
+            "health": 19216,
+            "power": 46321,
+            "defense": 47624,
+            "chakra": 10
+        },
+        "missions_completed": 3155,
+        "lastClaim": "2026-02-19T08:01:54.914Z",
+        "nextClaim": "2026-02-20T08:01:54.914Z",
+        "premiumRoles": [
+            {
+                "roleId": "1385640798581952714",
+                "expiresAt": 1773081971269
+            }
+        ],
+        "adtokens": 60
+    },
+    "818893461881094175": {
+        "level": 3000,
+        "exp": 52617582.6,
+        "money": 421089580,
+        "ramen": 1482,
+        "ss": 3186,
+        "elo": null,
+        "backup": {
+            "health": 19204,
+            "power": 65794,
+            "defense": 116685,
+            "chakra": 15
+        },
+        "lastClaim": "2026-02-18T23:43:32.402Z",
+        "nextClaim": "2026-02-19T23:43:32.402Z",
+        "missions_completed": 44997,
+        "adtokens": 32
+    },
+    "966850707674267728": {
+        "level": 1,
+        "exp": 2.9000000000000004,
+        "money": 16520,
+        "ramen": 1,
+        "ss": null,
+        "elo": null
+    },
+    "1042609880021876836": {
+        "level": 1,
+        "exp": 3.8000000000000007,
+        "money": 12750,
+        "ramen": 1,
+        "ss": null,
+        "elo": null
+    },
+    "1391135014552342660": {
+        "level": 1,
+        "exp": 1.1,
+        "money": 16000,
+        "ramen": 1,
+        "ss": null,
+        "elo": null
+    },
+    "1382050552313155638": {
+        "level": 0,
+        "exp": null,
+        "money": 0,
+        "ramen": null,
+        "ss": null,
+        "elo": null
+    },
+    "1394844944233009243": {
+        "level": 1,
+        "exp": 2.9,
+        "money": 16520,
+        "ramen": 1,
+        "ss": null,
+        "elo": null
+    },
+    "770828909251919893": {
+        "level": 1,
+        "exp": 0.1,
+        "money": 15000,
+        "ramen": 1,
+        "ss": null,
+        "elo": null
+    },
+    "1252635305178042390": {
+        "level": 1,
+        "exp": 2.9000000000000004,
+        "money": 16520,
+        "ramen": 1,
+        "ss": null,
+        "elo": null
+    },
+    "615547555807494175": {
+        "level": 201,
+        "exp": 723,
+        "money": 3632428,
+        "ramen": 5,
+        "ss": 1081,
+        "elo": null,
+        "backup": {
+            "health": 3747,
+            "power": 8938,
+            "defense": 3320,
+            "chakra": 10
+        },
+        "missions_completed": 346,
+        "lastClaim": "2026-02-20T08:03:07.258Z",
+        "nextClaim": "2026-02-21T08:03:07.258Z"
+    },
+    "1396299472195031221": {
+        "level": 0,
+        "exp": null,
+        "money": 0,
+        "ramen": null,
+        "ss": null,
+        "elo": null
+    },
+    "1369736280807575552": {
+        "level": 1,
+        "exp": 0.1,
+        "money": 15000,
+        "ramen": 1,
+        "ss": null,
+        "elo": null
+    },
+    "1121181029579886612": {
+        "level": 1,
+        "exp": 0.1,
+        "money": 15000,
+        "ramen": 1,
+        "ss": null,
+        "elo": null
+    },
+    "1368966351103856753": {
+        "level": 1,
+        "exp": 0.1,
+        "money": 15000,
+        "ramen": 1,
+        "ss": null,
+        "elo": null
+    },
+    "1259704514768797747": {
+        "level": 0,
+        "exp": null,
+        "money": 1000,
+        "ramen": null,
+        "ss": null,
+        "elo": null
+    },
+    "1304885422714916894": {
+        "level": 0,
+        "exp": null,
+        "money": 1000,
+        "ramen": null,
+        "ss": null,
+        "elo": null
+    },
+    "776457117515251712": {
+        "level": 8,
+        "exp": 1,
+        "money": 66930,
+        "ramen": 1,
+        "ss": null,
+        "elo": null
+    },
+    "903759245034536980": {
+        "level": 1,
+        "exp": 14.161657632047383,
+        "money": 41520,
+        "ramen": 1,
+        "ss": null,
+        "elo": null
+    },
+    "994101966395416598": {
+        "level": 1,
+        "exp": 1.1,
+        "money": 16000,
+        "ramen": 1,
+        "ss": null,
+        "elo": null
+    },
+    "1303128250079383583": {
+        "level": 716,
+        "exp": 27401.2,
+        "money": 21511066,
+        "ramen": 0,
+        "ss": 1056,
+        "elo": 700,
+        "backup": {
+            "health": 24916,
+            "power": 80196,
+            "defense": 37403,
+            "chakra": 15
+        },
+        "lastClaim": "2026-02-20T00:10:10.695Z",
+        "nextClaim": "2026-02-21T00:10:10.695Z",
+        "premiumRoles": [
+            {
+                "roleId": "1385641469507010640",
+                "expiresAt": 1774202118158
+            }
+        ],
+        "missions_completed": 347
+    },
+    "1209162927689568267": {
+        "level": 0,
+        "exp": 4,
+        "money": 5000,
+        "ramen": null,
+        "ss": null,
+        "elo": null
+    },
+    "528291369018720267": {
+        "level": 1,
+        "exp": 19.63589620917832,
+        "money": 66520,
+        "ramen": 1,
+        "ss": null,
+        "elo": null
+    },
+    "1191077759036952708": {
+        "level": 1,
+        "exp": 1.1,
+        "money": 16000,
+        "ramen": 1,
+        "ss": null,
+        "elo": null
+    },
+    "1111082162716950568": {
+        "level": 1,
+        "exp": 11.117143746006303,
+        "money": 37135,
+        "ramen": 1,
+        "ss": null,
+        "elo": null
+    },
+    "1239065381373476894": {
+        "level": 1,
+        "exp": 0.1,
+        "money": 15000,
+        "ramen": 1,
+        "ss": null,
+        "elo": null
+    },
+    "1247270560824823850": {
+        "level": 1,
+        "exp": 0.2,
+        "money": 20000,
+        "ramen": 1,
+        "ss": null,
+        "elo": null
+    },
+    "1245000848090726435": {
+        "level": 1,
+        "exp": 7.4292432921967855,
+        "money": 16520,
+        "ramen": 1,
+        "ss": null,
+        "elo": 0
+    },
+    "1337437875465355344": {
+        "level": 1,
+        "exp": 0,
+        "money": 10000,
+        "ramen": 1,
+        "ss": null,
+        "elo": null
+    },
+    "687398463029510146": {
+        "level": 8,
+        "exp": 1.4020459046245461,
+        "money": 18020,
+        "ramen": 1,
+        "ss": null,
+        "elo": 0
+    },
+    "436634341603278859": {
+        "level": 200,
+        "exp": 1822.7167154181516,
+        "money": 12853666,
+        "ramen": 4,
+        "ss": 150,
+        "elo": 0,
+        "lastClaim": "2025-10-27T23:36:57.852Z",
+        "nextClaim": "2025-10-28T23:36:57.852Z",
+        "backup": {
+            "health": 6685,
+            "power": 7236,
+            "defense": 4840,
+            "chakra": 10
+        },
+        "premiumRoles": []
+    },
+    "843680216022122516": {
+        "level": 22,
+        "exp": 9,
+        "money": 25705,
+        "ramen": 2,
+        "ss": null,
+        "elo": 20
+    },
+    "449222713672859656": {
+        "level": 1,
+        "exp": 33.007656353097374,
+        "money": 18600,
+        "ramen": 1,
+        "ss": null,
+        "elo": 0
+    },
+    "635137522166399006": {
+        "level": 1,
+        "exp": 0.1,
+        "money": 15000,
+        "ramen": 1,
+        "ss": null,
+        "elo": null
+    },
+    "420101737173483541": {
+        "level": 322,
+        "exp": 24301.2,
+        "money": 31709448,
+        "ramen": 509,
+        "ss": 221,
+        "elo": 340,
+        "backup": {
+            "health": 45106,
+            "power": 56482,
+            "defense": 47173,
+            "chakra": 10
+        },
+        "lastClaim": "2025-12-20T09:28:26.626Z",
+        "nextClaim": "2025-12-21T09:28:26.626Z",
+        "premiumRoles": []
+    },
+    "737913304214667345": {
+        "level": 1,
+        "exp": 64.35981738215786,
+        "money": 44560,
+        "ramen": 1,
+        "ss": 1000,
+        "elo": 0
+    },
+    "1378222935977889843": {
+        "level": 8,
+        "exp": 0.32404023417210936,
+        "money": 17100,
+        "ramen": 1,
+        "ss": null,
+        "elo": 0
+    },
+    "390864647042891776": {
+        "level": 1,
+        "exp": 1.1,
+        "money": 16000,
+        "ramen": 1,
+        "ss": null,
+        "elo": null
+    },
+    "689548407223877701": {
+        "level": 0,
+        "exp": null,
+        "money": 0,
+        "ramen": null,
+        "ss": null,
+        "elo": null
+    },
+    "247091818821451777": {
+        "level": 1,
+        "exp": 13.72104176822789,
+        "money": 41520,
+        "ramen": 1,
+        "ss": null,
+        "elo": 0
+    },
+    "1194165534418272256": {
+        "level": 7,
+        "exp": 1,
+        "money": 42520,
+        "ramen": 1,
+        "ss": null,
+        "elo": 0
+    },
+    "1227158575101771776": {
+        "level": 0,
+        "exp": null,
+        "money": 0,
+        "ramen": null,
+        "ss": null,
+        "elo": null
+    },
+    "1317887688745025627": {
+        "level": 1,
+        "exp": 7.231729098976345,
+        "money": 16520,
+        "ramen": 1,
+        "ss": null,
+        "elo": 0
+    },
+    "1138611993939558400": {
+        "level": 0,
+        "exp": null,
+        "money": 1000,
+        "ramen": null,
+        "ss": null,
+        "elo": null
+    },
+    "1395969824789762128": {
+        "level": 0,
+        "exp": null,
+        "money": 1000,
+        "ramen": null,
+        "ss": null,
+        "elo": null
+    },
+    "1289721832135589960": {
+        "level": 1,
+        "exp": 0.1,
+        "money": 15000,
+        "ramen": 1,
+        "ss": null,
+        "elo": null
+    },
+    "1286744652803870802": {
+        "level": 0,
+        "exp": null,
+        "money": 1000,
+        "ramen": null,
+        "ss": null,
+        "elo": null
+    },
+    "1210841218771193856": {
+        "level": 1,
+        "exp": 0.1,
+        "money": 15000,
+        "ramen": 1,
+        "ss": null,
+        "elo": null
+    },
+    "728522737009819649": {
+        "level": 40,
+        "exp": 155,
+        "money": 225065,
+        "ramen": 76,
+        "ss": null,
+        "elo": 0
     },
     "420661520918380544": {
-        "usersjutsu": [
-            "Transformation Jutsu",
-            "Summon Ninken",
-            "Infused Chakra Blade",
-            "One Thousand Years of Death",
-            "Fireball Jutsu",
-            "Summon Manda",
-            "Creation Rebirth",
-            "Amaterasu",
-            "Crimson Lightning Dragon",
-            "Burning Ash",
-            "Analysis",
-            "Heavenly Palm of Annihilation",
-            "Asura's Blade of Execution",
-            "Water Dragon Jutsu",
-            "Flying Raijin Jutsu",
-            "Great Forest Crumbling",
-            "Rasenshuriken",
-            "Shadow Clone Jutsu: 1000 clones",
-            "Lightning Hound",
-            "Kirin: Lightning Storm"
-        ],
-        "scrolls": [
-            "Infused Chakra Blade Scroll",
-            "Amaterasu",
-            "9th form: Rengoku",
-            "Chidori: Enchanced",
-            "Asura's Blade of Execution"
-        ],
-        "items": {
-            "Crystalline Shard": 115,
-            "Zoro's Locket": 5,
-            "Ay Token": 40
-        },
-        "combos": [
-            "Intermediate Combo",
-            "Basic Combo"
-        ]
+        "level": 137,
+        "exp": 356.08144848717984,
+        "money": 3113233.5,
+        "ramen": 0,
+        "ss": 100,
+        "elo": 110,
+        "backup": {
+            "health": 1550,
+            "power": 2883,
+            "defense": 1878,
+            "chakra": 15
+        }
     },
     "596375919510159371": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 1.1,
+        "money": 16000,
+        "ramen": 1,
+        "ss": null,
+        "elo": null
     },
     "1264838223297908912": {
-        "usersjutsu": [
-            "Transformation Jutsu",
-            "Shadow Clone Jutsu",
-            "Fireball Jutsu"
-        ]
+        "level": 1,
+        "exp": 30,
+        "money": 18955,
+        "ramen": 1,
+        "ss": null,
+        "elo": 0
     },
     "869947662626062457": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 0.1,
+        "money": 15000,
+        "ramen": 2,
+        "ss": null,
+        "elo": null
     },
     "845875435924619324": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
-    },
-    "678406353202708484": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 0.1,
+        "money": 15000,
+        "ramen": 1,
+        "ss": null,
+        "elo": null
     },
     "723666263544561765": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ],
-        "items": {
-            "Crystalline Shard": 2
-        }
+        "level": 1,
+        "exp": 0.1,
+        "money": 15000,
+        "ramen": 1,
+        "ss": null,
+        "elo": null
     },
     "923819606450270219": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 0.1,
+        "money": 15000,
+        "ramen": 1,
+        "ss": null,
+        "elo": null
     },
     "646149279437553664": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ],
-        "items": {
-            "Crystalline Shard": 6
-        },
-        "scrolls": [
-            "Chidori: Enchanced",
-            "Amaterasu"
-        ]
+        "level": 1,
+        "exp": 0.1,
+        "money": 15000,
+        "ramen": 1,
+        "ss": null,
+        "elo": null
     },
     "1090999654763741284": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 12.236333345815634,
+        "money": 17135,
+        "ramen": 1,
+        "ss": null,
+        "elo": 0
     },
     "450496711123795979": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 0.1,
+        "money": 15000,
+        "ramen": 1,
+        "ss": null,
+        "elo": null
     },
     "343110437350670339": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 10.837372850362172,
+        "money": 42520,
+        "ramen": 1,
+        "ss": null,
+        "elo": 0
     },
     "726798301680107621": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 1.1,
+        "money": 16000,
+        "ramen": 1,
+        "ss": null,
+        "elo": 0
     },
     "1062014672896794715": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 4,
+        "money": 17520,
+        "ramen": 1,
+        "ss": null,
+        "elo": 0
     },
     "261684298694918144": {
-        "usersjutsu": [
-            "Transformation Jutsu",
-            "Fireball Jutsu",
-            "Shadow Clone Jutsu",
-            "Mystic Palm",
-            "Summon Ninken",
-            "Parry",
-            "Analysis",
-            "One Thousand Years of Death",
-            "Infused Chakra Blade",
-            "Creation Rebirth",
-            "Burning Ash"
-        ],
-        "combos": [
-            "Basic Combo"
-        ],
-        "items": {
-            "Crystalline Shard": 15
+        "level": 81,
+        "exp": 568,
+        "money": 7690180,
+        "ramen": 107,
+        "SS": 0,
+        "elo": 0,
+        "backup": {
+            "health": 1441,
+            "power": 3071,
+            "defense": 6969,
+            "chakra": 10
         },
-        "scrolls": [
-            "9th form: Rengoku",
-            "Summon Manda",
-            "Infused Chakra Blade Scroll"
-        ]
+        "lastClaim": "2025-10-24T06:01:56.745Z",
+        "nextClaim": "2025-10-25T06:01:56.745Z",
+        "ss": 300
     },
     "435086873069617157": {
-        "usersjutsu": [
-            "Transformation Jutsu",
-            "One Thousand Years of Death"
-        ]
+        "level": 1,
+        "exp": 154,
+        "money": 5485,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "1156072351738368020": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 1,
+        "money": 1500,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "1329198150090489868": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 2,
+        "money": 2500,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "953705770799738910": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 5.90003115324529,
+        "money": 3020,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "852084810381787186": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 1,
+        "money": 1500,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "844177296957243402": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 1,
+        "money": 1500,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "608441966824521767": {
-        "usersjutsu": [
-            "Transformation Jutsu",
-            "One Thousand Years of Death"
-        ]
-    },
-    "1296885597205430302": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
-    },
-    "169869057300889601": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ],
-        "combos": [
-            "Intermediate Combo"
-        ]
-    },
-    "731954948681760768": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
-    },
-    "1148979590660898856": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
-    },
-    "1333019992463114271": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
-    },
-    "1073307267115515904": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
-    },
-    "1406256583112917094": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
-    },
-    "250160994590916609": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
-    },
-    "809433522972524585": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
-    },
-    "1130385614072709182": {
-        "usersjutsu": [
-            "Transformation Jutsu",
-            "Puppet Kazekage",
-            "Lightning Hound",
-            "Kirin: Lightning Storm",
-            "Explosive Paper Clone",
-            "Shadow Clone Jutsu: 1000 clones"
-        ],
-        "items": {
-            "Crystalline Shard": 31,
-            "Ay Token": 30
-        },
-        "scrolls": [
-            "Chidori: Enchanced"
-        ]
-    },
-    "353296548391813124": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
-    },
-    "1157537116457279490": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
-    },
-    "1088952418261270629": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
-    },
-    "362536562698878976": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
-    },
-    "758439182687010838": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
-    },
-    "913185563023142933": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
-    },
-    "133283939384164353": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
-    },
-    "270026736551460864": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
-    },
-    "669480725250048002": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
-    },
-    "330689194492166145": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
-    },
-    "479559410927009823": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
-    },
-    "292868813010239499": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
-    },
-    "1357416855152754849": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
-    },
-    "317891686564888576": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
-    },
-    "813347661235093504": {
-        "usersjutsu": [
-            "Transformation Jutsu",
-            "Summon Ninken"
-        ]
-    },
-    "717265638107643958": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
-    },
-    "933050349437218890": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
-    },
-    "523956555402575873": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
-    },
-    "311228416047185923": {
-        "usersjutsu": [
-            "Transformation Jutsu",
-            "Fireball Jutsu",
-            "Shadow Clone Jutsu",
-            "Analysis",
-            "Ice Mirrors"
-        ],
-        "items": {
-            "Crystalline Shard": 2
+        "level": 13,
+        "exp": 22.07480514339335,
+        "money": 43415,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0,
+        "backup": {
+            "health": 128,
+            "power": 139,
+            "defense": 66,
+            "chakra": 10
         }
     },
+    "1296885597205430302": {
+        "level": 6,
+        "exp": 11,
+        "money": 6880,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0,
+        "backup": {
+            "health": 1013,
+            "power": 117,
+            "defense": 56,
+            "chakra": 10
+        }
+    },
+    "169869057300889601": {
+        "level": 4,
+        "exp": 112,
+        "money": 21930,
+        "ramen": 26,
+        "SS": 0,
+        "elo": 0,
+        "backup": {
+            "health": 108,
+            "power": 110,
+            "defense": 55,
+            "chakra": 10
+        }
+    },
+    "1405983758863306955": {
+        "money": 1000,
+        "exp": null
+    },
+    "731954948681760768": {
+        "level": 1,
+        "exp": 0,
+        "money": 1000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
+    },
+    "1148979590660898856": {
+        "level": 1,
+        "exp": 2,
+        "money": 2500,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
+    },
+    "1333019992463114271": {
+        "level": 1,
+        "exp": 1,
+        "money": 1500,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
+    },
+    "1073307267115515904": {
+        "level": 1,
+        "exp": 1,
+        "money": 1500,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
+    },
+    "1406256583112917094": {
+        "level": 1,
+        "exp": 3,
+        "money": 3500,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
+    },
+    "250160994590916609": {
+        "level": 1,
+        "exp": 6,
+        "money": 4020,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
+    },
+    "809433522972524585": {
+        "level": 1,
+        "exp": 1,
+        "money": 1500,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
+    },
+    "1130385614072709182": {
+        "level": 81,
+        "exp": 239.81925445688285,
+        "money": 2557610,
+        "ramen": 50,
+        "SS": 0,
+        "elo": 0,
+        "ss": 0,
+        "backup": {
+            "health": 2595,
+            "power": 2035,
+            "defense": 1558,
+            "chakra": 10
+        },
+        "lastClaim": "2025-10-02T06:18:37.571Z",
+        "nextClaim": "2025-10-03T06:18:37.571Z"
+    },
+    "353296548391813124": {
+        "level": 1,
+        "exp": 102,
+        "money": 101500,
+        "ramen": 26,
+        "SS": 0,
+        "elo": 0,
+        "ss": 0
+    },
+    "647455522496184321": {
+        "money": 0
+    },
+    "1157537116457279490": {
+        "level": 1,
+        "exp": 1,
+        "money": 1500,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
+    },
+    "1088952418261270629": {
+        "level": 1,
+        "exp": 1,
+        "money": 1500,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
+    },
+    "1327078828622741588": {
+        "money": 102000,
+        "exp": 14,
+        "ramen": 25,
+        "ss": 0,
+        "level": 9,
+        "backup": {
+            "health": 120,
+            "power": 38,
+            "defense": 18,
+            "chakra": 10
+        }
+    },
+    "362536562698878976": {
+        "level": 1,
+        "exp": 1,
+        "money": 1500,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
+    },
+    "758439182687010838": {
+        "level": 1,
+        "exp": 2,
+        "money": 2500,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
+    },
+    "913185563023142933": {
+        "level": 1,
+        "exp": 3,
+        "money": 3500,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
+    },
+    "133283939384164353": {
+        "level": 1,
+        "exp": 1,
+        "money": 1500,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
+    },
+    "669480725250048002": {
+        "level": 1,
+        "exp": 2,
+        "money": 2500,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
+    },
+    "330689194492166145": {
+        "level": 1,
+        "exp": 22.43279108518865,
+        "money": 3020,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
+    },
+    "479559410927009823": {
+        "level": 1,
+        "exp": 1,
+        "money": 1500,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
+    },
+    "292868813010239499": {
+        "level": 1,
+        "exp": 1,
+        "money": 1500,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
+    },
+    "1357416855152754849": {
+        "level": 1,
+        "exp": 1,
+        "money": 1500,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
+    },
+    "317891686564888576": {
+        "level": 1,
+        "exp": 2,
+        "money": 2500,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
+    },
+    "813347661235093504": {
+        "level": 1,
+        "exp": 5,
+        "money": 5500,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
+    },
+    "717265638107643958": {
+        "level": 1,
+        "exp": 1,
+        "money": 1500,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
+    },
+    "933050349437218890": {
+        "level": 1,
+        "exp": 1,
+        "money": 1500,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
+    },
+    "523956555402575873": {
+        "level": 1,
+        "exp": 1,
+        "money": 1500,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
+    },
+    "311228416047185923": {
+        "level": 51,
+        "exp": 103,
+        "money": 217795,
+        "ramen": 77,
+        "SS": 0,
+        "elo": 0,
+        "backup": {
+            "health": 1126,
+            "power": 280,
+            "defense": 122,
+            "chakra": 10
+        },
+        "ss": 0,
+        "lastClaim": "2025-10-12T03:16:33.777Z",
+        "nextClaim": "2025-10-13T03:16:33.777Z"
+    },
+    "1406681175703027859": {
+        "money": 2000,
+        "exp": 1
+    },
     "1337573368253255702": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 3.1,
+        "money": 3500,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
+    },
+    "1399350109430612053": {
+        "money": 0
     },
     "751399594918805667": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 2,
+        "money": 2500,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "1130315410319872031": {
-        "usersjutsu": [
-            "Transformation Jutsu",
-            "Shadow Clone Jutsu",
-            "Analysis",
-            "Fireball Jutsu",
-            "Mystic Palm",
-            "Summon Ninken",
-            "One Thousand Years of Death",
-            "Amaterasu",
-            "Lightning Hound",
-            "Kirin: Lightning Storm",
-            "Explosive Paper Clone",
-            "Shadow Clone Jutsu: 1000 clones",
-            "Creation Rebirth",
-            "Burning Ash",
-            "10%",
-            "Water Dragon Jutsu",
-            "Flying Raijin Jutsu",
-            "Great Forest Crumbling",
-            "Rasenshuriken",
-            "Tenseigan Chakra Mode",
-            "Guillotine Drop"
-        ],
-        "items": {
-            "Crystalline Shard": 199,
-            "Ay Token": 161
+        "level": 194,
+        "exp": 15864.4,
+        "money": 7005820,
+        "ramen": 0,
+        "SS": 0,
+        "elo": 0,
+        "ss": 91,
+        "backup": {
+            "health": 5959,
+            "power": 4274,
+            "defense": 2719,
+            "chakra": 10
         },
-        "scrolls": [
-            "Amaterasu",
-            "Lightning Blade: All Out",
-            "Tenseigan Scroll"
-        ]
+        "lastClaim": "2025-11-28T00:36:10.545Z",
+        "nextClaim": "2025-11-29T00:36:10.545Z",
+        "premiumRoles": []
     },
     "655014929090215967": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 1,
+        "money": 1500,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "1421153106703417445": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 1,
+        "money": 1500,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "367862244916068353": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 30.74051601330743,
+        "money": 3020,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "270037572409884673": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ],
-        "scrolls": [
-            "Infused Chakra Blade Scroll"
-        ]
+        "level": 1,
+        "exp": 137,
+        "money": 5110,
+        "ramen": 184,
+        "SS": 0,
+        "elo": 0,
+        "missions_completed": 2,
+        "ss": 350
     },
     "409742447661285386": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 115.83014798563778,
+        "money": 103020,
+        "ramen": 26,
+        "SS": 0,
+        "elo": 0,
+        "ss": 0
     },
     "505591703919656962": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 160.10285598204726,
+        "money": 105045,
+        "ramen": 26,
+        "SS": 0,
+        "elo": 0,
+        "ss": 0
     },
     "930983759975706655": {
-        "usersjutsu": [
-            "Transformation Jutsu",
-            "Human Boulder",
-            "Explosive Paper Clone",
-            "Ninpo: Ascetic Blaze",
-            "Analysis",
-            "One Thousand Years of Death",
-            "Creation Rebirth",
-            "Burning Ash",
-            "Infused Chakra Blade",
-            "Water Dragon Jutsu",
-            "Flying Raijin Jutsu",
-            "Great Forest Crumbling",
-            "Rasenshuriken"
-        ],
-        "combos": [
-            "Intermediate Combo"
-        ],
-        "items": {
-            "Crystalline Shard": 6,
-            "Ay Token": 10
+        "level": 355,
+        "exp": 21602.5,
+        "money": 13412225,
+        "ramen": 0,
+        "SS": 0,
+        "elo": 0,
+        "ss": 381,
+        "backup": {
+            "health": 3899,
+            "power": 11812,
+            "defense": 21953,
+            "chakra": 15
         },
-        "scrolls": [
-            "Infused Chakra Blade Scroll",
-            "Tenseigan Scroll"
-        ]
-    },
-    "1217870452253397082": {
-        "usersjutsu": [
-            "Carnage"
+        "missions_completed": 1645,
+        "lastClaim": "2026-01-31T15:51:50.260Z",
+        "nextClaim": "2026-02-01T15:51:50.260Z",
+        "premiumRoles": [
+            {
+                "roleId": "1385641469507010640",
+                "expiresAt": 1772478459175
+            }
         ]
     },
     "1117633529346527252": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 1,
+        "money": 1500,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "654746264109318164": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 1,
+        "money": 1500,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "1128111341903818752": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 20.58247268687956,
+        "money": 2003020,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0,
+        "ss": 300
     },
     "1352510388130021431": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 1,
+        "money": 1500,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "823994548333051924": {
-        "usersjutsu": [
-            "Transformation Jutsu",
-            "Lightning Hound",
-            "9th form: Rengoku",
-            "Summon Manda",
-            "One Thousand Years of Death",
-            "Amaterasu",
-            "Creation Rebirth",
-            "Burning Ash",
-            "Tenseigan Chakra Mode",
-            "Water Dragon Jutsu",
-            "Flying Raijin Jutsu",
-            "Great Forest Crumbling",
-            "Rasenshuriken",
-            "Shadow Clone Jutsu: 1000 clones",
-            "Kirin: Lightning Storm",
-            "Analysis",
-            "Asura's Blade of Execution",
-            "Lightning Blade: All Out",
-            "Twin Rising Dragons",
-            "Ice Prison",
-            "Blizzard Strike",
-            "Primary Lotus",
-            "Demon Cloak",
-            "Amaterasu: Infinite Flames",
-            "Praise Jashin",
-            "Almighty Push",
-            "Kamui",
-            "Susanoo",
-            "Tsukuyomi"
-        ],
-        "items": {
-            "Crystalline Shard": 127,
-            "Ay Token": 20,
-            "Zoro's Locket": 9,
-            "Christmas Token": 38
+        "level": 564,
+        "exp": 12270.5,
+        "money": 6014632.5,
+        "ramen": 100,
+        "SS": 0,
+        "elo": 0,
+        "ss": 2,
+        "backup": {
+            "health": 15212,
+            "power": 67443,
+            "defense": 33463,
+            "chakra": 15
         },
-        "scrolls": [
-            "9th form: Rengoku",
-            "Summon Manda",
-            "Amaterasu",
-            "Tenseigan Scroll",
-            "Chidori: Enchanced",
-            "Asura's Blade of Execution",
-            "Amaterasu: Infinite Flames",
-            "Praise Jashin",
-            "Almighty Push",
-            "Kamui",
-            "Susanoo",
-            "Tsukuyomi",
-            "Lightning Blade: All Out"
-        ]
+        "lastClaim": "2025-12-02T23:34:10.969Z",
+        "nextClaim": "2025-12-03T23:34:10.969Z",
+        "premiumRoles": [
+            {
+                "roleId": "1385641469507010640",
+                "expiresAt": 1772423970487
+            }
+        ],
+        "missions_completed": 158
     },
     "1110989485946187877": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 9,
+        "exp": 14,
+        "money": 101500,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0,
+        "lastClaim": "2025-10-21T07:15:18.427Z",
+        "nextClaim": "2025-10-22T07:15:18.427Z",
+        "ss": 0,
+        "backup": {
+            "health": 1022,
+            "power": 141,
+            "defense": 62,
+            "chakra": 10
+        }
     },
     "1073157170213945424": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ],
-        "combos": [
-            "Intermediate Combo"
-        ]
+        "level": 23,
+        "exp": 15.991382474287917,
+        "money": 33175,
+        "ramen": 51,
+        "SS": 0,
+        "elo": 0,
+        "ss": 0,
+        "backup": {
+            "health": 1055,
+            "power": 177,
+            "defense": 87,
+            "chakra": 10
+        }
+    },
+    "1331057411099983954": {
+        "money": 0
     },
     "1255807800269865021": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 6,
+        "exp": 6.51256551270523,
+        "money": 4430,
+        "ramen": 0,
+        "SS": 0,
+        "elo": 0,
+        "lastClaim": "2025-10-24T19:44:22.940Z",
+        "nextClaim": "2025-10-25T19:44:22.940Z",
+        "backup": {
+            "health": 1013,
+            "power": 147,
+            "defense": 59,
+            "chakra": 10
+        }
     },
     "1185345160628936806": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 2,
+        "money": 2500,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "1070799702410407996": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 2,
+        "money": 2500,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
+    },
+    "user_id": {
+        "exp": 1000000000
     },
     "493958402574254080": {
-        "usersjutsu": [
-            "Transformation Jutsu",
-            "Infused Chakra Blade",
-            "Kirin: Lightning Storm",
-            "Lightning Hound",
-            "Explosive Paper Clone",
-            "Analysis",
-            "Shadow Clone Jutsu: 1000 clones",
-            "Gyakuten no Horu",
-            "One Thousand Years of Death",
-            "Mystic Palm",
-            "Fire Style: Nuclear Armageddon",
-            "Creation Rebirth",
-            "Burning Ash",
-            "Tenseigan Chakra Mode",
-            "Human Boulder",
-            "Puppet Kazekage",
-            "Lightning Blade: All out",
-            "Summon Manda",
-            "Water Dragon Jutsu",
-            "Flying Raijin Jutsu",
-            "Great Forest Crumbling",
-            "Rasenshuriken",
-            "9th form: Rengoku",
-            "Improved Mystic Palm",
-            "Ephemeral",
-            "Amaterasu"
-        ],
-        "scrolls": [
-            "Infused Chakra Blade Scroll",
-            "Tenseigan Scroll",
-            "Chidori: Enchanced",
-            "Amaterasu",
-            "Lightning Blade: All Out"
-        ],
-        "items": {
-            "Crystalline Shard": 230,
-            "Zoro's Locket": 1,
-            "Ay Token": 10
+        "level": 200,
+        "exp": 2219,
+        "money": 7521597,
+        "ramen": 25,
+        "SS": 0,
+        "elo": 0,
+        "backup": {
+            "health": 8150,
+            "power": 6479,
+            "defense": 6381,
+            "chakra": 15
         },
-        "combos": [
-            "Intermediate Combo"
-        ]
+        "ss": 0,
+        "premiumRoles": [],
+        "lastClaim": "2025-11-01T05:23:53.427Z",
+        "nextClaim": "2025-11-02T05:23:53.427Z"
+    },
+    "me": {
+        "defense": 0,
+        "ramen": 1000
     },
     "469636822230630400": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 1,
+        "money": 1500,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
+    },
+    "1217236192689393816": {
+        "money": 0
+    },
+    "750717398440607846": {
+        "money": 2000,
+        "exp": 102,
+        "ramen": 25,
+        "ss": 0
     },
     "780790863189639208": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 104,
+        "money": 103500,
+        "ramen": 26,
+        "SS": 0,
+        "elo": 0,
+        "ss": 100
     },
     "723700031022170247": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 2,
+        "money": 2500,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
+    },
+    "self": {
+        "ramen": 1000
     },
     "1416409488696803429": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 1,
+        "money": 1500,
+        "ramen": 101,
+        "SS": 0,
+        "elo": 0
     },
     "1185324167109820536": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 1,
+        "money": 1500,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "1248574793196765257": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 1,
+        "money": 1500,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "435545144687722501": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 2,
+        "money": 2500,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "1324009338284806265": {
-        "usersjutsu": [
-            "Transformation Jutsu",
-            "Fireball Jutsu",
-            "Shadow Clone Jutsu",
-            "Summon Ninken",
-            "Sexy Jutsu",
-            "Infused Chakra Blade",
-            "Kirin",
-            "Explosive Paper Clone"
-        ],
-        "scrolls": [
-            "Infused Chakra Blade Scroll"
-        ],
-        "items": {
-            "Crystalline Shard": 46,
-            "Ay Token": 20
+        "level": 105,
+        "exp": 285,
+        "money": 1383176,
+        "ramen": 0,
+        "SS": 0,
+        "elo": 0,
+        "backup": {
+            "health": 3340,
+            "power": 845,
+            "defense": 209,
+            "chakra": 10
         },
-        "combos": [
-            "Intermediate Combo"
+        "lastClaim": "2025-11-22T18:19:36.125Z",
+        "nextClaim": "2025-11-23T18:19:36.125Z",
+        "ss": 0
+    },
+    "1410651013018292356": {
+        "money": 2037,
+        "exp": 193,
+        "level": 41,
+        "backup": {
+            "health": 187,
+            "power": 136,
+            "defense": 60,
+            "chakra": 10
+        },
+        "missions_completed": 20,
+        "ss": 65,
+        "ramen": 346,
+        "premiumRoles": [
+            {
+                "roleId": "1385640798581952714",
+                "expiresAt": 1773139805363
+            }
         ]
     },
     "916390011417542677": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
-    },
-    "1410651013018292356": {
-        "usersjutsu": [
-            "Summon Ninken",
-            "Lightning Blade",
-            "Fireball Jutsu",
-            "Kirin",
-            "Needle Assault",
-            "Puppet Kazekage",
-            "Transformation Jutsu"
-        ],
-        "scrolls": [],
-        "combos": [
-            "Basic Combo",
-            "Intermediate Combo"
-        ]
+        "level": 1,
+        "exp": 2,
+        "money": 2500,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "1299496796514680905": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 1,
+        "money": 1500,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "991370704807268423": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 102.8,
+        "money": 4250,
+        "ramen": 0,
+        "SS": 0,
+        "elo": 0
+    },
+    "1281960567959060580": {
+        "ramen": 1,
+        "lastClaim": "2025-11-04T11:05:14.921Z",
+        "nextClaim": "2025-11-05T11:05:14.921Z"
     },
     "815696379820900383": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 2.1,
+        "money": 2500,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "1400214380880335009": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 43.6,
+        "money": 4430,
+        "ramen": 0,
+        "SS": 0,
+        "elo": 0,
+        "lastClaim": "2025-11-07T15:47:23.585Z",
+        "nextClaim": "2025-11-08T15:47:23.585Z"
+    },
+    "1415285259666198571": {
+        "level": 1,
+        "exp": 101,
+        "money": 100000,
+        "ramen": 25,
+        "ss": 0
+    },
+    "1319375107998875729": {
+        "level": 1,
+        "exp": 101,
+        "money": 100000,
+        "ramen": 25,
+        "ss": 0
     },
     "954633398620684288": {
-        "usersjutsu": [
-            "Transformation Jutsu",
-            "Analysis"
-        ],
-        "items": {
-            "Crystalline Shard": 2
+        "level": 10,
+        "exp": 45.3,
+        "money": 107520,
+        "ramen": 0,
+        "SS": 0,
+        "elo": 0,
+        "ss": 0,
+        "lastClaim": "2025-11-08T07:27:22.504Z",
+        "nextClaim": "2025-11-09T07:27:22.504Z",
+        "backup": {
+            "health": 1022,
+            "power": 538,
+            "defense": 63,
+            "chakra": 10
         }
     },
     "1129152571852996638": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 66.6,
+        "money": 8135,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "703975295543279617": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 10,
+        "money": 6000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "1237068444629733467": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 11.1,
+        "money": 7000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "538574004664008726": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
-    },
-    "1028384861536399440": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 10,
+        "money": 6000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "928116862187864065": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 10,
+        "money": 6000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "273100630598483968": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 10,
+        "money": 6000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "1429138003569414385": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 11.1,
+        "money": 7000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "323791474800197633": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 11.1,
+        "money": 7000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
+    },
+    "1312446740221267998": {
+        "money": 0
     },
     "961252876083142776": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 10,
+        "money": 6000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "690320989095329812": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 11.1,
+        "money": 7000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "935589043511623820": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 11.1,
+        "money": 7000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "1177640597054566441": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 11.1,
+        "money": 7000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
+    },
+    "338103068266856458": {
+        "money": 1000,
+        "exp": null
     },
     "1366455974776541227": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 11.1,
+        "money": 7000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "1439829738326724662": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 10,
+        "money": 6000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "975250882495148074": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 0,
+        "money": 1000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "912724225276641330": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 10,
+        "money": 6000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "1232402028127457350": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 20,
+        "money": 11000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "758406269077291018": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 11.1,
+        "money": 7000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "1057885572196204554": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 10,
+        "money": 6000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "983363815565582377": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 10,
+        "money": 6000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "784252973059407882": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ],
-        "scrolls": [
-            "Infused Chakra Blade Scroll"
-        ]
+        "level": 1,
+        "exp": 22.4,
+        "money": 8520,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "966043611185680524": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 123.3,
+        "money": 17520,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "1425489765095964682": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 194.6,
+        "money": 13560,
+        "ramen": 6,
+        "SS": 0,
+        "elo": 0,
+        "ss": 106,
+        "missions_completed": 2
     },
     "1411352853536051221": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ],
-        "scrolls": [
-            "Infused Chakra Blade Scroll"
-        ]
+        "level": 1,
+        "exp": 55.900000000000006,
+        "money": 12080,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "996513757415092275": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 10,
+        "money": 6000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "576692561641734174": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ],
-        "scrolls": [
-            "Infused Chakra Blade Scroll"
-        ]
+        "level": 1,
+        "exp": 123.3,
+        "money": 17520,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "1316051731993460798": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 0,
+        "money": 1000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "1442717299630018653": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 112.1,
+        "money": 107000,
+        "ramen": 26,
+        "SS": 0,
+        "elo": 0,
+        "ss": 0
     },
     "1086277855144579156": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 0,
+        "money": 1000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "611198325651275815": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 11.1,
+        "money": 7000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "1198710489870516316": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 0,
+        "money": 1000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "1263312156703854603": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 20,
+        "money": 11000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "769141500755836928": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 12.2,
+        "money": 8000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "1433164235755749488": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 12.2,
+        "money": 8000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "767121131835883590": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 3,
+        "exp": 1.0999999999999996,
+        "money": 7000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0,
+        "backup": {
+            "health": 1004,
+            "power": 107,
+            "defense": 52,
+            "chakra": 10
+        }
     },
     "1285893427866898462": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 10,
+        "money": 6000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
+    },
+    "1408953333019836486": {
+        "money": 0
+    },
+    "1396656392894681158": {
+        "money": 0
     },
     "766465809639669840": {
-        "usersjutsu": [
-            "Transformation Jutsu",
-            "Infused Chakra Blade",
-            "Lightning Blade: All Out",
-            "One Thousand Years of Death",
-            "Creation Rebirth",
-            "Lightning Hound",
-            "Burning Ash",
-            "Water Dragon Jutsu",
-            "Flying Raijin Jutsu",
-            "Great Forest Crumbling",
-            "Rasenshuriken",
-            "Analysis",
-            "Seventh Form: Haze Dance",
-            "Shadow Clone Jutsu",
-            "Summon Ninken",
-            "Rasengan",
-            "Improved Mystic Palm",
-            "Seventh Form: Flaming Thunder God",
-            "Explosive Paper Clone",
-            "Shadow Clone Jutsu: 1000 clones",
-            "Kirin: Lightning Storm",
-            "Tenseigan Chakra Mode",
-            "Planetary Devastation",
-            "Ice Shards",
-            "Snow Clone",
-            "Mystic Palm",
-            "Amaterasu",
-            "Summon Manda",
-            "Primary Lotus",
-            "Twin Rising Dragons",
-            "Blizzard Strike",
-            "Ice Prison",
-            "Sixty Four Palms",
-            "Serpents Wrath",
-            "9th form: Rengoku",
-            "Asura's Blade of Execution",
-            "Black Vortex Cataclysm",
-            "Four Violet Flames Formation",
-            "Pee Pee Poo Poo",
-            "Needle Assault",
-            "Perfect Sage",
-            "Silent Assassination",
-            "Eight Gates",
-            "Shadow Strangle",
-            "Ephemeral",
-            "Sexy Jutsu",
-            "Mystic Palm Enhanced",
-            "Tsukuyomi",
-            "Susanoo",
-            "Amaterasu: Infinite Flames",
-            "Almighty Push",
-            "Praise Jashin",
-            "Kamui",
-            "Izanami",
-            "Gum Gum Gatling",
-            "Lightning Blade",
-            "Fireball Jutsu",
-            "Cherry Blossom Impact",
-            "Detroit Smash"
-        ],
-        "items": {
-            "Crystalline Shard": 318,
-            "Ay Token": 136,
-            "Christmas Token": 0,
-            "crystal_shard": 12,
-            "iron_ore": 13,
-            "Zoro's Locket": 6,
-            "Pocket Watch": 2
+        "level": 2400,
+        "exp": 2178205,
+        "money": 20327635.5,
+        "ramen": 0,
+        "SS": 0,
+        "elo": 0,
+        "lastClaim": "2026-02-20T17:31:07.565Z",
+        "nextClaim": "2026-02-21T17:31:07.565Z",
+        "ss": 384,
+        "backup": {
+            "health": 46227,
+            "power": 107933,
+            "defense": 102570,
+            "chakra": 30
         },
-        "scrolls": [
-            "Tenseigan Scroll",
-            "Asura's Blade of Execution",
-            "Lightning Blade: All Out",
-            "9th form: Rengoku",
-            "Amaterasu",
-            "Summon Manda",
-            "Tsukuyomi",
-            "Susanoo",
-            "Amaterasu: Infinite Flames",
-            "Almighty Push",
-            "Praise Jashin",
-            "Kamui",
-            "Izanami"
-        ],
-        "combos": [
-            "Intermediate Combo",
-            "Kakashi's Legacy",
-            "Hidden Mist Duo",
-            "Team 7 Classic"
-        ]
+        "premiumRoles": [],
+        "missions_completed": 11488,
+        "adtokens": 42
     },
     "495235192190009345": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 10,
+        "money": 6000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "638801018943176724": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 11.1,
+        "money": 7000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
+    },
+    "834523163513585754": {
+        "money": 1000,
+        "exp": null
+    },
+    "1384582609438376127": {
+        "money": 0
     },
     "701483740337274880": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 10,
+        "money": 6000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
+    },
+    "1088923256557420654": {
+        "money": 0
+    },
+    "447025934655029258": {
+        "money": 2000,
+        "exp": 39,
+        "level": 4,
+        "backup": {
+            "health": 108,
+            "power": 20,
+            "defense": 9,
+            "chakra": 10
+        },
+        "ramen": 1,
+        "lastClaim": "2025-12-07T20:49:55.536Z",
+        "nextClaim": "2025-12-08T20:49:55.536Z"
     },
     "1403336950663872663": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 1.1,
+        "money": 2000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "483324503292641309": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 3,
+        "exp": 1.0999999999999996,
+        "money": 7000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0,
+        "backup": {
+            "health": 1004,
+            "power": 106,
+            "defense": 53,
+            "chakra": 10
+        }
     },
     "253907708800008193": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 11.1,
+        "money": 7000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "616710232206475271": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 5,
+        "exp": 8,
+        "money": 3015204,
+        "ramen": 0,
+        "SS": 0,
+        "elo": 0,
+        "ss": 300,
+        "backup": {
+            "health": 1010,
+            "power": 278,
+            "defense": 57,
+            "chakra": 10
+        }
     },
     "494637954799763467": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ],
-        "items": {
-            "Christmas Token": 6,
-            "iron_ore": 14,
-            "wood": 9
-        }
+        "level": 1,
+        "exp": 297,
+        "money": 8734,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "167673799179763713": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ],
-        "items": {
-            "Crystalline Shard": 2
-        }
+        "level": 1,
+        "exp": 164,
+        "money": 123410,
+        "ramen": 26,
+        "SS": 0,
+        "elo": 0,
+        "ss": 0
     },
     "1123162433507311677": {
-        "usersjutsu": [
-            "Transformation Jutsu",
-            "Shadow Clone Jutsu",
-            "Fireball Jutsu",
-            "Analysis",
-            "Mystic Palm",
-            "Summon Ninken",
-            "Parry",
-            "Ice Prison",
-            "Twin Rising Dragons",
-            "Primary Lotus",
-            "One Thousand Years of Death",
-            "Planetary Devastation",
-            "Blizzard Strike",
-            "Creation Rebirth",
-            "Burning Ash",
-            "Seventh Form: Flaming Thunder God",
-            "Water Dragon Jutsu",
-            "Needle Assault",
-            "Flying Raijin Jutsu",
-            "Great Forest Crumbling",
-            "Amaterasu",
-            "Rasenshuriken",
-            "9th form: Rengoku",
-            "Lightning Blade: All Out",
-            "Asura's Blade of Execution",
-            "Set Your Face Ablaze",
-            "Ruri'iro Kujaku",
-            "Ninpo: Ascetic Blaze",
-            "FLOWING RED SCALE",
-            "PIERCING BLOOD: CONVERGENCE MAXIMUM",
-            "A Twins Sacrifice"
-        ],
-        "items": {
-            "Christmas Token": 0,
-            "Crystalline Shard": 59,
-            "Zoro's Locket": 1
+        "level": 597,
+        "exp": 5331,
+        "money": 26168650.5,
+        "ramen": 161,
+        "SS": 0,
+        "elo": 0,
+        "ss": 466,
+        "lastClaim": "2026-01-09T01:56:03.533Z",
+        "nextClaim": "2026-01-10T01:56:03.533Z",
+        "backup": {
+            "health": 3863,
+            "power": 16978,
+            "defense": 16317,
+            "chakra": 10
         },
-        "scrolls": [
-            "Amaterasu",
-            "9th form: Rengoku",
-            "Lightning Blade: All Out",
-            "Tenseigan Scroll"
-        ]
+        "missions_completed": 3506
     },
     "757969874130829505": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 10,
+        "money": 6000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "1257046447917109318": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 10,
+        "money": 6000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "1425847648543309928": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 10,
+        "money": 6000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "1206690110226038827": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 10,
+        "money": 6000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "1421904237608177845": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 10,
+        "money": 6000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "898809992528928789": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 10,
+        "money": 6000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "933834435592323083": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 0,
+        "money": 1000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "1424128035883323476": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 0,
+        "money": 1000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "971564454116483182": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 10,
+        "money": 6000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "961918563382362122": {
-        "usersjutsu": [
-            "Transformation Jutsu",
-            "Heaven's Supremacy",
-            "Kirin: Lightning Storm",
-            "One Thousand Years of Death",
-            "Creation Rebirth",
-            "Burning Ash",
-            "Water Dragon Jutsu",
-            "Flying Raijin Jutsu",
-            "Great Forest Crumbling",
-            "Rasenshuriken",
-            "Carnage",
-            "World Cutting Slash",
-            "Pee Pee Poo Poo",
-            "Full Counter",
-            "Izanagi",
-            "Izanami",
-            "Guillotine Drop",
-            "Tsukuyomi",
-            "Susanoo",
-            "Three Thousand Worlds",
-            "Ikari",
-            "Raiders Tower",
-            "Banana Killer",
-            "Gum Gum Gatling",
-            "Infinite Void",
-            "Dimensional Slash",
-            "Galick Gun",
-            "Amaterasu: Infinite Flames",
-            "Analysis"
-        ],
-        "scrolls": [
-            "Tenseigan Scroll"
-        ]
+        "level": 83,
+        "exp": 397.9,
+        "money": 996339682314,
+        "ramen": 250,
+        "SS": 0,
+        "elo": 0,
+        "missions_completed": 17,
+        "ss": 7055,
+        "backup": {
+            "health": 210009400003742,
+            "power": 15000000150000360,
+            "defense": 15315030450010880,
+            "chakra": 10
+        }
     },
     "174997486874656768": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 10,
+        "money": 6000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "648626814138318894": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 10,
+        "money": 6000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "1310429099017240689": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 10,
+        "money": 6000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
+    },
+    "1081723482750058526": {
+        "money": 0
     },
     "557342571886673920": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 10,
+        "money": 6000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "983939927156871208": {
-        "usersjutsu": [
-            "Transformation Jutsu",
-            "Water Clone"
-        ]
+        "level": 1,
+        "exp": 70,
+        "money": 6902,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0,
+        "ss": 0,
+        "missions_completed": 1
     },
     "807323161698762792": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 10,
+        "money": 6000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "775292287017811978": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 11.1,
+        "money": 7000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "139501897311584256": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 4,
+        "exp": 5.4,
+        "money": 14000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0,
+        "backup": {
+            "health": 1007,
+            "power": 112,
+            "defense": 54,
+            "chakra": 10
+        }
     },
     "343911839593136140": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 3,
+        "exp": 1.0999999999999996,
+        "money": 7000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0,
+        "backup": {
+            "health": 1004,
+            "power": 107,
+            "defense": 54,
+            "chakra": 10
+        }
+    },
+    "1413132407950934057": {
+        "money": 0
     },
     "239165788638937089": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 14,
+        "money": 9000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "1309017261645758484": {
-        "usersjutsu": [
-            "Transformation Jutsu",
-            "Shadow Clone Jutsu"
-        ]
+        "level": 1,
+        "exp": 11.1,
+        "money": 2107000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0,
+        "ss": 200
     },
     "1328871192840634430": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 10,
+        "money": 6000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
+    },
+    "765131315711967263": {
+        "money": 0
     },
     "789225036196085760": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 11.1,
+        "money": 7000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "820580034376105995": {
-        "usersjutsu": [
-            "Transformation Jutsu",
-            "Needle Assault",
-            "Silent Assassination",
-            "Fireball Jutsu",
-            "Shadow Clone Jutsu",
-            "Analysis",
-            "The Grand Rebellion",
-            "Summon Ninken",
-            "Mystic Palm",
-            "Parry",
-            "Kirin",
-            "Lightning Blade",
-            "Sexy Jutsu",
-            "Dynamic Entry",
-            "Infused Chakra Blade: Enhanced",
-            "Leaf Whirlwind",
-            "Shadow Possession",
-            "One Thousand Years of Death",
-            "Rasengan",
-            "Creation Rebirth",
-            "Burning Ash",
-            "Amaterasu",
-            "Water Dragon Jutsu",
-            "Flying Raijin Jutsu",
-            "Great Forest Crumbling",
-            "Rasenshuriken",
-            "9th form: Rengoku",
-            "Lightning Blade: All Out",
-            "Ephemeral",
-            "Eight Gates",
-            "Asura's Blade of Execution",
-            "Tenseigan Chakra Mode",
-            "Human Boulder",
-            "Puppet Kazekage",
-            "Serpents Wrath",
-            "King of Hell",
-            "Primary Lotus",
-            "Blizzard Strike",
-            "Improved Mystic Palm",
-            "Unified Will",
-            "Summon Manda",
-            "Twin Lion Fist",
-            "Shadow Strangle",
-            "Cherry Blossom Impact",
-            "Mystic Palm Enhanced",
-            "Infused Chakra Blade",
-            "Tsukuyomi",
-            "Praise Jashin",
-            "Susanoo",
-            "Almighty Push",
-            "Amaterasu: Infinite Flames",
-            "Kamui",
-            "Izanami",
-            "Dimensional Slash",
-            "Sixty Four Palms",
-            "Thirty Two Palms",
-            "Smoke Bomb",
-            "Kamehameha"
-        ],
-        "items": {
-            "Christmas Token": 0,
-            "Crystalline Shard": 290,
-            "Zoro's Locket": 21
+        "level": 2026,
+        "exp": 1007766,
+        "money": 44470538.5,
+        "ramen": 561,
+        "SS": 0,
+        "elo": 0,
+        "backup": {
+            "health": 63437,
+            "power": 92119,
+            "defense": 84634,
+            "chakra": 15
         },
-        "combos": [
-            "Intermediate Combo",
-            "Basic Combo",
-            "Kakashi's Legacy",
-            "Shadow Tactician",
-            "Hidden Mist Duo",
-            "Team 7 Classic"
+        "ss": 388,
+        "lastClaim": "2026-02-17T16:36:15.999Z",
+        "nextClaim": "2026-02-18T16:36:15.999Z",
+        "missions_completed": 9155,
+        "premiumRoles": [
+            {
+                "roleId": "1385641469507010640",
+                "expiresAt": 1774173809371
+            }
         ],
-        "scrolls": [
-            "Amaterasu",
-            "Lightning Blade: All Out",
-            "9th form: Rengoku",
-            "Asura's Blade of Execution",
-            "Tenseigan Scroll",
-            "Summon Manda",
-            "Tsukuyomi",
-            "Praise Jashin",
-            "Susanoo",
-            "Almighty Push",
-            "Amaterasu: Infinite Flames",
-            "Kamui",
-            "Izanami"
-        ]
+        "adtokens": 56
     },
     "1215055297492819978": {
-        "usersjutsu": [
-            "Transformation Jutsu",
-            "Thirty Two Palms",
-            "Infused Chakra Blade",
-            "Needle Assault",
-            "One Thousand Years of Death",
-            "Creation Rebirth",
-            "Serpents Wrath",
-            "Burning Ash"
-        ],
-        "scrolls": [
-            "Infused Chakra Blade Scroll"
-        ],
-        "items": {
-            "Crystalline Shard": 1
-        },
-        "combos": [
-            "Intermediate Combo"
-        ]
+        "level": 142,
+        "exp": 18237,
+        "money": 34692282,
+        "ramen": 1098,
+        "SS": 0,
+        "elo": 0,
+        "lastClaim": "2026-01-31T17:40:33.044Z",
+        "nextClaim": "2026-02-01T17:40:33.044Z",
+        "ss": 366,
+        "missions_completed": 457,
+        "backup": {
+            "health": 4842,
+            "power": 1832,
+            "defense": 1742,
+            "chakra": 10
+        }
     },
     "1086309931864559616": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 0,
+        "money": 1000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "714197971947880518": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 10,
+        "money": 6000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "775935240060796940": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 10,
+        "money": 6000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "760489168899276842": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ],
-        "items": {
-            "Crystalline Shard": 2
-        }
+        "level": 1,
+        "exp": 11.1,
+        "money": 12000,
+        "ramen": 379,
+        "SS": 0,
+        "elo": 0,
+        "lastClaim": "2026-01-24T12:20:02.827Z",
+        "nextClaim": "2026-01-25T12:20:02.827Z"
     },
     "511590474876715010": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 10,
+        "money": 6000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "778213616163356674": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 10,
+        "money": 6000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "512009014867918859": {
-        "usersjutsu": [
-            "Transformation Jutsu",
-            "Needle Assault"
-        ],
-        "scrolls": [
-            "Infused Chakra Blade Scroll"
-        ]
+        "level": 1,
+        "exp": 365.1,
+        "money": 35000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "835408109899219004": {
-        "usersjutsu": [
-            "Transformation Jutsu",
-            "Carnage",
-            "Infused Chakra Blade",
-            "One Thousand Years of Death",
-            "Creation Rebirth",
-            "Burning Ash",
-            "Water Dragon Jutsu",
-            "Flying Raijin Jutsu",
-            "Great Forest Crumbling",
-            "Rasenshuriken",
-            "Wheel of Fate Adaptation",
-            "Analysis",
-            "Meteoric Burst",
-            "Silent Assassination",
-            "Rebirth Protocol",
-            "King of Hell",
-            "Ruri'iro Kujaku",
-            "Black Vortex Cataclysm",
-            "Last Resort",
-            "Punisher Shield",
-            "200% Hollow Purple",
-            "Hakai Release",
-            "Dragon Emperor Life Destructor",
-            "Four Violet Flames Formation",
-            "Summon Shrek",
-            "Lord of Bloodsea",
-            "Twin Rising Dragons",
-            "Summon Ninken",
-            "Fireball Jutsu",
-            "Kaioken",
-            "Sixty Four Palms",
-            "Unified Will",
-            "Full Counter",
-            "World Cutting Slash",
-            "Azora Raizen",
-            "Puppet Kazekage",
-            "Perfect Sage",
-            "Gold Experience Requiem",
-            "Violent Fierce God Slicer",
-            "Crystal Palace",
-            "Mystic Palm",
-            "Izanami",
-            "C3",
-            "Special Beam Cannon",
-            "Indra's Arrow",
-            "Asura's Blade of Execution",
-            "Sand Bullet",
-            "Planetary Devastation",
-            "Almighty Push",
-            "Amaterasu",
-            "Amaterasu: Infinite Flames",
-            "Banana Killer",
-            "Bull Charge",
-            "Tiger Hunt",
-            "Three Thousand Worlds",
-            "Ashura: Makyusen",
-            "Ikari",
-            "The Grand Rebellion",
-            "PIERCING BLOOD: CONVERGENCE MAXIMUM",
-            "Water Prison",
-            "TAILED BEAST ART: VERMILLION PULSE",
-            "Iai Chop Form 7:Nichirin"
+        "level": 1,
+        "exp": 10276.2,
+        "money": 80071146,
+        "ramen": 786889,
+        "SS": 1000,
+        "elo": 0,
+        "missions_completed": 32,
+        "lastClaim": "2026-02-20T18:28:33.392Z",
+        "nextClaim": "2026-02-21T18:28:33.392Z",
+        "ss": 999971058,
+        "premiumRoles": [
+            {
+                "roleId": "1385641469507010640",
+                "expiresAt": 1773435738458
+            }
         ],
-        "scrolls": [
-            "Infused Chakra Blade Scroll",
-            "Tenseigan Scroll",
-            "Almighty Push"
-        ],
-        "items": {
-            "Crystalline Shard": 8
-        }
+        "akatsuki_tickets": 5,
+        "adTokens": 2,
+        "adtokens": 11
     },
     "1267862418441240596": {
-        "usersjutsu": [
-            "Transformation Jutsu",
-            "Monster Claw",
-            "Silent Assassination",
-            "Needle Assault",
-            "Shadow Clone Jutsu",
-            "Analysis",
-            "Fireball Jutsu",
-            "Kirin",
-            "Sexy Jutsu",
-            "Rasengan",
-            "One Thousand Years of Death",
-            "Creation Rebirth",
-            "Eight Gates",
-            "Parry",
-            "Ephemeral",
-            "Burning Ash"
-        ],
-        "combos": [
-            "Basic Combo",
-            "Intermediate Combo"
-        ],
-        "items": {
-            "Crystalline Shard": 16
+        "level": 107,
+        "exp": 2347,
+        "money": 1705750,
+        "ramen": 10,
+        "SS": 0,
+        "elo": 0,
+        "missions_completed": 15,
+        "backup": {
+            "health": 1684,
+            "power": 467,
+            "defense": 618,
+            "chakra": 10
         },
-        "scrolls": [
-            "Lightning Blade: All Out"
-        ]
+        "ss": 0,
+        "lastClaim": "2026-01-01T17:42:49.319Z",
+        "nextClaim": "2026-01-02T17:42:49.319Z"
     },
     "832639694126448710": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 25.1,
+        "money": 6205,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "1003462305494880378": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 10,
+        "money": 6000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "1336261859224981594": {
-        "usersjutsu": [
-            "Transformation Jutsu",
-            "Shadow Clone Jutsu",
-            "Web Trap",
-            "Needle Assault",
-            "Silent Assassination",
-            "Serpents Wrath",
-            "Analysis",
-            "Mystic Palm"
-        ],
-        "items": {
-            "Crystalline Shard": 16,
-            "Zoro's Locket": 2
+        "level": 107,
+        "exp": 5732,
+        "money": 4543014.5,
+        "ramen": 0,
+        "SS": 0,
+        "elo": 0,
+        "missions_completed": 113,
+        "backup": {
+            "health": 1271,
+            "power": 846,
+            "defense": 746,
+            "chakra": 10
         },
-        "scrolls": [
-            "Amaterasu",
-            "9th form: Rengoku"
-        ]
+        "ss": 300
     },
     "1066697102345912340": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 0,
+        "money": 1000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "283317748438925312": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 11.1,
+        "money": 7000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0,
+        "missions_completed": 1
     },
     "747563905282343043": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 266,
+        "money": 34000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0,
+        "missions_completed": 3
     },
     "1305791155090358283": {
-        "usersjutsu": [
-            "Transformation Jutsu",
-            "Needle Assault",
-            "Twin Rising Dragons"
-        ],
-        "items": {
-            "Crystalline Shard": 4
+        "level": 120,
+        "exp": 74,
+        "money": 201010,
+        "ramen": 0,
+        "SS": 0,
+        "elo": 0,
+        "lastClaim": "2026-01-09T05:55:44.299Z",
+        "nextClaim": "2026-01-10T05:55:44.299Z",
+        "missions_completed": 8,
+        "backup": {
+            "health": 1305,
+            "power": 1640,
+            "defense": 976,
+            "chakra": 10
         },
-        "scrolls": [
-            "9th form: Rengoku"
-        ],
-        "combos": [
-            "Intermidiate Combo"
-        ]
+        "ss": 0
     },
     "791252443039924255": {
-        "usersjutsu": [
-            "Transformation Jutsu",
-            "Infused Chakra Blade",
-            "Needle Assault",
-            "Human Boulder",
-            "Analysis",
-            "Shadow Clone Jutsu",
-            "Fireball Jutsu",
-            "Lightning Blade",
-            "Eight Gates",
-            "Amaterasu"
-        ],
-        "scrolls": [
-            "Amaterasu"
-        ],
-        "items": {
-            "Crystalline Shard": 11,
-            "Zoro's Locket": 1
+        "level": 72,
+        "exp": 20.699999999999818,
+        "money": 682690,
+        "ramen": 0,
+        "SS": 0,
+        "elo": 0,
+        "missions_completed": 70,
+        "backup": {
+            "health": 1178,
+            "power": 734,
+            "defense": 1298,
+            "chakra": 10
         },
-        "combos": [
-            "Intermediate Combo"
-        ]
+        "ss": 100,
+        "lastClaim": "2026-01-12T10:18:43.357Z",
+        "nextClaim": "2026-01-13T10:18:43.357Z"
     },
     "714104614512885770": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ],
-        "items": {
-            "Crystalline Shard": 4
-        }
+        "level": 17,
+        "exp": 1,
+        "money": 112520,
+        "ramen": 26,
+        "SS": 0,
+        "elo": 0,
+        "missions_completed": 8,
+        "backup": {
+            "health": 1041,
+            "power": 158,
+            "defense": 78,
+            "chakra": 10
+        },
+        "ss": 0
     },
     "1080877450763980831": {
-        "usersjutsu": [
-            "Transformation Jutsu",
-            "Blizzard Strike"
-        ]
+        "level": 1,
+        "exp": 60,
+        "money": 1000,
+        "ramen": 1,
+        "SS": 31999,
+        "elo": 0,
+        "missions_completed": 1
     },
     "576474741565816854": {
-        "usersjutsu": [
-            "Transformation Jutsu",
-            "Needle Assault"
-        ]
+        "level": 1,
+        "exp": 163.1,
+        "money": 18000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0,
+        "missions_completed": 2
     },
     "636694840876335164": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ],
-        "scrolls": [
-            "Infused Chakra Blade Scroll"
-        ]
+        "level": 1,
+        "exp": 163.3,
+        "money": 12000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0,
+        "missions_completed": 6
+    },
+    "770010084096213002": {
+        "money": 0
     },
     "251077823433801728": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 11.1,
+        "money": 7000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0,
+        "missions_completed": 1
     },
     "423703410206965760": {
-        "usersjutsu": [
-            "Transformation Jutsu",
-            "Puppet Kazekage",
-            "Needle Assault"
-        ]
+        "level": 27,
+        "exp": 39.30000000000001,
+        "money": 158315,
+        "ramen": 51,
+        "SS": 0,
+        "elo": 0,
+        "missions_completed": 13,
+        "backup": {
+            "health": 1063,
+            "power": 185,
+            "defense": 85,
+            "chakra": 10
+        },
+        "ss": 0
     },
     "1356103829837451355": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 11.1,
+        "money": 7000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0,
+        "missions_completed": 1
+    },
+    "934347146411507773": {
+        "money": 1000,
+        "missions_completed": 1,
+        "exp": null
     },
     "711146181794988064": {
-        "usersjutsu": [
-            "Transformation Jutsu",
-            "Needle Assault",
-            "Kirin",
-            "Infused Chakra Blade",
-            "Serpents Wrath",
-            "Silent Assassination",
-            "One Thousand Years of Death",
-            "Puppet Kazekage",
-            "Creation Rebirth",
-            "Analysis",
-            "Shadow Clone Jutsu",
-            "Fireball Jutsu",
-            "Mystic Palm",
-            "Summon Ninken",
-            "Parry",
-            "Lightning Blade",
-            "Infused Chakra Blade: Enhanced",
-            "Sexy Jutsu",
-            "Dynamic Entry",
-            "Shadow Possession",
-            "Cherry Blossom Impact",
-            "Amaterasu",
-            "Burning Ash",
-            "Leaf Whirlwind",
-            "Water Dragon Jutsu",
-            "Primary Lotus",
-            "Rasengan",
-            "Ephemeral",
-            "Lightning Blade: All Out",
-            "Eight Gates",
-            "Twin Lion Fist",
-            "Shadow Strangle",
-            "Flying Raijin Jutsu",
-            "Great Forest Crumbling",
-            "Rasenshuriken",
-            "Asura's Blade of Execution",
-            "Tenseigan Chakra Mode",
-            "Full Counter",
-            "9th form: Rengoku",
-            "Summon Manda",
-            "Pee Pee Poo Poo",
-            "Gold Experience Requiem",
-            "Violent Fierce God Slicer",
-            "Mystic Palm Enhanced"
-        ],
-        "scrolls": [
-            "Amaterasu",
-            "Tenseigan Scroll",
-            "Infused Chakra Blade Scroll",
-            "9th form: Rengoku",
-            "Summon Manda"
-        ],
-        "items": {
-            "Crystalline Shard": 184,
-            "Zoro's Locket": 13
+        "level": 1196,
+        "exp": 327689.5,
+        "money": 15516375,
+        "ramen": 239,
+        "SS": 0,
+        "elo": 0,
+        "missions_completed": 4828,
+        "lastClaim": "2026-01-30T16:50:09.615Z",
+        "nextClaim": "2026-01-31T16:50:09.615Z",
+        "ss": 715,
+        "backup": {
+            "health": 24178,
+            "power": 95083,
+            "defense": 70484,
+            "chakra": 15
         },
-        "combos": [
-            "Intermediate Combo"
+        "premiumRoles": [
+            {
+                "roleId": "1385641469507010640",
+                "expiresAt": 1771664686271
+            },
+            {
+                "roleId": "1385640798581952714",
+                "expiresAt": 1771676735287
+            }
         ]
     },
     "1393342409009795123": {
-        "usersjutsu": [
-            "Transformation Jutsu",
-            "Needle Assault"
-        ]
+        "level": 1,
+        "exp": 163.1,
+        "money": 18000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0,
+        "missions_completed": 2
     },
     "689601916506079317": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 61.1,
+        "money": 8000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0,
+        "missions_completed": 2
     },
     "1202275260637138967": {
-        "usersjutsu": [
-            "Transformation Jutsu",
-            "Lightning Blade",
-            "Infused Chakra Blade",
-            "One Thousand Years of Death",
-            "Needle Assault",
-            "Serpents Wrath",
-            "Creation Rebirth",
-            "Burning Ash",
-            "Dragon Emperor Life Destructor",
-            "Water Dragon Jutsu",
-            "Flying Raijin Jutsu",
-            "Great Forest Crumbling",
-            "Rasenshuriken"
-        ]
+        "level": 500,
+        "exp": 17094.2,
+        "money": 931315,
+        "ramen": 25,
+        "SS": 0,
+        "elo": 0,
+        "missions_completed": 10,
+        "ss": 100,
+        "lastClaim": "2026-01-18T13:17:54.145Z",
+        "nextClaim": "2026-01-19T13:17:54.145Z"
     },
     "178263754251698176": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 10,
+        "money": 6000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "148210108919316480": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 10,
+        "money": 6000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "1462032658530828309": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 11.1,
+        "money": 0,
+        "ramen": 12,
+        "SS": 300,
+        "elo": 0,
+        "ss": 0,
+        "premiumRoles": [
+            {
+                "roleId": "1385641469507010640",
+                "expiresAt": 1771700407048
+            },
+            {
+                "roleId": "1385640798581952714",
+                "expiresAt": 1772025182333
+            },
+            {
+                "roleId": "1385640728130097182",
+                "expiresAt": 1772025190460
+            }
+        ],
+        "missions_completed": 1
     },
     "1015551518956589078": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 101.1,
+        "money": 4000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0,
+        "missions_completed": 3
     },
     "1192106651344441414": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 20,
+        "money": 11000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "1459687907768926404": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 61.1,
+        "money": 8000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0,
+        "missions_completed": 2
     },
     "891089077988892692": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 10,
+        "money": 6000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "971110549414871140": {
-        "usersjutsu": [
-            "Transformation Jutsu"
-        ]
+        "level": 1,
+        "exp": 11.1,
+        "money": 7000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0,
+        "missions_completed": 1
     },
     "135275438556708873": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu",
-            "Infused Chakra Blade",
-            "One Thousand Years of Death",
-            "Creation Rebirth",
-            "Needle Assault",
-            "Serpents Wrath",
-            "Summon Shrek",
-            "Burning Ash",
-            "Water Dragon Jutsu",
-            "Flying Raijin Jutsu",
-            "Great Forest Crumbling",
-            "Rasenshuriken",
-            "9th form: Rengoku",
-            "Lightning Blade: All Out",
-            "Analysis",
-            "Summon Ninken",
-            "Shadow Possession",
-            "Puppet Kazekage"
-        ],
-        "combos": [],
-        "scrolls": [
-            "Infused Chakra Blade Scroll",
-            "Tenseigan Scroll"
-        ],
-        "items": {
-            "Crystalline Shard": 5
+        "level": 509,
+        "exp": 2837.7,
+        "money": 3825441.5,
+        "ramen": 46,
+        "SS": 0,
+        "elo": 0,
+        "missions_completed": 112,
+        "backup": {
+            "health": 25022,
+            "power": 15033,
+            "defense": 15015,
+            "chakra": 15
         },
-        "rankeditems": []
+        "ss": 200,
+        "lastClaim": "2026-01-19T10:51:29.072Z",
+        "nextClaim": "2026-01-20T10:51:29.072Z",
+        "premiumRoles": []
     },
     "892711988923338792": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu"
-        ],
-        "combos": [],
-        "scrolls": [],
-        "items": {},
-        "rankeditems": []
+        "level": 1,
+        "exp": 10,
+        "money": 6000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "1000836510058303559": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu",
-            "Needle Assault"
-        ],
-        "combos": [],
-        "scrolls": [],
-        "items": {},
-        "rankeditems": []
+        "level": 28,
+        "exp": 200,
+        "money": 46829,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0,
+        "missions_completed": 36,
+        "backup": {
+            "health": 1070,
+            "power": 193,
+            "defense": 91,
+            "chakra": 10
+        }
     },
     "1066798426966208552": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu",
-            "Shadow Strangle",
-            "Needle Assault"
-        ],
-        "combos": [],
-        "scrolls": [
-            "Infused Chakra Blade Scroll"
-        ],
-        "items": {},
-        "rankeditems": []
+        "level": 36,
+        "exp": 47.10000000000002,
+        "money": 75215,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0,
+        "missions_completed": 53,
+        "backup": {
+            "health": 1088,
+            "power": 217,
+            "defense": 104,
+            "chakra": 10
+        }
     },
     "1259372885630521405": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu"
-        ],
-        "combos": [],
-        "scrolls": [],
-        "items": {},
-        "rankeditems": []
+        "level": 1,
+        "exp": 11.1,
+        "money": 7000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0,
+        "missions_completed": 1
     },
     "1341334288716533831": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu",
-            "The Grand Rebellion"
-        ],
-        "combos": [],
-        "scrolls": [],
-        "items": {},
-        "rankeditems": []
+        "level": 7,
+        "exp": 8.8,
+        "money": 9000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0,
+        "missions_completed": 3,
+        "backup": {
+            "health": 1015,
+            "power": 121,
+            "defense": 60,
+            "chakra": 10
+        }
     },
     "1192527669217218711": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu"
-        ],
-        "combos": [],
-        "scrolls": [],
-        "items": {},
-        "rankeditems": []
+        "level": 1,
+        "exp": 11,
+        "money": 6150,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0,
+        "missions_completed": 1
     },
     "1117186377570861056": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu"
-        ],
-        "combos": [],
-        "scrolls": [],
-        "items": {},
-        "rankeditems": []
+        "level": 1,
+        "exp": 27.3,
+        "money": 8205,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0,
+        "missions_completed": 3
     },
     "1281721691902574687": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu"
-        ],
-        "combos": [],
-        "scrolls": [],
-        "items": {},
-        "rankeditems": []
+        "level": 1,
+        "exp": 10,
+        "money": 6000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "1464867919493202032": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu",
-            "Infused Chakra Blade",
-            "Needle Assault",
-            "Analysis",
-            "Puppet Master",
-            "One Thousand Years of Death",
-            "Creation Rebirth",
-            "Summon Ninken",
-            "Lightning Blade: All Out",
-            "Burning Ash"
-        ],
-        "combos": [],
-        "scrolls": [
-            "Summon Manda",
-            "Infused Chakra Blade Scroll"
-        ],
-        "items": {
-            "Crystalline Shard": 5
+        "level": 101,
+        "exp": 228,
+        "money": 780767,
+        "ramen": 75,
+        "SS": 0,
+        "elo": 0,
+        "missions_completed": 207,
+        "backup": {
+            "health": 1540,
+            "power": 871,
+            "defense": 1248,
+            "chakra": 10
         },
-        "rankeditems": []
+        "ss": 10
     },
     "636089119390302209": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu"
-        ],
-        "combos": [],
-        "scrolls": [],
-        "items": {},
-        "rankeditems": []
+        "level": 1,
+        "exp": 10,
+        "money": 6000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "1133597719634657350": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu"
-        ],
-        "combos": [],
-        "scrolls": [],
-        "items": {},
-        "rankeditems": []
+        "level": 1,
+        "exp": 10,
+        "money": 6000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "1446349184163774520": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu"
-        ],
-        "combos": [],
-        "scrolls": [],
-        "items": {},
-        "rankeditems": []
+        "level": 1,
+        "exp": 71,
+        "money": 7050,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0,
+        "missions_completed": 2
     },
     "1351531759379939329": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu"
-        ],
-        "combos": [],
-        "scrolls": [],
-        "items": {},
-        "rankeditems": []
+        "level": 1,
+        "exp": 12,
+        "money": 6300,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0,
+        "missions_completed": 2
     },
     "1453436128483868713": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu",
-            "Crystal Palace",
-            "Analysis",
-            "Lightning Blade",
-            "Improved Mystic Palm",
-            "Needle Assault",
-            "Rasengan",
-            "One Thousand Years of Death",
-            "Creation Rebirth",
-            "Burning Ash",
-            "Infused Chakra Blade",
-            "Lightning Blade: All Out",
-            "Water Dragon Jutsu",
-            "Eight Gates",
-            "Silent Assassination",
-            "Ephemeral",
-            "Summon Ninken",
-            "Kirin",
-            "Flying Raijin Jutsu",
-            "Serpents Wrath",
-            "Shadow Possession",
-            "Mystic Palm Enhanced",
-            "Great Forest Crumbling",
-            "Rasenshuriken",
-            "Indra's Arrow",
-            "Tenseigan Chakra Mode",
-            "Asura's Blade of Execution",
-            "Tsukuyomi",
-            "Susanoo",
-            "Amaterasu: Infinite Flames",
-            "Shadow Strangle",
-            "Twin Lion Fist",
-            "Kamui",
-            "Almighty Push",
-            "Praise Jashin",
-            "Infused Chakra Blade: Enhanced",
-            "Izanami",
-            "Gum Gum Gatling",
-            "Dimensional Slash",
-            "TAILED BEAST ART: VERMILLION PULSE",
-            "Sixty Four Palms",
-            "Mystic Palm",
-            "Detroit Smash",
-            "Smoke Bomb"
-        ],
-        "combos": [
-            "Hokage's Will",
-            "Hidden Mist Duo",
-            "Shadow Tactician"
-        ],
-        "scrolls": [
-            "Infused Chakra Blade Scroll",
-            "9th form: Rengoku",
-            "Amaterasu",
-            "Lightning Blade: All Out",
-            "Summon Manda",
-            "Tenseigan Scroll",
-            "Tsukuyomi",
-            "Susanoo",
-            "Amaterasu: Infinite Flames",
-            "Kamui",
-            "Almighty Push",
-            "Praise Jashin",
-            "Izanami"
-        ],
-        "items": {
-            "Crystalline Shard": 795,
-            "Zoro's Locket": 4,
-            "Pocket Watch": 1
+        "level": 939,
+        "exp": 11163,
+        "money": 175936323,
+        "ramen": 3,
+        "SS": 0,
+        "elo": 0,
+        "missions_completed": 1045,
+        "backup": {
+            "health": 61641,
+            "power": 90348,
+            "defense": 89170,
+            "chakra": 10
         },
-        "rankeditems": []
+        "ss": 1090,
+        "lastClaim": "2026-02-20T18:28:20.873Z",
+        "nextClaim": "2026-02-21T18:28:20.873Z",
+        "premiumRoles": [
+            {
+                "roleId": "1385640798581952714",
+                "expiresAt": 1772292972233
+            }
+        ],
+        "adtokens": 104
     },
     "811203159401693196": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu",
-            "Needle Assault",
-            "Rasengan",
-            "Silent Assassination",
-            "Infused Chakra Blade"
-        ],
-        "combos": [
-            "Intermediate Combo"
-        ],
-        "scrolls": [],
-        "items": {},
-        "rankeditems": []
+        "level": 51,
+        "exp": 88,
+        "money": 66736,
+        "ramen": 0,
+        "SS": 0,
+        "elo": 0,
+        "missions_completed": 52,
+        "ss": 0,
+        "backup": {
+            "health": 1127,
+            "power": 1039,
+            "defense": 127,
+            "chakra": 10
+        }
     },
     "938325776883929108": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu",
-            "Infused Chakra Blade",
-            "Needle Assault",
-            "Rasenshuriken",
-            "One Thousand Years of Death",
-            "Creation Rebirth",
-            "Burning Ash",
-            "Mystic Palm",
-            "Rasengan",
-            "Amaterasu",
-            "Serpents Wrath",
-            "Water Dragon Jutsu",
-            "Flying Raijin Jutsu",
-            "Great Forest Crumbling",
-            "Analysis",
-            "Susanoo",
-            "Asura's Blade of Execution",
-            "Tenseigan Chakra Mode",
-            "Infinite Void"
-        ],
-        "combos": [
-            "Intermediate Combo"
-        ],
-        "scrolls": [
-            "Infused Chakra Blade Scroll",
-            "Summon Manda",
-            "Susanoo",
-            "Lightning Blade: All Out",
-            "Tenseigan Scroll"
-        ],
-        "items": {
-            "Crystalline Shard": 1,
-            "Zoro's Locket": 2
+        "level": 262,
+        "exp": 2332,
+        "money": 1272608.5,
+        "ramen": 25,
+        "SS": 0,
+        "elo": 0,
+        "missions_completed": 1148,
+        "backup": {
+            "health": 6360,
+            "power": 14567,
+            "defense": 14502,
+            "chakra": 10
         },
-        "rankeditems": []
-    },
-    "1129254239420551188": {
-        "usersjutsu": [
-            "Special Beam Canon"
+        "lastClaim": "2026-02-07T09:34:52.568Z",
+        "nextClaim": "2026-02-08T09:34:52.568Z",
+        "ss": 46,
+        "premiumRoles": [
+            {
+                "roleId": "1385640798581952714",
+                "expiresAt": 1772785597976
+            }
         ]
     },
     "890669412917592114": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu",
-            "Infused Chakra Blade",
-            "Explosive Paper Clone"
-        ],
-        "combos": [],
-        "scrolls": [],
-        "items": {
-            "Crystalline Shard": 1
-        },
-        "rankeditems": []
+        "level": 49,
+        "exp": 175,
+        "money": 596943,
+        "ramen": 176,
+        "SS": 0,
+        "elo": 0,
+        "missions_completed": 59,
+        "ss": 0,
+        "backup": {
+            "health": 1038,
+            "power": 159,
+            "defense": 74,
+            "chakra": 10
+        }
     },
     "787929150686101555": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu",
-            "Needle Assault"
-        ],
-        "combos": [],
-        "scrolls": [
-            "Infused Chakra Blade Scroll"
-        ],
-        "items": {},
-        "rankeditems": []
+        "level": 1,
+        "exp": 1173,
+        "money": 2367050,
+        "ramen": 101,
+        "SS": 0,
+        "elo": 0,
+        "missions_completed": 2,
+        "ss": 200
     },
     "1415035242619736175": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu",
-            "Rasenshuriken",
-            "Needle Assault"
-        ],
-        "combos": [],
-        "scrolls": [],
-        "items": {},
-        "rankeditems": []
+        "level": 1,
+        "exp": 293,
+        "money": 32233,
+        "ramen": 100000000000000,
+        "SS": 0,
+        "elo": 0,
+        "missions_completed": 3,
+        "ss": 110
     },
     "1242808719453196290": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu"
-        ],
-        "combos": [],
-        "scrolls": [],
-        "items": {},
-        "rankeditems": []
+        "level": 1,
+        "exp": 71,
+        "money": 7050,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0,
+        "missions_completed": 2
     },
     "1466794905761484994": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu"
-        ],
-        "combos": [],
-        "scrolls": [],
-        "items": {},
-        "rankeditems": []
+        "level": 1,
+        "exp": 1010,
+        "money": 356000,
+        "ramen": 101,
+        "SS": 0,
+        "elo": 0
     },
     "1466798629921751103": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu"
-        ],
-        "combos": [],
-        "scrolls": [],
-        "items": {},
-        "rankeditems": []
+        "level": 1,
+        "exp": 1010,
+        "money": 356000,
+        "ramen": 101,
+        "SS": 0,
+        "elo": 0
     },
     "1466800602771361803": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu"
-        ],
-        "combos": [],
-        "scrolls": [],
-        "items": {},
-        "rankeditems": []
+        "level": 1,
+        "exp": 1010,
+        "money": 356000,
+        "ramen": 101,
+        "SS": 0,
+        "elo": 0
     },
     "930349156961239070": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu"
-        ],
-        "combos": [],
-        "scrolls": [],
-        "items": {},
-        "rankeditems": []
+        "level": 1,
+        "exp": 1010,
+        "money": 356000,
+        "ramen": 101,
+        "SS": 0,
+        "elo": 0
     },
     "1341946327126507522": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu",
-            "Needle Assault",
-            "Infused Chakra Blade",
-            "Iron Sand",
-            "One Thousand Years of Death",
-            "Creation Rebirth",
-            "Burning Ash",
-            "Water Dragon Jutsu",
-            "Serpents Wrath",
-            "Fireball Jutsu",
-            "Flying Raijin Jutsu",
-            "Great Forest Crumbling",
-            "Rasenshuriken",
-            "Lightning Blade: All Out",
-            "Kirin",
-            "Sexy Jutsu",
-            "Dynamic Entry",
-            "Infused Chakra Blade: Enhanced",
-            "Summon Manda"
-        ],
-        "combos": [],
-        "scrolls": [
-            "Infused Chakra Blade Scroll",
-            "Tenseigan Scroll",
-            "Amaterasu"
-        ],
-        "items": {
-            "Crystalline Shard": 9
+        "level": 364,
+        "exp": 8558.5,
+        "money": 24234223,
+        "ramen": 75,
+        "SS": 0,
+        "elo": 0,
+        "missions_completed": 772,
+        "backup": {
+            "health": 6923,
+            "power": 15774,
+            "defense": 27692,
+            "chakra": 15
         },
-        "rankeditems": []
+        "lastClaim": "2026-01-31T03:47:28.047Z",
+        "nextClaim": "2026-02-01T03:47:28.047Z",
+        "ss": 111,
+        "premiumRoles": [
+            {
+                "roleId": "1385641469507010640",
+                "expiresAt": 1772443397387
+            }
+        ]
     },
     "919819285067595786": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu",
-            "One Thousand Years of Death",
-            "Summon Ninken",
-            "Lightning Blade",
-            "Shadow Clone Jutsu",
-            "Fireball Jutsu",
-            "Cherry Blossom Impact",
-            "Silent Assassination",
-            "Needle Assault",
-            "Water Dragon Jutsu",
-            "Gum Gum Gatling",
-            "Flying Raijin Jutsu",
-            "Rasengan",
-            "Great Forest Crumbling"
-        ],
-        "combos": [
-            "Kakashi's Legacy",
-            "Team 7 Classic",
-            "Hidden Mist Duo",
-            "Hokage's Will"
-        ],
-        "scrolls": [
-            "9th form: Rengoku",
-            "Lightning Blade: All Out",
-            "Summon Manda",
-            "Amaterasu"
-        ],
-        "items": {
-            "Crystalline Shard": 64,
-            "Zoro's Locket": 2
-        },
-        "rankeditems": []
+        "level": 1,
+        "exp": 3908,
+        "money": 11600000.5,
+        "ramen": 1847,
+        "SS": 0,
+        "elo": 0,
+        "ss": 0,
+        "missions_completed": 5,
+        "adtokens": 78
     },
     "1311375059277058158": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu"
-        ],
-        "combos": [],
-        "scrolls": [],
-        "items": {},
-        "rankeditems": []
+        "level": 1,
+        "exp": 71,
+        "money": 7050,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0,
+        "missions_completed": 2
     },
     "889685403278397480": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu"
-        ],
-        "combos": [],
-        "scrolls": [],
-        "items": {},
-        "rankeditems": []
+        "level": 1,
+        "exp": 1010,
+        "money": 356000,
+        "ramen": 101,
+        "SS": 0,
+        "elo": 0
     },
     "1431505039263928460": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu"
-        ],
-        "combos": [],
-        "scrolls": [],
-        "items": {},
-        "rankeditems": []
+        "level": 1,
+        "exp": 71,
+        "money": 7050,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0,
+        "missions_completed": 2
     },
     "880223106155806750": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu"
-        ],
-        "combos": [],
-        "scrolls": [],
-        "items": {},
-        "rankeditems": []
+        "level": 1,
+        "exp": 71,
+        "money": 7050,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0,
+        "missions_completed": 2
     },
     "890668763085672458": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu"
-        ],
-        "combos": [],
-        "scrolls": [],
-        "items": {},
-        "rankeditems": []
+        "level": 1,
+        "exp": 1010,
+        "money": 356000,
+        "ramen": 101,
+        "SS": 0,
+        "elo": 0
     },
     "1191855993592746134": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu"
-        ],
-        "combos": [],
-        "scrolls": [],
-        "items": {},
-        "rankeditems": []
+        "level": 1,
+        "exp": 88,
+        "money": 7083,
+        "ramen": 312,
+        "SS": 0,
+        "elo": 0,
+        "missions_completed": 2,
+        "ss": 21
     },
     "1467198271062675468": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu"
-        ],
-        "combos": [],
-        "scrolls": [],
-        "items": {},
-        "rankeditems": []
+        "level": 1,
+        "exp": 1010,
+        "money": 356000,
+        "ramen": 101,
+        "SS": 0,
+        "elo": 0
     },
     "1467200660758990922": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu",
-            "Kamehameha",
-            "Getsuga Tensho",
-            "Silent Assassination",
-            "Needle Assault",
-            "Water Dragon Jutsu",
-            "Summon Ninken",
-            "Lightning Blade",
-            "Shadow Clone Jutsu",
-            "Analysis",
-            "Shadow Strangle",
-            "Smoke Bomb"
-        ],
-        "combos": [
-            "Hidden Mist Duo",
-            "Kakashi's Legacy",
-            "Shadow Tactician"
-        ],
-        "scrolls": [],
-        "items": {},
-        "rankeditems": []
+        "level": 1,
+        "exp": 1070,
+        "money": 1306901,
+        "ramen": 451,
+        "SS": 0,
+        "elo": 0,
+        "adtokens": 58,
+        "ss": 0,
+        "missions_completed": 1
     },
     "1448652877424758856": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu"
-        ],
-        "combos": [],
-        "scrolls": [],
-        "items": {},
-        "rankeditems": []
+        "level": 1,
+        "exp": 1012,
+        "money": 356000,
+        "ramen": 101,
+        "SS": 0,
+        "elo": 0
     },
     "1140404569923395668": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu",
-            "Human Boulder"
-        ],
-        "combos": [
-            "Intermediate Combo"
-        ],
-        "scrolls": [],
-        "items": {},
-        "rankeditems": []
+        "level": 1,
+        "exp": 1624,
+        "money": 412457,
+        "ramen": 126,
+        "SS": 0,
+        "elo": 0,
+        "missions_completed": 26,
+        "ss": 0
     },
     "772230265565216798": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu"
-        ],
-        "combos": [],
-        "scrolls": [],
-        "items": {},
-        "rankeditems": []
+        "level": 1,
+        "exp": 10,
+        "money": 6000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "1243438862139916308": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu",
-            "Kirin: Lightning Storm",
-            "Infused Chakra Blade",
-            "Needle Assault",
-            "Rasengan",
-            "One Thousand Years of Death",
-            "Creation Rebirth"
-        ],
-        "combos": [],
-        "scrolls": [
-            "Infused Chakra Blade Scroll"
-        ],
-        "items": {
-            "Crystalline Shard": 1
+        "level": 58,
+        "exp": 446,
+        "money": 524912,
+        "ramen": 57,
+        "SS": 0,
+        "elo": 0,
+        "missions_completed": 99,
+        "lastClaim": "2026-01-31T21:09:16.362Z",
+        "nextClaim": "2026-02-01T21:09:16.362Z",
+        "backup": {
+            "health": 1548,
+            "power": 1091,
+            "defense": 1039,
+            "chakra": 10
         },
-        "rankeditems": []
+        "ss": 7
     },
     "881013581364207616": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu"
-        ],
-        "combos": [],
-        "scrolls": [],
-        "items": {},
-        "rankeditems": []
+        "level": 1,
+        "exp": 10,
+        "money": 6000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "1442562014328127549": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu",
-            "Puppet Kazekage",
-            "Human Boulder",
-            "Needle Assault",
-            "Kirin: Lightning Storm"
-        ],
-        "combos": [],
-        "scrolls": [],
-        "items": {},
-        "rankeditems": []
+        "level": 31,
+        "exp": 489,
+        "money": 267050,
+        "ramen": 101,
+        "SS": 0,
+        "elo": 0,
+        "backup": {
+            "health": 1080,
+            "power": 208,
+            "defense": 98,
+            "chakra": 10
+        },
+        "missions_completed": 2
     },
     "123227974802604034": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu"
-        ],
-        "combos": [],
-        "scrolls": [],
-        "items": {},
-        "rankeditems": []
+        "level": 1,
+        "exp": 1010,
+        "money": 356000,
+        "ramen": 101,
+        "SS": 0,
+        "elo": 0
     },
     "1442711547645526097": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu"
-        ],
-        "combos": [],
-        "scrolls": [],
-        "items": {},
-        "rankeditems": []
+        "level": 1,
+        "exp": 0,
+        "money": 1000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "1290443658083958857": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu"
-        ],
-        "combos": [],
-        "scrolls": [],
-        "items": {},
-        "rankeditems": []
+        "level": 31,
+        "exp": 10,
+        "money": 351000,
+        "ramen": 101,
+        "SS": 0,
+        "elo": 0,
+        "backup": {
+            "health": 1075,
+            "power": 206,
+            "defense": 96,
+            "chakra": 10
+        }
     },
     "1431441368860856392": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu"
-        ],
-        "combos": [],
-        "scrolls": [],
-        "items": {},
-        "rankeditems": []
+        "level": 1,
+        "exp": 1010,
+        "money": 356000,
+        "ramen": 101,
+        "SS": 0,
+        "elo": 0
     },
     "1127771123195596830": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu"
-        ],
-        "combos": [],
-        "scrolls": [],
-        "items": {},
-        "rankeditems": []
+        "level": 31,
+        "exp": 20,
+        "money": 356000,
+        "ramen": 101,
+        "SS": 0,
+        "elo": 0,
+        "backup": {
+            "health": 1074,
+            "power": 207,
+            "defense": 95,
+            "chakra": 10
+        }
     },
     "1467470156434243617": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu",
-            "Kamehameha"
-        ],
-        "combos": [],
-        "scrolls": [],
-        "items": {},
-        "rankeditems": []
+        "level": 1,
+        "exp": 1010,
+        "money": 356000,
+        "ramen": 101,
+        "SS": 0,
+        "elo": 0
     },
     "1467478771878854800": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu",
-            "Flying Raijin Jutsu"
-        ],
-        "combos": [],
-        "scrolls": [],
-        "items": {},
-        "rankeditems": []
+        "level": 1,
+        "exp": 1010,
+        "money": 356000,
+        "ramen": 101,
+        "SS": 0,
+        "elo": 0
     },
     "1381411174498832445": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu"
-        ],
-        "combos": [],
-        "scrolls": [],
-        "items": {},
-        "rankeditems": []
+        "level": 1,
+        "exp": 1010,
+        "money": 356000,
+        "ramen": 101,
+        "SS": 0,
+        "elo": 0
     },
     "748085133223002123": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu"
-        ],
-        "combos": [],
-        "scrolls": [],
-        "items": {},
-        "rankeditems": []
+        "level": 1,
+        "exp": 1010,
+        "money": 356000,
+        "ramen": 101,
+        "SS": 0,
+        "elo": 0
     },
     "1429814567638401179": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu"
-        ],
-        "combos": [],
-        "scrolls": [],
-        "items": {},
-        "rankeditems": []
+        "level": 1,
+        "exp": 1010,
+        "money": 356000,
+        "ramen": 101,
+        "SS": 0,
+        "elo": 0
     },
     "1377742986510860429": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu"
-        ],
-        "combos": [],
-        "scrolls": [],
-        "items": {},
-        "rankeditems": []
+        "level": 1,
+        "exp": 1010,
+        "money": 356000,
+        "ramen": 101,
+        "SS": 0,
+        "elo": 0
     },
     "1411098236407779548": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu"
-        ],
-        "combos": [],
-        "scrolls": [],
-        "items": {},
-        "rankeditems": []
+        "level": 1,
+        "exp": 1010,
+        "money": 356000,
+        "ramen": 101,
+        "SS": 0,
+        "elo": 0
     },
     "919887146180026408": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu"
-        ],
-        "combos": [],
-        "scrolls": [],
-        "items": {},
-        "rankeditems": []
+        "level": 1,
+        "exp": 1010,
+        "money": 356000,
+        "ramen": 51,
+        "SS": 0,
+        "elo": 0
     },
     "741142009670271010": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu",
-            "Carnage",
-            "Needle Assault",
-            "One Thousand Years of Death",
-            "Creation Rebirth",
-            "Burning Ash",
-            "Water Dragon Jutsu",
-            "Flying Raijin Jutsu",
-            "Great Forest Crumbling",
-            "Rasenshuriken",
-            "Summon Manda",
-            "Kamui",
-            "Susanoo",
-            "Tsukuyomi",
-            "Almighty Push",
-            "Praise Jashin",
-            "Amaterasu: Infinite Flames",
-            "Summon Ninken",
-            "Lightning Blade",
-            "Shadow Clone Jutsu",
-            "Izanami",
-            "Tenseigan Chakra Mode",
-            "Analysis",
-            "Shadow Strangle",
-            "Smoke Bomb",
-            "Rasengan",
-            "9th form: Rengoku",
-            "The Force: Awakens"
-        ],
-        "combos": [
-            "Intermediate Combo",
-            "Kakashi's Legacy",
-            "Shadow Tactician",
-            "Hokage's Will"
-        ],
-        "scrolls": [
-            "Lightning Blade: All Out",
-            "Kamui",
-            "Susanoo",
-            "Tsukuyomi",
-            "Almighty Push",
-            "Praise Jashin",
-            "Amaterasu: Infinite Flames",
-            "Izanami",
-            "Summon Manda",
-            "Tenseigan Scroll",
-            "Amaterasu"
-        ],
-        "items": {
-            "Crystalline Shard": 31,
-            "Zoro's Locket": 4
+        "level": 1483,
+        "exp": 42675,
+        "money": 1221584666,
+        "ramen": 25,
+        "SS": 0,
+        "elo": 0,
+        "missions_completed": 314,
+        "backup": {
+            "health": 103818,
+            "power": 199456,
+            "defense": 334960,
+            "chakra": 15
         },
-        "rankeditems": []
+        "lastClaim": "2026-02-20T01:47:42.581Z",
+        "nextClaim": "2026-02-21T01:47:42.581Z",
+        "ss": 20,
+        "premiumRoles": [
+            {
+                "roleId": "1385641469507010640",
+                "expiresAt": 1773275967826
+            }
+        ],
+        "adtokens": 24
     },
     "1201212892125610084": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu"
-        ],
-        "combos": [],
-        "scrolls": [],
-        "items": {},
-        "rankeditems": []
+        "level": 1,
+        "exp": 1010,
+        "money": 356000,
+        "ramen": 51,
+        "SS": 0,
+        "elo": 0
     },
     "1467587909602509078": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu",
-            "Ninpo: Ascetic Blaze",
-            "Infused Chakra Blade"
-        ],
-        "combos": [],
-        "scrolls": [
-            "Infused Chakra Blade Scroll"
-        ],
-        "items": {
-            "Crystalline Shard": 1
+        "level": 33,
+        "exp": 72,
+        "money": 119000,
+        "ramen": 50,
+        "SS": 0,
+        "elo": 0,
+        "missions_completed": 5,
+        "backup": {
+            "health": 1078,
+            "power": 523,
+            "defense": 547,
+            "chakra": 10
         },
-        "rankeditems": []
+        "lastClaim": "2026-02-01T19:16:44.441Z",
+        "nextClaim": "2026-02-02T19:16:44.441Z"
     },
     "1023825001268387860": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu"
-        ],
-        "combos": [],
-        "scrolls": [],
-        "items": {},
-        "rankeditems": []
+        "level": 1,
+        "exp": 0,
+        "money": 1000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "1467623069274341376": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu"
-        ],
-        "combos": [],
-        "scrolls": [],
-        "items": {},
-        "rankeditems": []
+        "level": 1,
+        "exp": 1010,
+        "money": 356000,
+        "ramen": 51,
+        "SS": 0,
+        "elo": 0
     },
     "1467623894839066868": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu"
-        ],
-        "combos": [],
-        "scrolls": [],
-        "items": {},
-        "rankeditems": []
+        "level": 1,
+        "exp": 1010,
+        "money": 356000,
+        "ramen": 51,
+        "SS": 0,
+        "elo": 0
     },
     "1467624641387565170": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu"
-        ],
-        "combos": [],
-        "scrolls": [],
-        "items": {},
-        "rankeditems": []
+        "level": 1,
+        "exp": 1010,
+        "money": 356000,
+        "ramen": 51,
+        "SS": 0,
+        "elo": 0
     },
     "829809369847431229": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu"
-        ],
-        "combos": [],
-        "scrolls": [],
-        "items": {},
-        "rankeditems": []
+        "level": 1,
+        "exp": 10,
+        "money": 6000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "437016873104834561": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu"
-        ],
-        "combos": [],
-        "scrolls": [],
-        "items": {},
-        "rankeditems": []
+        "level": 1,
+        "exp": 10,
+        "money": 6000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "1023619464652132412": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu",
-            "Human Boulder",
-            "Eight Gates",
-            "Needle Assault",
-            "Silent Assassination",
-            "Shadow Clone Jutsu",
-            "Fireball Jutsu",
-            "Serpents Wrath",
-            "Kirin"
-        ],
-        "combos": [
-            "Intermediate Combo"
-        ],
-        "scrolls": [],
-        "items": {
-            "Crystalline Shard": 2
+        "level": 93,
+        "exp": 154,
+        "money": 680135,
+        "ramen": 36,
+        "SS": 0,
+        "elo": 0,
+        "missions_completed": 173,
+        "backup": {
+            "health": 1229,
+            "power": 2671,
+            "defense": 1692,
+            "chakra": 10
         },
-        "rankeditems": []
+        "ss": 100
     },
     "1146966849335074826": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu",
-            "Needle Assault",
-            "Human Boulder",
-            "Seventh Form: Flaming Thunder God",
-            "One Thousand Years of Death",
-            "Creation Rebirth",
-            "Burning Ash",
-            "Amaterasu",
-            "Infused Chakra Blade",
-            "Water Dragon Jutsu",
-            "Flying Raijin Jutsu",
-            "Mystic Palm",
-            "Shadow Clone Jutsu",
-            "Fireball Jutsu",
-            "Summon Ninken",
-            "Analysis",
-            "Thirty Two Palms",
-            "Sixty Four Palms",
-            "Twin Lion Fist",
-            "Sexy Jutsu",
-            "Eight Gates",
-            "Dynamic Entry",
-            "Leaf Whirlwind",
-            "Primary Lotus",
-            "Lightning Blade: All Out",
-            "Great Forest Crumbling",
-            "Rasenshuriken",
-            "Serpents Wrath"
-        ],
-        "combos": [],
-        "scrolls": [],
-        "items": {
-            "Crystalline Shard": 7
+        "level": 139,
+        "exp": 2106,
+        "money": 306929,
+        "ramen": 0,
+        "SS": 0,
+        "elo": 0,
+        "missions_completed": 319,
+        "backup": {
+            "health": 3035,
+            "power": 1340,
+            "defense": 10138,
+            "chakra": 10
         },
-        "rankeditems": []
+        "ss": 0,
+        "lastClaim": "2026-02-05T18:22:19.791Z",
+        "nextClaim": "2026-02-06T18:22:19.791Z"
     },
     "488797920854933504": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu"
-        ],
-        "combos": [],
-        "scrolls": [],
-        "items": {},
-        "rankeditems": []
+        "level": 44,
+        "exp": 60,
+        "money": 118600,
+        "ramen": 77,
+        "SS": 0,
+        "elo": 0,
+        "missions_completed": 36,
+        "backup": {
+            "health": 1102,
+            "power": 254,
+            "defense": 116,
+            "chakra": 10
+        },
+        "lastClaim": "2026-02-02T17:16:25.570Z",
+        "nextClaim": "2026-02-03T17:16:25.570Z",
+        "ss": 0
     },
     "1426233098521022637": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu"
-        ],
-        "combos": [],
-        "scrolls": [],
-        "items": {},
-        "rankeditems": []
+        "level": 1,
+        "exp": 1010,
+        "money": 356000,
+        "ramen": 51,
+        "SS": 0,
+        "elo": 0
     },
     "881865831783489597": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu"
-        ],
-        "combos": [],
-        "scrolls": [],
-        "items": {},
-        "rankeditems": []
+        "level": 1,
+        "exp": 10,
+        "money": 6000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "1130895547251826801": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu"
-        ],
-        "combos": [],
-        "scrolls": [],
-        "items": {},
-        "rankeditems": []
+        "level": 1,
+        "exp": 71,
+        "money": 7050,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0,
+        "missions_completed": 2
     },
     "1468299518490574909": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu",
-            "One Thousand Years of Death"
-        ],
-        "combos": [],
-        "scrolls": [],
-        "items": {},
-        "rankeditems": []
+        "level": 1,
+        "exp": 1010,
+        "money": 6001,
+        "ramen": 51,
+        "SS": 0,
+        "elo": 0
     },
     "1468301363489276057": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu"
-        ],
-        "combos": [],
-        "scrolls": [],
-        "items": {},
-        "rankeditems": []
+        "level": 1,
+        "exp": 1010,
+        "money": 6001,
+        "ramen": 51,
+        "SS": 0,
+        "elo": 0
     },
     "553999404001001482": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu",
-            "Planetary Devastation",
-            "Infused Chakra Blade",
-            "Needle Assault",
-            "One Thousand Years of Death",
-            "Creation Rebirth",
-            "Fireball Jutsu",
-            "Serpents Wrath",
-            "Lightning Blade",
-            "Lightning Blade: All Out",
-            "Burning Ash",
-            "Ephemeral",
-            "Amaterasu",
-            "Water Dragon Jutsu",
-            "Flying Raijin Jutsu",
-            "Great Forest Crumbling",
-            "Tenseigan Chakra Mode",
-            "Rasenshuriken",
-            "Mystic Palm"
-        ],
-        "combos": [
-            "Intermediate Combo"
-        ],
-        "scrolls": [
-            "Infused Chakra Blade Scroll",
-            "Lightning Blade: All Out",
-            "Amaterasu"
-        ],
-        "items": {
-            "Crystalline Shard": 65,
-            "Zoro's Locket": 2
+        "level": 160,
+        "exp": 622.5,
+        "money": 2513519,
+        "ramen": 25,
+        "SS": 0,
+        "elo": 0,
+        "missions_completed": 349,
+        "ss": 0,
+        "lastClaim": "2026-02-13T17:03:13.029Z",
+        "nextClaim": "2026-02-14T17:03:13.029Z",
+        "backup": {
+            "health": 5350,
+            "power": 15592,
+            "defense": 11371,
+            "chakra": 15
         },
-        "rankeditems": []
+        "premiumRoles": [
+            {
+                "roleId": "1385641469507010640",
+                "expiresAt": 1773256649904
+            }
+        ]
     },
     "1303374282130198538": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu",
-            "Amaterasu: Infinite Flames",
-            "Infused Chakra Blade"
-        ],
-        "combos": [],
-        "scrolls": [
-            "Summon Manda"
-        ],
-        "items": {
-            "Crystalline Shard": 1
-        },
-        "rankeditems": []
+        "level": 1,
+        "exp": 1071,
+        "money": 357050,
+        "ramen": 61,
+        "SS": 0,
+        "elo": 0,
+        "missions_completed": 2
     },
     "1302557566672310294": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu",
-            "Infused Chakra Blade",
-            "Kirin",
-            "Needle Assault",
-            "Ephemeral",
-            "Puppet Kazekage",
-            "Lightning Blade: All Out",
-            "Twin Lion Fist",
-            "Silent Assassination",
-            "Serpents Wrath",
-            "One Thousand Years of Death"
-        ],
-        "combos": [
-            "Intermediate Combo"
-        ],
-        "scrolls": [],
-        "items": {
-            "Crystalline Shard": 3
+        "level": 100,
+        "exp": 270,
+        "money": 1341889,
+        "ramen": 25,
+        "SS": 0,
+        "elo": 0,
+        "missions_completed": 359,
+        "backup": {
+            "health": 1519,
+            "power": 823,
+            "defense": 569,
+            "chakra": 10
         },
-        "rankeditems": []
+        "lastClaim": "2026-02-04T06:11:55.377Z",
+        "nextClaim": "2026-02-05T06:11:55.377Z",
+        "ss": 0
     },
     "1320073283982327884": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu",
-            "Twin Lion Fist",
-            "Infused Chakra Blade",
-            "Needle Assault",
-            "One Thousand Years of Death",
-            "Creation Rebirth",
-            "Fireball Jutsu",
-            "Rasengan",
-            "Analysis",
-            "Burning Ash",
-            "Water Dragon Jutsu",
-            "Flying Raijin Jutsu",
-            "Great Forest Crumbling",
-            "Rasenshuriken",
-            "Susanoo",
-            "Kamui",
-            "Ikari",
-            "Serpents Wrath",
-            "Shadow Strangle",
-            "Smoke Bomb",
-            "Summon Ninken",
-            "Lightning Blade",
-            "Shadow Clone Jutsu",
-            "Silent Assassination",
-            "Cherry Blossom Impact",
-            "Almighty Push"
-        ],
-        "combos": [
-            "Shadow Tactician",
-            "Kakashi's Legacy",
-            "Hidden Mist Duo",
-            "Team 7 Classic"
-        ],
-        "scrolls": [
-            "Infused Chakra Blade Scroll",
-            "Tenseigan Scroll",
-            "Susanoo",
-            "Kamui",
-            "Almighty Push"
-        ],
-        "items": {
-            "Crystalline Shard": 7
+        "level": 216,
+        "exp": 483,
+        "money": 25417935,
+        "ramen": 0,
+        "SS": 0,
+        "elo": 0,
+        "missions_completed": 357,
+        "backup": {
+            "health": 10804,
+            "power": 15069,
+            "defense": 15099,
+            "chakra": 15
         },
-        "rankeditems": []
+        "ss": 0,
+        "lastClaim": "2026-02-14T21:30:02.114Z",
+        "nextClaim": "2026-02-15T21:30:02.114Z",
+        "premiumRoles": [
+            {
+                "roleId": "1385641469507010640",
+                "expiresAt": 1773430540601
+            }
+        ],
+        "adtokens": 40
     },
     "1266483426555334688": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu"
-        ],
-        "combos": [],
-        "scrolls": [],
-        "items": {},
-        "rankeditems": []
+        "level": 1,
+        "exp": 72,
+        "money": 7200,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0,
+        "missions_completed": 3
     },
     "552026016827310081": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu",
-            "Infused Chakra Blade",
-            "Smoke Bomb",
-            "Fireball Jutsu",
-            "Shadow Clone Jutsu",
-            "Thirty Two Palms"
-        ],
-        "combos": [],
-        "scrolls": [],
-        "items": {
-            "Crystalline Shard": 1,
-            "Zoro's Locket": 1
-        },
-        "rankeditems": []
+        "level": 38,
+        "exp": 37,
+        "money": 16060,
+        "ramen": 51,
+        "SS": 0,
+        "elo": 0,
+        "missions_completed": 19,
+        "backup": {
+            "health": 1098,
+            "power": 234,
+            "defense": 100,
+            "chakra": 10
+        }
     },
     "1369151302893834242": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu"
-        ],
-        "combos": [],
-        "scrolls": [],
-        "items": {},
-        "rankeditems": []
+        "level": 1,
+        "exp": 174,
+        "money": 17200,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0,
+        "missions_completed": 3
     },
     "834300675659530261": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu"
-        ],
-        "combos": [],
-        "scrolls": [],
-        "items": {},
-        "rankeditems": []
+        "level": 1,
+        "exp": 10,
+        "money": 6000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "619879176316649482": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu"
-        ],
-        "combos": [],
-        "scrolls": [],
-        "items": {},
-        "rankeditems": []
+        "level": 1,
+        "exp": 10,
+        "money": 6000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "776482384099016737": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu"
-        ],
-        "combos": [],
-        "scrolls": [],
-        "items": {},
-        "rankeditems": []
+        "level": 1,
+        "exp": 10,
+        "money": 6000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "1451906526209114132": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu"
-        ],
-        "combos": [],
-        "scrolls": [
-            "Infused Chakra Blade Scroll"
-        ],
-        "items": {},
-        "rankeditems": []
+        "level": 1,
+        "exp": 173,
+        "money": 17050,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0,
+        "missions_completed": 2
     },
     "749126543342567466": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu"
-        ],
-        "combos": [],
-        "scrolls": [],
-        "items": {},
-        "rankeditems": []
+        "level": 1,
+        "exp": 10,
+        "money": 6000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "529892643165962250": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu"
-        ],
-        "combos": [],
-        "scrolls": [],
-        "items": {},
-        "rankeditems": []
+        "level": 1,
+        "exp": 10,
+        "money": 6000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "394244791224762369": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu"
-        ],
-        "combos": [],
-        "scrolls": [],
-        "items": {},
-        "rankeditems": []
+        "level": 1,
+        "exp": 10,
+        "money": 6000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "542377160334114816": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu"
-        ],
-        "combos": [],
-        "scrolls": [],
-        "items": {},
-        "rankeditems": []
+        "level": 1,
+        "exp": 10,
+        "money": 6000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
+    },
+    "678406353202708484": {
+        "level": 1,
+        "exp": 173,
+        "money": 17050,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0,
+        "missions_completed": 2
     },
     "1284426943294341204": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu"
-        ],
-        "combos": [],
-        "scrolls": [],
-        "items": {},
-        "rankeditems": []
+        "level": 1,
+        "exp": 132,
+        "money": 8100,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0,
+        "missions_completed": 4
     },
     "1301191654291804241": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu",
-            "Thirty Two Palms"
-        ],
-        "combos": [],
-        "scrolls": [],
-        "items": {},
-        "rankeditems": []
+        "level": 1,
+        "exp": 71,
+        "money": 7050,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0,
+        "missions_completed": 2
     },
     "1228254807442063390": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu"
-        ],
-        "combos": [],
-        "scrolls": [],
-        "items": {},
-        "rankeditems": []
+        "level": 1,
+        "exp": 89,
+        "money": 7233,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0,
+        "missions_completed": 3
     },
     "819435695478800414": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu",
-            "Needle Assault",
-            "Bull Charge",
-            "Infused Chakra Blade",
-            "Shadow Clone Jutsu",
-            "Rasengan",
-            "Analysis",
-            "One Thousand Years of Death",
-            "Creation Rebirth",
-            "Burning Ash",
-            "Water Dragon Jutsu",
-            "Kamehameha",
-            "Silent Assassination",
-            "Shadow Strangle",
-            "Smoke Bomb",
-            "Flying Raijin Jutsu",
-            "Great Forest Crumbling",
-            "Mystic Palm",
-            "Rasenshuriken"
-        ],
-        "combos": [
-            "Hidden Mist Duo",
-            "Shadow Tactician"
-        ],
-        "scrolls": [
-            "Infused Chakra Blade Scroll"
-        ],
-        "items": {},
-        "rankeditems": []
+        "level": 102,
+        "exp": 243,
+        "money": 12021501,
+        "ramen": 0,
+        "SS": 0,
+        "elo": 0,
+        "missions_completed": 180,
+        "backup": {
+            "health": 7016,
+            "power": 4200,
+            "defense": 3950,
+            "chakra": 10
+        },
+        "ss": 50,
+        "adtokens": 10,
+        "lastClaim": "2026-02-13T04:15:00.722Z",
+        "nextClaim": "2026-02-14T04:15:00.722Z"
     },
     "1471592850197053581": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu",
-            "Last Resort"
-        ],
-        "combos": [],
-        "scrolls": [],
-        "items": {},
-        "rankeditems": []
+        "level": 1,
+        "exp": 1010,
+        "money": 356000,
+        "ramen": 51,
+        "SS": 0,
+        "elo": 0
     },
     "1471596073272344818": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu",
-            "Shadow Clone Jutsu"
-        ],
-        "combos": [],
-        "scrolls": [],
-        "items": {},
-        "rankeditems": []
+        "level": 1,
+        "exp": 1010,
+        "money": 356000,
+        "ramen": 51,
+        "SS": 0,
+        "elo": 0
     },
     "1471597546135879741": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu",
-            "Puppet Kazekage"
-        ],
-        "combos": [],
-        "scrolls": [],
-        "items": {},
-        "rankeditems": []
+        "level": 1,
+        "exp": 1010,
+        "money": 356000,
+        "ramen": 51,
+        "SS": 0,
+        "elo": 0
     },
     "1208214039545651361": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu"
-        ],
-        "combos": [],
-        "scrolls": [],
-        "items": {},
-        "rankeditems": []
+        "level": 1,
+        "exp": 173,
+        "money": 17050,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0,
+        "missions_completed": 2
     },
     "782907937290846228": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu",
-            "Full Power Strike",
-            "Silent Assassination",
-            "Serpents Wrath",
-            "Infused Chakra Blade",
-            "One Thousand Years of Death",
-            "Creation Rebirth"
-        ],
-        "combos": [],
-        "scrolls": [],
-        "items": {
-            "Crystalline Shard": 1
+        "level": 64,
+        "exp": 260,
+        "money": 752950,
+        "ramen": 52,
+        "SS": 0,
+        "elo": 0,
+        "missions_completed": 3,
+        "backup": {
+            "health": 1160,
+            "power": 1071,
+            "defense": 1639,
+            "chakra": 10
         },
-        "rankeditems": []
+        "lastClaim": "2026-02-14T16:38:02.295Z",
+        "nextClaim": "2026-02-15T16:38:02.295Z"
     },
     "1446536644286087280": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu"
-        ],
-        "combos": [],
-        "scrolls": [],
-        "items": {},
-        "rankeditems": []
+        "level": 1,
+        "exp": 0,
+        "money": 1000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "1056629700992176170": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu",
-            "Summon Manda",
-            "Analysis",
-            "Puppet Kazekage",
-            "Mystic Palm",
-            "Shadow Clone Jutsu",
-            "Needle Assault",
-            "Silent Assassination",
-            "Water Dragon Jutsu",
-            "Infused Chakra Blade",
-            "One Thousand Years of Death",
-            "Creation Rebirth",
-            "Burning Ash",
-            "Fireball Jutsu",
-            "Serpents Wrath",
-            "Flying Raijin Jutsu",
-            "Great Forest Crumbling",
-            "Rasengan",
-            "Cherry Blossom Impact"
-        ],
-        "combos": [
-            "Hidden Mist Duo",
-            "Hokage's Will",
-            "Team 7 Classic"
-        ],
-        "scrolls": [],
-        "items": {
-            "Crystalline Shard": 1
+        "level": 211,
+        "exp": 662,
+        "money": 61302032,
+        "ramen": 397,
+        "SS": 0,
+        "elo": 0,
+        "missions_completed": 919,
+        "lastClaim": "2026-02-19T20:22:09.257Z",
+        "nextClaim": "2026-02-20T20:22:09.257Z",
+        "ss": 120,
+        "adtokens": 42,
+        "backup": {
+            "health": 4109,
+            "power": 2953,
+            "defense": 5182,
+            "chakra": 15
         },
-        "rankeditems": []
+        "premiumRoles": [
+            {
+                "roleId": "1385641469507010640",
+                "expiresAt": 1773845457690
+            }
+        ]
     },
     "679164230716620811": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu"
-        ],
-        "combos": [],
-        "scrolls": [],
-        "items": {},
-        "rankeditems": []
+        "level": 1,
+        "exp": 10,
+        "money": 6000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "1361992385365676053": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu",
-            "Susanoo"
-        ],
-        "combos": [],
-        "scrolls": [],
-        "items": {},
-        "rankeditems": []
+        "level": 1,
+        "exp": 71,
+        "money": 7050,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0,
+        "missions_completed": 2
     },
     "862455823099363368": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu",
-            "Sand Bullet"
-        ],
-        "combos": [],
-        "scrolls": [],
-        "items": {},
-        "rankeditems": []
+        "level": 1,
+        "exp": 173,
+        "money": 17050,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0,
+        "missions_completed": 2
     },
     "743404375740776518": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu"
-        ],
-        "combos": [],
-        "scrolls": [],
-        "items": {},
-        "rankeditems": []
+        "level": 1,
+        "exp": 10,
+        "money": 6000,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0
     },
     "518732237303447592": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu",
-            "Needle Assault",
-            "Corrupted Ice Prison",
-            "Infused Chakra Blade",
-            "Analysis",
-            "Silent Assassination",
-            "One Thousand Years of Death",
-            "Creation Rebirth",
-            "Burning Ash",
-            "Water Dragon Jutsu",
-            "Shadow Clone Jutsu",
-            "Lightning Blade",
-            "Infused Chakra Blade: Enhanced",
-            "Mystic Palm Enhanced",
-            "Flying Raijin Jutsu",
-            "Great Forest Crumbling",
-            "Rasenshuriken",
-            "Puppet Kazekage",
-            "Lightning Blade: All Out",
-            "Tenseigan Chakra Mode",
-            "Kamui",
-            "Praise Jashin"
-        ],
-        "combos": [],
-        "scrolls": [
-            "Infused Chakra Blade Scroll",
-            "Tenseigan Scroll",
-            "Kamui",
-            "Praise Jashin",
-            "Amaterasu",
-            "9th form: Rengoku"
-        ],
-        "items": {
-            "Crystalline Shard": 16
+        "level": 219,
+        "exp": 1842,
+        "money": 32433991,
+        "ramen": 0,
+        "SS": 0,
+        "elo": 0,
+        "missions_completed": 2661,
+        "backup": {
+            "health": 10619,
+            "power": 11812,
+            "defense": 11684,
+            "chakra": 15
         },
-        "rankeditems": []
+        "ss": 4,
+        "premiumRoles": [
+            {
+                "roleId": "1385641469507010640",
+                "expiresAt": 1773944957592
+            }
+        ],
+        "lastClaim": "2026-02-20T03:05:10.095Z",
+        "nextClaim": "2026-02-21T03:05:10.095Z",
+        "adtokens": 2
     },
     "1050314706675585094": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu"
-        ],
-        "combos": [],
-        "scrolls": [],
-        "items": {},
-        "rankeditems": []
+        "level": 1,
+        "exp": 234,
+        "money": 18100,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0,
+        "missions_completed": 4
     },
     "1408981864600834159": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu"
-        ],
-        "combos": [],
-        "scrolls": [],
-        "items": {},
-        "rankeditems": []
+        "level": 1,
+        "exp": 11,
+        "money": 6150,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0,
+        "missions_completed": 1
     },
     "822757869253689356": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu",
-            "Emperor of the skies"
-        ],
-        "combos": [],
-        "scrolls": [],
-        "items": {},
-        "rankeditems": []
+        "level": 1,
+        "exp": 10,
+        "money": 6000,
+        "ramen": 101,
+        "SS": 0,
+        "elo": 0
     },
     "1368549025787150356": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu",
-            "Tiger Hunt",
-            "Infused Chakra Blade"
-        ],
-        "combos": [],
-        "scrolls": [],
-        "items": {},
-        "rankeditems": []
+        "level": 32,
+        "exp": 141,
+        "money": 367500,
+        "ramen": 146,
+        "SS": 0,
+        "elo": 0,
+        "missions_completed": 4,
+        "backup": {
+            "health": 1081,
+            "power": 215,
+            "defense": 95,
+            "chakra": 10
+        },
+        "lastClaim": "2026-02-19T07:58:30.519Z",
+        "nextClaim": "2026-02-20T07:58:30.519Z"
     },
     "147153347680534528": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu",
-            "Needle Assault"
-        ],
-        "combos": [],
-        "scrolls": [],
-        "items": {},
-        "rankeditems": []
+        "level": 20,
+        "exp": 81,
+        "money": 44150,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0,
+        "missions_completed": 6,
+        "backup": {
+            "health": 1047,
+            "power": 167,
+            "defense": 80,
+            "chakra": 10
+        }
     },
     "211707675640070146": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu"
-        ],
-        "combos": [],
-        "scrolls": [],
-        "items": {},
-        "rankeditems": []
+        "level": 1,
+        "exp": 143,
+        "money": 7782,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0,
+        "missions_completed": 6
     },
     "837658052584407050": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu",
-            "Needle Assault"
-        ],
-        "combos": [
-            "Intermediate Combo"
-        ],
-        "scrolls": [],
-        "items": {},
-        "rankeditems": []
+        "level": 1,
+        "exp": 270,
+        "money": 18466,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0,
+        "missions_completed": 6
     },
     "1407001668012212285": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu",
-            "Primary Lotus",
-            "Infused Chakra Blade",
-            "Fireball Jutsu"
-        ],
-        "combos": [],
-        "scrolls": [],
-        "items": {},
-        "rankeditems": []
+        "level": 42,
+        "exp": 73,
+        "money": 432050,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0,
+        "missions_completed": 2,
+        "backup": {
+            "health": 1102,
+            "power": 987,
+            "defense": 110,
+            "chakra": 10
+        }
     },
     "1267125594433523895": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu",
-            "Summon Ninken",
-            "Infused Chakra Blade",
-            "Shadow Clone Jutsu"
-        ],
-        "combos": [],
-        "scrolls": [],
-        "items": {},
-        "rankeditems": []
+        "level": 339,
+        "exp": 2340,
+        "money": 28500444,
+        "ramen": 1350,
+        "SS": 0,
+        "elo": 0,
+        "backup": {
+            "health": 1295,
+            "power": 620,
+            "defense": 311,
+            "chakra": 10
+        },
+        "missions_completed": 70,
+        "adtokens": 6,
+        "ss": 20
     },
     "1073749595600977970": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu",
-            "Needle Assault"
-        ],
-        "combos": [],
-        "scrolls": [
-            "Infused Chakra Blade Scroll"
-        ],
-        "items": {},
-        "rankeditems": []
+        "level": 1,
+        "exp": 234,
+        "money": 18100,
+        "ramen": 51,
+        "SS": 0,
+        "elo": 0,
+        "missions_completed": 4
     },
     "856856850665046016": {
-        "usersjutsu": [
-            "Attack",
-            "Transformation Jutsu"
-        ],
-        "combos": [],
-        "scrolls": [],
-        "items": {},
-        "rankeditems": []
+        "level": 1,
+        "exp": 10,
+        "money": 6003,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0,
+        "ss": 0
+    },
+    "277406029371670528": {
+        "level": 19,
+        "exp": 129,
+        "money": 120095,
+        "ramen": 26,
+        "SS": 0,
+        "elo": 0,
+        "missions_completed": 13,
+        "backup": {
+            "health": 1027,
+            "power": 139,
+            "defense": 67,
+            "chakra": 10
+        },
+        "ss": 0
+    },
+    "1469809168947871829": {
+        "level": 1,
+        "exp": 182,
+        "money": 8239,
+        "ramen": 1,
+        "SS": 0,
+        "elo": 0,
+        "missions_completed": 8
     }
 }

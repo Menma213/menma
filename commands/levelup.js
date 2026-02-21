@@ -90,9 +90,9 @@ module.exports = {
                 totalExpConsumed = requiredExp;
                 levelsGained = 1;
 
-                player.health += Math.floor(Math.random() * 2) + 2;
-                player.power += Math.floor(Math.random() * 2) + 3;
-                player.defense += Math.floor(Math.random() * 2) + 1;
+                player.health += (Math.floor(Math.random() * 4) + 2) * 2;
+                player.power += (Math.floor(Math.random() * 2) + 3) * 2;
+                player.defense += (Math.floor(Math.random() * 2) + 1) * 2;
             } else {
                 while (true) {
                     const req = getExpRequirement(playerData.level);
@@ -101,9 +101,9 @@ module.exports = {
                     totalExpConsumed += req;
                     playerData.level++;
                     levelsGained++;
-                    player.health += Math.floor(Math.random() * 2) + 2;
-                    player.power += Math.floor(Math.random() * 2) + 3;
-                    player.defense += Math.floor(Math.random() * 2) + 1;
+                    player.health += (Math.floor(Math.random() * 4) + 2) * 2;
+                    player.power += (Math.floor(Math.random() * 2) + 3) * 2;
+                    player.defense += (Math.floor(Math.random() * 2) + 1) * 2;
                 }
                 if (levelsGained === 0) {
                     return interaction.editReply(`Not enough EXP. Need **${getExpRequirement(playerData.level).toLocaleString()}**.`);

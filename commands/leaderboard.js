@@ -220,43 +220,48 @@ async function loadLeaderboardData(statType) {
     const usersPath = path.resolve(__dirname, '../../menma/data/users.json');
     const playersPath = path.resolve(__dirname, '../../menma/data/players.json');
 
-    if (!fs.existsSync(usersPath)) return [];
-
     try {
-        const usersData = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
+        const usersData = fs.existsSync(usersPath) ? JSON.parse(fs.readFileSync(usersPath, 'utf8')) : {};
         const playersData = fs.existsSync(playersPath) ? JSON.parse(fs.readFileSync(playersPath, 'utf8')) : {};
+
+        const allIds = new Set([...Object.keys(usersData), ...Object.keys(playersData)]);
         const allUsers = [];
 
-        for (const id in usersData) {
-            const user = usersData[id];
+        for (const id of allIds) {
+            const user = usersData[id] || {};
             const player = playersData[id] || {};
             let value, displayValue;
 
             switch (statType) {
                 case 'richest':
+                    // Money from players.json
                     value = player.money || 0;
                     displayValue = `${value.toLocaleString()} Ryo`;
                     break;
                 case 'shards':
-                    value = player.ss || player.SS || 0;
+                    // SS from players.json (only using 'ss' key and ignoring 'SS')
+                    value = player.ss || 0;
                     displayValue = `${value.toLocaleString()} SS`;
                     break;
                 case 'hungriest':
+                    // Ramen from players.json
                     value = player.ramen || 0;
                     displayValue = `${value} 🍜`;
                     break;
                 case 'raging_demon':
+                    // Wins from users.json
                     value = user.wins || 0;
                     displayValue = `${value} Wins`;
                     break;
                 case 'strongest':
                 default:
-                    value = user.level || 1;
+                    // Level from players.json
+                    value = player.level || 0;
                     displayValue = `Lvl ${value}`;
                     break;
             }
 
-            if (value > 0 || statType === 'strongest') {
+            if (value > 0 || (statType === 'strongest' && value > 0)) {
                 allUsers.push({
                     id,
                     username: user.username || 'Unknown Ninja',

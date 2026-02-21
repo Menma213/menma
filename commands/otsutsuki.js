@@ -8,9 +8,9 @@ const OTSUTSUKI_BOSSES = {
     "Toneri": {
         name: "Toneri Otsutsuki",
         image: "https://www.pngplay.com/wp-content/uploads/12/Toneri-Otsutsuki-Transparent-Images.png",
-        health:150000,
+        health: 150000,
         currentHealth: 150000,
-        power:150000,
+        power: 150000,
         defense: 150000,
         accuracy: 1000,
         chakra: 1000,
@@ -234,8 +234,10 @@ module.exports = {
 
                 await interaction.channel.send({ embeds: [lossEmbed] });
 
-                // Set cooldown on loss per user request
-                setCooldown(userId);
+                // Set cooldown on loss per user request, but not for Toneri
+                if (bossKey !== "Toneri") {
+                    setCooldown(userId);
+                }
                 return;
             }
         }

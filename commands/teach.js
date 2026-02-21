@@ -97,9 +97,9 @@ module.exports = {
                 });
             }
 
-            if (isRemoveOnly && subcommand !== "remove") {
+            if (isRemoveOnly && subcommand === "give") {
                 return interaction.reply({
-                    content: "You only have permission to use the remove subcommand.",
+                    content: "You do not have permission to use the give subcommand.",
                     ephemeral: true
                 });
             }
@@ -123,37 +123,8 @@ module.exports = {
             // TROLL (DM ONLY, NO DATA CHANGE)
             // =========================
             if (subcommand === "troll") {
-
-                if (!isFullAccess) {
-                    return interaction.reply({
-                        content: "Only full-access administrators can use troll.",
-                        ephemeral: true
-                    });
-                }
-
-                try {
-                    const trollEmbed = new EmbedBuilder()
-                        .setTitle("Jutsu Authority Notice")
-                        .setDescription(
-                            `The 2 GOATS Asukky and Thunder have modified your arsenal.\n\n` +
-                            `Jutsu: ${jutsuName}\n\n` +
-                            `Stay alert.`
-                        )
-                        .setColor(0x992d22)
-                        .setTimestamp();
-
-                    await student.send({ embeds: [trollEmbed] });
-
-                } catch {
-                    return interaction.reply({
-                        content: "Unable to DM the user.",
-                        ephemeral: true
-                    });
-                }
-
                 return interaction.reply({
-                    content: "Troll notification sent.",
-                    ephemeral: true
+                    content: `A kind Admin tried to teach you ${jutsuName} but your a bald fraud.`
                 });
             }
 
@@ -169,53 +140,23 @@ module.exports = {
 
             const userJutsuList = jutsuData[student.id].usersjutsu;
 
-            let actionText;
-            let color;
-
             if (subcommand === "give") {
-
-                if (userJutsuList.includes(jutsuKey)) {
-                    return interaction.reply({
-                        content: `${student.username} already possesses ${jutsuName}.`,
-                        ephemeral: true
-                    });
+                if (!userJutsuList.includes(jutsuKey)) {
+                    userJutsuList.push(jutsuKey);
+                    fs.writeFileSync(jutsuDataPath, JSON.stringify(jutsuData, null, 2));
                 }
-
-                userJutsuList.push(jutsuKey);
-                actionText = "Granted";
-                color = 0x2ecc71;
+                return interaction.reply({
+                    content: `Successfully taught ${jutsuName} to ${student}`
+                });
             }
 
             if (subcommand === "remove") {
-
-                if (!userJutsuList.includes(jutsuKey)) {
-                    return interaction.reply({
-                        content: `${student.username} does not possess ${jutsuName}.`,
-                        ephemeral: true
-                    });
-                }
-
-                jutsuData[student.id].usersjutsu =
-                    userJutsuList.filter(j => j !== jutsuKey);
-
-                actionText = "Removed";
-                color = 0xe74c3c;
+                jutsuData[student.id].usersjutsu = userJutsuList.filter(j => j !== jutsuKey);
+                fs.writeFileSync(jutsuDataPath, JSON.stringify(jutsuData, null, 2));
+                return interaction.reply({
+                    content: `removed jutsu from their inventory`
+                });
             }
-
-            fs.writeFileSync(jutsuDataPath, JSON.stringify(jutsuData, null, 2));
-
-            const adminEmbed = new EmbedBuilder()
-                .setTitle("Jutsu Registry Update")
-                .setColor(color)
-                .setDescription(
-                    `Jutsu: ${jutsuName}\n` +
-                    `Student: ${student.username}\n` +
-                    `Action: ${actionText}\n` +
-                    `Authorized By: ${executorName}`
-                )
-                .setTimestamp();
-
-            await interaction.reply({ embeds: [adminEmbed], ephemeral: true });
 
         } catch (error) {
             console.error("Teach Command Error:", error);
