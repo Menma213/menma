@@ -441,7 +441,7 @@
     "effects": [
       {
         "type": "damage",
-        "formula": "5 * user.power"
+        "formula": "5 * user.power / target.defense"
       }
     ]
   },
@@ -1539,8 +1539,8 @@
       {
         "type": "buff",
         "stats": {
-          "defense": "user.defense * 200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
-          "power": "user.power * 2000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+          "defense": "user.defense * 200000000000000000000",
+          "power": "user.power * 2000000000000000000000000"
         },
         "duration": 30
       }
@@ -3476,5 +3476,37 @@
     "category": "Custom",
     "obtainment": "unobtainable",
     "scriptFile": "urashiki_jutsu_steal.js"
+  },
+  "Gods Possession": {
+    "name": "Gods Possession",
+    "description": "user becomes a vessel for divine power, channeling the essence of a god to unleash devastating attacks and unparalleled abilities",
+    "info": "A divine transformation that grants the user godlike abilities and overwhelming power.",
+    "chakraCost": 0,
+    "category": "Custom",
+    "obtainment": "unobtainable",
+    "scriptFile": "gods_possession.js"
+  },
+  "Overwhelming Power": {
+    "name": "Overwhelming Power",
+    "description": "user taps into an infinite well of strength, overwhelming the target with a surge of raw power that crushes all resistance",
+    "info": "An unstoppable surge of raw strength that overwhelms the target.",
+    "chakraCost": 0,
+    "category": "Custom",
+    "obtainment": "unobtainable",
+    "effects": [
+      {
+        "type": "damage",
+        "formula": "99999999999999999999999999999999 * user.power / target.defense"
+      }
+    ]
+  },
+  "Chakra tool creation RAGE": {
+    "name": "Chakra tool creation RAGE",
+    "description": "user creates a chakra tool and attacks target with overwhelming force",
+    "info": "A high-precision barrage of celestial chakra weapons.",
+    "chakraCost": 15,
+    "category": "Custom",
+    "obtainment": "Otsutsuki",
+    "scriptFile": "chakra_tool_creation_rage.js"
   }
 }

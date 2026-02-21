@@ -1279,13 +1279,15 @@
       "slot_0": "Attack",
       "slot_1": "Carnage",
       "slot_2": "Heaven's Supremacy",
-      "slot_3": "None",
-      "slot_4": "None",
+      "slot_3": "Gods Possession",
+      "slot_4": "Banana Killer",
       "slot_5": "None"
     },
     "Combo": "Basic Combo",
     "title": "None",
-    "lastsrank": 1769797552938
+    "lastsrank": 1771666196709,
+    "lastbrank": 1771675250720,
+    "brankWon": true
   },
   "799979545046155284": {
     "wins": 0,

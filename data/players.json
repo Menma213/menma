@@ -2108,12 +2108,12 @@
   },
   "961918563382362122": {
     "level": 53,
-    "exp": 5889.9,
-    "money": 996338882014,
+    "exp": 6255.9,
+    "money": 996339282914,
     "ramen": 150,
     "SS": 0,
     "elo": 0,
-    "missions_completed": 16,
+    "missions_completed": 17,
     "ss": 7055,
     "backup": {
       "health": 210009400003670,
@@ -2582,10 +2582,6 @@
       "chakra": 15
     },
     "premiumRoles": [
-      {
-        "roleId": "1385641469507010640",
-        "expiresAt": 1771664686271
-      },
       {
         "roleId": "1385640798581952714",
         "expiresAt": 1771676735287
